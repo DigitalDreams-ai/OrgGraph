@@ -124,6 +124,17 @@ async function run(): Promise<void> {
     const missingParamsRes = await fetch(`${base}/perms?user=jane@example.com`);
     assert.equal(missingParamsRes.status, 400, 'missing object param should return 400');
 
+    const automationRes = await fetch(`${base}/automation?object=Case`);
+    assert.equal(automationRes.status, 200, 'automation endpoint should return 200');
+    const automationBody = (await automationRes.json()) as {
+      status: string;
+      automations: Array<{ type: string; name: string; rel: string }>;
+    };
+    assert.equal(automationBody.status, 'implemented', 'automation endpoint should be implemented');
+    assert.ok(automationBody.automations.length > 0, 'automation should return at least one item');
+    assert.equal(automationBody.automations[0].name, 'CaseBeforeUpdate');
+    assert.equal(automationBody.automations[0].rel, 'TRIGGERS_ON');
+
     console.log('integration passed');
   } finally {
     await app.close();
