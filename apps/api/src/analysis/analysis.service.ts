@@ -10,14 +10,18 @@ export class AnalysisService {
     relationsChecked: string[];
     paths: Array<{ from: string; rel: string; to: string }>;
     explanation: string;
-    status: 'scaffold';
+    status: 'implemented';
   } {
+    const hits = this.graphService.findImpactForField(field);
     return {
       field,
       relationsChecked: ['REFERENCES', 'QUERIES', 'WRITES'],
-      paths: [],
-      explanation: `impact analysis scaffolded for ${field}`,
-      status: 'scaffold'
+      paths: hits.map((hit) => ({ from: hit.name, rel: hit.rel, to: hit.target })),
+      explanation:
+        hits.length > 0
+          ? `found ${hits.length} impact path(s) for ${field}`
+          : `no impact path found for ${field}`,
+      status: 'implemented'
     };
   }
 
@@ -34,7 +38,7 @@ export class AnalysisService {
 
     return {
       object,
-      relationsChecked: ['TRIGGERS_ON'],
+      relationsChecked: ['TRIGGERS_ON', 'REFERENCES', 'QUERIES', 'WRITES'],
       automations,
       explanation:
         automations.length > 0

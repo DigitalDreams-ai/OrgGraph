@@ -13,7 +13,7 @@ export class AnalysisController {
     relationsChecked: string[];
     paths: Array<{ from: string; rel: string; to: string }>;
     explanation: string;
-    status: 'scaffold';
+    status: 'implemented';
   } {
     if (!field) {
       throw new BadRequestException('field query param is required');

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+  <processType>AutoLaunchedFlow</processType>
+  <start>
+    <object>Opportunity</object>
+    <recordTriggerType>CreateAndUpdate</recordTriggerType>
+    <triggerType>RecordAfterSave</triggerType>
+  </start>
+  <recordUpdates>
+    <name>Update_Opportunity</name>
+    <label>Update Opportunity</label>
+    <object>Opportunity</object>
+    <inputAssignments>
+      <field>StageName</field>
+      <value>
+        <stringValue>Negotiation/Review</stringValue>
+      </value>
+    </inputAssignments>
+  </recordUpdates>
+  <formulas>
+    <name>CrossObjectRef</name>
+    <dataType>String</dataType>
+    <expression>Account.Name</expression>
+  </formulas>
+</Flow>

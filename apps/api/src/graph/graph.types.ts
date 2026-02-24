@@ -31,3 +31,17 @@ export interface PermPath {
   object: string;
   path: PermPathStep[];
 }
+
+export interface AutomationHit {
+  type: string;
+  name: string;
+  rel: string;
+  target: string;
+}
+
+export interface ImpactHit {
+  type: string;
+  name: string;
+  rel: string;
+  target: string;
+}

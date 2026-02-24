@@ -5,7 +5,7 @@ import path from 'node:path';
 import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
 import { resolveDbPath } from '../common/path';
 import { AppConfigService } from '../config/app-config.service';
-import type { GraphPayload, PermPath } from './graph.types';
+import type { AutomationHit, GraphPayload, ImpactHit, PermPath } from './graph.types';
 
 @Injectable()
 export class GraphService implements OnModuleDestroy {
@@ -143,13 +143,19 @@ export class GraphService implements OnModuleDestroy {
     return paths.sort((a, b) => a.principal.localeCompare(b.principal));
   }
 
-  findAutomationsForObject(
-    objectName: string
-  ): Array<{ type: string; name: string; rel: string; target: string }> {
+  findAutomationsForObject(objectName: string): AutomationHit[] {
     const objectNode = this.findNode(NODE_TYPES.OBJECT, objectName);
     if (!objectNode) {
       return [];
     }
+
+    const rels = [
+      REL_TYPES.TRIGGERS_ON,
+      REL_TYPES.REFERENCES,
+      REL_TYPES.QUERIES,
+      REL_TYPES.WRITES
+    ];
+    const srcTypes = [NODE_TYPES.APEX_TRIGGER, NODE_TYPES.FLOW, NODE_TYPES.APEX_CLASS];
 
     const rows = this.db
       .prepare(
@@ -157,17 +163,65 @@ export class GraphService implements OnModuleDestroy {
          FROM edges e
          JOIN nodes n ON e.src_id = n.id
          JOIN nodes t ON e.dst_id = t.id
-         WHERE e.rel = ? AND e.dst_id = ? AND n.type = ?
-         ORDER BY n.name ASC`
+         WHERE e.rel IN (${rels.map(() => '?').join(',')})
+           AND e.dst_id = ?
+           AND n.type IN (${srcTypes.map(() => '?').join(',')})
+         ORDER BY e.rel ASC, n.name ASC`
       )
-      .all(REL_TYPES.TRIGGERS_ON, objectNode.id, NODE_TYPES.APEX_TRIGGER) as Array<{
-      type: string;
-      name: string;
-      rel: string;
-      target: string;
-    }>;
+      .all(...rels, objectNode.id, ...srcTypes) as AutomationHit[];
 
     return rows;
+  }
+
+  findImpactForField(fieldName: string): ImpactHit[] {
+    const rels = [REL_TYPES.REFERENCES, REL_TYPES.QUERIES, REL_TYPES.WRITES];
+    const srcTypes = [NODE_TYPES.APEX_TRIGGER, NODE_TYPES.FLOW, NODE_TYPES.APEX_CLASS];
+    const output = new Map<string, ImpactHit>();
+
+    const fieldNode = this.findNode(NODE_TYPES.FIELD, fieldName);
+    if (fieldNode) {
+      const fieldRows = this.db
+        .prepare(
+          `SELECT n.type as type, n.name as name, e.rel as rel, t.name as target
+           FROM edges e
+           JOIN nodes n ON e.src_id = n.id
+           JOIN nodes t ON e.dst_id = t.id
+           WHERE e.rel IN (${rels.map(() => '?').join(',')})
+             AND e.dst_id = ?
+             AND n.type IN (${srcTypes.map(() => '?').join(',')})
+           ORDER BY e.rel ASC, n.name ASC`
+        )
+        .all(...rels, fieldNode.id, ...srcTypes) as ImpactHit[];
+
+      for (const row of fieldRows) {
+        output.set(`${row.type}|${row.name}|${row.rel}|${row.target}`, row);
+      }
+    }
+
+    const objectFromField = fieldName.split('.')[0];
+    const objectNode = this.findNode(NODE_TYPES.OBJECT, objectFromField);
+    if (objectNode) {
+      const objectRows = this.db
+        .prepare(
+          `SELECT n.type as type, n.name as name, e.rel as rel, t.name as target
+           FROM edges e
+           JOIN nodes n ON e.src_id = n.id
+           JOIN nodes t ON e.dst_id = t.id
+           WHERE e.rel IN (${rels.map(() => '?').join(',')})
+             AND e.dst_id = ?
+             AND n.type IN (${srcTypes.map(() => '?').join(',')})
+           ORDER BY e.rel ASC, n.name ASC`
+        )
+        .all(...rels, objectNode.id, ...srcTypes) as ImpactHit[];
+
+      for (const row of objectRows) {
+        output.set(`${row.type}|${row.name}|${row.rel}|${row.target}`, row);
+      }
+    }
+
+    return [...output.values()].sort(
+      (a, b) => a.rel.localeCompare(b.rel) || a.type.localeCompare(b.type) || a.name.localeCompare(b.name)
+    );
   }
 
   private findNode(type: string, name: string): { id: string; name: string } | undefined {
