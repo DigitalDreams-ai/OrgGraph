@@ -1,4 +1,4 @@
-name: orggraphservices
+name: orggraph
 
 services:
   api:
@@ -13,7 +13,7 @@ services:
       PERMISSIONS_FIXTURES_PATH: /app/fixtures/permissions
       USER_PROFILE_MAP_PATH: /app/fixtures/permissions/user-profile-map.json
     ports:
-      - "3000:3000"
+      - "3100:3000"
     volumes:
       - ../data:/app/data
       - ../fixtures:/app/fixtures:ro
