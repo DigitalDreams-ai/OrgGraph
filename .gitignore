@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Chroma / vector store
+chroma/
+*.chroma
+
+# Prisma
+prisma/migrations/**/migration_lock.toml
+
+# pnpm
+.pnpm-store/
+
+# Docker
+.docker/
+
+# Salesforce (pulled metadata - optional: remove if you want to track)
+# force-app/
+# manifest/
+
+# Misc
+*.tsbuildinfo
+.cache/
+
+# docs
+docs/
