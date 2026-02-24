@@ -55,42 +55,26 @@ export class GraphService implements OnModuleDestroy {
     return { nodeCount: payload.nodes.length, edgeCount: payload.edges.length };
   }
 
-  findPermPaths(principals: string[], objectName: string): PermPath[] {
+  findObjectPermPaths(principals: string[], objectName: string): PermPath[] {
     if (principals.length === 0) {
       return [];
     }
 
-    const objectNode = this.db
-      .prepare('SELECT id, name FROM nodes WHERE type = ? AND name = ? LIMIT 1')
-      .get(NODE_TYPES.OBJECT, objectName) as { id: string; name: string } | undefined;
+    const objectNode = this.findNode(NODE_TYPES.OBJECT, objectName);
 
     if (!objectNode) {
       return [];
     }
 
-    const principalRows = this.db
-      .prepare(
-        `SELECT id, name FROM nodes
-         WHERE (type = ? OR type = ?) AND name IN (${principals.map(() => '?').join(',')})`
-      )
-      .all(NODE_TYPES.PROFILE, NODE_TYPES.PERMISSION_SET, ...principals) as Array<{
-      id: string;
-      name: string;
-    }>;
+    const principalRows = this.findPrincipals(principals);
 
     if (principalRows.length === 0) {
       return [];
     }
-
-    const hasGrant = this.db.prepare(
-      'SELECT 1 FROM edges WHERE src_id = ? AND dst_id = ? AND rel = ? LIMIT 1'
-    );
-
     const paths: PermPath[] = [];
 
     for (const principal of principalRows) {
-      const grant = hasGrant.get(principal.id, objectNode.id, REL_TYPES.GRANTS_OBJECT);
-      if (!grant) {
+      if (!this.hasGrant(principal.id, objectNode.id, REL_TYPES.GRANTS_OBJECT)) {
         continue;
       }
 
@@ -108,6 +92,78 @@ export class GraphService implements OnModuleDestroy {
     }
 
     return paths.sort((a, b) => a.principal.localeCompare(b.principal));
+  }
+
+  findFieldPermPaths(principals: string[], objectName: string, fieldName: string): PermPath[] {
+    if (principals.length === 0) {
+      return [];
+    }
+
+    const objectNode = this.findNode(NODE_TYPES.OBJECT, objectName);
+    const fieldNode = this.findNode(NODE_TYPES.FIELD, fieldName);
+
+    if (!objectNode || !fieldNode) {
+      return [];
+    }
+
+    const principalRows = this.findPrincipals(principals);
+    if (principalRows.length === 0) {
+      return [];
+    }
+
+    const paths: PermPath[] = [];
+
+    for (const principal of principalRows) {
+      const objectGrant = this.hasGrant(principal.id, objectNode.id, REL_TYPES.GRANTS_OBJECT);
+      const fieldGrant = this.hasGrant(principal.id, fieldNode.id, REL_TYPES.GRANTS_FIELD);
+      if (!objectGrant || !fieldGrant) {
+        continue;
+      }
+
+      paths.push({
+        principal: principal.name,
+        object: objectNode.name,
+        path: [
+          {
+            from: principal.name,
+            rel: REL_TYPES.GRANTS_OBJECT,
+            to: objectNode.name
+          },
+          {
+            from: principal.name,
+            rel: REL_TYPES.GRANTS_FIELD,
+            to: fieldNode.name
+          }
+        ]
+      });
+    }
+
+    return paths.sort((a, b) => a.principal.localeCompare(b.principal));
+  }
+
+  private findNode(type: string, name: string): { id: string; name: string } | undefined {
+    return this.db
+      .prepare('SELECT id, name FROM nodes WHERE type = ? AND name = ? LIMIT 1')
+      .get(type, name) as { id: string; name: string } | undefined;
+  }
+
+  private findPrincipals(principals: string[]): Array<{ id: string; name: string }> {
+    return this.db
+      .prepare(
+        `SELECT id, name FROM nodes
+         WHERE (type = ? OR type = ?) AND name IN (${principals.map(() => '?').join(',')})`
+      )
+      .all(NODE_TYPES.PROFILE, NODE_TYPES.PERMISSION_SET, ...principals) as Array<{
+      id: string;
+      name: string;
+    }>;
+  }
+
+  private hasGrant(srcId: string, dstId: string, rel: string): boolean {
+    const grant = this.db
+      .prepare('SELECT 1 FROM edges WHERE src_id = ? AND dst_id = ? AND rel = ? LIMIT 1')
+      .get(srcId, dstId, rel);
+    return Boolean(grant);
   }
 
   private initSchema(): void {

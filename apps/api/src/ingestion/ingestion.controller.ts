@@ -1,8 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import { IngestionService } from './ingestion.service';
 
 interface RefreshBody {
-  fixturesPath?: string;
+  fixturesPath?: unknown;
 }
 
 @Controller()
@@ -17,6 +17,9 @@ export class IngestionController {
     sourcePath: string;
     databasePath: string;
   } {
+    if (body.fixturesPath !== undefined && typeof body.fixturesPath !== 'string') {
+      throw new BadRequestException('fixturesPath must be a string');
+    }
     return this.ingestionService.refresh(body.fixturesPath);
   }
 }
