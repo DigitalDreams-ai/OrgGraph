@@ -135,6 +135,39 @@ async function run(): Promise<void> {
     assert.equal(automationBody.automations[0].name, 'CaseBeforeUpdate');
     assert.equal(automationBody.automations[0].rel, 'TRIGGERS_ON');
 
+    const automationOppRes = await fetch(`${base}/automation?object=Opportunity`);
+    assert.equal(automationOppRes.status, 200, 'automation opportunity endpoint should return 200');
+    const automationOppBody = (await automationOppRes.json()) as {
+      status: string;
+      automations: Array<{ type: string; name: string; rel: string }>;
+    };
+    assert.equal(automationOppBody.status, 'implemented');
+    assert.ok(
+      automationOppBody.automations.some((item) => item.name === 'OpportunityStageSync'),
+      'automation should include flow for Opportunity'
+    );
+    assert.ok(
+      automationOppBody.automations.some((item) => item.name === 'OpportunityImpactService'),
+      'automation should include apex class for Opportunity'
+    );
+
+    const impactPositiveRes = await fetch(`${base}/impact?field=Opportunity.StageName`);
+    assert.equal(impactPositiveRes.status, 200, 'impact positive should return 200');
+    const impactPositive = (await impactPositiveRes.json()) as {
+      status: string;
+      paths: Array<{ from: string; rel: string; to: string }>;
+    };
+    assert.equal(impactPositive.status, 'implemented', 'impact endpoint should be implemented');
+    assert.ok(
+      impactPositive.paths.some((item) => item.to === 'Opportunity.StageName'),
+      'impact should include field-level path'
+    );
+
+    const impactNegativeRes = await fetch(`${base}/impact?field=Lead.Unused__c`);
+    assert.equal(impactNegativeRes.status, 200, 'impact negative should return 200');
+    const impactNegative = (await impactNegativeRes.json()) as { paths: unknown[] };
+    assert.equal(impactNegative.paths.length, 0, 'impact should return no paths for unknown field');
+
     console.log('integration passed');
   } finally {
     await app.close();
