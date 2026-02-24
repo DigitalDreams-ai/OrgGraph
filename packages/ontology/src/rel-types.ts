@@ -1,6 +1,10 @@
 export const REL_TYPES = {
   GRANTS_OBJECT: 'GRANTS_OBJECT',
-  GRANTS_FIELD: 'GRANTS_FIELD'
+  GRANTS_FIELD: 'GRANTS_FIELD',
+  TRIGGERS_ON: 'TRIGGERS_ON',
+  REFERENCES: 'REFERENCES',
+  QUERIES: 'QUERIES',
+  WRITES: 'WRITES'
 } as const;
 
 export type RelType = (typeof REL_TYPES)[keyof typeof REL_TYPES];
