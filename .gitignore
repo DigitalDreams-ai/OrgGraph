@@ -37,6 +37,7 @@ coverage/
 *.db
 *.sqlite
 *.sqlite3
+data/
 
 # Chroma / vector store
 chroma/
