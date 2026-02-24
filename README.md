@@ -13,7 +13,7 @@ A Salesforce operational reasoning engine — ontology-first knowledge graph for
 | Hostname | DS1823xs |
 | IP | 10.0.1.10 |
 | SSH User | docker |
-| Project Path | `/volume1/data/projects/orggraph` |
+| Project Path | `/volume1/data/projects/OrgGraph` |
 | Auth | SSH key (no password) |
 
 ### Prerequisites (Synology)
@@ -39,15 +39,33 @@ ssh-copy-id docker@10.0.1.10
 ### Development on NAS
 
 - Use **Cursor Remote SSH** or `ssh docker@DS1823xs`
-- Open `/volume1/data/projects/orggraph`
+- Open `/volume1/data/projects/OrgGraph`
 - Work directly in the repo on the NAS
+
+### Local Bootstrap (Phase 1)
+
+```bash
+cd /volume1/data/projects/OrgGraph
+
+# Preferred if pnpm is installed globally:
+pnpm install
+
+# Fallback on this NAS (no global pnpm):
+npm exec --yes pnpm@9.12.3 -- install
+
+# Typecheck all workspace packages
+npm exec --yes pnpm@9.12.3 -- typecheck
+
+# Build the API
+npm exec --yes pnpm@9.12.3 -- --filter api build
+```
 
 ### Running the Stack
 
 All OrgGraph services run via Docker Compose under the project **OrgGraphServices**:
 
 ```bash
-cd /volume1/data/projects/orggraph
+cd /volume1/data/projects/OrgGraph
 docker compose -f docker/docker-compose.yml -p OrgGraphServices up -d
 ```
 
@@ -69,4 +87,4 @@ og ask "What touches Opportunity.StageName?"
 
 ## Plan
 
-See [PLAN_v3_Monorepo.md](./PLAN_v3_Monorepo.md) — monorepo, validate-first approach. Permissions proof of concept in Phase 1.
+See [PLAN_v1_Monorepo.md](./docs/planning/PLAN_v1_Monorepo.md) and [PHASE1_TASKLIST.md](./PHASE1_TASKLIST.md) for the execution plan and checklist.
