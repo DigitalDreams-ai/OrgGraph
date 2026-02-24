@@ -30,7 +30,7 @@ export class AnalysisController {
     relationsChecked: string[];
     automations: Array<{ type: string; name: string; rel: string }>;
     explanation: string;
-    status: 'scaffold';
+    status: 'scaffold' | 'implemented';
   } {
     if (!object) {
       throw new BadRequestException('object query param is required');

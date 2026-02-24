@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
+import { GraphService } from '../graph/graph.service';
 
 @Injectable()
 export class AnalysisService {
+  constructor(private readonly graphService: GraphService) {}
+
   impact(field: string): {
     field: string;
     relationsChecked: string[];
@@ -23,14 +26,21 @@ export class AnalysisService {
     relationsChecked: string[];
     automations: Array<{ type: string; name: string; rel: string }>;
     explanation: string;
-    status: 'scaffold';
+    status: 'scaffold' | 'implemented';
   } {
+    const automations = this.graphService
+      .findAutomationsForObject(object)
+      .map((row) => ({ type: row.type, name: row.name, rel: row.rel }));
+
     return {
       object,
       relationsChecked: ['TRIGGERS_ON'],
-      automations: [],
-      explanation: `automation query scaffolded for ${object}`,
-      status: 'scaffold'
+      automations,
+      explanation:
+        automations.length > 0
+          ? `found ${automations.length} automation item(s) for ${object}`
+          : `no automation found for ${object}`,
+      status: 'implemented'
     };
   }
 }

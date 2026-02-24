@@ -143,6 +143,33 @@ export class GraphService implements OnModuleDestroy {
     return paths.sort((a, b) => a.principal.localeCompare(b.principal));
   }
 
+  findAutomationsForObject(
+    objectName: string
+  ): Array<{ type: string; name: string; rel: string; target: string }> {
+    const objectNode = this.findNode(NODE_TYPES.OBJECT, objectName);
+    if (!objectNode) {
+      return [];
+    }
+
+    const rows = this.db
+      .prepare(
+        `SELECT n.type as type, n.name as name, e.rel as rel, t.name as target
+         FROM edges e
+         JOIN nodes n ON e.src_id = n.id
+         JOIN nodes t ON e.dst_id = t.id
+         WHERE e.rel = ? AND e.dst_id = ? AND n.type = ?
+         ORDER BY n.name ASC`
+      )
+      .all(REL_TYPES.TRIGGERS_ON, objectNode.id, NODE_TYPES.APEX_TRIGGER) as Array<{
+      type: string;
+      name: string;
+      rel: string;
+      target: string;
+    }>;
+
+    return rows;
+  }
+
   private findNode(type: string, name: string): { id: string; name: string } | undefined {
     return this.db
       .prepare('SELECT id, name FROM nodes WHERE type = ? AND name = ? LIMIT 1')
