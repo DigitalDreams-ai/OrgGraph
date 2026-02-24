@@ -1,13 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import fs from 'node:fs';
+import { AppConfigService } from '../config/app-config.service';
 import { GraphService } from '../graph/graph.service';
 import { resolveUserProfileMapPath } from '../common/path';
 
 @Injectable()
 export class QueriesService {
-  private readonly userProfileMapPath = resolveUserProfileMapPath(process.env.USER_PROFILE_MAP_PATH);
+  private readonly userProfileMapPath: string;
 
-  constructor(private readonly graphService: GraphService) {}
+  constructor(
+    private readonly configService: AppConfigService,
+    private readonly graphService: GraphService
+  ) {
+    this.userProfileMapPath = resolveUserProfileMapPath(this.configService.userProfileMapPath());
+  }
 
   perms(user: string, object: string, field?: string): {
     user: string;

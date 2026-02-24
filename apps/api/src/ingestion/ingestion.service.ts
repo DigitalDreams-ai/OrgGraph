@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { AppConfigService } from '../config/app-config.service';
 import { GraphService } from '../graph/graph.service';
 import { resolveFixturesPath } from '../common/path';
-import { PermissionsParserService } from './permissions-parser.service';
+import { PermissionsParseError, PermissionsParserService } from './permissions-parser.service';
 
 @Injectable()
 export class IngestionService {
   constructor(
+    private readonly configService: AppConfigService,
     private readonly graphService: GraphService,
     private readonly parserService: PermissionsParserService
   ) {}
@@ -17,9 +19,19 @@ export class IngestionService {
     sourcePath: string;
     databasePath: string;
   } {
-    const sourcePath = resolveFixturesPath(fixturesPathFromRequest ?? process.env.PERMISSIONS_FIXTURES_PATH);
+    const sourcePath = resolveFixturesPath(
+      fixturesPathFromRequest ?? this.configService.permissionsFixturesPath()
+    );
     const start = Date.now();
-    const payload = this.parserService.parseFromFixtures(sourcePath);
+    let payload;
+    try {
+      payload = this.parserService.parseFromFixtures(sourcePath);
+    } catch (error) {
+      if (error instanceof PermissionsParseError) {
+        throw new BadRequestException(error.message);
+      }
+      throw error;
+    }
     const counts = this.graphService.fullRebuild(payload);
 
     return {

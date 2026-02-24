@@ -4,15 +4,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
 import { resolveDbPath } from '../common/path';
+import { AppConfigService } from '../config/app-config.service';
 import type { GraphPayload, PermPath } from './graph.types';
 
 @Injectable()
 export class GraphService implements OnModuleDestroy {
-  private readonly dbPath = resolveDbPath(process.env.DATABASE_URL);
+  private readonly dbPath: string;
 
   private readonly db: Database.Database;
 
-  constructor() {
+  constructor(private readonly configService: AppConfigService) {
+    this.dbPath = resolveDbPath(this.configService.databaseUrl());
     fs.mkdirSync(path.dirname(this.dbPath), { recursive: true });
     this.db = new Database(this.dbPath);
     this.db.pragma('journal_mode = WAL');

@@ -11,6 +11,16 @@ interface PermissionEntity {
   fieldPermissions?: unknown;
 }
 
+export class PermissionsParseError extends Error {
+  constructor(
+    readonly filePath: string,
+    readonly reason: string
+  ) {
+    super(`Failed to parse permissions XML at ${filePath}: ${reason}`);
+    this.name = 'PermissionsParseError';
+  }
+}
+
 @Injectable()
 export class PermissionsParserService {
   private readonly parser = new XMLParser({
@@ -37,9 +47,20 @@ export class PermissionsParserService {
       edgesById
     });
 
+    const nodes = [...nodesById.values()].sort(
+      (a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name)
+    );
+    const edges = [...edgesById.values()].sort(
+      (a, b) =>
+        a.srcId.localeCompare(b.srcId) ||
+        a.dstId.localeCompare(b.dstId) ||
+        a.rel.localeCompare(b.rel) ||
+        a.id.localeCompare(b.id)
+    );
+
     return {
-      nodes: [...nodesById.values()],
-      edges: [...edgesById.values()]
+      nodes,
+      edges
     };
   }
 
@@ -63,7 +84,7 @@ export class PermissionsParserService {
       const filePath = path.join(dirPath, file);
       const entityName = this.entityNameFromFilename(file);
       const xml = fs.readFileSync(filePath, 'utf8');
-      const parsed = this.parser.parse(xml) as { PermissionSet?: PermissionEntity };
+      const parsed = this.parsePermissionFile(xml, filePath);
       const body = parsed.PermissionSet ?? {};
 
       const principal = this.upsertNode(nodesById, {
@@ -151,6 +172,25 @@ export class PermissionsParserService {
     }
 
     return value ? [value as T] : [];
+  }
+
+  private parsePermissionFile(xml: string, filePath: string): { PermissionSet?: PermissionEntity } {
+    try {
+      const parsed = this.parser.parse(xml) as { PermissionSet?: PermissionEntity };
+      if (!parsed || typeof parsed !== 'object') {
+        throw new PermissionsParseError(filePath, 'parsed XML is not an object');
+      }
+      if (!parsed.PermissionSet) {
+        throw new PermissionsParseError(filePath, 'missing PermissionSet root element');
+      }
+      return parsed;
+    } catch (error) {
+      if (error instanceof PermissionsParseError) {
+        throw error;
+      }
+      const reason = error instanceof Error ? error.message : String(error);
+      throw new PermissionsParseError(filePath, reason);
+    }
   }
 
   private upsertNode(
