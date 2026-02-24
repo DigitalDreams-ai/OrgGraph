@@ -29,3 +29,9 @@ export function resolveFixturesPath(fixturesPath?: string): string {
   const raw = fixturesPath?.trim() || 'fixtures/permissions';
   return path.resolve(workspaceRoot, raw);
 }
+
+export function resolveUserProfileMapPath(mapPath?: string): string {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const raw = mapPath?.trim() || 'fixtures/permissions/user-profile-map.json';
+  return path.resolve(workspaceRoot, raw);
+}

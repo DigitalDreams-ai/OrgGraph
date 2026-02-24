@@ -23,7 +23,7 @@ A Salesforce operational reasoning engine — ontology-first knowledge graph for
 - **Postgres** — Runs in container
 - **Chroma** — Runs in-process with NestJS app
 
-All OrgGraph services run under the Docker project **OrgGraphServices** for isolation and organization.
+All OrgGraph services run under the Docker project **orggraphservices** for isolation and organization.
 
 ### SSH Setup
 
@@ -60,16 +60,18 @@ npm exec --yes pnpm@9.12.3 -- typecheck
 npm exec --yes pnpm@9.12.3 -- --filter api build
 ```
 
+Phase 1 user-to-profile resolution is read from `fixtures/permissions/user-profile-map.json`.
+
 ### Running the Stack
 
-All OrgGraph services run via Docker Compose under the project **OrgGraphServices**:
+All OrgGraph services run via Docker Compose under the project **orggraphservices**:
 
 ```bash
 cd /volume1/data/projects/OrgGraph
-docker compose -f docker/docker-compose.yml -p OrgGraphServices up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
-See `docker/docker-compose.yml` for Postgres + OrgGraph app configuration. The compose file uses `name: OrgGraphServices` to keep containers grouped in Container Manager.
+See `docker/docker-compose.yml` for API configuration. The compose file uses `name: orggraphservices` to keep containers grouped in Container Manager.
 
 ---
 
