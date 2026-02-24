@@ -56,6 +56,29 @@ async function run(): Promise<void> {
     });
     assert.equal(malformedRefreshRes.status, 400, 'refresh should reject malformed fixturesPath');
 
+    const brokenRoot = fs.mkdtempSync(path.join(workspaceRoot, 'fixtures', 'tmp-broken-'));
+    const brokenProfilesPath = path.join(brokenRoot, 'profiles');
+    fs.mkdirSync(brokenProfilesPath, { recursive: true });
+    fs.writeFileSync(
+      path.join(brokenProfilesPath, 'Broken.profile-meta.xml'),
+      `<?xml version="1.0" encoding="UTF-8"?><NotPermissionSet><objectPermissions /></NotPermissionSet>`,
+      'utf8'
+    );
+
+    const malformedXmlRes = await fetch(`${base}/refresh`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ fixturesPath: brokenRoot })
+    });
+    assert.equal(malformedXmlRes.status, 400, 'refresh should reject malformed XML with 400');
+    const malformedXmlBody = (await malformedXmlRes.json()) as { message?: string };
+    assert.match(
+      String(malformedXmlBody.message ?? ''),
+      /Broken\.profile-meta\.xml/,
+      'malformed XML error should include failing filename'
+    );
+    fs.rmSync(brokenRoot, { recursive: true, force: true });
+
     const permsPositiveRes = await fetch(`${base}/perms?user=jane@example.com&object=Case`);
     assert.equal(permsPositiveRes.status, 200, 'perms positive should return 200');
     const permsPositive = (await permsPositiveRes.json()) as {

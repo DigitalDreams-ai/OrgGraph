@@ -7,8 +7,9 @@
     "start": "node dist/main.js",
     "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "lint": "echo 'lint not configured yet'",
-    "test": "pnpm test:validation && pnpm test:integration",
+    "test": "pnpm test:validation && pnpm test:parser && pnpm test:integration",
     "test:integration": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/integration.ts",
+    "test:parser": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/parser-errors.ts",
     "test:validation": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/validation.ts",
     "typecheck": "pnpm --filter @orggraph/ontology build && tsc -p tsconfig.json --noEmit"
   },

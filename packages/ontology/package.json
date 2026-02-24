@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "echo 'lint not configured yet'",
-    "test": "echo 'tests not configured yet'",
+    "test": "pnpm build && node test/type-drift.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
