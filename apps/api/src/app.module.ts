@@ -1,4 +1,5 @@
 import { Controller, Get, Module } from '@nestjs/common';
+import { AnalysisModule } from './analysis/analysis.module';
 import { ConfigModule } from './config/config.module';
 import { GraphModule } from './graph/graph.module';
 import { IngestionModule } from './ingestion/ingestion.module';
@@ -13,7 +14,7 @@ class HealthController {
 }
 
 @Module({
-  imports: [ConfigModule, GraphModule, IngestionModule, QueriesModule],
+  imports: [ConfigModule, GraphModule, IngestionModule, QueriesModule, AnalysisModule],
   controllers: [HealthController]
 })
 export class AppModule {}
