@@ -168,15 +168,16 @@ curl -X POST http://localhost:3100/org/retrieve \
   -d '{"runAuth":true,"runRetrieve":true,"autoRefresh":true}'
 ```
 
-See [ORG_INTEGRATION.md](./ORG_INTEGRATION.md) and [SANDBOX_CONNECT_CHECKLIST.md](./SANDBOX_CONNECT_CHECKLIST.md).
+See [ORG_INTEGRATION.md](./docs/runbooks/ORG_INTEGRATION.md) and [SANDBOX_CONNECT_CHECKLIST.md](./docs/runbooks/SANDBOX_CONNECT_CHECKLIST.md).
 
 ## Operator Docs
 
+- Documentation index: [docs/README.md](./docs/README.md)
 - Usage guide: [docs/USAGE_GUIDE.md](./docs/USAGE_GUIDE.md)
 - Quick commands: [docs/CHEATSHEET.md](./docs/CHEATSHEET.md)
-- Production promotion gate: [PRODUCTION_PROMOTION.md](./PRODUCTION_PROMOTION.md)
-- Release checklist: [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)
-- Postgres migration: [POSTGRES_MIGRATION.md](./POSTGRES_MIGRATION.md)
+- Production promotion gate: [docs/runbooks/PRODUCTION_PROMOTION.md](./docs/runbooks/PRODUCTION_PROMOTION.md)
+- Release checklist: [docs/releases/RELEASE_CHECKLIST.md](./docs/releases/RELEASE_CHECKLIST.md)
+- Postgres migration: [docs/runbooks/POSTGRES_MIGRATION.md](./docs/runbooks/POSTGRES_MIGRATION.md)
 
 ## Operational Environment Variables
 

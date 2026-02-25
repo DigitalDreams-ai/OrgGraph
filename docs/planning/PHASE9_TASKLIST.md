@@ -101,6 +101,6 @@ Goal: migrate the graph backend from SQLite to Postgres with zero functional reg
 
 - Parity covered by automated `backend-parity` integration test (`sqlite` vs `postgres` via `pg-mem`).
 - Docker compose now defaults API service to Postgres backend.
-- Migration and rollback procedures documented in `POSTGRES_MIGRATION.md`.
+- Migration and rollback procedures documented in `docs/runbooks/POSTGRES_MIGRATION.md`.
 - Metadata expansion added for `CustomObject`, `PermissionSetGroup`, `CustomPermission`, `ConnectedApp`, plus gated staged UI parsers (`INGEST_UI_METADATA_ENABLED=true`) for `ApexPage`, `LightningComponentBundle`, `AuraDefinitionBundle`, `QuickAction`, and `Layout`.
 - Validation coverage extended with dedicated parser tests and ontology constraint checks for new node/relationship patterns.

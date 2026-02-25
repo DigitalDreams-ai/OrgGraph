@@ -30,4 +30,3 @@ Operational checklist for routine OrgGraph upgrades and safe promotion.
 - [ ] Capture new snapshot: `npm run phase7:snapshot`
 - [ ] Optional retention prune: `npm run phase8:retention-prune`
 - [ ] Record notes in `RELEASE.md`
-
