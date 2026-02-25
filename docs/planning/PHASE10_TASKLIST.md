@@ -2,6 +2,12 @@
 
 Goal: add production-safe LLM capabilities for explanation and synthesis while preserving deterministic graph truth, citation fidelity, and provider portability.
 
+## Progress Update (2026-02-25)
+- Anthropic and OpenAI provider paths are wired and exercised in runtime.
+- Anthropic `llm_assist` now succeeds (`llm.used=true`) with model `claude-haiku-4-5-20251001`.
+- `/ask` citation handling was improved for index-style citation references.
+- Docker/runtime config was stabilized for fast provider/model switching without full stack rebuild.
+
 ## Entry Criteria
 - [ ] Phase 9 Postgres migration complete and stable
 - [ ] `/ask` deterministic baseline quality and latency documented
@@ -40,7 +46,7 @@ Goal: add production-safe LLM capabilities for explanation and synthesis while p
 
 ## 3. Prompting & Response Policy
 
-- [ ] Create strict system prompt: graph truth first, no uncited claims
+- [x] Create strict system prompt: graph truth first, no uncited claims
 - [x] Add citation-grounded synthesis template using evidence snippets
 - [ ] Add refusal behavior for low-confidence/insufficient evidence cases
 - [x] Add deterministic fallback when provider call fails or times out
@@ -54,7 +60,7 @@ Goal: add production-safe LLM capabilities for explanation and synthesis while p
 
 ## 5. Testing & Evaluation
 
-- [ ] Add provider contract tests with mocked SDK responses
+- [x] Add provider contract tests with mocked SDK responses
 - [ ] Add integration tests for both providers (sanitized fixtures)
 - [ ] Add regression set comparing deterministic vs llm-assisted answers
 - [ ] Add citation integrity tests (every nontrivial claim must map to citation)
@@ -76,7 +82,7 @@ Goal: add production-safe LLM capabilities for explanation and synthesis while p
 ## Provider Configuration Checklist
 
 - [x] `.env.example` includes OpenAI + Anthropic settings
-- [ ] Runtime docs explain provider selection and model pinning
+- [x] Runtime docs explain provider selection and model pinning
 - [ ] Fallback behavior documented when one provider is degraded
 - [ ] Local smoke script validates both provider configs (without exposing keys)
 
