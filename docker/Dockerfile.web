@@ -13,6 +13,11 @@ COPY . .
 
 RUN pnpm --filter web build
 
+# Next standalone output does not include static assets by default.
+# Copy static assets into the standalone tree so CSS/JS are served at runtime.
+RUN mkdir -p apps/web/.next/standalone/apps/web/.next \
+  && cp -R apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+
 EXPOSE 3000
 
 ENV NODE_ENV=production
