@@ -114,19 +114,21 @@ Phase 6 adds sandbox-first org retrieval and refresh.
 1. Install Salesforce CLI (`sf`) on NAS host.
 2. Create secrets directory:
 `mkdir -p /volume1/data/projects/OrgGraph/.secrets`
-3. Create an External Client App in sandbox org and enable OAuth scopes:
+3. Ensure env file exists at repo root:
+`cp .env.sample .env` (or `cp .env.example .env`)
+4. Create an External Client App in sandbox org and enable OAuth scopes:
 - `refresh_token`
 - `api`
 - `web`
-4. Set OAuth values in `.env`:
+5. Set OAuth values in `.env` (scripts auto-load this file):
 - `SF_AUTH_MODE=oauth_refresh_token`
 - `SF_LOGIN_DOMAIN=https://test.salesforce.com`
 - `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REDIRECT_URI`
-5. Generate authorization URL and authorize once:
+6. Generate authorization URL and authorize once:
 `npm run sf:oauth:url`
-6. Paste returned OAuth `code` into `.secrets/sf-auth-code.txt`, then exchange:
+7. Paste returned OAuth `code` into `.secrets/sf-auth-code.txt`, then exchange:
 `npm run sf:oauth:exchange`
-7. Review/adjust retrieve manifest:
+8. Review/adjust retrieve manifest:
 `manifest/package.xml`
 
 ### Commands

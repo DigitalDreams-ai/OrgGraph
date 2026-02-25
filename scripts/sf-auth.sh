@@ -2,6 +2,7 @@
 set -eu
 
 ROOT_DIR="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
+. "$ROOT_DIR/scripts/load-dotenv.sh"
 
 SF_AUTH_MODE="${SF_AUTH_MODE:-oauth_refresh_token}"
 SF_ALIAS="${SF_ALIAS:-orggraph-sandbox}"
@@ -42,6 +43,7 @@ fi
 
 if [ "$SF_AUTH_MODE" = "oauth_refresh_token" ]; then
   SF_LOGIN_DOMAIN="${SF_LOGIN_DOMAIN:-https://test.salesforce.com}"
+  SF_LOGIN_DOMAIN="${SF_LOGIN_DOMAIN%/}"
   SF_CLIENT_ID="${SF_CLIENT_ID:-}"
   SF_CLIENT_SECRET="${SF_CLIENT_SECRET:-}"
   SF_REDIRECT_URI="${SF_REDIRECT_URI:-http://localhost/callback}"

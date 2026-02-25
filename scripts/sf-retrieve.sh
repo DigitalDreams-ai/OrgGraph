@@ -2,6 +2,7 @@
 set -eu
 
 ROOT_DIR="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
+. "$ROOT_DIR/scripts/load-dotenv.sh"
 SF_ALIAS="${SF_ALIAS:-orggraph-sandbox}"
 SF_PROJECT_PATH="${SF_PROJECT_PATH:-$ROOT_DIR/data/sf-project}"
 SF_MANIFEST_PATH="${SF_MANIFEST_PATH:-$ROOT_DIR/manifest/package.xml}"

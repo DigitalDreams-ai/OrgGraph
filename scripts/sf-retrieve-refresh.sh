@@ -2,6 +2,7 @@
 set -eu
 
 ROOT_DIR="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
+. "$ROOT_DIR/scripts/load-dotenv.sh"
 API_BASE="${API_BASE:-http://127.0.0.1:3100}"
 SF_PARSE_PATH="${SF_PARSE_PATH:-$ROOT_DIR/data/sf-project/force-app/main/default}"
 
