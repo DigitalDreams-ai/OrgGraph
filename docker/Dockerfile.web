@@ -21,5 +21,6 @@ RUN mkdir -p apps/web/.next/standalone/apps/web/.next \
 EXPOSE 3000
 
 ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
 
 CMD ["node", "apps/web/.next/standalone/apps/web/server.js"]

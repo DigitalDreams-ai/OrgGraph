@@ -8,6 +8,7 @@ export class AppConfigService {
     this.validateOptionalString('USER_PROFILE_MAP_PATH');
     this.validateOptionalString('EVIDENCE_INDEX_PATH');
     this.validateOptionalString('REFRESH_STATE_PATH');
+    this.validateOptionalString('REFRESH_AUDIT_PATH');
     this.validateOptionalString('SF_INTEGRATION_ENABLED');
     this.validateOptionalString('SF_AUTH_MODE');
     this.validateOptionalString('SF_AUTH_URL_PATH');
@@ -63,6 +64,10 @@ export class AppConfigService {
 
   refreshStatePath(): string | undefined {
     return process.env.REFRESH_STATE_PATH;
+  }
+
+  refreshAuditPath(): string | undefined {
+    return process.env.REFRESH_AUDIT_PATH;
   }
 
   sfIntegrationEnabled(): boolean {

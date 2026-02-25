@@ -10,10 +10,11 @@ services:
     environment:
       PORT: "3000"
       DATABASE_URL: file:/app/data/orggraph.db
-      PERMISSIONS_FIXTURES_PATH: /app/fixtures/permissions
-      USER_PROFILE_MAP_PATH: /app/fixtures/permissions/user-profile-map.json
+      PERMISSIONS_FIXTURES_PATH: /app/data/sf-project/force-app/main/default
+      USER_PROFILE_MAP_PATH: /app/data/sf-user-principals.json
       EVIDENCE_INDEX_PATH: /app/data/evidence/index.json
       REFRESH_STATE_PATH: /app/data/refresh/state.json
+      REFRESH_AUDIT_PATH: /app/data/refresh/audit.jsonl
       SF_INTEGRATION_ENABLED: "false"
       SF_AUTH_MODE: sfdx_url
       SF_AUTH_URL_PATH: /app/.secrets/sandbox.sfdx-url.txt
@@ -54,6 +55,7 @@ services:
     restart: unless-stopped
     environment:
       PORT: "3000"
+      HOSTNAME: "0.0.0.0"
       NEXT_PUBLIC_API_BASE: http://api:3000
     depends_on:
       api:

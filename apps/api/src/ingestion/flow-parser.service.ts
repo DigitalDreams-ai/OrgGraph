@@ -5,6 +5,7 @@ import path from 'node:path';
 import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
 import { stableId } from '../common/ids';
 import type { GraphEdge, GraphNode, GraphPayload } from '../graph/graph.types';
+import type { ParserStats } from './parser-stats';
 
 export class FlowParseError extends Error {
   constructor(
@@ -18,6 +19,21 @@ export class FlowParseError extends Error {
 
 @Injectable()
 export class FlowParserService {
+  private static readonly IGNORED_DOTTED_PREFIXES = new Set([
+    'apex',
+    'flowruntime',
+    'process',
+    'schema'
+  ]);
+
+  private lastStats: ParserStats = {
+    parser: 'flow',
+    filesDiscovered: 0,
+    filesParsed: 0,
+    filesSkipped: 0,
+    warnings: []
+  };
+
   private readonly parser = new XMLParser({
     ignoreAttributes: false,
     parseTagValue: true,
@@ -28,17 +44,26 @@ export class FlowParserService {
     const flowsDir = path.join(rootPath, 'flows');
     const nodesById = new Map<string, GraphNode>();
     const edgesById = new Map<string, GraphEdge>();
+    this.lastStats = {
+      parser: 'flow',
+      filesDiscovered: 0,
+      filesParsed: 0,
+      filesSkipped: 0,
+      warnings: []
+    };
 
     if (!fs.existsSync(flowsDir)) {
       return { nodes: [], edges: [] };
     }
 
     const files = fs.readdirSync(flowsDir).filter((name) => name.endsWith('.xml'));
+    this.lastStats.filesDiscovered = files.length;
 
     for (const file of files) {
       const filePath = path.join(flowsDir, file);
       const xml = fs.readFileSync(filePath, 'utf8');
       const parsed = this.parseFlowFile(xml, filePath);
+      this.lastStats.filesParsed += 1;
       const flowName = this.flowNameFromFilename(file);
 
       const flowNode = this.upsertNode(nodesById, {
@@ -57,7 +82,7 @@ export class FlowParserService {
           srcId: flowNode.id,
           dstId: objectNode.id,
           rel: REL_TYPES.TRIGGERS_ON,
-          meta: JSON.stringify({ source: file })
+          meta: JSON.stringify({ source: file, parser: 'flow', confidence: 'high' })
         });
       }
 
@@ -71,7 +96,7 @@ export class FlowParserService {
           srcId: flowNode.id,
           dstId: fieldNode.id,
           rel: REL_TYPES.REFERENCES,
-          meta: JSON.stringify({ source: file })
+          meta: JSON.stringify({ source: file, parser: 'flow', confidence: 'medium' })
         });
       }
 
@@ -85,7 +110,7 @@ export class FlowParserService {
           srcId: flowNode.id,
           dstId: fieldNode.id,
           rel: REL_TYPES.WRITES,
-          meta: JSON.stringify({ source: file })
+          meta: JSON.stringify({ source: file, parser: 'flow', confidence: 'high' })
         });
       }
     }
@@ -102,6 +127,10 @@ export class FlowParserService {
           a.id.localeCompare(b.id)
       )
     };
+  }
+
+  getLastStats(): ParserStats {
+    return this.lastStats;
   }
 
   private parseFlowFile(
@@ -143,8 +172,23 @@ export class FlowParserService {
   }
 
   private extractDottedFields(xml: string): Set<string> {
+    const output = new Set<string>();
     const matches = xml.match(/\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b/g) ?? [];
-    return new Set(matches);
+    for (const token of matches) {
+      const [lhs, rhs] = token.split('.');
+      if (FlowParserService.IGNORED_DOTTED_PREFIXES.has(lhs.toLowerCase())) {
+        this.lastStats.filesSkipped += 1;
+        continue;
+      }
+      if (lhs[0] !== lhs[0].toUpperCase() && !lhs.includes('__')) {
+        continue;
+      }
+      if (rhs.length < 2) {
+        continue;
+      }
+      output.add(token);
+    }
+    return output;
   }
 
   private extractWrittenFields(flow: Record<string, unknown>): Set<string> {

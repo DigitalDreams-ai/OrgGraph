@@ -12,20 +12,27 @@ async function run(): Promise<void> {
   const workspaceRoot = resolveWorkspaceRoot();
   const dbPath = path.join(workspaceRoot, 'data', 'orggraph.integration.db');
   const evidencePath = path.join(workspaceRoot, 'data', 'evidence.integration.json');
+  const userMapPath = path.join(workspaceRoot, 'data', 'user-profile-map.integration.json');
 
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   if (fs.existsSync(dbPath)) {
     fs.rmSync(dbPath, { force: true });
   }
+  fs.writeFileSync(
+    userMapPath,
+    JSON.stringify(
+      {
+        'jane@example.com': ['Support', 'Support']
+      },
+      null,
+      2
+    ) + '\n',
+    'utf8'
+  );
 
   process.env.DATABASE_URL = `file:${dbPath}`;
   process.env.PERMISSIONS_FIXTURES_PATH = path.join(workspaceRoot, 'fixtures', 'permissions');
-  process.env.USER_PROFILE_MAP_PATH = path.join(
-    workspaceRoot,
-    'fixtures',
-    'permissions',
-    'user-profile-map.json'
-  );
+  process.env.USER_PROFILE_MAP_PATH = userMapPath;
   process.env.EVIDENCE_INDEX_PATH = evidencePath;
   process.env.SF_INTEGRATION_ENABLED = 'false';
 
@@ -71,6 +78,17 @@ async function run(): Promise<void> {
     assert.equal(readyBody.status, 'ready');
     assert.equal(readyBody.checks.db.ok, true);
     assert.equal(readyBody.checks.fixtures.ok, true);
+
+    const ingestLatestRes = await fetch(`${base}/ingest/latest`);
+    assert.equal(ingestLatestRes.status, 200, 'ingest latest should return 200');
+    const ingestLatestBody = (await ingestLatestRes.json()) as {
+      latest?: { parserStats?: Array<{ parser: string }> };
+      lowConfidenceSources: unknown[];
+      auditPath: string;
+    };
+    assert.ok(Array.isArray(ingestLatestBody.lowConfidenceSources));
+    assert.equal(typeof ingestLatestBody.auditPath, 'string');
+    assert.ok((ingestLatestBody.latest?.parserStats?.length ?? 0) >= 1);
 
     const refreshIncrementalRes = await fetch(`${base}/refresh`, {
       method: 'POST',
@@ -162,15 +180,27 @@ async function run(): Promise<void> {
       granted: boolean;
       objectGranted: boolean;
       paths: unknown[];
+      principalsChecked: string[];
+      mappingStatus: string;
+      warnings: string[];
     };
     assert.equal(permsPositive.granted, true, 'jane should have object grant');
     assert.equal(permsPositive.objectGranted, true, 'objectGranted should be true');
     assert.ok(permsPositive.paths.length > 0, 'paths should include a deterministic path');
+    assert.deepEqual(permsPositive.principalsChecked, ['Support']);
+    assert.equal(permsPositive.mappingStatus, 'resolved');
+    assert.equal(permsPositive.warnings.length, 0);
 
     const permsUnknownUserRes = await fetch(`${base}/perms?user=missing@example.com&object=Case`);
     assert.equal(permsUnknownUserRes.status, 200, 'unknown user should still return 200');
-    const permsUnknownUser = (await permsUnknownUserRes.json()) as { granted: boolean };
+    const permsUnknownUser = (await permsUnknownUserRes.json()) as {
+      granted: boolean;
+      mappingStatus: string;
+      warnings: string[];
+    };
     assert.equal(permsUnknownUser.granted, false, 'unknown user should not have grant');
+    assert.equal(permsUnknownUser.mappingStatus, 'unmapped_user');
+    assert.ok(permsUnknownUser.warnings.length > 0);
 
     const fieldPositiveRes = await fetch(
       `${base}/perms?user=jane@example.com&object=Case&field=Case.Status`
@@ -213,12 +243,15 @@ async function run(): Promise<void> {
     assert.equal(automationRes.status, 200, 'automation endpoint should return 200');
     const automationBody = (await automationRes.json()) as {
       status: string;
-      automations: Array<{ type: string; name: string; rel: string }>;
+      automations: Array<{ type: string; name: string; rel: string; confidence: string; score: number }>;
+      strictMode: boolean;
     };
     assert.equal(automationBody.status, 'implemented', 'automation endpoint should be implemented');
     assert.ok(automationBody.automations.length > 0, 'automation should return at least one item');
     assert.equal(automationBody.automations[0].name, 'CaseBeforeUpdate');
     assert.equal(automationBody.automations[0].rel, 'TRIGGERS_ON');
+    assert.equal(typeof automationBody.automations[0].score, 'number');
+    assert.equal(automationBody.strictMode, false);
 
     const automationOppRes = await fetch(`${base}/automation?object=Opportunity`);
     assert.equal(automationOppRes.status, 200, 'automation opportunity endpoint should return 200');
@@ -244,9 +277,10 @@ async function run(): Promise<void> {
     assert.equal(impactPositiveRes.status, 200, 'impact positive should return 200');
     const impactPositive = (await impactPositiveRes.json()) as {
       status: string;
-      paths: Array<{ from: string; rel: string; to: string }>;
+      paths: Array<{ from: string; rel: string; to: string; confidence: string; score: number }>;
       totalPaths: number;
       truncated: boolean;
+      strictMode: boolean;
     };
     assert.equal(impactPositive.status, 'implemented', 'impact endpoint should be implemented');
     assert.ok(
@@ -255,6 +289,14 @@ async function run(): Promise<void> {
     );
     assert.equal(impactPositive.totalPaths >= impactPositive.paths.length, true);
     assert.equal(impactPositive.truncated, false);
+    assert.equal(impactPositive.strictMode, false);
+    assert.equal(typeof impactPositive.paths[0].score, 'number');
+
+    const impactStrictRes = await fetch(`${base}/impact?field=Opportunity.StageName&strict=true&debug=true`);
+    assert.equal(impactStrictRes.status, 200, 'impact strict/debug should return 200');
+    const impactStrict = (await impactStrictRes.json()) as { strictMode: boolean; debug?: { raw: unknown[] } };
+    assert.equal(impactStrict.strictMode, true);
+    assert.ok(Array.isArray(impactStrict.debug?.raw));
 
     const impactNegativeRes = await fetch(`${base}/impact?field=Lead.Unused__c`);
     assert.equal(impactNegativeRes.status, 200, 'impact negative should return 200');
@@ -339,6 +381,9 @@ async function run(): Promise<void> {
     await app.close();
     if (fs.existsSync(dbPath)) {
       fs.rmSync(dbPath, { force: true });
+    }
+    if (fs.existsSync(userMapPath)) {
+      fs.rmSync(userMapPath, { force: true });
     }
     if (fs.existsSync(evidencePath)) {
       fs.rmSync(evidencePath, { force: true });

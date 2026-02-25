@@ -32,7 +32,7 @@ export function resolveFixturesPath(fixturesPath?: string): string {
 
 export function resolveUserProfileMapPath(mapPath?: string): string {
   const workspaceRoot = findWorkspaceRoot(process.cwd());
-  const raw = mapPath?.trim() || 'fixtures/permissions/user-profile-map.json';
+  const raw = mapPath?.trim() || 'data/sf-user-principals.json';
   return path.resolve(workspaceRoot, raw);
 }
 
@@ -45,6 +45,12 @@ export function resolveEvidenceIndexPath(indexPath?: string): string {
 export function resolveRefreshStatePath(statePath?: string): string {
   const workspaceRoot = findWorkspaceRoot(process.cwd());
   const raw = statePath?.trim() || 'data/refresh/state.json';
+  return path.resolve(workspaceRoot, raw);
+}
+
+export function resolveRefreshAuditPath(auditPath?: string): string {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const raw = auditPath?.trim() || 'data/refresh/audit.jsonl';
   return path.resolve(workspaceRoot, raw);
 }
 

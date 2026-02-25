@@ -44,6 +44,7 @@
 
 ## 7) Verify OrgGraph Endpoints
 - [x] `GET /ready` returns `status=ready`.
+- [ ] Run `npm run sf:export-user-map` (writes `USER_PROFILE_MAP_PATH`) before `/perms` validation.
 - [ ] `GET /perms` returns expected path for known test user/object.
 - [x] `GET /automation` returns expected automations.
 - [x] `GET /impact` returns expected impact paths.

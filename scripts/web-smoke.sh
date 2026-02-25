@@ -3,6 +3,12 @@ set -eu
 
 BASE_URL="${WEB_SMOKE_BASE:-http://127.0.0.1:3101}"
 ARTIFACT_DIR="${WEB_SMOKE_ARTIFACT_DIR:-artifacts}"
+DEFAULT_FIXTURES_PATH="fixtures/permissions"
+if [ -d "data/sf-project/force-app/main/default" ]; then
+  DEFAULT_FIXTURES_PATH="data/sf-project/force-app/main/default"
+fi
+WEB_SMOKE_FIXTURES_PATH="${WEB_SMOKE_FIXTURES_PATH:-$DEFAULT_FIXTURES_PATH}"
+WEB_SMOKE_REFRESH_MODE="${WEB_SMOKE_REFRESH_MODE:-incremental}"
 mkdir -p "$ARTIFACT_DIR"
 
 health_code="$(curl -sS -o "$ARTIFACT_DIR/web-health.json" -w '%{http_code}' "$BASE_URL/api/health")"
@@ -42,7 +48,7 @@ run_query() {
   fi
 }
 
-run_query refresh '{"mode":"incremental"}'
+run_query refresh "{\"mode\":\"$WEB_SMOKE_REFRESH_MODE\",\"fixturesPath\":\"$WEB_SMOKE_FIXTURES_PATH\"}"
 run_query perms '{"user":"jane@example.com","object":"Case","field":"Case.Status"}'
 run_query automation '{"object":"Opportunity"}'
 run_query impact '{"field":"Opportunity.StageName"}'

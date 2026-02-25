@@ -151,6 +151,9 @@ npm run sf:retrieve-refresh
 
 # Verbose output for auth/retrieve/refresh pipeline
 SF_VERBOSE=true npm run sf:retrieve-refresh
+
+# Export org-derived user -> [profile, permission-set...] map for /perms
+npm run sf:export-user-map
 ```
 
 ### API Trigger
@@ -162,6 +165,12 @@ curl -X POST http://localhost:3100/org/retrieve \
 ```
 
 See [ORG_INTEGRATION.md](./ORG_INTEGRATION.md) and [SANDBOX_CONNECT_CHECKLIST.md](./SANDBOX_CONNECT_CHECKLIST.md).
+
+## Operator Docs
+
+- Usage guide: [ORGGRAPH_USAGE_GUIDE.md](./ORGGRAPH_USAGE_GUIDE.md)
+- Quick commands: [ORGGRAPH_CHEATSHEET.md](./ORGGRAPH_CHEATSHEET.md)
+- Production promotion gate: [PRODUCTION_PROMOTION.md](./PRODUCTION_PROMOTION.md)
 
 ## Operational Environment Variables
 

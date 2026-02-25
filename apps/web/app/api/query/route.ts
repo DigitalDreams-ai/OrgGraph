@@ -5,8 +5,10 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
 type QueryKind = 'refresh' | 'perms' | 'automation' | 'impact' | 'ask';
 
 interface QueryRequest {
-  kind: QueryKind;
+  kind?: QueryKind;
+  endpoint?: QueryKind;
   payload?: Record<string, unknown>;
+  params?: Record<string, unknown>;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -87,14 +89,15 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
 export async function POST(req: Request): Promise<NextResponse> {
   try {
     const json = (await req.json()) as Partial<QueryRequest>;
-    if (!json || typeof json.kind !== 'string') {
+    const kindRaw = json?.kind ?? json?.endpoint;
+    if (!json || typeof kindRaw !== 'string') {
       return NextResponse.json(
-        { error: { code: 'BAD_REQUEST', message: 'kind is required' } },
+        { error: { code: 'BAD_REQUEST', message: 'kind (or endpoint) is required' } },
         { status: 400 }
       );
     }
 
-    const kind = json.kind as QueryKind;
+    const kind = kindRaw as QueryKind;
     if (!['refresh', 'perms', 'automation', 'impact', 'ask'].includes(kind)) {
       return NextResponse.json(
         { error: { code: 'BAD_REQUEST', message: 'invalid query kind' } },
@@ -102,7 +105,8 @@ export async function POST(req: Request): Promise<NextResponse> {
       );
     }
 
-    const upstream = buildUpstream({ kind, payload: json.payload as Record<string, unknown> | undefined });
+    const payload = (json.payload ?? json.params) as Record<string, unknown> | undefined;
+    const upstream = buildUpstream({ kind, payload });
     const upstreamRes = await fetchWithRetry(upstream.url, { ...upstream.init, cache: 'no-store' });
 
     const contentType = upstreamRes.headers.get('content-type') ?? '';
@@ -114,9 +118,9 @@ export async function POST(req: Request): Promise<NextResponse> {
       );
     }
 
-    const payload = await upstreamRes.json();
+    const upstreamPayload = await upstreamRes.json();
     return NextResponse.json(
-      { ok: upstreamRes.ok, statusCode: upstreamRes.status, payload },
+      { ok: upstreamRes.ok, statusCode: upstreamRes.status, payload: upstreamPayload },
       { status: upstreamRes.status }
     );
   } catch (error) {
@@ -131,4 +135,3 @@ export async function POST(req: Request): Promise<NextResponse> {
     );
   }
 }
-

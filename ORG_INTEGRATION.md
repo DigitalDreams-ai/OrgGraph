@@ -54,6 +54,8 @@ JWT mode:
 `npm run sf:retrieve`
 3. Refresh graph/evidence:
 `npm run sf:retrieve-refresh`
+4. Export org user principal map for `/perms`:
+`npm run sf:export-user-map`
 
 Alternative single API trigger:
 `POST /org/retrieve` with `{ "runAuth": true, "runRetrieve": true, "autoRefresh": true }`
@@ -63,6 +65,7 @@ After retrieve + refresh:
 1. `GET /ready`
 2. `GET /metrics`
 3. `GET /perms?user=<known-user>&object=<known-object>`
+   - If response includes `mappingStatus=unmapped_user`, run `npm run sf:export-user-map` and retry.
 4. `GET /automation?object=<known-object>`
 5. `GET /impact?field=<known-object.field>`
 6. `POST /ask` with a known query

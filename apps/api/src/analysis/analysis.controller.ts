@@ -8,14 +8,18 @@ export class AnalysisController {
   @Get('/impact')
   impact(
     @Query('field') field?: string,
-    @Query('limit') limitRaw?: string
+    @Query('limit') limitRaw?: string,
+    @Query('strict') strictRaw?: string,
+    @Query('debug') debugRaw?: string
   ): {
     field: string;
     relationsChecked: string[];
-    paths: Array<{ from: string; rel: string; to: string }>;
+    paths: Array<{ from: string; rel: string; to: string; confidence: 'high' | 'medium' | 'low'; score: number }>;
     totalPaths: number;
     truncated: boolean;
     explanation: string;
+    strictMode: boolean;
+    debug?: { raw: unknown[] };
     status: 'implemented';
   } {
     if (!field) {
@@ -34,20 +38,25 @@ export class AnalysisController {
       }
     }
 
-    return this.analysisService.impact(field.trim(), limit);
+    const strict = strictRaw === 'true';
+    const debug = debugRaw === 'true';
+
+    return this.analysisService.impact(field.trim(), limit, strict, debug);
   }
 
   @Get('/automation')
   automation(
     @Query('object') object?: string,
-    @Query('limit') limitRaw?: string
+    @Query('limit') limitRaw?: string,
+    @Query('strict') strictRaw?: string
   ): {
     object: string;
     relationsChecked: string[];
-    automations: Array<{ type: string; name: string; rel: string }>;
+    automations: Array<{ type: string; name: string; rel: string; confidence: 'high' | 'medium' | 'low'; score: number }>;
     totalAutomations: number;
     truncated: boolean;
     explanation: string;
+    strictMode: boolean;
     status: 'scaffold' | 'implemented';
   } {
     if (!object) {
@@ -66,6 +75,7 @@ export class AnalysisController {
       }
     }
 
-    return this.analysisService.automation(object.trim(), limit);
+    const strict = strictRaw === 'true';
+    return this.analysisService.automation(object.trim(), limit, strict);
   }
 }

@@ -29,10 +29,17 @@ export class QueriesService {
     totalPaths: number;
     truncated: boolean;
     explanation: string;
+    mappingStatus: 'resolved' | 'unmapped_user' | 'map_missing';
+    warnings: string[];
   } {
-    const userProfileMap = this.readUserProfileMap();
-    const principal = userProfileMap[user.toLowerCase()];
-    const principalsChecked = principal ? [principal] : [];
+    const mapResult = this.readUserProfileMap();
+    const principalsChecked = mapResult.map[user.toLowerCase()] ?? [];
+    const mappingStatus = mapResult.exists
+      ? principalsChecked.length > 0
+        ? 'resolved'
+        : 'unmapped_user'
+      : 'map_missing';
+    const warnings = this.buildWarnings(mappingStatus, user);
     const objectPaths = this.graphService.findObjectPermPaths(principalsChecked, object);
     const objectGranted = objectPaths.length > 0;
 
@@ -47,7 +54,9 @@ export class QueriesService {
           objectGranted: false,
           totalPaths: 0,
           truncated: false,
-          explanation: 'no object grant path found'
+          explanation: 'no object grant path found',
+          mappingStatus,
+          warnings
         };
       }
 
@@ -62,7 +71,9 @@ export class QueriesService {
         objectGranted: true,
         totalPaths: objectPaths.length,
         truncated: objectPaths.length > sliced.length,
-        explanation: `${user} can edit ${object} via ${objectPaths[0].principal}`
+        explanation: `${user} can edit ${object} via ${objectPaths[0].principal}`,
+        mappingStatus,
+        warnings
       };
     }
 
@@ -80,7 +91,9 @@ export class QueriesService {
         fieldGranted: false,
         totalPaths: 0,
         truncated: false,
-        explanation: `${user} has no object-level edit path to ${object}`
+        explanation: `${user} has no object-level edit path to ${object}`,
+        mappingStatus,
+        warnings
       };
     }
 
@@ -96,7 +109,9 @@ export class QueriesService {
         fieldGranted: false,
         totalPaths: 0,
         truncated: false,
-        explanation: `${user} has object access to ${object} but no field-level edit path to ${field}`
+        explanation: `${user} has object access to ${object} but no field-level edit path to ${field}`,
+        mappingStatus,
+        warnings
       };
     }
 
@@ -113,29 +128,73 @@ export class QueriesService {
       fieldGranted: true,
       totalPaths: fieldPaths.length,
       truncated: fieldPaths.length > sliced.length,
-      explanation: `${user} can edit ${field} via ${fieldPaths[0].principal}`
+      explanation: `${user} can edit ${field} via ${fieldPaths[0].principal}`,
+      mappingStatus,
+      warnings
     };
   }
 
-  private readUserProfileMap(): Record<string, string> {
+  private readUserProfileMap(): { exists: boolean; map: Record<string, string[]> } {
     if (!fs.existsSync(this.userProfileMapPath)) {
-      return {};
+      return { exists: false, map: {} };
     }
 
     try {
       const raw = fs.readFileSync(this.userProfileMapPath, 'utf8');
       const parsed = JSON.parse(raw) as Record<string, unknown>;
-      const normalized: Record<string, string> = {};
+      const normalized: Record<string, string[]> = {};
 
-      for (const [email, profile] of Object.entries(parsed)) {
-        if (typeof profile !== 'string') {
+      for (const [email, principalValue] of Object.entries(parsed)) {
+        const principals = this.normalizePrincipals(principalValue);
+        if (principals.length === 0) {
           continue;
         }
-        normalized[email.toLowerCase()] = profile;
+        normalized[email.toLowerCase()] = principals;
       }
-      return normalized;
+      return { exists: true, map: normalized };
     } catch {
-      return {};
+      return { exists: true, map: {} };
     }
+  }
+
+  private normalizePrincipals(value: unknown): string[] {
+    if (typeof value === 'string') {
+      return value.trim().length > 0 ? [value.trim()] : [];
+    }
+
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    const output: string[] = [];
+    for (const item of value) {
+      if (typeof item !== 'string') {
+        continue;
+      }
+      const principal = item.trim();
+      if (principal.length === 0 || output.includes(principal)) {
+        continue;
+      }
+      output.push(principal);
+    }
+
+    return output;
+  }
+
+  private buildWarnings(
+    mappingStatus: 'resolved' | 'unmapped_user' | 'map_missing',
+    user: string
+  ): string[] {
+    if (mappingStatus === 'resolved') {
+      return [];
+    }
+
+    if (mappingStatus === 'map_missing') {
+      return [
+        `user principal map not found at ${this.userProfileMapPath}; /perms cannot resolve user profile/permission-set assignments`
+      ];
+    }
+
+    return [`no principals found for ${user} in user principal map`];
   }
 }
