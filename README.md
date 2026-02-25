@@ -105,6 +105,44 @@ curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -
 curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"mode":"incremental"}'
 ```
 
+## Salesforce Org Integration (Phase 6)
+
+Phase 6 adds sandbox-first org retrieval and refresh.
+
+### Prerequisites
+
+1. Install Salesforce CLI (`sf`) on NAS host.
+2. Create secrets directory:
+`mkdir -p /volume1/data/projects/OrgGraph/.secrets`
+3. Provide sandbox auth:
+- SFDX URL mode: store auth URL at `.secrets/sandbox.sfdx-url.txt`
+- JWT mode: provide connected app details + key file
+4. Review/adjust retrieve manifest:
+`manifest/package.xml`
+
+### Commands
+
+```bash
+# Auth only
+npm run sf:auth
+
+# Retrieve metadata only
+npm run sf:retrieve
+
+# Auth + retrieve + API refresh
+npm run sf:retrieve-refresh
+```
+
+### API Trigger
+
+```bash
+curl -X POST http://localhost:3100/org/retrieve \
+  -H 'content-type: application/json' \
+  -d '{"runAuth":true,"runRetrieve":true,"autoRefresh":true}'
+```
+
+See [ORG_INTEGRATION.md](./ORG_INTEGRATION.md) and [SANDBOX_CONNECT_CHECKLIST.md](./SANDBOX_CONNECT_CHECKLIST.md).
+
 ## Operational Environment Variables
 
 ```bash
