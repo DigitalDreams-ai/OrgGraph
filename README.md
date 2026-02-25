@@ -148,6 +148,9 @@ npm run sf:retrieve
 
 # Auth + retrieve + API refresh
 npm run sf:retrieve-refresh
+
+# Verbose output for auth/retrieve/refresh pipeline
+SF_VERBOSE=true npm run sf:retrieve-refresh
 ```
 
 ### API Trigger

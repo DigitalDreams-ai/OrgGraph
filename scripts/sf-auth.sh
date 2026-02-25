@@ -3,10 +3,15 @@ set -eu
 
 ROOT_DIR="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
 . "$ROOT_DIR/scripts/load-dotenv.sh"
+SF_VERBOSE="${SF_VERBOSE:-false}"
 
 SF_AUTH_MODE="${SF_AUTH_MODE:-oauth_refresh_token}"
 SF_ALIAS="${SF_ALIAS:-orggraph-sandbox}"
 SF_PROJECT_PATH="${SF_PROJECT_PATH:-$ROOT_DIR/data/sf-project}"
+
+if [ "$SF_VERBOSE" = "true" ]; then
+  set -x
+fi
 
 mkdir -p "$SF_PROJECT_PATH"
 mkdir -p "$SF_PROJECT_PATH/force-app"
