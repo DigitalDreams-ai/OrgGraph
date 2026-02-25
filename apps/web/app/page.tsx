@@ -6,10 +6,18 @@ type QueryKind = 'refresh' | 'perms' | 'automation' | 'impact' | 'ask';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export default function Page(): JSX.Element {
   const [kind, setKind] = useState<QueryKind>('ask');
   const [loading, setLoading] = useState(false);
   const [responseText, setResponseText] = useState('');
+  const [errorText, setErrorText] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [healthStatus, setHealthStatus] = useState('unknown');
+  const [readyStatus, setReadyStatus] = useState('unknown');
 
   const [refreshMode, setRefreshMode] = useState<'full' | 'incremental'>('incremental');
   const [user, setUser] = useState('jane@example.com');
@@ -33,51 +41,93 @@ export default function Page(): JSX.Element {
     return 'POST /ask';
   }, [kind]);
 
+  async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Promise<Response> {
+    let lastError: Error | undefined;
+    for (let i = 0; i < attempts; i += 1) {
+      try {
+        const res = await fetch(url, init);
+        if (res.status === 502 || res.status === 503 || res.status === 504) {
+          if (i < attempts - 1) {
+            await sleep(200 * (i + 1));
+            continue;
+          }
+        }
+        return res;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('unknown request error');
+        if (i < attempts - 1) {
+          await sleep(200 * (i + 1));
+          continue;
+        }
+      }
+    }
+    throw lastError ?? new Error('request failed after retries');
+  }
+
+  async function refreshStatuses(): Promise<void> {
+    try {
+      const health = await fetch('/api/health', { cache: 'no-store' });
+      setHealthStatus(health.ok ? 'ok' : `http_${health.status}`);
+    } catch {
+      setHealthStatus('unreachable');
+    }
+
+    try {
+      const ready = await fetch('/api/ready', { cache: 'no-store' });
+      setReadyStatus(ready.ok ? 'ready' : `http_${ready.status}`);
+    } catch {
+      setReadyStatus('unreachable');
+    }
+  }
+
   async function runQuery(): Promise<void> {
     setLoading(true);
     setResponseText('');
+    setErrorText('');
+    setCopied(false);
 
     try {
-      let response: Response;
-      if (kind === 'refresh') {
-        response = await fetch(`${API_BASE}/refresh`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ mode: refreshMode })
-        });
-      } else if (kind === 'perms') {
-        const params = new URLSearchParams({ user, object: objectName });
-        if (fieldName.trim().length > 0) {
-          params.set('field', fieldName);
-        }
-        response = await fetch(`${API_BASE}/perms?${params.toString()}`);
-      } else if (kind === 'automation') {
-        const params = new URLSearchParams({ object: objectName });
-        response = await fetch(`${API_BASE}/automation?${params.toString()}`);
-      } else if (kind === 'impact') {
-        const params = new URLSearchParams({ field: fieldName });
-        response = await fetch(`${API_BASE}/impact?${params.toString()}`);
-      } else {
-        response = await fetch(`${API_BASE}/ask`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ query: askQuery, maxCitations: 5 })
-        });
-      }
+      const payload =
+        kind === 'refresh'
+          ? { mode: refreshMode }
+          : kind === 'perms'
+            ? { user, object: objectName, field: fieldName }
+            : kind === 'automation'
+              ? { object: objectName }
+              : kind === 'impact'
+                ? { field: fieldName }
+                : { query: askQuery, maxCitations: 5 };
 
-      const payload = await response.json();
-      const wrapped = {
-        statusCode: response.status,
-        ok: response.ok,
-        payload
-      };
+      const response = await fetchWithRetry('/api/query', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ kind, payload })
+      });
+
+      const wrapped = await response.json();
       setResponseText(JSON.stringify(wrapped, null, 2));
+
+      if (!response.ok) {
+        setErrorText(
+          'Request failed. Check API readiness, query format, and container health. Use /api/ready and /metrics for diagnosis.'
+        );
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown request error';
       setResponseText(JSON.stringify({ ok: false, error: message }, null, 2));
+      setErrorText('Network request failed after retries. Check container health and retry in a few seconds.');
     } finally {
       setLoading(false);
     }
+  }
+
+  async function copyResponse(): Promise<void> {
+    if (!responseText) {
+      return;
+    }
+    await navigator.clipboard.writeText(responseText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
   }
 
   return (
@@ -92,15 +142,27 @@ export default function Page(): JSX.Element {
       </section>
 
       <section className="panel">
-        <div className="row">
-          <label htmlFor="kind">Query Type</label>
-          <select id="kind" value={kind} onChange={(e) => setKind(e.target.value as QueryKind)}>
-            <option value="ask">Ask</option>
-            <option value="refresh">Refresh</option>
-            <option value="perms">Permissions</option>
-            <option value="automation">Automation</option>
-            <option value="impact">Impact</option>
-          </select>
+        <h2>Environment Status</h2>
+        <p className="endpoint-hint">API Base: {API_BASE}</p>
+        <p className="endpoint-hint">Web Health: {healthStatus}</p>
+        <p className="endpoint-hint">Web Readiness (with API): {readyStatus}</p>
+        <button type="button" onClick={refreshStatuses}>
+          Refresh Status
+        </button>
+      </section>
+
+      <section className="panel">
+        <div className="tab-row">
+          {(['ask', 'refresh', 'perms', 'automation', 'impact'] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={value === kind ? 'tab active' : 'tab'}
+              onClick={() => setKind(value)}
+            >
+              {value}
+            </button>
+          ))}
         </div>
 
         <p className="endpoint-hint">Endpoint: {endpointHint}</p>
@@ -163,8 +225,17 @@ export default function Page(): JSX.Element {
       </section>
 
       <section className="panel response-panel">
-        <h2>Response</h2>
-        <pre>{responseText || '{\n  "hint": "Run a query to view JSON response"\n}'}</pre>
+        <div className="response-header">
+          <h2>Response</h2>
+          <button type="button" onClick={copyResponse} disabled={!responseText}>
+            {copied ? 'Copied' : 'Copy JSON'}
+          </button>
+        </div>
+        {errorText ? <p className="error-text">{errorText}</p> : null}
+        <details open>
+          <summary>JSON Output</summary>
+          <pre>{responseText || '{\n  "hint": "Run a query to view JSON response"\n}'}</pre>
+        </details>
       </section>
     </main>
   );

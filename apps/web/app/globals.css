@@ -77,6 +77,23 @@ body {
   margin-bottom: 0.8rem;
 }
 
+.tab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.7rem;
+}
+
+.tab {
+  background: #edf2f7;
+  color: #1f2937;
+}
+
+.tab.active {
+  background: linear-gradient(90deg, var(--accent-2), #d97706);
+  color: #fff;
+}
+
 label {
   font-weight: 600;
 }
@@ -118,6 +135,19 @@ button:disabled {
   margin: 0 0 0.8rem;
 }
 
+.response-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.error-text {
+  margin: 0.5rem 0;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
 pre {
   margin: 0;
   background: #0f172a;
@@ -129,6 +159,12 @@ pre {
   font-family: 'IBM Plex Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.86rem;
   line-height: 1.35;
+}
+
+summary {
+  cursor: pointer;
+  margin: 0.3rem 0 0.6rem;
+  font-weight: 600;
 }
 
 @keyframes reveal {
