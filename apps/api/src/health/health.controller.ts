@@ -1,6 +1,6 @@
 import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import fs from 'node:fs';
-import { resolveFixturesPath } from '../common/path';
+import { resolveFixturesPath, resolveRefreshStatePath } from '../common/path';
 import { AppConfigService } from '../config/app-config.service';
 import { EvidenceStoreService } from '../evidence/evidence-store.service';
 import { GraphService } from '../graph/graph.service';
@@ -29,7 +29,7 @@ export class HealthController {
   } {
     try {
       const dbCounts = this.graphService.getCounts();
-      const fixturesPath = resolveFixturesPath(this.configService.permissionsFixturesPath());
+      const fixturesPath = this.resolveReportedFixturesPath();
       const evidencePath = this.evidenceStore.getIndexPath();
 
       const checks = {
@@ -48,5 +48,24 @@ export class HealthController {
       });
     }
   }
-}
 
+  private resolveReportedFixturesPath(): string {
+    const configuredPath = resolveFixturesPath(this.configService.permissionsFixturesPath());
+    const statePath = resolveRefreshStatePath(this.configService.refreshStatePath());
+
+    if (!fs.existsSync(statePath)) {
+      return configuredPath;
+    }
+
+    try {
+      const raw = fs.readFileSync(statePath, 'utf8');
+      const parsed = JSON.parse(raw) as { sourcePath?: string };
+      if (typeof parsed.sourcePath === 'string' && parsed.sourcePath.trim().length > 0) {
+        return parsed.sourcePath;
+      }
+      return configuredPath;
+    } catch {
+      return configuredPath;
+    }
+  }
+}
