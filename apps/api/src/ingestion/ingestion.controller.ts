@@ -1,5 +1,6 @@
 import { BadRequestException, Body, Controller, Get, Post } from '@nestjs/common';
 import { IngestionService, type RefreshMode } from './ingestion.service';
+import type { OntologyConstraintReport } from './ontology-constraints.service';
 import type { ParserStats } from './parser-stats';
 
 interface RefreshBody {
@@ -24,6 +25,7 @@ export class IngestionController {
     databasePath: string;
     evidenceIndexPath: string;
     parserStats: ParserStats[];
+    ontology: OntologyConstraintReport;
   } {
     if (body.fixturesPath !== undefined && typeof body.fixturesPath !== 'string') {
       throw new BadRequestException('fixturesPath must be a string');
@@ -46,6 +48,8 @@ export class IngestionController {
     latest?: unknown;
     lowConfidenceSources: Array<{ source: string; count: number }>;
     auditPath: string;
+    ontologyReportPath: string;
+    ontology: OntologyConstraintReport;
   } {
     return this.ingestionService.getLatestIngestSummary();
   }

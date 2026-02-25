@@ -9,6 +9,7 @@ export class AppConfigService {
     this.validateOptionalString('EVIDENCE_INDEX_PATH');
     this.validateOptionalString('REFRESH_STATE_PATH');
     this.validateOptionalString('REFRESH_AUDIT_PATH');
+    this.validateOptionalString('ONTOLOGY_REPORT_PATH');
     this.validateOptionalString('SF_INTEGRATION_ENABLED');
     this.validateOptionalString('SF_AUTH_MODE');
     this.validateOptionalString('SF_AUTH_URL_PATH');
@@ -29,6 +30,8 @@ export class AppConfigService {
     this.validateOptionalString('SF_RETRY_DELAY_MS');
     this.validateOptionalString('SF_TIMEOUT_SECONDS');
     this.validateOptionalString('SF_AUTO_REFRESH_AFTER_RETRIEVE');
+    this.validateOptionalString('MIN_CONFIDENCE_DEFAULT');
+    this.validateOptionalString('ASK_CONSISTENCY_CHECK_ENABLED');
     this.validateOptionalString('PORT');
   }
 
@@ -68,6 +71,10 @@ export class AppConfigService {
 
   refreshAuditPath(): string | undefined {
     return process.env.REFRESH_AUDIT_PATH;
+  }
+
+  ontologyReportPath(): string | undefined {
+    return process.env.ONTOLOGY_REPORT_PATH;
   }
 
   sfIntegrationEnabled(): boolean {
@@ -152,6 +159,18 @@ export class AppConfigService {
 
   sfAutoRefreshAfterRetrieve(): boolean {
     return (process.env.SF_AUTO_REFRESH_AFTER_RETRIEVE || 'true').trim().toLowerCase() === 'true';
+  }
+
+  minConfidenceDefault(): 'low' | 'medium' | 'high' {
+    const raw = (process.env.MIN_CONFIDENCE_DEFAULT || 'medium').trim().toLowerCase();
+    if (raw !== 'low' && raw !== 'medium' && raw !== 'high') {
+      throw new Error(`Invalid MIN_CONFIDENCE_DEFAULT: ${raw}`);
+    }
+    return raw as 'low' | 'medium' | 'high';
+  }
+
+  askConsistencyCheckEnabled(): boolean {
+    return (process.env.ASK_CONSISTENCY_CHECK_ENABLED || 'true').trim().toLowerCase() === 'true';
   }
 
   private readPositiveInt(

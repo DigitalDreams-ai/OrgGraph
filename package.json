@@ -19,6 +19,11 @@
     "phase7:smoke-live": "./scripts/phase7-live-smoke.sh",
     "phase7:snapshot": "./scripts/phase7-capture-snapshot.sh",
     "phase7:regression": "./scripts/phase7-regression-check.sh",
-    "ingest:report": "./scripts/ingest-report.sh"
+    "ingest:report": "./scripts/ingest-report.sh",
+    "phase8:promotion-dry-run": "./scripts/phase8-promotion-dry-run.sh",
+    "phase8:restore-point:create": "./scripts/phase8-create-restore-point.sh",
+    "phase8:restore-point:apply": "./scripts/phase8-restore-restore-point.sh",
+    "phase8:promotion-log": "./scripts/phase8-promotion-log.sh",
+    "phase8:retention-prune": "./scripts/phase8-retention-prune.sh"
   }
 }

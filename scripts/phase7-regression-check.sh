@@ -5,6 +5,14 @@ API_BASE="${ORGGRAPH_API_BASE:-http://127.0.0.1:3100}"
 SNAPSHOT_DIR="${ORGGRAPH_SNAPSHOT_DIR:-data/validation/snapshots}"
 MAX_DROP_PCT="${ORGGRAPH_MAX_DROP_PCT:-30}"
 
+notify() {
+  status="$1"
+  message="$2"
+  if [ -x "./scripts/phase8-alert-hook.sh" ]; then
+    ./scripts/phase8-alert-hook.sh "$status" "$message" || true
+  fi
+}
+
 CURRENT_READY="$(mktemp)"
 trap 'rm -f "$CURRENT_READY"' EXIT
 curl -sS "$API_BASE/ready" > "$CURRENT_READY"
@@ -45,5 +53,5 @@ if (nodeDropPct > maxDrop || edgeDropPct > maxDrop) {
 }
 NODE
 
+notify "ok" "phase7 regression check passed"
 echo "phase7 regression check passed"
-

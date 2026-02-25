@@ -154,6 +154,11 @@ SF_VERBOSE=true npm run sf:retrieve-refresh
 
 # Export org-derived user -> [profile, permission-set...] map for /perms
 npm run sf:export-user-map
+
+# Phase 8 promotion safety commands
+npm run phase8:promotion-dry-run
+npm run phase8:restore-point:create
+npm run phase8:promotion-log -- promoted
 ```
 
 ### API Trigger
@@ -171,6 +176,7 @@ See [ORG_INTEGRATION.md](./ORG_INTEGRATION.md) and [SANDBOX_CONNECT_CHECKLIST.md
 - Usage guide: [ORGGRAPH_USAGE_GUIDE.md](./ORGGRAPH_USAGE_GUIDE.md)
 - Quick commands: [ORGGRAPH_CHEATSHEET.md](./ORGGRAPH_CHEATSHEET.md)
 - Production promotion gate: [PRODUCTION_PROMOTION.md](./PRODUCTION_PROMOTION.md)
+- Release checklist: [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)
 
 ## Operational Environment Variables
 
@@ -182,6 +188,10 @@ PERMISSIONS_FIXTURES_PATH=fixtures/permissions
 USER_PROFILE_MAP_PATH=fixtures/permissions/user-profile-map.json
 EVIDENCE_INDEX_PATH=data/evidence/index.json
 REFRESH_STATE_PATH=data/refresh/state.json
+REFRESH_AUDIT_PATH=data/refresh/audit.jsonl
+ONTOLOGY_REPORT_PATH=data/refresh/ontology-report.json
+MIN_CONFIDENCE_DEFAULT=medium
+ASK_CONSISTENCY_CHECK_ENABLED=true
 
 # Web
 NEXT_PUBLIC_API_BASE=http://localhost:3100
@@ -206,4 +216,6 @@ NEXT_PUBLIC_API_BASE=http://localhost:3100
 
 ## Plan
 
-See [PLAN_v1_Monorepo.md](./docs/planning/PLAN_v1_Monorepo.md) and [PHASE1_TASKLIST.md](./PHASE1_TASKLIST.md) for the execution plan and checklist.
+- Current active phase: **Phase 8** (ontology constraints, parser precision, confidence/consistency hardening).
+- See [PHASE8_TASKLIST.md](./docs/planning/PHASE8_TASKLIST.md) for current priorities and gates.
+- See [PLAN_v1_Monorepo.md](./docs/planning/PLAN_v1_Monorepo.md) for the master roadmap.

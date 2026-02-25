@@ -54,6 +54,12 @@ export function resolveRefreshAuditPath(auditPath?: string): string {
   return path.resolve(workspaceRoot, raw);
 }
 
+export function resolveOntologyReportPath(reportPath?: string): string {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const raw = reportPath?.trim() || 'data/refresh/ontology-report.json';
+  return path.resolve(workspaceRoot, raw);
+}
+
 export function resolveSfProjectPath(projectPath?: string): string {
   const workspaceRoot = findWorkspaceRoot(process.cwd());
   const raw = projectPath?.trim() || 'data/sf-project';

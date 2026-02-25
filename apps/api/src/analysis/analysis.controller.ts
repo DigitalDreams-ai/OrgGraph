@@ -10,7 +10,9 @@ export class AnalysisController {
     @Query('field') field?: string,
     @Query('limit') limitRaw?: string,
     @Query('strict') strictRaw?: string,
-    @Query('debug') debugRaw?: string
+    @Query('debug') debugRaw?: string,
+    @Query('explain') explainRaw?: string,
+    @Query('includeLowConfidence') includeLowConfidenceRaw?: string
   ): {
     field: string;
     relationsChecked: string[];
@@ -19,6 +21,9 @@ export class AnalysisController {
     truncated: boolean;
     explanation: string;
     strictMode: boolean;
+    minConfidenceApplied: 'low' | 'medium' | 'high';
+    explainMode: boolean;
+    explain?: { scoring: { relBaseScore: Record<string, number>; confidenceWeights: Record<string, number> } };
     debug?: { raw: unknown[] };
     status: 'implemented';
   } {
@@ -40,15 +45,26 @@ export class AnalysisController {
 
     const strict = strictRaw === 'true';
     const debug = debugRaw === 'true';
+    const explain = explainRaw === 'true';
+    const includeLowConfidence = includeLowConfidenceRaw === 'true';
 
-    return this.analysisService.impact(field.trim(), limit, strict, debug);
+    return this.analysisService.impact(
+      field.trim(),
+      limit,
+      strict,
+      debug,
+      explain,
+      includeLowConfidence
+    );
   }
 
   @Get('/automation')
   automation(
     @Query('object') object?: string,
     @Query('limit') limitRaw?: string,
-    @Query('strict') strictRaw?: string
+    @Query('strict') strictRaw?: string,
+    @Query('explain') explainRaw?: string,
+    @Query('includeLowConfidence') includeLowConfidenceRaw?: string
   ): {
     object: string;
     relationsChecked: string[];
@@ -57,6 +73,9 @@ export class AnalysisController {
     truncated: boolean;
     explanation: string;
     strictMode: boolean;
+    minConfidenceApplied: 'low' | 'medium' | 'high';
+    explainMode: boolean;
+    explain?: { scoring: { relBaseScore: Record<string, number>; confidenceWeights: Record<string, number> } };
     status: 'scaffold' | 'implemented';
   } {
     if (!object) {
@@ -76,6 +95,14 @@ export class AnalysisController {
     }
 
     const strict = strictRaw === 'true';
-    return this.analysisService.automation(object.trim(), limit, strict);
+    const explain = explainRaw === 'true';
+    const includeLowConfidence = includeLowConfidenceRaw === 'true';
+    return this.analysisService.automation(
+      object.trim(),
+      limit,
+      strict,
+      explain,
+      includeLowConfidence
+    );
   }
 }

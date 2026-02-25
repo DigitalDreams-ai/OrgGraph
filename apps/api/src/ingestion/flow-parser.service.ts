@@ -5,7 +5,7 @@ import path from 'node:path';
 import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
 import { stableId } from '../common/ids';
 import type { GraphEdge, GraphNode, GraphPayload } from '../graph/graph.types';
-import type { ParserStats } from './parser-stats';
+import { createParserStats, recordParserWarning, type ParserStats } from './parser-stats';
 
 export class FlowParseError extends Error {
   constructor(
@@ -26,13 +26,7 @@ export class FlowParserService {
     'schema'
   ]);
 
-  private lastStats: ParserStats = {
-    parser: 'flow',
-    filesDiscovered: 0,
-    filesParsed: 0,
-    filesSkipped: 0,
-    warnings: []
-  };
+  private lastStats: ParserStats = createParserStats('flow');
 
   private readonly parser = new XMLParser({
     ignoreAttributes: false,
@@ -44,13 +38,7 @@ export class FlowParserService {
     const flowsDir = path.join(rootPath, 'flows');
     const nodesById = new Map<string, GraphNode>();
     const edgesById = new Map<string, GraphEdge>();
-    this.lastStats = {
-      parser: 'flow',
-      filesDiscovered: 0,
-      filesParsed: 0,
-      filesSkipped: 0,
-      warnings: []
-    };
+    this.lastStats = createParserStats('flow');
 
     if (!fs.existsSync(flowsDir)) {
       return { nodes: [], edges: [] };
@@ -145,7 +133,7 @@ export class FlowParserService {
 
       const flow = parsed.Flow;
       const triggerObject = this.extractTriggerObject(flow);
-      const referencedFields = this.extractDottedFields(xml);
+      const referencedFields = this.extractReferencedFields(flow);
       const writtenFields = this.extractWrittenFields(flow);
 
       return {
@@ -171,23 +159,45 @@ export class FlowParserService {
     return undefined;
   }
 
-  private extractDottedFields(xml: string): Set<string> {
+  private extractReferencedFields(flow: Record<string, unknown>): Set<string> {
     const output = new Set<string>();
-    const matches = xml.match(/\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b/g) ?? [];
-    for (const token of matches) {
+    this.walkFlowValues(flow, (value) => {
+      const token = value.trim();
+      if (!token.includes('.')) {
+        return;
+      }
+
+      if (!/^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(token)) {
+        return;
+      }
+
       const [lhs, rhs] = token.split('.');
       if (FlowParserService.IGNORED_DOTTED_PREFIXES.has(lhs.toLowerCase())) {
-        this.lastStats.filesSkipped += 1;
-        continue;
+        recordParserWarning(
+          this.lastStats,
+          'noise',
+          `ignored non-SF dotted token "${token}" while parsing flow`
+        );
+        return;
       }
       if (lhs[0] !== lhs[0].toUpperCase() && !lhs.includes('__')) {
-        continue;
+        recordParserWarning(
+          this.lastStats,
+          'noise',
+          `ignored likely variable-scoped token "${token}" while parsing flow`
+        );
+        return;
       }
       if (rhs.length < 2) {
-        continue;
+        recordParserWarning(
+          this.lastStats,
+          'ambiguous',
+          `ignored short field token "${token}" while parsing flow`
+        );
+        return;
       }
       output.add(token);
-    }
+    });
     return output;
   }
 
@@ -218,6 +228,32 @@ export class FlowParserService {
       return value as T[];
     }
     return value ? [value as T] : [];
+  }
+
+  private walkFlowValues(value: unknown, onString: (token: string) => void): void {
+    if (typeof value === 'string') {
+      const parts = value
+        .split(/[^A-Za-z0-9_.]+/)
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0);
+      for (const token of parts) {
+        onString(token);
+      }
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        this.walkFlowValues(item, onString);
+      }
+      return;
+    }
+
+    if (value && typeof value === 'object') {
+      for (const nested of Object.values(value as Record<string, unknown>)) {
+        this.walkFlowValues(nested, onString);
+      }
+    }
   }
 
   private flowNameFromFilename(file: string): string {
