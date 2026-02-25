@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 type QueryKind = 'refresh' | 'perms' | 'permsSystem' | 'automation' | 'impact' | 'ask';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
+const BUILD_VERSION = process.env.NEXT_PUBLIC_BUILD_VERSION || 'dev-local';
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -201,6 +202,7 @@ export default function Page(): JSX.Element {
           Run deterministic graph and evidence queries directly against the API. This UI is a thin operator surface,
           not a new source of truth.
         </p>
+        <p className="endpoint-hint">UI Build: {BUILD_VERSION}</p>
       </section>
 
       <section className="panel">

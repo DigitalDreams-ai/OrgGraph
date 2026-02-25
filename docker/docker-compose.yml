@@ -77,6 +77,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_BUILD_VERSION: ${ORGGRAPH_WEB_VERSION:-dev-local}
     container_name: orggraph-web
     restart: unless-stopped
     environment:

@@ -4,6 +4,9 @@ WORKDIR /app
 
 RUN corepack enable
 
+ARG NEXT_PUBLIC_BUILD_VERSION=dev-local
+ENV NEXT_PUBLIC_BUILD_VERSION=${NEXT_PUBLIC_BUILD_VERSION}
+
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/package.json
 
