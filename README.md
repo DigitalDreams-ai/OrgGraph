@@ -166,6 +166,11 @@ curl -X POST http://localhost:3100/org/retrieve \
 
 See [ORG_INTEGRATION.md](./ORG_INTEGRATION.md) and [SANDBOX_CONNECT_CHECKLIST.md](./SANDBOX_CONNECT_CHECKLIST.md).
 
+## Operator Docs
+
+- Usage guide: [ORGGRAPH_USAGE_GUIDE.md](./ORGGRAPH_USAGE_GUIDE.md)
+- Quick commands: [ORGGRAPH_CHEATSHEET.md](./ORGGRAPH_CHEATSHEET.md)
+
 ## Operational Environment Variables
 
 ```bash
