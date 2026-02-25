@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
-type QueryKind = 'refresh' | 'perms' | 'automation' | 'impact' | 'ask';
+type QueryKind = 'refresh' | 'perms' | 'permsSystem' | 'automation' | 'impact' | 'ask';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
 
@@ -18,25 +18,38 @@ export default function Page(): JSX.Element {
   const [copied, setCopied] = useState(false);
   const [healthStatus, setHealthStatus] = useState('unknown');
   const [readyStatus, setReadyStatus] = useState('unknown');
+  const [readyDetails, setReadyDetails] = useState('');
 
   const [refreshMode, setRefreshMode] = useState<'full' | 'incremental'>('incremental');
   const [user, setUser] = useState('jane@example.com');
   const [objectName, setObjectName] = useState('Opportunity');
   const [fieldName, setFieldName] = useState('Opportunity.StageName');
+  const [systemPermission, setSystemPermission] = useState('ApproveUninstalledConnectedApps');
   const [askQuery, setAskQuery] = useState('What touches Opportunity.StageName?');
+  const [limitRaw, setLimitRaw] = useState('25');
+  const [strictMode, setStrictMode] = useState(true);
+  const [explainMode, setExplainMode] = useState(false);
+  const [includeLowConfidence, setIncludeLowConfidence] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
+  const [maxCitationsRaw, setMaxCitationsRaw] = useState('5');
+  const [consistencyCheck, setConsistencyCheck] = useState(true);
+  const [askContextRaw, setAskContextRaw] = useState('{}');
 
   const endpointHint = useMemo(() => {
     if (kind === 'refresh') {
       return 'POST /refresh';
     }
     if (kind === 'perms') {
-      return 'GET /perms?user=...&object=...&field=...';
+      return 'GET /perms?user=...&object=...&field=...&limit=...';
+    }
+    if (kind === 'permsSystem') {
+      return 'GET /perms/system?user=...&permission=...&limit=...';
     }
     if (kind === 'automation') {
-      return 'GET /automation?object=...';
+      return 'GET /automation?object=...&limit=...&strict=...&explain=...&includeLowConfidence=...';
     }
     if (kind === 'impact') {
-      return 'GET /impact?field=...';
+      return 'GET /impact?field=...&limit=...&strict=...&debug=...&explain=...&includeLowConfidence=...';
     }
     return 'POST /ask';
   }, [kind]);
@@ -74,10 +87,40 @@ export default function Page(): JSX.Element {
 
     try {
       const ready = await fetch('/api/ready', { cache: 'no-store' });
-      setReadyStatus(ready.ok ? 'ready' : `http_${ready.status}`);
+      const readyPayload = (await ready.json()) as { upstreamApi?: { payload?: unknown } };
+      if (ready.ok) {
+        setReadyStatus('ready');
+      } else {
+        setReadyStatus(`http_${ready.status}`);
+      }
+      setReadyDetails(JSON.stringify(readyPayload, null, 2));
     } catch {
       setReadyStatus('unreachable');
+      setReadyDetails('');
     }
+  }
+
+  function parseOptionalInt(raw: string): number | undefined {
+    if (raw.trim().length === 0) {
+      return undefined;
+    }
+    const parsed = Number(raw);
+    return Number.isInteger(parsed) ? parsed : undefined;
+  }
+
+  function parseContext(raw: string): Record<string, unknown> | undefined {
+    if (raw.trim().length === 0) {
+      return undefined;
+    }
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return undefined;
+    }
+    return undefined;
   }
 
   async function runQuery(): Promise<void> {
@@ -87,16 +130,35 @@ export default function Page(): JSX.Element {
     setCopied(false);
 
     try {
+      const limit = parseOptionalInt(limitRaw);
+      const maxCitations = parseOptionalInt(maxCitationsRaw);
+      const askContext = parseContext(askContextRaw);
+
       const payload =
         kind === 'refresh'
           ? { mode: refreshMode }
           : kind === 'perms'
-            ? { user, object: objectName, field: fieldName }
-            : kind === 'automation'
-              ? { object: objectName }
-              : kind === 'impact'
-                ? { field: fieldName }
-                : { query: askQuery, maxCitations: 5 };
+            ? { user, object: objectName, field: fieldName, limit }
+            : kind === 'permsSystem'
+              ? { user, permission: systemPermission, limit }
+              : kind === 'automation'
+                ? { object: objectName, limit, strict: strictMode, explain: explainMode, includeLowConfidence }
+                : kind === 'impact'
+                  ? {
+                      field: fieldName,
+                      limit,
+                      strict: strictMode,
+                      explain: explainMode,
+                      includeLowConfidence,
+                      debug: debugMode
+                    }
+                  : {
+                      query: askQuery,
+                      maxCitations: typeof maxCitations === 'number' ? maxCitations : 5,
+                      includeLowConfidence,
+                      consistencyCheck,
+                      context: askContext
+                    };
 
       const response = await fetchWithRetry('/api/query', {
         method: 'POST',
@@ -133,7 +195,7 @@ export default function Page(): JSX.Element {
   return (
     <main className="page-shell">
       <section className="hero">
-        <p className="hero-kicker">Phase 4 Console</p>
+        <p className="hero-kicker">Operator Console</p>
         <h1>OrgGraph Operator Workbench</h1>
         <p>
           Run deterministic graph and evidence queries directly against the API. This UI is a thin operator surface,
@@ -149,11 +211,17 @@ export default function Page(): JSX.Element {
         <button type="button" onClick={refreshStatuses}>
           Refresh Status
         </button>
+        {readyDetails ? (
+          <details>
+            <summary>Ready Details</summary>
+            <pre>{readyDetails}</pre>
+          </details>
+        ) : null}
       </section>
 
       <section className="panel">
         <div className="tab-row">
-          {(['ask', 'refresh', 'perms', 'automation', 'impact'] as const).map((value) => (
+          {(['ask', 'refresh', 'perms', 'permsSystem', 'automation', 'impact'] as const).map((value) => (
             <button
               key={value}
               type="button"
@@ -182,10 +250,29 @@ export default function Page(): JSX.Element {
         ) : null}
 
         {kind === 'ask' ? (
-          <div className="row">
-            <label htmlFor="askQuery">Ask Query</label>
-            <textarea id="askQuery" value={askQuery} onChange={(e) => setAskQuery(e.target.value)} rows={4} />
-          </div>
+          <>
+            <div className="row">
+              <label htmlFor="askQuery">Ask Query</label>
+              <textarea id="askQuery" value={askQuery} onChange={(e) => setAskQuery(e.target.value)} rows={4} />
+            </div>
+            <div className="row">
+              <label htmlFor="maxCitations">Max Citations</label>
+              <input id="maxCitations" value={maxCitationsRaw} onChange={(e) => setMaxCitationsRaw(e.target.value)} />
+            </div>
+            <div className="row">
+              <label htmlFor="consistencyCheck">Consistency Check</label>
+              <input
+                id="consistencyCheck"
+                type="checkbox"
+                checked={consistencyCheck}
+                onChange={(e) => setConsistencyCheck(e.target.checked)}
+              />
+            </div>
+            <div className="row">
+              <label htmlFor="askContext">Context JSON (optional)</label>
+              <textarea id="askContext" value={askContextRaw} onChange={(e) => setAskContextRaw(e.target.value)} rows={3} />
+            </div>
+          </>
         ) : null}
 
         {kind === 'perms' ? (
@@ -202,6 +289,31 @@ export default function Page(): JSX.Element {
               <label htmlFor="field">Field (optional)</label>
               <input id="field" value={fieldName} onChange={(e) => setFieldName(e.target.value)} />
             </div>
+            <div className="row">
+              <label htmlFor="limitPerms">Limit (optional)</label>
+              <input id="limitPerms" value={limitRaw} onChange={(e) => setLimitRaw(e.target.value)} />
+            </div>
+          </>
+        ) : null}
+
+        {kind === 'permsSystem' ? (
+          <>
+            <div className="row">
+              <label htmlFor="systemUser">User</label>
+              <input id="systemUser" value={user} onChange={(e) => setUser(e.target.value)} />
+            </div>
+            <div className="row">
+              <label htmlFor="systemPermission">System Permission</label>
+              <input
+                id="systemPermission"
+                value={systemPermission}
+                onChange={(e) => setSystemPermission(e.target.value)}
+              />
+            </div>
+            <div className="row">
+              <label htmlFor="limitSystem">Limit (optional)</label>
+              <input id="limitSystem" value={limitRaw} onChange={(e) => setLimitRaw(e.target.value)} />
+            </div>
           </>
         ) : null}
 
@@ -216,6 +328,50 @@ export default function Page(): JSX.Element {
           <div className="row">
             <label htmlFor="impactField">Field</label>
             <input id="impactField" value={fieldName} onChange={(e) => setFieldName(e.target.value)} />
+          </div>
+        ) : null}
+
+        {(kind === 'automation' || kind === 'impact') ? (
+          <>
+            <div className="row">
+              <label htmlFor="limitAnalysis">Limit (optional)</label>
+              <input id="limitAnalysis" value={limitRaw} onChange={(e) => setLimitRaw(e.target.value)} />
+            </div>
+            <div className="row">
+              <label htmlFor="strictMode">Strict Mode</label>
+              <input id="strictMode" type="checkbox" checked={strictMode} onChange={(e) => setStrictMode(e.target.checked)} />
+            </div>
+            <div className="row">
+              <label htmlFor="explainMode">Explain Mode</label>
+              <input id="explainMode" type="checkbox" checked={explainMode} onChange={(e) => setExplainMode(e.target.checked)} />
+            </div>
+            <div className="row">
+              <label htmlFor="includeLowConfidence">Include Low Confidence</label>
+              <input
+                id="includeLowConfidence"
+                type="checkbox"
+                checked={includeLowConfidence}
+                onChange={(e) => setIncludeLowConfidence(e.target.checked)}
+              />
+            </div>
+            {kind === 'impact' ? (
+              <div className="row">
+                <label htmlFor="debugMode">Debug Mode</label>
+                <input id="debugMode" type="checkbox" checked={debugMode} onChange={(e) => setDebugMode(e.target.checked)} />
+              </div>
+            ) : null}
+          </>
+        ) : null}
+
+        {kind === 'ask' ? (
+          <div className="row">
+            <label htmlFor="askIncludeLowConfidence">Include Low Confidence</label>
+            <input
+              id="askIncludeLowConfidence"
+              type="checkbox"
+              checked={includeLowConfidence}
+              onChange={(e) => setIncludeLowConfidence(e.target.checked)}
+            />
           </div>
         ) : null}
 

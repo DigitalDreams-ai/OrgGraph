@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
 
-type QueryKind = 'refresh' | 'perms' | 'automation' | 'impact' | 'ask';
+type QueryKind = 'refresh' | 'perms' | 'permsSystem' | 'automation' | 'impact' | 'ask';
 
 interface QueryRequest {
   kind?: QueryKind;
@@ -42,6 +42,20 @@ async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Pro
 
 function buildUpstream(request: QueryRequest): { url: string; init: RequestInit } {
   const body = request.payload ?? {};
+  const appendParam = (params: URLSearchParams, key: string, value: unknown): void => {
+    if (typeof value === 'string' && value.length > 0) {
+      params.set(key, value);
+      return;
+    }
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      params.set(key, String(value));
+      return;
+    }
+    if (typeof value === 'boolean') {
+      params.set(key, String(value));
+    }
+  };
+
   if (request.kind === 'refresh') {
     return {
       url: `${API_BASE}/refresh`,
@@ -55,21 +69,39 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
 
   if (request.kind === 'perms') {
     const params = new URLSearchParams();
-    if (typeof body.user === 'string') params.set('user', body.user);
-    if (typeof body.object === 'string') params.set('object', body.object);
-    if (typeof body.field === 'string' && body.field.length > 0) params.set('field', body.field);
+    appendParam(params, 'user', body.user);
+    appendParam(params, 'object', body.object);
+    appendParam(params, 'field', body.field);
+    appendParam(params, 'limit', body.limit);
     return { url: `${API_BASE}/perms?${params.toString()}`, init: { method: 'GET' } };
+  }
+
+  if (request.kind === 'permsSystem') {
+    const params = new URLSearchParams();
+    appendParam(params, 'user', body.user);
+    appendParam(params, 'permission', body.permission);
+    appendParam(params, 'limit', body.limit);
+    return { url: `${API_BASE}/perms/system?${params.toString()}`, init: { method: 'GET' } };
   }
 
   if (request.kind === 'automation') {
     const params = new URLSearchParams();
-    if (typeof body.object === 'string') params.set('object', body.object);
+    appendParam(params, 'object', body.object);
+    appendParam(params, 'limit', body.limit);
+    appendParam(params, 'strict', body.strict);
+    appendParam(params, 'explain', body.explain);
+    appendParam(params, 'includeLowConfidence', body.includeLowConfidence);
     return { url: `${API_BASE}/automation?${params.toString()}`, init: { method: 'GET' } };
   }
 
   if (request.kind === 'impact') {
     const params = new URLSearchParams();
-    if (typeof body.field === 'string') params.set('field', body.field);
+    appendParam(params, 'field', body.field);
+    appendParam(params, 'limit', body.limit);
+    appendParam(params, 'strict', body.strict);
+    appendParam(params, 'debug', body.debug);
+    appendParam(params, 'explain', body.explain);
+    appendParam(params, 'includeLowConfidence', body.includeLowConfidence);
     return { url: `${API_BASE}/impact?${params.toString()}`, init: { method: 'GET' } };
   }
 
@@ -80,7 +112,10 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         query: body.query,
-        maxCitations: typeof body.maxCitations === 'number' ? body.maxCitations : 5
+        maxCitations: typeof body.maxCitations === 'number' ? body.maxCitations : 5,
+        includeLowConfidence: typeof body.includeLowConfidence === 'boolean' ? body.includeLowConfidence : undefined,
+        consistencyCheck: typeof body.consistencyCheck === 'boolean' ? body.consistencyCheck : undefined,
+        context: typeof body.context === 'object' && body.context !== null ? body.context : undefined
       })
     }
   };
@@ -98,7 +133,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     const kind = kindRaw as QueryKind;
-    if (!['refresh', 'perms', 'automation', 'impact', 'ask'].includes(kind)) {
+    if (!['refresh', 'perms', 'permsSystem', 'automation', 'impact', 'ask'].includes(kind)) {
       return NextResponse.json(
         { error: { code: 'BAD_REQUEST', message: 'invalid query kind' } },
         { status: 400 }
