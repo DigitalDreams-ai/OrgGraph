@@ -10,56 +10,56 @@ Goal: complete Phase 4 polish with incremental refresh, a usable web UI, and ope
 
 ## 1. Incremental Refresh
 
-- [ ] Add refresh mode contract (`full` | `incremental`) on `POST /refresh`
-- [ ] Implement fixture change detection fingerprint
-- [ ] Persist refresh state metadata (`data/refresh/state.json`)
-- [ ] Skip rebuild when unchanged in incremental mode
-- [ ] Return refresh metadata (`mode`, `skipped`, `skipReason`)
+- [x] Add refresh mode contract (`full` | `incremental`) on `POST /refresh`
+- [x] Implement fixture change detection fingerprint
+- [x] Persist refresh state metadata (`data/refresh/state.json`)
+- [x] Skip rebuild when unchanged in incremental mode
+- [x] Return refresh metadata (`mode`, `skipped`, `skipReason`)
 
 ## 2. Web App (`apps/web`)
 
-- [ ] Scaffold Next.js app in monorepo workspace
-- [ ] Add API base configuration (`NEXT_PUBLIC_API_BASE`)
-- [ ] Build UI flows for:
-  - [ ] Refresh
-  - [ ] Permissions query
-  - [ ] Automation query
-  - [ ] Impact query
-  - [ ] Ask query
-- [ ] Add responsive layout for desktop/mobile
+- [x] Scaffold Next.js app in monorepo workspace
+- [x] Add API base configuration (`NEXT_PUBLIC_API_BASE`)
+- [x] Build UI flows for:
+  - [x] Refresh
+  - [x] Permissions query
+  - [x] Automation query
+  - [x] Impact query
+  - [x] Ask query
+- [x] Add responsive layout for desktop/mobile
 
 ## 3. Docker + Runtime
 
-- [ ] Add web container build/runtime definition
-- [ ] Wire web + api services in `docker/docker-compose.yml`
-- [ ] Validate NAS runtime with both services up
+- [x] Add web container build/runtime definition
+- [x] Wire web + api services in `docker/docker-compose.yml`
+- [x] Validate NAS runtime with both services up
 
 ## 4. CI + Repo Hygiene
 
-- [ ] Ensure CI validates web build/typecheck
-- [ ] Keep API test/build checks green
-- [ ] Ensure no regressions in PR workflows
+- [x] Ensure CI validates web build/typecheck
+- [x] Keep API test/build checks green
+- [x] Ensure no regressions in PR workflows
 
 ## 5. Testing
 
-- [ ] Extend integration tests for incremental refresh behavior
-- [ ] Keep existing parser/validation/integration tests passing
-- [ ] Smoke test web to API connectivity
+- [x] Extend integration tests for incremental refresh behavior
+- [x] Keep existing parser/validation/integration tests passing
+- [x] Smoke test web to API connectivity
 
 ## 6. Documentation
 
-- [ ] Update `README.md` with web + incremental refresh usage
-- [ ] Update `.env.example` with any new variables
-- [ ] Add Phase 4 notes to planning docs as needed
+- [x] Update `README.md` with web + incremental refresh usage
+- [x] Update `.env.example` with any new variables
+- [x] Add Phase 4 notes to planning docs as needed
 
 ## Definition of Done (Phase 4)
 
-- [ ] Incremental refresh mode works and skips unchanged refreshes
-- [ ] Web UI can execute `/refresh`, `/perms`, `/automation`, `/impact`, `/ask`
-- [ ] Docker project runs API + Web services on NAS
-- [ ] CI checks pass for updated monorepo
-- [ ] Phase 4 tasklist updated to complete
+- [x] Incremental refresh mode works and skips unchanged refreshes
+- [x] Web UI can execute `/refresh`, `/perms`, `/automation`, `/impact`, `/ask`
+- [x] Docker project runs API + Web services on NAS
+- [x] CI checks pass for updated monorepo
+- [x] Phase 4 tasklist updated to complete
 
 ## Immediate Next Action
 
-- [ ] Implement incremental refresh API contract + state/fingerprint logic and add integration coverage.
+- [x] Implement incremental refresh API contract + state/fingerprint logic and add integration coverage.
