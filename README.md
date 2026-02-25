@@ -151,6 +151,9 @@ npm run sf:retrieve-refresh
 
 # Verbose output for auth/retrieve/refresh pipeline
 SF_VERBOSE=true npm run sf:retrieve-refresh
+
+# Export org-derived user -> [profile, permission-set...] map for /perms
+npm run sf:export-user-map
 ```
 
 ### API Trigger
