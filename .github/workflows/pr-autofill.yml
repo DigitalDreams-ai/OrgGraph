@@ -80,26 +80,28 @@ jobs:
               })
               .join('\n');
 
-            const generatedBody = `${marker}
-_Auto-generated from commit messages. Remove the marker to stop auto-updates on new commits._
-
-## Summary
-- Commit count: ${commits.length}
-- Branch: \`${pr.head.ref}\`
-
-## Commit Types
-${typeSummary || '- other: 0'}
-
-## Commits
-${commitList}
-
-## Validation
-- [ ] CI passed
-- [ ] Tested locally if needed
-
-## Notes
-- Add reviewer context here (what to focus on, known limitations, follow-ups).
-`;
+            const generatedBody = [
+              marker,
+              '_Auto-generated from commit messages. Remove the marker to stop auto-updates on new commits._',
+              '',
+              '## Summary',
+              `- Commit count: ${commits.length}`,
+              `- Branch: \`${pr.head.ref}\``,
+              '',
+              '## Commit Types',
+              typeSummary || '- other: 0',
+              '',
+              '## Commits',
+              commitList,
+              '',
+              '## Validation',
+              '- [ ] CI passed',
+              '- [ ] Tested locally if needed',
+              '',
+              '## Notes',
+              '- Add reviewer context here (what to focus on, known limitations, follow-ups).',
+              ''
+            ].join('\n');
 
             const existingTitle = (pr.title || '').trim();
             const existingBody = pr.body || '';
