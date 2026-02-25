@@ -206,4 +206,6 @@ NEXT_PUBLIC_API_BASE=http://localhost:3100
 
 ## Plan
 
-See [PLAN_v1_Monorepo.md](./docs/planning/PLAN_v1_Monorepo.md) and [PHASE1_TASKLIST.md](./PHASE1_TASKLIST.md) for the execution plan and checklist.
+- Current active phase: **Phase 8** (ontology constraints, parser precision, confidence/consistency hardening).
+- See [PHASE8_TASKLIST.md](./docs/planning/PHASE8_TASKLIST.md) for current priorities and gates.
+- See [PLAN_v1_Monorepo.md](./docs/planning/PLAN_v1_Monorepo.md) for the master roadmap.
