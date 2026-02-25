@@ -14,6 +14,7 @@ services:
       USER_PROFILE_MAP_PATH: /app/data/sf-user-principals.json
       EVIDENCE_INDEX_PATH: /app/data/evidence/index.json
       REFRESH_STATE_PATH: /app/data/refresh/state.json
+      REFRESH_AUDIT_PATH: /app/data/refresh/audit.jsonl
       SF_INTEGRATION_ENABLED: "false"
       SF_AUTH_MODE: sfdx_url
       SF_AUTH_URL_PATH: /app/.secrets/sandbox.sfdx-url.txt

@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-02-25",
+  "cases": {
+    "perms": [
+      {
+        "user": "sbingham@shulman-hill.com.uat",
+        "object": "litify_pm__Intake__c",
+        "expectedGranted": true
+      }
+    ],
+    "automation": [
+      {
+        "object": "Opportunity",
+        "expectedMinimum": 1
+      }
+    ],
+    "impact": [
+      {
+        "field": "Opportunity.StageName",
+        "expectedMinimum": 1
+      }
+    ],
+    "ask": [
+      {
+        "query": "What touches Opportunity.StageName?",
+        "expectedIntent": "impact"
+      }
+    ]
+  }
+}
+

@@ -15,6 +15,10 @@
     "sf:oauth:exchange": "./scripts/sf-oauth-token-exchange.sh",
     "sf:retrieve": "./scripts/sf-retrieve.sh",
     "sf:retrieve-refresh": "./scripts/sf-retrieve-refresh.sh",
-    "sf:export-user-map": "./scripts/sf-export-user-principals.sh"
+    "sf:export-user-map": "./scripts/sf-export-user-principals.sh",
+    "phase7:smoke-live": "./scripts/phase7-live-smoke.sh",
+    "phase7:snapshot": "./scripts/phase7-capture-snapshot.sh",
+    "phase7:regression": "./scripts/phase7-regression-check.sh",
+    "ingest:report": "./scripts/ingest-report.sh"
   }
 }
