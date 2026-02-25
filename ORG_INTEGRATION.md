@@ -10,14 +10,19 @@ This runbook connects OrgGraph to a Salesforce sandbox, retrieves metadata, and 
 
 ## Required Environment Variables
 - `SF_INTEGRATION_ENABLED=true`
-- `SF_AUTH_MODE=sfdx_url` or `jwt`
+- `SF_AUTH_MODE=oauth_refresh_token` (recommended)
 - `SF_ALIAS=orggraph-sandbox`
 - `SF_PROJECT_PATH=data/sf-project`
 - `SF_MANIFEST_PATH=manifest/package.xml`
 - `SF_PARSE_PATH=data/sf-project/force-app/main/default`
 
-SFDX URL mode:
-- `SF_AUTH_URL_PATH=.secrets/sandbox.sfdx-url.txt`
+External Client App OAuth mode:
+- `SF_LOGIN_DOMAIN=https://test.salesforce.com`
+- `SF_CLIENT_ID=<external-client-app-consumer-key>`
+- `SF_CLIENT_SECRET=<external-client-app-consumer-secret>`
+- `SF_REDIRECT_URI=<same-callback-url-configured-in-external-client-app>`
+- `SF_AUTH_CODE_PATH=.secrets/sf-auth-code.txt`
+- `SF_TOKEN_STORE_PATH=.secrets/sf-oauth-token.json`
 
 JWT mode:
 - `SF_CLIENT_ID=<connected-app-client-id>`
@@ -29,8 +34,18 @@ JWT mode:
 1. Ensure `sf` CLI is installed and in `PATH`.
 2. Create secrets path:
 `mkdir -p .secrets`
-3. Add credentials for selected auth mode.
-4. Confirm retrieve manifest:
+3. Create an External Client App in the sandbox org:
+- Setup -> App Manager -> New External Client App
+- Enable OAuth
+- Set callback URL to your `SF_REDIRECT_URI`
+- Add scopes: `refresh_token`, `api`, `web`
+4. Generate authorize URL:
+`npm run sf:oauth:url`
+5. Open URL in browser, sign in, capture `code`, and save to:
+`.secrets/sf-auth-code.txt`
+6. Exchange code for token store:
+`npm run sf:oauth:exchange`
+7. Confirm retrieve manifest:
 `manifest/package.xml`
 
 ## Execution Flow
