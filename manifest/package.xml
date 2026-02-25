@@ -20,6 +20,17 @@
     <members>*</members>
     <name>Flow</name>
   </types>
+  <types>
+    <members>*</members>
+    <name>CustomObject</name>
+  </types>
+  <types>
+    <members>*</members>
+    <name>PermissionSetGroup</name>
+  </types>
+  <types>
+    <members>*</members>
+    <name>CustomPermission</name>
+  </types>
   <version>61.0</version>
 </Package>
-
