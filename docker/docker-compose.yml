@@ -18,7 +18,7 @@ services:
       SF_AUTH_MODE: sfdx_url
       SF_AUTH_URL_PATH: /app/.secrets/sandbox.sfdx-url.txt
       SF_ALIAS: orggraph-sandbox
-      SF_INSTANCE_URL: https://test.salesforce.com
+      SF_BASE_URL: https://test.salesforce.com
       SF_PROJECT_PATH: /app/data/sf-project
       SF_MANIFEST_PATH: /app/manifest/package.xml
       SF_PARSE_PATH: /app/data/sf-project/force-app/main/default

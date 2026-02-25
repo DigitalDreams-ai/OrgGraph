@@ -12,7 +12,6 @@
 - [ ] Set `SF_BASE_URL` to the org host you want to target (quick switch variable).
 - [ ] Set `SF_INTEGRATION_ENABLED=true`.
 - [ ] Set `SF_AUTH_MODE=oauth_refresh_token`.
-- [ ] Set `SF_LOGIN_DOMAIN=https://test.salesforce.com`.
 - [ ] Set `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REDIRECT_URI`.
 - [ ] Set `SF_AUTH_CODE_PATH=.secrets/sf-auth-code.txt`.
 - [ ] Set `SF_TOKEN_STORE_PATH=.secrets/sf-oauth-token.json`.

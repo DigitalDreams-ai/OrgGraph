@@ -123,7 +123,6 @@ Phase 6 adds sandbox-first org retrieval and refresh.
 5. Set OAuth values in `.env` (scripts auto-load this file):
 - `SF_BASE_URL=https://test.salesforce.com` (single variable to switch org host)
 - `SF_AUTH_MODE=oauth_refresh_token`
-- `SF_LOGIN_DOMAIN=https://test.salesforce.com`
 - `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REDIRECT_URI`
 6. Generate authorization URL and authorize once:
 `npm run sf:oauth:url`

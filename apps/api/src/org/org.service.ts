@@ -274,7 +274,7 @@ export class OrgService {
       const clientId = this.configService.sfClientId();
       const clientSecret = this.configService.sfClientSecret();
       const redirectUri = this.configService.sfRedirectUri();
-      const loginDomain = this.configService.sfLoginDomain();
+      const loginDomain = this.configService.sfBaseUrl();
       const authCodePath = resolveSfAuthCodePath(this.configService.sfAuthCodePath());
       const tokenStorePath = resolveSfTokenStorePath(this.configService.sfTokenStorePath());
       if (!clientId || !clientSecret || !redirectUri) {
@@ -314,10 +314,10 @@ export class OrgService {
     const clientId = this.configService.sfClientId();
     const jwtKeyPath = this.configService.sfJwtKeyPath();
     const username = this.configService.sfUsername();
-    const instanceUrl = this.configService.sfInstanceUrl();
+    const instanceUrl = this.configService.sfBaseUrl();
     if (!clientId || !jwtKeyPath || !username || !instanceUrl) {
       throw new Error(
-        'SF_CLIENT_ID, SF_JWT_KEY_PATH, SF_USERNAME, and SF_INSTANCE_URL are required for jwt auth mode'
+        'SF_CLIENT_ID, SF_JWT_KEY_PATH, SF_USERNAME, and SF_BASE_URL are required for jwt auth mode'
       );
     }
 

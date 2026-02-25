@@ -4,8 +4,7 @@ set -eu
 ROOT_DIR="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
 . "$ROOT_DIR/scripts/load-dotenv.sh"
 SF_BASE_URL="${SF_BASE_URL:-https://test.salesforce.com}"
-SF_LOGIN_DOMAIN="${SF_LOGIN_DOMAIN:-$SF_BASE_URL}"
-SF_LOGIN_DOMAIN="${SF_LOGIN_DOMAIN%/}"
+SF_BASE_URL="${SF_BASE_URL%/}"
 SF_CLIENT_ID="${SF_CLIENT_ID:-}"
 SF_CLIENT_SECRET="${SF_CLIENT_SECRET:-}"
 SF_REDIRECT_URI="${SF_REDIRECT_URI:-http://localhost/callback}"
@@ -31,7 +30,7 @@ fi
 mkdir -p "$(dirname "$SF_TOKEN_STORE_PATH")"
 
 RESPONSE_FILE="$(mktemp)"
-HTTP_CODE="$(curl -sS -w '%{http_code}' -o "$RESPONSE_FILE" -X POST "$SF_LOGIN_DOMAIN/services/oauth2/token" \
+HTTP_CODE="$(curl -sS -w '%{http_code}' -o "$RESPONSE_FILE" -X POST "$SF_BASE_URL/services/oauth2/token" \
   -H 'content-type: application/x-www-form-urlencoded' \
   --data-urlencode grant_type=authorization_code \
   --data-urlencode "client_id=$SF_CLIENT_ID" \
