@@ -5,6 +5,7 @@ import path from 'node:path';
 import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
 import { stableId } from '../common/ids';
 import type { GraphEdge, GraphNode, GraphPayload } from '../graph/graph.types';
+import type { ParserStats } from './parser-stats';
 
 interface PermissionEntity {
   objectPermissions?: unknown;
@@ -28,6 +29,14 @@ export class PermissionsParseError extends Error {
 
 @Injectable()
 export class PermissionsParserService {
+  private lastStats: ParserStats = {
+    parser: 'permissions',
+    filesDiscovered: 0,
+    filesParsed: 0,
+    filesSkipped: 0,
+    warnings: []
+  };
+
   private readonly parser = new XMLParser({
     ignoreAttributes: false,
     parseTagValue: true,
@@ -37,6 +46,13 @@ export class PermissionsParserService {
   parseFromFixtures(rootPath: string): GraphPayload {
     const nodesById = new Map<string, GraphNode>();
     const edgesById = new Map<string, GraphEdge>();
+    this.lastStats = {
+      parser: 'permissions',
+      filesDiscovered: 0,
+      filesParsed: 0,
+      filesSkipped: 0,
+      warnings: []
+    };
 
     this.parseEntityDir({
       dirPath: this.resolveEntityDir(rootPath, ['profiles']),
@@ -69,6 +85,10 @@ export class PermissionsParserService {
     };
   }
 
+  getLastStats(): ParserStats {
+    return this.lastStats;
+  }
+
   private resolveEntityDir(rootPath: string, candidates: string[]): string {
     for (const name of candidates) {
       const dirPath = path.join(rootPath, name);
@@ -94,6 +114,7 @@ export class PermissionsParserService {
     const files = fs
       .readdirSync(dirPath)
       .filter((name) => name.endsWith('.xml') || name.endsWith('.profile-meta.xml') || name.endsWith('.permissionset-meta.xml'));
+    this.lastStats.filesDiscovered += files.length;
 
     for (const file of files) {
       const filePath = path.join(dirPath, file);
@@ -110,6 +131,7 @@ export class PermissionsParserService {
         name: entityName,
         meta: JSON.stringify({ source: file })
       });
+      this.lastStats.filesParsed += 1;
 
       for (const objectPerm of this.toArray<Record<string, unknown>>(body.objectPermissions)) {
         const objectName = this.asString(objectPerm.object);
@@ -126,7 +148,7 @@ export class PermissionsParserService {
           srcId: principal.id,
           dstId: objectNode.id,
           rel: REL_TYPES.GRANTS_OBJECT,
-          meta: JSON.stringify({ source: file })
+          meta: JSON.stringify({ source: file, parser: 'permissions', confidence: 'high' })
         });
       }
 
@@ -145,7 +167,7 @@ export class PermissionsParserService {
           srcId: principal.id,
           dstId: fieldNode.id,
           rel: REL_TYPES.GRANTS_FIELD,
-          meta: JSON.stringify({ source: file })
+          meta: JSON.stringify({ source: file, parser: 'permissions', confidence: 'high' })
         });
       }
     }

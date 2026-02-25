@@ -5,11 +5,12 @@ import path from 'node:path';
 import { AppConfigService } from '../config/app-config.service';
 import { EvidenceStoreService } from '../evidence/evidence-store.service';
 import { GraphService } from '../graph/graph.service';
-import { resolveFixturesPath, resolveRefreshStatePath } from '../common/path';
+import { resolveFixturesPath, resolveRefreshAuditPath, resolveRefreshStatePath } from '../common/path';
 import type { GraphPayload } from '../graph/graph.types';
 import { ApexClassParseError, ApexClassParserService } from './apex-class-parser.service';
 import { ApexTriggerParseError, ApexTriggerParserService } from './apex-trigger-parser.service';
 import { FlowParseError, FlowParserService } from './flow-parser.service';
+import type { ParserStats } from './parser-stats';
 import { PermissionsParseError, PermissionsParserService } from './permissions-parser.service';
 
 export type RefreshMode = 'full' | 'incremental';
@@ -18,6 +19,11 @@ interface RefreshState {
   sourcePath: string;
   fingerprint: string;
   refreshedAt: string;
+  parserStats: ParserStats[];
+  nodeCount: number;
+  edgeCount: number;
+  evidenceCount: number;
+  mode: RefreshMode;
 }
 
 interface RefreshOptions {
@@ -48,17 +54,30 @@ export class IngestionService {
     sourcePath: string;
     databasePath: string;
     evidenceIndexPath: string;
+    parserStats: ParserStats[];
   } {
     const mode: RefreshMode = options.mode ?? 'full';
     const sourcePath = resolveFixturesPath(
       options.fixturesPath ?? this.configService.permissionsFixturesPath()
     );
     const statePath = resolveRefreshStatePath(this.configService.refreshStatePath());
+    const auditPath = resolveRefreshAuditPath(this.configService.refreshAuditPath());
     const start = Date.now();
     const fingerprint = this.buildFixtureFingerprint(sourcePath);
 
     if (mode === 'incremental' && this.canSkipRefresh(sourcePath, statePath, fingerprint)) {
       const counts = this.graphService.getCounts();
+      const parserStats = this.readState(statePath)?.parserStats ?? [];
+      this.appendAuditEntry(auditPath, {
+        sourcePath,
+        fingerprint,
+        refreshedAt: new Date().toISOString(),
+        parserStats,
+        nodeCount: counts.nodeCount,
+        edgeCount: counts.edgeCount,
+        evidenceCount: this.evidenceStore.getDocumentCount(),
+        mode
+      });
       return {
         mode,
         skipped: true,
@@ -68,7 +87,8 @@ export class IngestionService {
         elapsedMs: Date.now() - start,
         sourcePath,
         databasePath: this.graphService.getDatabasePath(),
-        evidenceIndexPath: this.evidenceStore.getIndexPath()
+        evidenceIndexPath: this.evidenceStore.getIndexPath(),
+        parserStats
       };
     }
 
@@ -92,11 +112,24 @@ export class IngestionService {
     }
     const counts = this.graphService.fullRebuild(payload);
     const evidence = this.evidenceStore.reindexFromFixtures(sourcePath);
-    this.writeState(statePath, {
+    const parserStats = [
+      this.parserService.getLastStats(),
+      this.triggerParserService.getLastStats(),
+      this.classParserService.getLastStats(),
+      this.flowParserService.getLastStats()
+    ];
+    const state: RefreshState = {
       sourcePath,
       fingerprint,
-      refreshedAt: new Date().toISOString()
-    });
+      refreshedAt: new Date().toISOString(),
+      parserStats,
+      nodeCount: counts.nodeCount,
+      edgeCount: counts.edgeCount,
+      evidenceCount: evidence.documentCount,
+      mode
+    };
+    this.writeState(statePath, state);
+    this.appendAuditEntry(auditPath, state);
 
     return {
       mode,
@@ -106,7 +139,22 @@ export class IngestionService {
       elapsedMs: Date.now() - start,
       sourcePath,
       databasePath: this.graphService.getDatabasePath(),
-      evidenceIndexPath: evidence.sourcePath
+      evidenceIndexPath: evidence.sourcePath,
+      parserStats
+    };
+  }
+
+  getLatestIngestSummary(): {
+    latest?: RefreshState;
+    lowConfidenceSources: Array<{ source: string; count: number }>;
+    auditPath: string;
+  } {
+    const statePath = resolveRefreshStatePath(this.configService.refreshStatePath());
+    const auditPath = resolveRefreshAuditPath(this.configService.refreshAuditPath());
+    return {
+      latest: this.readState(statePath),
+      lowConfidenceSources: this.graphService.getLowConfidenceSummary(10),
+      auditPath
     };
   }
 
@@ -139,14 +187,19 @@ export class IngestionService {
     try {
       const raw = fs.readFileSync(statePath, 'utf8');
       const parsed = JSON.parse(raw) as Partial<RefreshState>;
-      if (
-        typeof parsed.sourcePath !== 'string' ||
-        typeof parsed.fingerprint !== 'string' ||
-        typeof parsed.refreshedAt !== 'string'
-      ) {
+      if (typeof parsed.sourcePath !== 'string' || typeof parsed.fingerprint !== 'string' || typeof parsed.refreshedAt !== 'string') {
         return undefined;
       }
-      return parsed as RefreshState;
+      return {
+        sourcePath: parsed.sourcePath,
+        fingerprint: parsed.fingerprint,
+        refreshedAt: parsed.refreshedAt,
+        parserStats: Array.isArray(parsed.parserStats) ? (parsed.parserStats as ParserStats[]) : [],
+        nodeCount: typeof parsed.nodeCount === 'number' ? parsed.nodeCount : 0,
+        edgeCount: typeof parsed.edgeCount === 'number' ? parsed.edgeCount : 0,
+        evidenceCount: typeof parsed.evidenceCount === 'number' ? parsed.evidenceCount : 0,
+        mode: parsed.mode === 'incremental' ? 'incremental' : 'full'
+      };
     } catch {
       return undefined;
     }
@@ -155,6 +208,11 @@ export class IngestionService {
   private writeState(statePath: string, state: RefreshState): void {
     fs.mkdirSync(path.dirname(statePath), { recursive: true });
     fs.writeFileSync(statePath, JSON.stringify(state, null, 2), 'utf8');
+  }
+
+  private appendAuditEntry(auditPath: string, state: RefreshState): void {
+    fs.mkdirSync(path.dirname(auditPath), { recursive: true });
+    fs.appendFileSync(auditPath, `${JSON.stringify(state)}\n`, 'utf8');
   }
 
   private buildFixtureFingerprint(sourcePath: string): string {

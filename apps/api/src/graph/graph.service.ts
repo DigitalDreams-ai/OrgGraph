@@ -35,6 +35,20 @@ export class GraphService implements OnModuleDestroy {
     return { nodeCount: nodes.value, edgeCount: edges.value };
   }
 
+  getLowConfidenceSummary(limit = 10): Array<{ source: string; count: number }> {
+    return this.db
+      .prepare(
+        `SELECT n.name as source, COUNT(*) as count
+         FROM edges e
+         JOIN nodes n ON n.id = e.src_id
+         WHERE e.meta LIKE '%"confidence":"low"%'
+         GROUP BY n.name
+         ORDER BY count DESC, n.name ASC
+         LIMIT ?`
+      )
+      .all(limit) as Array<{ source: string; count: number }>;
+  }
+
   fullRebuild(payload: GraphPayload): { nodeCount: number; edgeCount: number } {
     const insertNode = this.db.prepare(
       `INSERT INTO nodes (id, type, name, meta, created_at)
@@ -165,7 +179,7 @@ export class GraphService implements OnModuleDestroy {
 
     const rows = this.db
       .prepare(
-        `SELECT n.type as type, n.name as name, e.rel as rel, t.name as target
+        `SELECT n.type as type, n.name as name, e.rel as rel, t.name as target, e.meta as meta
          FROM edges e
          JOIN nodes n ON e.src_id = n.id
          JOIN nodes t ON e.dst_id = t.id
@@ -188,7 +202,7 @@ export class GraphService implements OnModuleDestroy {
     if (fieldNode) {
       const fieldRows = this.db
         .prepare(
-          `SELECT n.type as type, n.name as name, e.rel as rel, t.name as target
+          `SELECT n.type as type, n.name as name, e.rel as rel, t.name as target, e.meta as meta
            FROM edges e
            JOIN nodes n ON e.src_id = n.id
            JOIN nodes t ON e.dst_id = t.id
@@ -209,7 +223,7 @@ export class GraphService implements OnModuleDestroy {
     if (objectNode) {
       const objectRows = this.db
         .prepare(
-          `SELECT n.type as type, n.name as name, e.rel as rel, t.name as target
+          `SELECT n.type as type, n.name as name, e.rel as rel, t.name as target, e.meta as meta
            FROM edges e
            JOIN nodes n ON e.src_id = n.id
            JOIN nodes t ON e.dst_id = t.id

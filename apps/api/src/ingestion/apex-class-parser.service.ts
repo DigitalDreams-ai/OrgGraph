@@ -4,6 +4,7 @@ import path from 'node:path';
 import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
 import { stableId } from '../common/ids';
 import type { GraphEdge, GraphNode, GraphPayload } from '../graph/graph.types';
+import type { ParserStats } from './parser-stats';
 
 export class ApexClassParseError extends Error {
   constructor(
@@ -17,17 +18,44 @@ export class ApexClassParseError extends Error {
 
 @Injectable()
 export class ApexClassParserService {
+  private static readonly IGNORED_OBJECT_TOKENS = new Set([
+    'String',
+    'Integer',
+    'Decimal',
+    'Date',
+    'Datetime',
+    'Boolean',
+    'Object',
+    'Test'
+  ]);
+
+  private lastStats: ParserStats = {
+    parser: 'apex-class',
+    filesDiscovered: 0,
+    filesParsed: 0,
+    filesSkipped: 0,
+    warnings: []
+  };
+
   parseFromFixtures(rootPath: string): GraphPayload {
     const classesDir = this.resolveClassesDir(rootPath);
     const tolerateMissingDeclaration = path.basename(classesDir) === 'classes';
     const nodesById = new Map<string, GraphNode>();
     const edgesById = new Map<string, GraphEdge>();
+    this.lastStats = {
+      parser: 'apex-class',
+      filesDiscovered: 0,
+      filesParsed: 0,
+      filesSkipped: 0,
+      warnings: []
+    };
 
     if (!fs.existsSync(classesDir)) {
       return { nodes: [], edges: [] };
     }
 
     const files = fs.readdirSync(classesDir).filter((name) => name.endsWith('.cls'));
+    this.lastStats.filesDiscovered = files.length;
 
     for (const file of files) {
       const filePath = path.join(classesDir, file);
@@ -48,13 +76,16 @@ export class ApexClassParserService {
           error instanceof ApexClassParseError &&
           error.reason.includes('missing class/interface/enum declaration')
         ) {
+          this.lastStats.filesSkipped += 1;
           continue;
         }
         throw error;
       }
       if (!parsed) {
+        this.lastStats.filesSkipped += 1;
         continue;
       }
+      this.lastStats.filesParsed += 1;
 
       const classNode = this.upsertNode(nodesById, {
         type: NODE_TYPES.APEX_CLASS,
@@ -72,14 +103,14 @@ export class ApexClassParserService {
           srcId: classNode.id,
           dstId: objectNode.id,
           rel: REL_TYPES.QUERIES,
-          meta: JSON.stringify({ source: file })
+          meta: JSON.stringify({ source: file, parser: 'apex-class', confidence: 'high' })
         });
 
         this.upsertEdge(edgesById, {
           srcId: classNode.id,
           dstId: objectNode.id,
           rel: REL_TYPES.REFERENCES,
-          meta: JSON.stringify({ source: file })
+          meta: JSON.stringify({ source: file, parser: 'apex-class', confidence: 'medium' })
         });
       }
 
@@ -93,7 +124,7 @@ export class ApexClassParserService {
           srcId: classNode.id,
           dstId: objectNode.id,
           rel: REL_TYPES.WRITES,
-          meta: JSON.stringify({ source: file })
+          meta: JSON.stringify({ source: file, parser: 'apex-class', confidence: 'medium' })
         });
       }
 
@@ -107,14 +138,14 @@ export class ApexClassParserService {
           srcId: classNode.id,
           dstId: fieldNode.id,
           rel: REL_TYPES.QUERIES,
-          meta: JSON.stringify({ source: file })
+          meta: JSON.stringify({ source: file, parser: 'apex-class', confidence: 'high' })
         });
 
         this.upsertEdge(edgesById, {
           srcId: classNode.id,
           dstId: fieldNode.id,
           rel: REL_TYPES.REFERENCES,
-          meta: JSON.stringify({ source: file })
+          meta: JSON.stringify({ source: file, parser: 'apex-class', confidence: 'medium' })
         });
       }
     }
@@ -131,6 +162,10 @@ export class ApexClassParserService {
           a.id.localeCompare(b.id)
       )
     };
+  }
+
+  getLastStats(): ParserStats {
+    return this.lastStats;
   }
 
   private resolveClassesDir(rootPath: string): string {
@@ -187,6 +222,10 @@ export class ApexClassParserService {
     for (const match of scrubbed.matchAll(dmlRegex)) {
       const token = match[2];
       const resolved = variableTypes.get(token) ?? token;
+      if (ApexClassParserService.IGNORED_OBJECT_TOKENS.has(resolved)) {
+        this.lastStats.warnings.push(`ignored likely non-sObject DML token "${resolved}" in ${filePath}`);
+        continue;
+      }
       if (resolved[0] === resolved[0].toUpperCase()) {
         writtenObjects.add(resolved);
       }

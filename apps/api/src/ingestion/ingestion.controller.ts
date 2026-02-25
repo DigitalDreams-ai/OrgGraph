@@ -1,5 +1,6 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Post } from '@nestjs/common';
 import { IngestionService, type RefreshMode } from './ingestion.service';
+import type { ParserStats } from './parser-stats';
 
 interface RefreshBody {
   fixturesPath?: unknown;
@@ -22,6 +23,7 @@ export class IngestionController {
     sourcePath: string;
     databasePath: string;
     evidenceIndexPath: string;
+    parserStats: ParserStats[];
   } {
     if (body.fixturesPath !== undefined && typeof body.fixturesPath !== 'string') {
       throw new BadRequestException('fixturesPath must be a string');
@@ -37,5 +39,14 @@ export class IngestionController {
       fixturesPath: body.fixturesPath as string | undefined,
       mode: body.mode as RefreshMode | undefined
     });
+  }
+
+  @Get('/ingest/latest')
+  latestIngest(): {
+    latest?: unknown;
+    lowConfidenceSources: Array<{ source: string; count: number }>;
+    auditPath: string;
+  } {
+    return this.ingestionService.getLatestIngestSummary();
   }
 }

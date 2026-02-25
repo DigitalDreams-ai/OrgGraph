@@ -4,6 +4,7 @@ import path from 'node:path';
 import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
 import { stableId } from '../common/ids';
 import type { GraphEdge, GraphNode, GraphPayload } from '../graph/graph.types';
+import type { ParserStats } from './parser-stats';
 
 export class ApexTriggerParseError extends Error {
   constructor(
@@ -17,21 +18,38 @@ export class ApexTriggerParseError extends Error {
 
 @Injectable()
 export class ApexTriggerParserService {
+  private lastStats: ParserStats = {
+    parser: 'apex-trigger',
+    filesDiscovered: 0,
+    filesParsed: 0,
+    filesSkipped: 0,
+    warnings: []
+  };
+
   parseFromFixtures(rootPath: string): GraphPayload {
     const triggersDir = this.resolveTriggersDir(rootPath);
     const nodesById = new Map<string, GraphNode>();
     const edgesById = new Map<string, GraphEdge>();
+    this.lastStats = {
+      parser: 'apex-trigger',
+      filesDiscovered: 0,
+      filesParsed: 0,
+      filesSkipped: 0,
+      warnings: []
+    };
 
     if (!fs.existsSync(triggersDir)) {
       return { nodes: [], edges: [] };
     }
 
     const files = fs.readdirSync(triggersDir).filter((name) => name.endsWith('.trigger'));
+    this.lastStats.filesDiscovered = files.length;
 
     for (const file of files) {
       const filePath = path.join(triggersDir, file);
       const source = fs.readFileSync(filePath, 'utf8');
       const parsed = this.parseTriggerSource(source, filePath);
+      this.lastStats.filesParsed += 1;
 
       const triggerNode = this.upsertNode(nodesById, {
         type: NODE_TYPES.APEX_TRIGGER,
@@ -48,7 +66,7 @@ export class ApexTriggerParserService {
         srcId: triggerNode.id,
         dstId: targetObject.id,
         rel: REL_TYPES.TRIGGERS_ON,
-        meta: JSON.stringify({ source: file })
+        meta: JSON.stringify({ source: file, parser: 'apex-trigger', confidence: 'high' })
       });
 
       for (const objectName of parsed.references) {
@@ -60,7 +78,7 @@ export class ApexTriggerParserService {
           srcId: triggerNode.id,
           dstId: referencedObject.id,
           rel: REL_TYPES.REFERENCES,
-          meta: JSON.stringify({ source: file })
+          meta: JSON.stringify({ source: file, parser: 'apex-trigger', confidence: 'medium' })
         });
       }
     }
@@ -77,6 +95,10 @@ export class ApexTriggerParserService {
     );
 
     return { nodes, edges };
+  }
+
+  getLastStats(): ParserStats {
+    return this.lastStats;
   }
 
   private resolveTriggersDir(rootPath: string): string {

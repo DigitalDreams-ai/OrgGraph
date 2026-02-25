@@ -37,6 +37,7 @@ export interface AutomationHit {
   name: string;
   rel: string;
   target: string;
+  meta?: string;
 }
 
 export interface ImpactHit {
@@ -44,4 +45,5 @@ export interface ImpactHit {
   name: string;
   rel: string;
   target: string;
+  meta?: string;
 }

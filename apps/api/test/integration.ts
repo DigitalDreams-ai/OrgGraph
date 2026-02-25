@@ -79,6 +79,17 @@ async function run(): Promise<void> {
     assert.equal(readyBody.checks.db.ok, true);
     assert.equal(readyBody.checks.fixtures.ok, true);
 
+    const ingestLatestRes = await fetch(`${base}/ingest/latest`);
+    assert.equal(ingestLatestRes.status, 200, 'ingest latest should return 200');
+    const ingestLatestBody = (await ingestLatestRes.json()) as {
+      latest?: { parserStats?: Array<{ parser: string }> };
+      lowConfidenceSources: unknown[];
+      auditPath: string;
+    };
+    assert.ok(Array.isArray(ingestLatestBody.lowConfidenceSources));
+    assert.equal(typeof ingestLatestBody.auditPath, 'string');
+    assert.ok((ingestLatestBody.latest?.parserStats?.length ?? 0) >= 1);
+
     const refreshIncrementalRes = await fetch(`${base}/refresh`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -232,12 +243,15 @@ async function run(): Promise<void> {
     assert.equal(automationRes.status, 200, 'automation endpoint should return 200');
     const automationBody = (await automationRes.json()) as {
       status: string;
-      automations: Array<{ type: string; name: string; rel: string }>;
+      automations: Array<{ type: string; name: string; rel: string; confidence: string; score: number }>;
+      strictMode: boolean;
     };
     assert.equal(automationBody.status, 'implemented', 'automation endpoint should be implemented');
     assert.ok(automationBody.automations.length > 0, 'automation should return at least one item');
     assert.equal(automationBody.automations[0].name, 'CaseBeforeUpdate');
     assert.equal(automationBody.automations[0].rel, 'TRIGGERS_ON');
+    assert.equal(typeof automationBody.automations[0].score, 'number');
+    assert.equal(automationBody.strictMode, false);
 
     const automationOppRes = await fetch(`${base}/automation?object=Opportunity`);
     assert.equal(automationOppRes.status, 200, 'automation opportunity endpoint should return 200');
@@ -263,9 +277,10 @@ async function run(): Promise<void> {
     assert.equal(impactPositiveRes.status, 200, 'impact positive should return 200');
     const impactPositive = (await impactPositiveRes.json()) as {
       status: string;
-      paths: Array<{ from: string; rel: string; to: string }>;
+      paths: Array<{ from: string; rel: string; to: string; confidence: string; score: number }>;
       totalPaths: number;
       truncated: boolean;
+      strictMode: boolean;
     };
     assert.equal(impactPositive.status, 'implemented', 'impact endpoint should be implemented');
     assert.ok(
@@ -274,6 +289,14 @@ async function run(): Promise<void> {
     );
     assert.equal(impactPositive.totalPaths >= impactPositive.paths.length, true);
     assert.equal(impactPositive.truncated, false);
+    assert.equal(impactPositive.strictMode, false);
+    assert.equal(typeof impactPositive.paths[0].score, 'number');
+
+    const impactStrictRes = await fetch(`${base}/impact?field=Opportunity.StageName&strict=true&debug=true`);
+    assert.equal(impactStrictRes.status, 200, 'impact strict/debug should return 200');
+    const impactStrict = (await impactStrictRes.json()) as { strictMode: boolean; debug?: { raw: unknown[] } };
+    assert.equal(impactStrict.strictMode, true);
+    assert.ok(Array.isArray(impactStrict.debug?.raw));
 
     const impactNegativeRes = await fetch(`${base}/impact?field=Lead.Unused__c`);
     assert.equal(impactNegativeRes.status, 200, 'impact negative should return 200');
