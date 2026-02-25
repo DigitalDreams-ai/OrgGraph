@@ -49,6 +49,7 @@ const psa = JSON.parse(fs.readFileSync(psaPath, 'utf8'));
 
 const byUser = new Map();
 const profileById = new Map();
+const unresolvedProfileIds = new Set();
 
 const profileRecords = profiles.result?.records ?? [];
 for (const row of profileRecords) {
@@ -63,6 +64,9 @@ for (const row of userRecords) {
   const username = String(row.Username || '').trim().toLowerCase();
   const profileId = String(row.ProfileId || '').trim();
   const profileName = profileById.get(profileId) || profileId;
+  if (profileId && !profileById.has(profileId)) {
+    unresolvedProfileIds.add(profileId);
+  }
   if (!username) continue;
   if (!byUser.has(username)) byUser.set(username, []);
   if (profileName && !byUser.get(username).includes(profileName)) {
@@ -95,4 +99,10 @@ for (const username of sortedUsers) {
 
 fs.writeFileSync(outputPath, JSON.stringify(output, null, 2) + '\n', 'utf8');
 console.log(`Wrote ${Object.keys(output).length} users to ${outputPath}`);
+if (unresolvedProfileIds.size > 0) {
+  const sample = [...unresolvedProfileIds].slice(0, 5).join(', ');
+  console.error(
+    `Warning: ${unresolvedProfileIds.size} users had unresolved ProfileId values (sample: ${sample})`
+  );
+}
 NODE
