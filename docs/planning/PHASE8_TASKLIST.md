@@ -20,11 +20,6 @@ Goal: strengthen reasoning quality by improving ontology constraints, parser pre
 - Operational monitoring and release discipline
 - Retrieval/storage expansion only after quality gates are met
 
-## Not In Phase 8
-- Full data-store migration execution (SQLite -> Postgres cutover)
-- Chroma rollout by default
-- Broad release automation beyond the minimal promotion safety gate
-
 ## 1. Ontology Constraint Expansion
 
 - [ ] Define and encode domain invariants (object/field ownership, grant preconditions)
