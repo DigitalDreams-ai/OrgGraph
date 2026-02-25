@@ -39,14 +39,14 @@ export class PermissionsParserService {
     const edgesById = new Map<string, GraphEdge>();
 
     this.parseEntityDir({
-      dirPath: path.join(rootPath, 'profiles'),
+      dirPath: this.resolveEntityDir(rootPath, ['profiles']),
       entityType: NODE_TYPES.PROFILE,
       nodesById,
       edgesById
     });
 
     this.parseEntityDir({
-      dirPath: path.join(rootPath, 'permission-sets'),
+      dirPath: this.resolveEntityDir(rootPath, ['permission-sets', 'permissionsets']),
       entityType: NODE_TYPES.PERMISSION_SET,
       nodesById,
       edgesById
@@ -67,6 +67,16 @@ export class PermissionsParserService {
       nodes,
       edges
     };
+  }
+
+  private resolveEntityDir(rootPath: string, candidates: string[]): string {
+    for (const name of candidates) {
+      const dirPath = path.join(rootPath, name);
+      if (fs.existsSync(dirPath)) {
+        return dirPath;
+      }
+    }
+    return path.join(rootPath, candidates[0]);
   }
 
   private parseEntityDir(params: {

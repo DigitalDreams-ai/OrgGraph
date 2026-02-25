@@ -18,7 +18,7 @@ export class ApexTriggerParseError extends Error {
 @Injectable()
 export class ApexTriggerParserService {
   parseFromFixtures(rootPath: string): GraphPayload {
-    const triggersDir = path.join(rootPath, 'apex-triggers');
+    const triggersDir = this.resolveTriggersDir(rootPath);
     const nodesById = new Map<string, GraphNode>();
     const edgesById = new Map<string, GraphEdge>();
 
@@ -77,6 +77,17 @@ export class ApexTriggerParserService {
     );
 
     return { nodes, edges };
+  }
+
+  private resolveTriggersDir(rootPath: string): string {
+    const candidates = ['apex-triggers', 'triggers'];
+    for (const name of candidates) {
+      const dir = path.join(rootPath, name);
+      if (fs.existsSync(dir)) {
+        return dir;
+      }
+    }
+    return path.join(rootPath, candidates[0]);
   }
 
   private parseTriggerSource(
