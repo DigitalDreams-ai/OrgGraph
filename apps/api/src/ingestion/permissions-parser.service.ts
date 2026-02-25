@@ -10,6 +10,7 @@ import { createParserStats, type ParserStats } from './parser-stats';
 interface PermissionEntity {
   objectPermissions?: unknown;
   fieldPermissions?: unknown;
+  userPermissions?: unknown;
 }
 
 interface ParsedPermissionFile {
