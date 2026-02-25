@@ -14,11 +14,16 @@ import {
 import type { GraphPayload } from '../graph/graph.types';
 import { ApexClassParseError, ApexClassParserService } from './apex-class-parser.service';
 import { ApexTriggerParseError, ApexTriggerParserService } from './apex-trigger-parser.service';
+import { ConnectedAppParserService } from './connected-app-parser.service';
+import { CustomObjectParserService } from './custom-object-parser.service';
+import { CustomPermissionParserService } from './custom-permission-parser.service';
 import { FlowParseError, FlowParserService } from './flow-parser.service';
 import type { OntologyConstraintReport } from './ontology-constraints.service';
 import { OntologyConstraintsService } from './ontology-constraints.service';
 import type { ParserStats } from './parser-stats';
+import { PermissionSetGroupParserService } from './permission-set-group-parser.service';
 import { PermissionsParseError, PermissionsParserService } from './permissions-parser.service';
+import { StagedUiMetadataParserService } from './staged-ui-metadata-parser.service';
 
 export type RefreshMode = 'full' | 'incremental';
 
@@ -51,6 +56,11 @@ export class IngestionService {
     private readonly triggerParserService: ApexTriggerParserService,
     private readonly classParserService: ApexClassParserService,
     private readonly flowParserService: FlowParserService,
+    private readonly customObjectParserService: CustomObjectParserService,
+    private readonly permissionSetGroupParserService: PermissionSetGroupParserService,
+    private readonly customPermissionParserService: CustomPermissionParserService,
+    private readonly connectedAppParserService: ConnectedAppParserService,
+    private readonly stagedUiMetadataParserService: StagedUiMetadataParserService,
     private readonly constraintsService: OntologyConstraintsService
   ) {}
 
@@ -120,7 +130,25 @@ export class IngestionService {
         const triggerPayload = this.triggerParserService.parseFromFixtures(sourcePath);
         const classPayload = this.classParserService.parseFromFixtures(sourcePath);
         const flowPayload = this.flowParserService.parseFromFixtures(sourcePath);
-        payload = this.mergePayloads(permissionsPayload, triggerPayload, classPayload, flowPayload);
+        const customObjectPayload = this.customObjectParserService.parseFromFixtures(sourcePath);
+        const permissionSetGroupPayload =
+          this.permissionSetGroupParserService.parseFromFixtures(sourcePath);
+        const customPermissionPayload = this.customPermissionParserService.parseFromFixtures(sourcePath);
+        const connectedAppPayload = this.connectedAppParserService.parseFromFixtures(sourcePath);
+        const uiMetadataPayload = this.configService.ingestUiMetadataEnabled()
+          ? this.stagedUiMetadataParserService.parseFromFixtures(sourcePath)
+          : { nodes: [], edges: [] };
+        payload = this.mergePayloads(
+          permissionsPayload,
+          triggerPayload,
+          classPayload,
+          flowPayload,
+          customObjectPayload,
+          permissionSetGroupPayload,
+          customPermissionPayload,
+          connectedAppPayload,
+          uiMetadataPayload
+        );
       } catch (error) {
         if (
           error instanceof PermissionsParseError ||
@@ -146,7 +174,14 @@ export class IngestionService {
         this.parserService.getLastStats(),
         this.triggerParserService.getLastStats(),
         this.classParserService.getLastStats(),
-        this.flowParserService.getLastStats()
+        this.flowParserService.getLastStats(),
+        this.customObjectParserService.getLastStats(),
+        this.permissionSetGroupParserService.getLastStats(),
+        this.customPermissionParserService.getLastStats(),
+        this.connectedAppParserService.getLastStats(),
+        ...(this.configService.ingestUiMetadataEnabled()
+          ? [this.stagedUiMetadataParserService.getLastStats()]
+          : [])
       ];
       const state: RefreshState = {
         sourcePath,
@@ -304,9 +339,19 @@ export class IngestionService {
     const targetDirs = [
       'profiles',
       'permission-sets',
+      'permission-set-groups',
+      'custom-permissions',
+      'connectedApps',
+      'externalClientApplications',
+      'objects',
       'apex-triggers',
       'apex-classes',
-      'flows'
+      'flows',
+      'pages',
+      'lwc',
+      'aura',
+      'quickActions',
+      'layouts'
     ];
 
     const fingerprintRows: string[] = [];

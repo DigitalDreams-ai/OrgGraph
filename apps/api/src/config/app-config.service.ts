@@ -33,6 +33,7 @@ export class AppConfigService {
     this.validateOptionalString('SF_AUTO_REFRESH_AFTER_RETRIEVE');
     this.validateOptionalString('MIN_CONFIDENCE_DEFAULT');
     this.validateOptionalString('ASK_CONSISTENCY_CHECK_ENABLED');
+    this.validateOptionalString('INGEST_UI_METADATA_ENABLED');
     this.validateOptionalString('ORGGRAPH_LOG_LEVEL');
     this.validateOptionalString('ORGGRAPH_HTTP_LOG_ENABLED');
     this.validateOptionalString('PORT');
@@ -182,6 +183,10 @@ export class AppConfigService {
 
   askConsistencyCheckEnabled(): boolean {
     return (process.env.ASK_CONSISTENCY_CHECK_ENABLED || 'true').trim().toLowerCase() === 'true';
+  }
+
+  ingestUiMetadataEnabled(): boolean {
+    return (process.env.INGEST_UI_METADATA_ENABLED || 'false').trim().toLowerCase() === 'true';
   }
 
   nestLogLevels(): LogLevel[] {

@@ -11,6 +11,8 @@ interface PermissionEntity {
   objectPermissions?: unknown;
   fieldPermissions?: unknown;
   userPermissions?: unknown;
+  customPermissions?: unknown;
+  applicationVisibilities?: unknown;
 }
 
 interface ParsedPermissionFile {
@@ -175,6 +177,50 @@ export class PermissionsParserService {
           srcId: principal.id,
           dstId: permissionNode.id,
           rel: REL_TYPES.GRANTS_SYSTEM_PERMISSION,
+          meta: JSON.stringify({ source: file, parser: 'permissions', confidence: 'high' })
+        });
+      }
+
+      for (const customPerm of this.toArray<Record<string, unknown>>(body.customPermissions)) {
+        const permissionName =
+          this.asString(customPerm.name) ??
+          this.asString(customPerm.customPermission) ??
+          this.asString(customPerm.fullName);
+        if (!permissionName || !this.isTruthy(customPerm.enabled)) {
+          continue;
+        }
+
+        const customPermissionNode = this.upsertNode(nodesById, {
+          type: NODE_TYPES.CUSTOM_PERMISSION,
+          name: permissionName
+        });
+
+        this.upsertEdge(edgesById, {
+          srcId: principal.id,
+          dstId: customPermissionNode.id,
+          rel: REL_TYPES.GRANTS_CUSTOM_PERMISSION,
+          meta: JSON.stringify({ source: file, parser: 'permissions', confidence: 'high' })
+        });
+      }
+
+      for (const appVisibility of this.toArray<Record<string, unknown>>(body.applicationVisibilities)) {
+        const appName =
+          this.asString(appVisibility.application) ??
+          this.asString(appVisibility.applicationName) ??
+          this.asString(appVisibility.name);
+        if (!appName || !this.isTruthy(appVisibility.visible)) {
+          continue;
+        }
+
+        const connectedAppNode = this.upsertNode(nodesById, {
+          type: NODE_TYPES.CONNECTED_APP,
+          name: appName
+        });
+
+        this.upsertEdge(edgesById, {
+          srcId: principal.id,
+          dstId: connectedAppNode.id,
+          rel: REL_TYPES.USES_CONNECTED_APP,
           meta: JSON.stringify({ source: file, parser: 'permissions', confidence: 'high' })
         });
       }
