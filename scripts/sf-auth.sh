@@ -111,9 +111,8 @@ json.issued_at = new Date().toISOString();
 fs.writeFileSync(tokenPath, JSON.stringify(json, null, 2) + '\n', 'utf8');
 NODE
 
-  sf org login access-token \
+  SF_ACCESS_TOKEN="$ACCESS_TOKEN" sf org login access-token \
     --instance-url "$INSTANCE_URL" \
-    --access-token "$ACCESS_TOKEN" \
     --alias "$SF_ALIAS" \
     --set-default \
     --no-prompt \

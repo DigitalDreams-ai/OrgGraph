@@ -299,14 +299,14 @@ export class OrgService {
           'access-token',
           '--instance-url',
           tokenResponse.instanceUrl,
-          '--access-token',
-          tokenResponse.accessToken,
           '--alias',
           alias,
           '--set-default',
+          '--no-prompt',
           '--json'
         ],
-        projectPath
+        projectPath,
+        { SF_ACCESS_TOKEN: tokenResponse.accessToken }
       );
       return;
     }
@@ -524,14 +524,22 @@ export class OrgService {
     );
   }
 
-  private async runSfCommandWithRetry(args: string[], cwd: string): Promise<void> {
+  private async runSfCommandWithRetry(
+    args: string[],
+    cwd: string,
+    env?: NodeJS.ProcessEnv
+  ): Promise<void> {
     const retries = this.configService.sfRetryCount();
     const retryDelayMs = this.configService.sfRetryDelayMs();
     const timeoutMs = this.configService.sfTimeoutSeconds() * 1000;
 
     let lastError = '';
     for (let attempt = 0; attempt <= retries; attempt += 1) {
-      const result = await this.commandRunner.run('sf', args, { cwd, timeoutMs });
+      const result = await this.commandRunner.run('sf', args, {
+        cwd,
+        timeoutMs,
+        env: env ? { ...process.env, ...env } : process.env
+      });
       if (result.exitCode === 0) {
         return;
       }

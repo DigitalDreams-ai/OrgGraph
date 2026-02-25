@@ -13,12 +13,13 @@ export class CommandRunnerService {
   run(
     command: string,
     args: string[],
-    options: { cwd?: string; timeoutMs?: number } = {}
+    options: { cwd?: string; timeoutMs?: number; env?: NodeJS.ProcessEnv } = {}
   ): Promise<CommandResult> {
     const startedAt = Date.now();
     return new Promise((resolve, reject) => {
       const child = spawn(command, args, {
         cwd: options.cwd,
+        env: options.env ?? process.env,
         shell: false,
         stdio: ['ignore', 'pipe', 'pipe']
       });
@@ -56,4 +57,3 @@ export class CommandRunnerService {
     });
   }
 }
-
