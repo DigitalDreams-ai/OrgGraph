@@ -1,15 +1,14 @@
 # Sandbox Connection Checklist (External Client App OAuth)
 
-## Before Codex Can Run Live Retrieve
-- [ ] Confirm target sandbox org and login domain (`https://test.salesforce.com` for sandbox).
-- [ ] Create External Client App (Setup -> App Manager -> New External Client App).
-- [ ] Enable OAuth and set callback URL (must match `SF_REDIRECT_URI`).
-- [ ] Add scopes: `refresh_token`, `api`, `web`.
-- [ ] Capture `Client ID` and `Client Secret`.
-- [ ] Confirm integration user has metadata retrieve permissions.
-- [ ] Confirm NAS can reach Salesforce OAuth/API endpoints.
+## 1) Create External Client App in Salesforce Sandbox
+- [ ] In Sandbox org: Setup -> App Manager -> New External Client App.
+- [ ] Enable OAuth.
+- [ ] Set callback URL (must exactly match `SF_REDIRECT_URI`).
+- [ ] Add OAuth scopes: `refresh_token`, `api`, `web`.
+- [ ] Save and capture `Client ID` and `Client Secret`.
 
-## Local Secrets & Env on NAS
+## 2) Configure NAS Environment
+- [ ] Confirm login domain: `https://test.salesforce.com`.
 - [ ] Set `SF_INTEGRATION_ENABLED=true`.
 - [ ] Set `SF_AUTH_MODE=oauth_refresh_token`.
 - [ ] Set `SF_LOGIN_DOMAIN=https://test.salesforce.com`.
@@ -18,26 +17,39 @@
 - [ ] Set `SF_TOKEN_STORE_PATH=.secrets/sf-oauth-token.json`.
 - [ ] Ensure `.secrets/` exists.
 
-## One-Time Authorization Code Bootstrap
-- [ ] Run `npm run sf:oauth:url`.
-- [ ] Open URL, login, approve app, capture `code` from callback URL.
-- [ ] Save only the auth code value to `.secrets/sf-auth-code.txt`.
-- [ ] Run `npm run sf:oauth:exchange` to create token store JSON.
+## 3) Authorize User and Capture Auth Code
+- [ ] Generate URL with `npm run sf:oauth:url`.
+- [ ] Confirm URL format is:
+- [ ] `https://{loginDomain}/services/oauth2/authorize?response_type=code&client_id=...&redirect_uri=...&state=...`
+- [ ] Open URL, log in, approve app, copy `code` from redirect.
+- [ ] Save only the code value to `.secrets/sf-auth-code.txt`.
 
-## First Retrieval (Sandbox)
-- [ ] Run `npm run sf:auth` (uses refresh token, rotates access token).
+## 4) Exchange Auth Code for Tokens
+- [ ] Run `npm run sf:oauth:exchange`.
+- [ ] Confirm request target is:
+- [ ] `POST https://{loginDomain}/services/oauth2/token`
+- [ ] Confirm payload includes:
+- [ ] `grant_type=authorization_code`, `client_id`, `client_secret`, `redirect_uri`, `code`.
+- [ ] Confirm `.secrets/sf-oauth-token.json` contains `access_token`, `refresh_token`, `instance_url`.
+
+## 5) Use and Refresh Tokens
+- [ ] Run `npm run sf:auth` (uses `grant_type=refresh_token` and rotates access token).
+- [ ] Confirm API calls use `Authorization: Bearer {access_token}`.
+- [ ] Confirm refresh flow works after access token expiry.
+
+## 6) Run Retrieve + Refresh Pipeline
 - [ ] Run `npm run sf:retrieve`.
 - [ ] Run `npm run sf:retrieve-refresh`.
-- [ ] Capture baseline node/edge/evidence counts from response.
+- [ ] Capture baseline node/edge/evidence counts.
 
-## Verification
+## 7) Verify OrgGraph Endpoints
 - [ ] `GET /ready` returns `status=ready`.
 - [ ] `GET /perms` returns expected path for known test user/object.
 - [ ] `GET /automation` returns expected automations.
 - [ ] `GET /impact` returns expected impact paths.
 - [ ] `POST /ask` returns deterministic plan + citations.
 
-## Promotion Gate (to Production Org)
+## 8) Promotion Gate
 - [ ] Sandbox results reviewed and accepted.
 - [ ] Manifest scope tuned to avoid noisy retrieval.
 - [ ] Rollback plan confirmed.
