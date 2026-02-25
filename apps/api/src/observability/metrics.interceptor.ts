@@ -13,6 +13,7 @@ import { MetricsService } from './metrics.service';
 @Injectable()
 export class MetricsInterceptor implements NestInterceptor {
   private readonly logger = new Logger(MetricsInterceptor.name);
+  private static readonly LOG_EXCLUDED_PATHS = new Set(['/ready']);
 
   constructor(
     private readonly metrics: MetricsService,
@@ -32,7 +33,10 @@ export class MetricsInterceptor implements NestInterceptor {
         const statusCode = Number(response?.statusCode ?? 0);
         const elapsedMs = Date.now() - startedAt;
         this.metrics.record(path, method, statusCode, elapsedMs);
-        if (this.configService.httpLogEnabled()) {
+        if (
+          this.configService.httpLogEnabled() &&
+          !MetricsInterceptor.LOG_EXCLUDED_PATHS.has(path)
+        ) {
           this.logger.log(`${method} ${path} -> ${statusCode} (${elapsedMs}ms)`);
         }
       })

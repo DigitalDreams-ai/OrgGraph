@@ -6,8 +6,8 @@ const WEB_LOG_ENABLED = (process.env.ORGGRAPH_WEB_LOG_ENABLED || 'false').trim()
 export async function GET(): Promise<NextResponse> {
   try {
     const res = await fetch(`${API_BASE}/ready`, { cache: 'no-store' });
-    if (WEB_LOG_ENABLED) {
-      console.log(`[web] GET /api/ready upstreamStatus=${res.status}`);
+    if (WEB_LOG_ENABLED && !res.ok) {
+      console.warn(`[web] GET /api/ready upstreamStatus=${res.status}`);
     }
     const payload = await res.json().catch(() => undefined);
     if (!res.ok) {
