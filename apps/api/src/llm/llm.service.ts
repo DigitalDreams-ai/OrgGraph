@@ -80,17 +80,19 @@ export class LlmService {
   }
 
   private resolveMaxTokens(override?: number): number {
+    const configured = this.configService.llmMaxOutputTokens();
     if (!override || !this.configService.llmAllowProviderOverride()) {
-      return this.configService.llmMaxOutputTokens();
+      return configured;
     }
-    return override;
+    return Math.min(override, configured);
   }
 
   private resolveTimeoutMs(override?: number): number {
+    const configured = this.configService.llmTimeoutMs();
     if (!override || !this.configService.llmAllowProviderOverride()) {
-      return this.configService.llmTimeoutMs();
+      return configured;
     }
-    return override;
+    return Math.min(override, configured);
   }
 
   private buildPrompt(request: LlmGenerateRequest): string {

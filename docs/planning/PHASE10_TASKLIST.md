@@ -7,6 +7,9 @@ Goal: add production-safe LLM capabilities for explanation and synthesis while p
 - Anthropic `llm_assist` now succeeds (`llm.used=true`) with model `claude-haiku-4-5-20251001`.
 - `/ask` citation handling was improved for index-style citation references.
 - Docker/runtime config was stabilized for fast provider/model switching without full stack rebuild.
+- Low-evidence refusal gate added for `llm_assist` (`insufficient evidence for llm_assist` fallback).
+- Request-level timeout/token overrides are now capped by configured global limits.
+- Added local provider smoke script (`scripts/llm-provider-smoke.sh`) and fallback runbook guidance.
 
 ## Entry Criteria
 - [ ] Phase 9 Postgres migration complete and stable
@@ -48,7 +51,7 @@ Goal: add production-safe LLM capabilities for explanation and synthesis while p
 
 - [x] Create strict system prompt: graph truth first, no uncited claims
 - [x] Add citation-grounded synthesis template using evidence snippets
-- [ ] Add refusal behavior for low-confidence/insufficient evidence cases
+- [x] Add refusal behavior for low-confidence/insufficient evidence cases
 - [x] Add deterministic fallback when provider call fails or times out
 
 ## 4. API & Runtime Controls
@@ -83,8 +86,8 @@ Goal: add production-safe LLM capabilities for explanation and synthesis while p
 
 - [x] `.env.example` includes OpenAI + Anthropic settings
 - [x] Runtime docs explain provider selection and model pinning
-- [ ] Fallback behavior documented when one provider is degraded
-- [ ] Local smoke script validates both provider configs (without exposing keys)
+- [x] Fallback behavior documented when one provider is degraded
+- [x] Local smoke script validates both provider configs (without exposing keys)
 
 ## Definition of Done (Phase 10)
 

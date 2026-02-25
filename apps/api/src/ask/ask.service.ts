@@ -10,6 +10,7 @@ import type { AskRequest, AskResponse } from './ask.types';
 @Injectable()
 export class AskService {
   private readonly logger = new Logger(AskService.name);
+  private static readonly LLM_MIN_CONFIDENCE = 0.6;
 
   constructor(
     private readonly configService: AppConfigService,
@@ -146,6 +147,14 @@ export class AskService {
           used: false,
           fallbackReason: 'llm disabled by configuration'
         };
+      } else if (citations.length === 0 || confidence < AskService.LLM_MIN_CONFIDENCE) {
+        mode = 'deterministic';
+        llm = {
+          ...llm,
+          used: false,
+          fallbackReason: 'insufficient evidence for llm_assist'
+        };
+        answer = deterministicAnswer;
       } else {
         const llmStartedAt = Date.now();
         try {

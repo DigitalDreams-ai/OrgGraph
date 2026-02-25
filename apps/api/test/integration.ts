@@ -481,6 +481,28 @@ async function run(): Promise<void> {
     assert.equal(askLlmAssist.llm.used, false);
     assert.match(String(askLlmAssist.llm.fallbackReason ?? ''), /provider is none|disabled/i);
 
+    const askLlmLowEvidenceRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'hello world',
+        mode: 'llm_assist',
+        llm: { provider: 'anthropic' }
+      })
+    });
+    assert.equal(
+      askLlmLowEvidenceRes.status,
+      201,
+      'ask llm low-evidence should return deterministic fallback'
+    );
+    const askLlmLowEvidence = (await askLlmLowEvidenceRes.json()) as {
+      mode: string;
+      llm: { used: boolean; fallbackReason?: string };
+    };
+    assert.equal(askLlmLowEvidence.mode, 'deterministic');
+    assert.equal(askLlmLowEvidence.llm.used, false);
+    assert.match(String(askLlmLowEvidence.llm.fallbackReason ?? ''), /insufficient evidence/i);
+
     const askLlmAnthropicRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
