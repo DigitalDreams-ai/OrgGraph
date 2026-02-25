@@ -9,6 +9,17 @@ function run(): void {
   assert.equal(permsPlan.entities.user, 'jane@example.com');
   assert.equal(permsPlan.entities.object, 'Case');
 
+  const complexEmailPermsPlan = planner.plan(
+    'Can _john.shbu0nbf92ei.98wz66bcffvd.lb7cpijolxkf.rvguteb2fgug@litify.com.uat edit object Opportunity?'
+  );
+  assert.equal(complexEmailPermsPlan.intent, 'perms');
+  assert.equal(
+    complexEmailPermsPlan.entities.user,
+    '_john.shbu0nbf92ei.98wz66bcffvd.lb7cpijolxkf.rvguteb2fgug@litify.com.uat'
+  );
+  assert.equal(complexEmailPermsPlan.entities.object, 'Opportunity');
+  assert.equal(complexEmailPermsPlan.entities.field, undefined);
+
   const impactPlan = planner.plan('What touches Opportunity.StageName?');
   assert.equal(impactPlan.intent, 'impact');
   assert.equal(impactPlan.entities.field, 'Opportunity.StageName');

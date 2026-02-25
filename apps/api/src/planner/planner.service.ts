@@ -52,11 +52,15 @@ export class PlannerService {
   }
 
   private extractField(input: string): string | undefined {
+    const emailRanges = this.findEmailRanges(input);
     const pattern = /\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b/g;
     for (const match of input.matchAll(pattern)) {
       const index = match.index ?? 0;
       const before = index > 0 ? input[index - 1] : '';
       if (before === '@') {
+        continue;
+      }
+      if (this.overlapsEmailRange(index, match[0].length, emailRanges)) {
         continue;
       }
       return match[0];
@@ -80,5 +84,27 @@ export class PlannerService {
     }
 
     return undefined;
+  }
+
+  private findEmailRanges(input: string): Array<{ start: number; end: number }> {
+    const emailPattern = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+    const ranges: Array<{ start: number; end: number }> = [];
+    for (const match of input.matchAll(emailPattern)) {
+      const start = match.index ?? -1;
+      if (start < 0) {
+        continue;
+      }
+      ranges.push({ start, end: start + match[0].length });
+    }
+    return ranges;
+  }
+
+  private overlapsEmailRange(
+    tokenStart: number,
+    tokenLength: number,
+    ranges: Array<{ start: number; end: number }>
+  ): boolean {
+    const tokenEnd = tokenStart + tokenLength;
+    return ranges.some((range) => tokenStart < range.end && tokenEnd > range.start);
   }
 }
