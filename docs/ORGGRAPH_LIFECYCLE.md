@@ -153,15 +153,15 @@ flowchart TD
     Q --> R[Write Refresh State + Audit + Ontology Report]
     R --> S[Ready for Queries]
 
-    S --> T[/perms + /perms/system]
-    S --> U[/automation + /impact]
-    S --> V[/ask planner + evidence]
+    S --> T["/perms + /perms/system"]
+    S --> U["/automation + /impact"]
+    S --> V["/ask planner + evidence"]
 
-    T --> W[Web /api/query Proxy + UI]
+    T --> W["Web /api/query Proxy + UI"]
     U --> W
     V --> W
 
-    S --> X[/metrics + logs + Dozzle]
+    S --> X["/metrics + logs + Dozzle"]
 ```
 
 ## Visual: Runtime Components
