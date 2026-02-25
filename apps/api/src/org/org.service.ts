@@ -1,7 +1,13 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import fs from 'node:fs';
 import path from 'node:path';
-import { resolveSfManifestPath, resolveSfParsePath, resolveSfProjectPath } from '../common/path';
+import {
+  resolveSfAuthCodePath,
+  resolveSfManifestPath,
+  resolveSfParsePath,
+  resolveSfProjectPath,
+  resolveSfTokenStorePath
+} from '../common/path';
 import { AppConfigService } from '../config/app-config.service';
 import { IngestionService } from '../ingestion/ingestion.service';
 import { CommandRunnerService } from './command-runner.service';
@@ -184,7 +190,7 @@ export class OrgService {
   private appendAuditEntry(entry: {
     status: 'completed' | 'failed';
     alias: string;
-    authMode: 'sfdx_url' | 'jwt';
+    authMode: 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
     projectPath: string;
     manifestPath: string;
     parsePath: string;
@@ -231,7 +237,11 @@ export class OrgService {
     }
   }
 
-  private async runAuth(authMode: 'sfdx_url' | 'jwt', alias: string, projectPath: string): Promise<void> {
+  private async runAuth(
+    authMode: 'sfdx_url' | 'jwt' | 'oauth_refresh_token',
+    alias: string,
+    projectPath: string
+  ): Promise<void> {
     if (authMode === 'sfdx_url') {
       const authUrlPath = this.configService.sfAuthUrlPath();
       if (!authUrlPath) {
@@ -250,6 +260,47 @@ export class OrgService {
           'sfdx-url',
           '--sfdx-url-file',
           absAuthUrlPath,
+          '--alias',
+          alias,
+          '--set-default',
+          '--json'
+        ],
+        projectPath
+      );
+      return;
+    }
+
+    if (authMode === 'oauth_refresh_token') {
+      const clientId = this.configService.sfClientId();
+      const clientSecret = this.configService.sfClientSecret();
+      const redirectUri = this.configService.sfRedirectUri();
+      const loginDomain = this.configService.sfLoginDomain();
+      const authCodePath = resolveSfAuthCodePath(this.configService.sfAuthCodePath());
+      const tokenStorePath = resolveSfTokenStorePath(this.configService.sfTokenStorePath());
+      if (!clientId || !clientSecret || !redirectUri) {
+        throw new Error(
+          'SF_CLIENT_ID, SF_CLIENT_SECRET, and SF_REDIRECT_URI are required for oauth_refresh_token mode'
+        );
+      }
+
+      const tokenResponse = await this.resolveOrRefreshOAuthToken({
+        clientId,
+        clientSecret,
+        redirectUri,
+        loginDomain,
+        authCodePath,
+        tokenStorePath
+      });
+
+      await this.runSfCommandWithRetry(
+        [
+          'org',
+          'login',
+          'access-token',
+          '--instance-url',
+          tokenResponse.instanceUrl,
+          '--access-token',
+          tokenResponse.accessToken,
           '--alias',
           alias,
           '--set-default',
@@ -295,6 +346,163 @@ export class OrgService {
       ],
       projectPath
     );
+  }
+
+  private async resolveOrRefreshOAuthToken(input: {
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    loginDomain: string;
+    authCodePath: string;
+    tokenStorePath: string;
+  }): Promise<{ accessToken: string; refreshToken: string; instanceUrl: string }> {
+    const existing = this.readOAuthTokenStore(input.tokenStorePath);
+    if (existing?.refresh_token) {
+      const refreshed = await this.exchangeOAuthToken(
+        `${input.loginDomain}/services/oauth2/token`,
+        new URLSearchParams({
+          grant_type: 'refresh_token',
+          client_id: input.clientId,
+          client_secret: input.clientSecret,
+          refresh_token: existing.refresh_token
+        })
+      );
+      const resolved = {
+        accessToken: refreshed.access_token,
+        refreshToken: existing.refresh_token,
+        instanceUrl: refreshed.instance_url
+      };
+      this.writeOAuthTokenStore(input.tokenStorePath, {
+        access_token: refreshed.access_token,
+        refresh_token: existing.refresh_token,
+        instance_url: refreshed.instance_url,
+        issued_at: new Date().toISOString()
+      });
+      return resolved;
+    }
+
+    if (!fs.existsSync(input.authCodePath)) {
+      throw new Error(
+        `OAuth auth code file missing at ${input.authCodePath}. Complete external client app authorization first.`
+      );
+    }
+
+    const authCode = fs.readFileSync(input.authCodePath, 'utf8').trim();
+    if (!authCode) {
+      throw new Error(`OAuth auth code file is empty at ${input.authCodePath}`);
+    }
+
+    const exchanged = await this.exchangeOAuthToken(
+      `${input.loginDomain}/services/oauth2/token`,
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: input.clientId,
+        client_secret: input.clientSecret,
+        redirect_uri: input.redirectUri,
+        code: authCode
+      })
+    );
+
+    if (!exchanged.refresh_token) {
+      throw new Error(
+        'OAuth token exchange did not return refresh_token. Ensure refresh_token scope is enabled.'
+      );
+    }
+
+    this.writeOAuthTokenStore(input.tokenStorePath, {
+      access_token: exchanged.access_token,
+      refresh_token: exchanged.refresh_token,
+      instance_url: exchanged.instance_url,
+      issued_at: new Date().toISOString()
+    });
+
+    return {
+      accessToken: exchanged.access_token,
+      refreshToken: exchanged.refresh_token,
+      instanceUrl: exchanged.instance_url
+    };
+  }
+
+  private readOAuthTokenStore(
+    tokenStorePath: string
+  ): { access_token?: string; refresh_token?: string; instance_url?: string } | undefined {
+    if (!fs.existsSync(tokenStorePath)) {
+      return undefined;
+    }
+    try {
+      const raw = fs.readFileSync(tokenStorePath, 'utf8');
+      return JSON.parse(raw) as { access_token?: string; refresh_token?: string; instance_url?: string };
+    } catch {
+      return undefined;
+    }
+  }
+
+  private writeOAuthTokenStore(
+    tokenStorePath: string,
+    payload: {
+      access_token: string;
+      refresh_token: string;
+      instance_url: string;
+      issued_at: string;
+    }
+  ): void {
+    fs.mkdirSync(path.dirname(tokenStorePath), { recursive: true });
+    fs.writeFileSync(tokenStorePath, JSON.stringify(payload, null, 2), 'utf8');
+  }
+
+  private async exchangeOAuthToken(
+    tokenUrl: string,
+    formData: URLSearchParams
+  ): Promise<{ access_token: string; refresh_token?: string; instance_url: string }> {
+    const response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded'
+      },
+      body: formData
+    });
+
+    const raw = await response.text();
+    let parsed:
+      | {
+          access_token?: string;
+          refresh_token?: string;
+          instance_url?: string;
+          error?: string;
+          error_description?: string;
+        }
+      | undefined;
+    try {
+      parsed = JSON.parse(raw) as {
+        access_token?: string;
+        refresh_token?: string;
+        instance_url?: string;
+        error?: string;
+        error_description?: string;
+      };
+    } catch {
+      throw new Error('OAuth token endpoint returned non-JSON response');
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `OAuth token exchange failed: ${response.status} ${parsed.error || ''} ${
+          parsed.error_description || ''
+        }`.trim()
+      );
+    }
+
+    if (parsed.error) {
+      throw new Error(`OAuth token exchange failed: ${parsed.error} ${parsed.error_description || ''}`.trim());
+    }
+    if (!parsed.access_token || !parsed.instance_url) {
+      throw new Error('OAuth token response missing access_token or instance_url');
+    }
+    return {
+      access_token: parsed.access_token,
+      refresh_token: parsed.refresh_token,
+      instance_url: parsed.instance_url
+    };
   }
 
   private async runRetrieve(alias: string, projectPath: string, manifestPath: string): Promise<void> {

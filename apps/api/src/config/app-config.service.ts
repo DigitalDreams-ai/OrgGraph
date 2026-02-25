@@ -16,6 +16,11 @@ export class AppConfigService {
     this.validateOptionalString('SF_JWT_KEY_PATH');
     this.validateOptionalString('SF_USERNAME');
     this.validateOptionalString('SF_INSTANCE_URL');
+    this.validateOptionalString('SF_LOGIN_DOMAIN');
+    this.validateOptionalString('SF_CLIENT_SECRET');
+    this.validateOptionalString('SF_REDIRECT_URI');
+    this.validateOptionalString('SF_AUTH_CODE_PATH');
+    this.validateOptionalString('SF_TOKEN_STORE_PATH');
     this.validateOptionalString('SF_PROJECT_PATH');
     this.validateOptionalString('SF_MANIFEST_PATH');
     this.validateOptionalString('SF_PARSE_PATH');
@@ -65,12 +70,12 @@ export class AppConfigService {
     return (process.env.SF_INTEGRATION_ENABLED || 'false').trim().toLowerCase() === 'true';
   }
 
-  sfAuthMode(): 'sfdx_url' | 'jwt' {
-    const mode = (process.env.SF_AUTH_MODE || 'sfdx_url').trim().toLowerCase();
-    if (mode !== 'sfdx_url' && mode !== 'jwt') {
+  sfAuthMode(): 'sfdx_url' | 'jwt' | 'oauth_refresh_token' {
+    const mode = (process.env.SF_AUTH_MODE || 'oauth_refresh_token').trim().toLowerCase();
+    if (mode !== 'sfdx_url' && mode !== 'jwt' && mode !== 'oauth_refresh_token') {
       throw new Error(`Invalid SF_AUTH_MODE: ${mode}`);
     }
-    return mode;
+    return mode as 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
   }
 
   sfAuthUrlPath(): string | undefined {
@@ -95,6 +100,26 @@ export class AppConfigService {
 
   sfInstanceUrl(): string | undefined {
     return process.env.SF_INSTANCE_URL;
+  }
+
+  sfLoginDomain(): string {
+    return process.env.SF_LOGIN_DOMAIN?.trim() || 'https://test.salesforce.com';
+  }
+
+  sfClientSecret(): string | undefined {
+    return process.env.SF_CLIENT_SECRET;
+  }
+
+  sfRedirectUri(): string | undefined {
+    return process.env.SF_REDIRECT_URI;
+  }
+
+  sfAuthCodePath(): string | undefined {
+    return process.env.SF_AUTH_CODE_PATH;
+  }
+
+  sfTokenStorePath(): string | undefined {
+    return process.env.SF_TOKEN_STORE_PATH;
   }
 
   sfProjectPath(): string | undefined {

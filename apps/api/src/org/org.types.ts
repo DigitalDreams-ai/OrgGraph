@@ -17,11 +17,10 @@ export interface OrgRetrieveResponse {
   startedAt: string;
   completedAt: string;
   integrationEnabled: boolean;
-  authMode: 'sfdx_url' | 'jwt';
+  authMode: 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
   alias: string;
   projectPath: string;
   manifestPath: string;
   parsePath: string;
   steps: OrgStepResult[];
 }
-
