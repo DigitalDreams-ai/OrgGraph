@@ -12,6 +12,7 @@ services:
       DATABASE_URL: file:/app/data/orggraph.db
       PERMISSIONS_FIXTURES_PATH: /app/fixtures/permissions
       USER_PROFILE_MAP_PATH: /app/fixtures/permissions/user-profile-map.json
+      EVIDENCE_INDEX_PATH: /app/data/evidence/index.json
     ports:
       - "3100:3000"
     volumes:

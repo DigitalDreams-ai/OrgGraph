@@ -13,9 +13,11 @@ export class IngestionController {
   refresh(@Body() body: RefreshBody = {}): {
     nodeCount: number;
     edgeCount: number;
+    evidenceCount: number;
     elapsedMs: number;
     sourcePath: string;
     databasePath: string;
+    evidenceIndexPath: string;
   } {
     if (body.fixturesPath !== undefined && typeof body.fixturesPath !== 'string') {
       throw new BadRequestException('fixturesPath must be a string');

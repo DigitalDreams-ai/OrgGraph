@@ -6,6 +6,7 @@ import { QueriesService } from './queries.service';
 @Module({
   imports: [GraphModule],
   providers: [QueriesService],
-  controllers: [QueriesController]
+  controllers: [QueriesController],
+  exports: [QueriesService]
 })
 export class QueriesModule {}

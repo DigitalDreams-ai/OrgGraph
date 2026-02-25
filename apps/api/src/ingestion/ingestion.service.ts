@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../config/app-config.service';
+import { EvidenceStoreService } from '../evidence/evidence-store.service';
 import { GraphService } from '../graph/graph.service';
 import { resolveFixturesPath } from '../common/path';
 import type { GraphPayload } from '../graph/graph.types';
@@ -13,6 +14,7 @@ export class IngestionService {
   constructor(
     private readonly configService: AppConfigService,
     private readonly graphService: GraphService,
+    private readonly evidenceStore: EvidenceStoreService,
     private readonly parserService: PermissionsParserService,
     private readonly triggerParserService: ApexTriggerParserService,
     private readonly classParserService: ApexClassParserService,
@@ -22,9 +24,11 @@ export class IngestionService {
   refresh(fixturesPathFromRequest?: string): {
     nodeCount: number;
     edgeCount: number;
+    evidenceCount: number;
     elapsedMs: number;
     sourcePath: string;
     databasePath: string;
+    evidenceIndexPath: string;
   } {
     const sourcePath = resolveFixturesPath(
       fixturesPathFromRequest ?? this.configService.permissionsFixturesPath()
@@ -49,12 +53,15 @@ export class IngestionService {
       throw error;
     }
     const counts = this.graphService.fullRebuild(payload);
+    const evidence = this.evidenceStore.reindexFromFixtures(sourcePath);
 
     return {
       ...counts,
+      evidenceCount: evidence.documentCount,
       elapsedMs: Date.now() - start,
       sourcePath,
-      databasePath: this.graphService.getDatabasePath()
+      databasePath: this.graphService.getDatabasePath(),
+      evidenceIndexPath: evidence.sourcePath
     };
   }
 

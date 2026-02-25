@@ -11,6 +11,7 @@ function resolveWorkspaceRoot(): string {
 async function run(): Promise<void> {
   const workspaceRoot = resolveWorkspaceRoot();
   const dbPath = path.join(workspaceRoot, 'data', 'orggraph.integration.db');
+  const evidencePath = path.join(workspaceRoot, 'data', 'evidence.integration.json');
 
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   if (fs.existsSync(dbPath)) {
@@ -25,6 +26,7 @@ async function run(): Promise<void> {
     'permissions',
     'user-profile-map.json'
   );
+  process.env.EVIDENCE_INDEX_PATH = evidencePath;
 
   const app = await NestFactory.create(AppModule, { logger: false });
   await app.listen(0);
@@ -168,11 +170,64 @@ async function run(): Promise<void> {
     const impactNegative = (await impactNegativeRes.json()) as { paths: unknown[] };
     assert.equal(impactNegative.paths.length, 0, 'impact should return no paths for unknown field');
 
+    const askPermsRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: 'Can jane@example.com edit object Case?' })
+    });
+    assert.equal(askPermsRes.status, 201, 'ask perms should return 201');
+    const askPerms = (await askPermsRes.json()) as {
+      status: string;
+      plan: { intent: string };
+      citations: unknown[];
+    };
+    assert.equal(askPerms.status, 'implemented');
+    assert.equal(askPerms.plan.intent, 'perms');
+    assert.ok(askPerms.citations.length > 0, 'ask should include citations');
+
+    const askAutomationRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: 'What runs on object Opportunity?' })
+    });
+    assert.equal(askAutomationRes.status, 201, 'ask automation should return 201');
+    const askAutomation = (await askAutomationRes.json()) as { plan: { intent: string } };
+    assert.equal(askAutomation.plan.intent, 'automation');
+
+    const askImpactRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: 'What touches Opportunity.StageName?' })
+    });
+    assert.equal(askImpactRes.status, 201, 'ask impact should return 201');
+    const askImpact = (await askImpactRes.json()) as { plan: { intent: string } };
+    assert.equal(askImpact.plan.intent, 'impact');
+
+    const askUnknownRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: 'hello world' })
+    });
+    assert.equal(askUnknownRes.status, 201, 'ask unknown should return 201');
+    const askUnknown = (await askUnknownRes.json()) as { plan: { intent: string }; answer: string };
+    assert.equal(askUnknown.plan.intent, 'unknown');
+    assert.match(askUnknown.answer, /No deterministic plan/i);
+
+    const askBadRequest = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: '', maxCitations: 0 })
+    });
+    assert.equal(askBadRequest.status, 400, 'ask should validate request body');
+
     console.log('integration passed');
   } finally {
     await app.close();
     if (fs.existsSync(dbPath)) {
       fs.rmSync(dbPath, { force: true });
+    }
+    if (fs.existsSync(evidencePath)) {
+      fs.rmSync(evidencePath, { force: true });
     }
   }
 }

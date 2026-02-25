@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EvidenceModule } from '../evidence/evidence.module';
 import { GraphModule } from '../graph/graph.module';
 import { ApexClassParserService } from './apex-class-parser.service';
 import { ApexTriggerParserService } from './apex-trigger-parser.service';
@@ -8,7 +9,7 @@ import { IngestionService } from './ingestion.service';
 import { PermissionsParserService } from './permissions-parser.service';
 
 @Module({
-  imports: [GraphModule],
+  imports: [GraphModule, EvidenceModule],
   providers: [
     IngestionService,
     PermissionsParserService,
