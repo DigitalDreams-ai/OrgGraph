@@ -48,6 +48,11 @@ function run(): void {
   const statusFieldNode = payload.nodes.find(
     (node) => node.type === NODE_TYPES.FIELD && node.name === 'Case.Status'
   );
+  const systemPermNode = payload.nodes.find(
+    (node) =>
+      node.type === NODE_TYPES.SYSTEM_PERMISSION &&
+      node.name === 'ApproveUninstalledConnectedApps'
+  );
   const triggerNode = payload.nodes.find(
     (node) => node.type === NODE_TYPES.APEX_TRIGGER && node.name === 'CaseBeforeUpdate'
   );
@@ -64,6 +69,7 @@ function run(): void {
   assert.ok(supportNode, 'Support profile node should exist');
   assert.ok(caseNode, 'Case object node should exist');
   assert.ok(statusFieldNode, 'Case.Status field node should exist');
+  assert.ok(systemPermNode, 'ApproveUninstalledConnectedApps system permission node should exist');
   assert.ok(triggerNode, 'CaseBeforeUpdate trigger node should exist');
   assert.ok(classNode, 'OpportunityImpactService class node should exist');
   assert.ok(flowNode, 'OpportunityStageSync flow node should exist');
@@ -83,6 +89,14 @@ function run(): void {
 
   assert.ok(grantsObjectEdge, 'Support should grant Case object');
   assert.ok(grantsFieldEdge, 'Support should grant Case.Status field');
+
+  const grantsSystemPermEdge = payload.edges.find(
+    (edge) =>
+      edge.srcId === supportNode.id &&
+      edge.dstId === systemPermNode.id &&
+      edge.rel === REL_TYPES.GRANTS_SYSTEM_PERMISSION
+  );
+  assert.ok(grantsSystemPermEdge, 'Support should grant ApproveUninstalledConnectedApps');
 
   const triggerOnCaseEdge = payload.edges.find(
     (edge) =>

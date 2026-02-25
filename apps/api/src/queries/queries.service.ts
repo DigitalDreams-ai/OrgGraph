@@ -139,6 +139,54 @@ export class QueriesService {
     };
   }
 
+  async systemPermission(
+    user: string,
+    permission: string,
+    limit = QueriesService.DEFAULT_LIMIT
+  ): Promise<{
+    user: string;
+    permission: string;
+    principalsChecked: string[];
+    paths: Array<{ principal: string; permission: string; path: Array<{ from: string; rel: string; to: string }> }>;
+    granted: boolean;
+    totalPaths: number;
+    truncated: boolean;
+    explanation: string;
+    mappingStatus: 'resolved' | 'unmapped_user' | 'map_missing';
+    warnings: string[];
+  }> {
+    const mapResult = this.readUserProfileMap();
+    const principalsChecked = mapResult.map[user.toLowerCase()] ?? [];
+    const mappingStatus = mapResult.exists
+      ? principalsChecked.length > 0
+        ? 'resolved'
+        : 'unmapped_user'
+      : 'map_missing';
+    const warnings = this.buildWarnings(mappingStatus, user);
+    const paths = await this.graphService.findSystemPermissionPaths(principalsChecked, permission);
+    const sliced = paths.slice(0, limit);
+    const granted = paths.length > 0;
+
+    return {
+      user,
+      permission,
+      principalsChecked,
+      paths: sliced.map((item) => ({
+        principal: item.principal,
+        permission: item.object,
+        path: item.path
+      })),
+      granted,
+      totalPaths: paths.length,
+      truncated: paths.length > sliced.length,
+      explanation: granted
+        ? `${user} has ${permission} via ${paths[0].principal}`
+        : `${user} does not have ${permission}`,
+      mappingStatus,
+      warnings
+    };
+  }
+
   private readUserProfileMap(): { exists: boolean; map: Record<string, string[]> } {
     if (!fs.existsSync(this.userProfileMapPath)) {
       return { exists: false, map: {} };

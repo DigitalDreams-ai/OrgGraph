@@ -61,6 +61,13 @@ export class GraphService implements OnModuleDestroy {
     return this.store.findFieldPermPaths(principals, objectName, fieldName);
   }
 
+  async findSystemPermissionPaths(
+    principals: string[],
+    permissionName: string
+  ): Promise<PermPath[]> {
+    return this.store.findSystemPermissionPaths(principals, permissionName);
+  }
+
   async findAutomationsForObject(objectName: string): Promise<AutomationHit[]> {
     return this.store.findAutomationsForObject(objectName);
   }
@@ -69,4 +76,3 @@ export class GraphService implements OnModuleDestroy {
     return this.store.findImpactForField(fieldName);
   }
 }
-

@@ -184,6 +184,48 @@ export class PostgresGraphStore implements GraphStore {
     }));
   }
 
+  async findSystemPermissionPaths(
+    principals: string[],
+    permissionName: string
+  ): Promise<PermPath[]> {
+    await this.ensureInit();
+    if (principals.length === 0) {
+      return [];
+    }
+    const principalPlaceholders = principals.map((_, idx) => `$${idx + 6}`).join(', ');
+    const result = await this.pool.query(
+      `SELECT p.name as principal, s.name as permission_name
+       FROM nodes p
+       JOIN edges e ON e.src_id = p.id AND e.rel = $1
+       JOIN nodes s ON s.id = e.dst_id
+       WHERE s.type = $2
+         AND s.name = $3
+         AND (p.type = $4 OR p.type = $5)
+         AND p.name IN (${principalPlaceholders})
+       ORDER BY p.name ASC`,
+      [
+        REL_TYPES.GRANTS_SYSTEM_PERMISSION,
+        NODE_TYPES.SYSTEM_PERMISSION,
+        permissionName,
+        NODE_TYPES.PROFILE,
+        NODE_TYPES.PERMISSION_SET,
+        ...principals
+      ]
+    );
+
+    return result.rows.map((row) => ({
+      principal: row.principal as string,
+      object: row.permission_name as string,
+      path: [
+        {
+          from: row.principal as string,
+          rel: REL_TYPES.GRANTS_SYSTEM_PERMISSION,
+          to: row.permission_name as string
+        }
+      ]
+    }));
+  }
+
   async findAutomationsForObject(objectName: string): Promise<AutomationHit[]> {
     await this.ensureInit();
     const result = await this.pool.query(

@@ -158,6 +158,25 @@ export class PermissionsParserService {
           meta: JSON.stringify({ source: file, parser: 'permissions', confidence: 'high' })
         });
       }
+
+      for (const userPerm of this.toArray<Record<string, unknown>>(body.userPermissions)) {
+        const permissionName = this.asString(userPerm.name);
+        if (!permissionName || !this.isTruthy(userPerm.enabled)) {
+          continue;
+        }
+
+        const permissionNode = this.upsertNode(nodesById, {
+          type: NODE_TYPES.SYSTEM_PERMISSION,
+          name: permissionName
+        });
+
+        this.upsertEdge(edgesById, {
+          srcId: principal.id,
+          dstId: permissionNode.id,
+          rel: REL_TYPES.GRANTS_SYSTEM_PERMISSION,
+          meta: JSON.stringify({ source: file, parser: 'permissions', confidence: 'high' })
+        });
+      }
     }
   }
 

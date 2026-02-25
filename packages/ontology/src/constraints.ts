@@ -20,6 +20,11 @@ export const REL_CONSTRAINTS: RelConstraint[] = [
     dstTypes: [NODE_TYPES.FIELD]
   },
   {
+    rel: REL_TYPES.GRANTS_SYSTEM_PERMISSION,
+    srcTypes: [NODE_TYPES.PROFILE, NODE_TYPES.PERMISSION_SET],
+    dstTypes: [NODE_TYPES.SYSTEM_PERMISSION]
+  },
+  {
     rel: REL_TYPES.TRIGGERS_ON,
     srcTypes: [NODE_TYPES.APEX_TRIGGER, NODE_TYPES.FLOW],
     dstTypes: [NODE_TYPES.OBJECT]
@@ -40,4 +45,3 @@ export const REL_CONSTRAINTS: RelConstraint[] = [
     dstTypes: [NODE_TYPES.OBJECT, NODE_TYPES.FIELD]
   }
 ];
-

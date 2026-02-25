@@ -209,6 +209,34 @@ async function run(): Promise<void> {
     assert.equal(permsUnknownUser.mappingStatus, 'unmapped_user');
     assert.ok(permsUnknownUser.warnings.length > 0);
 
+    const systemPermPositiveRes = await fetch(
+      `${base}/perms/system?user=jane@example.com&permission=ApproveUninstalledConnectedApps`
+    );
+    assert.equal(systemPermPositiveRes.status, 200, 'system permission positive should return 200');
+    const systemPermPositive = (await systemPermPositiveRes.json()) as {
+      granted: boolean;
+      totalPaths: number;
+      paths: Array<{ permission: string }>;
+    };
+    assert.equal(
+      systemPermPositive.granted,
+      true,
+      'jane should have ApproveUninstalledConnectedApps'
+    );
+    assert.ok(systemPermPositive.totalPaths > 0, 'system permission should include at least one path');
+    assert.equal(systemPermPositive.paths[0]?.permission, 'ApproveUninstalledConnectedApps');
+
+    const systemPermNegativeRes = await fetch(
+      `${base}/perms/system?user=jane@example.com&permission=ManageSandboxes`
+    );
+    assert.equal(systemPermNegativeRes.status, 200, 'system permission negative should return 200');
+    const systemPermNegative = (await systemPermNegativeRes.json()) as { granted: boolean };
+    assert.equal(
+      systemPermNegative.granted,
+      false,
+      'jane should not have ManageSandboxes in fixtures'
+    );
+
     const fieldPositiveRes = await fetch(
       `${base}/perms?user=jane@example.com&object=Case&field=Case.Status`
     );

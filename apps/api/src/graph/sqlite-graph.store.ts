@@ -164,6 +164,45 @@ export class SqliteGraphStore implements GraphStore {
     return paths.sort((a, b) => a.principal.localeCompare(b.principal));
   }
 
+  async findSystemPermissionPaths(
+    principals: string[],
+    permissionName: string
+  ): Promise<PermPath[]> {
+    if (principals.length === 0) {
+      return [];
+    }
+
+    const permissionNode = this.findNode(NODE_TYPES.SYSTEM_PERMISSION, permissionName);
+    if (!permissionNode) {
+      return [];
+    }
+
+    const principalRows = this.findPrincipals(principals);
+    if (principalRows.length === 0) {
+      return [];
+    }
+
+    const paths: PermPath[] = [];
+    for (const principal of principalRows) {
+      if (!this.hasGrant(principal.id, permissionNode.id, REL_TYPES.GRANTS_SYSTEM_PERMISSION)) {
+        continue;
+      }
+      paths.push({
+        principal: principal.name,
+        object: permissionNode.name,
+        path: [
+          {
+            from: principal.name,
+            rel: REL_TYPES.GRANTS_SYSTEM_PERMISSION,
+            to: permissionNode.name
+          }
+        ]
+      });
+    }
+
+    return paths.sort((a, b) => a.principal.localeCompare(b.principal));
+  }
+
   async findAutomationsForObject(objectName: string): Promise<AutomationHit[]> {
     const objectNode = this.findNode(NODE_TYPES.OBJECT, objectName);
     if (!objectNode) {
@@ -299,4 +338,3 @@ export class SqliteGraphStore implements GraphStore {
     `);
   }
 }
-

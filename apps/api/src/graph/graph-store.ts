@@ -12,7 +12,7 @@ export interface GraphStore {
   fullRebuild(payload: GraphPayload): Promise<{ nodeCount: number; edgeCount: number }>;
   findObjectPermPaths(principals: string[], objectName: string): Promise<PermPath[]>;
   findFieldPermPaths(principals: string[], objectName: string, fieldName: string): Promise<PermPath[]>;
+  findSystemPermissionPaths(principals: string[], permissionName: string): Promise<PermPath[]>;
   findAutomationsForObject(objectName: string): Promise<AutomationHit[]>;
   findImpactForField(fieldName: string): Promise<ImpactHit[]>;
 }
-

@@ -17,6 +17,7 @@ async function runScenario(backend: 'sqlite' | 'postgres'): Promise<{
   automationCount: number;
   impactCount: number;
   askIntent: string;
+  systemPermissionGranted: boolean;
 }> {
   const root = workspaceRoot();
   const dbPath = path.join(root, `data/orggraph.parity.${backend}.db`);
@@ -70,6 +71,11 @@ async function runScenario(backend: 'sqlite' | 'postgres'): Promise<{
         body: JSON.stringify({ query: 'What touches Opportunity.StageName?' })
       })
     ).json()) as { plan: { intent: string } };
+    const systemPermBody = (await (
+      await fetch(
+        `${base}/perms/system?user=jane@example.com&permission=ApproveUninstalledConnectedApps`
+      )
+    ).json()) as { granted: boolean };
 
     return {
       backend,
@@ -79,7 +85,8 @@ async function runScenario(backend: 'sqlite' | 'postgres'): Promise<{
       permsGranted: permsBody.granted,
       automationCount: automationBody.totalAutomations,
       impactCount: impactBody.totalPaths,
-      askIntent: askBody.plan.intent
+      askIntent: askBody.plan.intent,
+      systemPermissionGranted: systemPermBody.granted
     };
   } finally {
     await app.close();
@@ -102,6 +109,11 @@ async function run(): Promise<void> {
   assert.equal(sqlite.automationCount, postgres.automationCount, 'automation parity should hold');
   assert.equal(sqlite.impactCount, postgres.impactCount, 'impact parity should hold');
   assert.equal(sqlite.askIntent, postgres.askIntent, 'ask intent parity should hold');
+  assert.equal(
+    sqlite.systemPermissionGranted,
+    postgres.systemPermissionGranted,
+    'system permission parity should hold'
+  );
 
   console.log('backend parity test passed');
 }
