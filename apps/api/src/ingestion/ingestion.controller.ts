@@ -26,6 +26,9 @@ export class IngestionController {
     if (body.fixturesPath !== undefined && typeof body.fixturesPath !== 'string') {
       throw new BadRequestException('fixturesPath must be a string');
     }
+    if (typeof body.fixturesPath === 'string' && body.fixturesPath.trim().length === 0) {
+      throw new BadRequestException('fixturesPath must be a non-empty string');
+    }
     if (body.mode !== undefined && body.mode !== 'full' && body.mode !== 'incremental') {
       throw new BadRequestException('mode must be one of: full, incremental');
     }

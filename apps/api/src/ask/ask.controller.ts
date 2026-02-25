@@ -19,8 +19,24 @@ export class AskController {
       throw new BadRequestException('query is required');
     }
 
-    if (body.maxCitations !== undefined && (!Number.isInteger(body.maxCitations) || body.maxCitations < 1)) {
-      throw new BadRequestException('maxCitations must be a positive integer');
+    if (body.query.trim().length > 1000) {
+      throw new BadRequestException('query must be 1000 characters or fewer');
+    }
+
+    if (
+      body.maxCitations !== undefined &&
+      (!Number.isInteger(body.maxCitations) || body.maxCitations < 1 || body.maxCitations > 20)
+    ) {
+      throw new BadRequestException('maxCitations must be an integer between 1 and 20');
+    }
+
+    if (body.context !== undefined) {
+      if (typeof body.context !== 'object' || body.context === null || Array.isArray(body.context)) {
+        throw new BadRequestException('context must be a key-value object');
+      }
+      if (Object.keys(body.context).length > 20) {
+        throw new BadRequestException('context may include at most 20 keys');
+      }
     }
 
     try {
@@ -37,7 +53,10 @@ export class AskController {
           message
         }
       };
-      throw new InternalServerErrorException(envelope);
+      throw new InternalServerErrorException({
+        message: 'ask orchestration failed',
+        details: envelope.error
+      });
     }
   }
 }

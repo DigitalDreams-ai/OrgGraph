@@ -7,11 +7,14 @@ export class AnalysisController {
 
   @Get('/impact')
   impact(
-    @Query('field') field?: string
+    @Query('field') field?: string,
+    @Query('limit') limitRaw?: string
   ): {
     field: string;
     relationsChecked: string[];
     paths: Array<{ from: string; rel: string; to: string }>;
+    totalPaths: number;
+    truncated: boolean;
     explanation: string;
     status: 'implemented';
   } {
@@ -19,16 +22,31 @@ export class AnalysisController {
       throw new BadRequestException('field query param is required');
     }
 
-    return this.analysisService.impact(field);
+    if (!/^[A-Za-z][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(field.trim())) {
+      throw new BadRequestException('field must match Object.Field format');
+    }
+
+    let limit: number | undefined;
+    if (limitRaw !== undefined) {
+      limit = Number(limitRaw);
+      if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+        throw new BadRequestException('limit must be an integer between 1 and 100');
+      }
+    }
+
+    return this.analysisService.impact(field.trim(), limit);
   }
 
   @Get('/automation')
   automation(
-    @Query('object') object?: string
+    @Query('object') object?: string,
+    @Query('limit') limitRaw?: string
   ): {
     object: string;
     relationsChecked: string[];
     automations: Array<{ type: string; name: string; rel: string }>;
+    totalAutomations: number;
+    truncated: boolean;
     explanation: string;
     status: 'scaffold' | 'implemented';
   } {
@@ -36,6 +54,18 @@ export class AnalysisController {
       throw new BadRequestException('object query param is required');
     }
 
-    return this.analysisService.automation(object);
+    if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(object.trim())) {
+      throw new BadRequestException('object must be a valid Salesforce object name');
+    }
+
+    let limit: number | undefined;
+    if (limitRaw !== undefined) {
+      limit = Number(limitRaw);
+      if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+        throw new BadRequestException('limit must be an integer between 1 and 100');
+      }
+    }
+
+    return this.analysisService.automation(object.trim(), limit);
   }
 }

@@ -38,6 +38,12 @@ async function run(): Promise<void> {
 
     const base = `http://127.0.0.1:${port}`;
 
+    const healthRes = await fetch(`${base}/health`);
+    assert.equal(healthRes.status, 200, 'health should return 200');
+    const healthBody = (await healthRes.json()) as { status: string; service: string };
+    assert.equal(healthBody.status, 'ok');
+    assert.equal(healthBody.service, 'api');
+
     const refreshRes = await fetch(`${base}/refresh`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -54,6 +60,16 @@ async function run(): Promise<void> {
     assert.equal(refreshBody.skipped, false, 'default refresh should not skip');
     assert.ok(refreshBody.nodeCount > 0, 'refresh should create nodes');
     assert.ok(refreshBody.edgeCount > 0, 'refresh should create edges');
+
+    const readyRes = await fetch(`${base}/ready`);
+    assert.equal(readyRes.status, 200, 'ready should return 200');
+    const readyBody = (await readyRes.json()) as {
+      status: string;
+      checks: { db: { ok: boolean }; fixtures: { ok: boolean } };
+    };
+    assert.equal(readyBody.status, 'ready');
+    assert.equal(readyBody.checks.db.ok, true);
+    assert.equal(readyBody.checks.fixtures.ok, true);
 
     const refreshIncrementalRes = await fetch(`${base}/refresh`, {
       method: 'POST',
@@ -80,6 +96,10 @@ async function run(): Promise<void> {
       body: JSON.stringify({ fixturesPath: 42 })
     });
     assert.equal(malformedRefreshRes.status, 400, 'refresh should reject malformed fixturesPath');
+    const malformedRefreshBody = (await malformedRefreshRes.json()) as {
+      error: { code: string; message: string };
+    };
+    assert.equal(malformedRefreshBody.error.code, 'BAD_REQUEST');
 
     const malformedModeRes = await fetch(`${base}/refresh`, {
       method: 'POST',
@@ -87,6 +107,8 @@ async function run(): Promise<void> {
       body: JSON.stringify({ mode: 'delta' })
     });
     assert.equal(malformedModeRes.status, 400, 'refresh should reject invalid mode');
+    const malformedModeBody = (await malformedModeRes.json()) as { error: { code: string } };
+    assert.equal(malformedModeBody.error.code, 'BAD_REQUEST');
 
     const brokenRoot = fs.mkdtempSync(path.join(workspaceRoot, 'fixtures', 'tmp-broken-'));
     const brokenProfilesPath = path.join(brokenRoot, 'profiles');
@@ -103,9 +125,9 @@ async function run(): Promise<void> {
       body: JSON.stringify({ fixturesPath: brokenRoot })
     });
     assert.equal(malformedXmlRes.status, 400, 'refresh should reject malformed XML with 400');
-    const malformedXmlBody = (await malformedXmlRes.json()) as { message?: string };
+    const malformedXmlBody = (await malformedXmlRes.json()) as { error?: { message?: string } };
     assert.match(
-      String(malformedXmlBody.message ?? ''),
+      String(malformedXmlBody.error?.message ?? ''),
       /Broken\.profile-meta\.xml/,
       'malformed XML error should include failing filename'
     );
@@ -155,6 +177,14 @@ async function run(): Promise<void> {
 
     const missingParamsRes = await fetch(`${base}/perms?user=jane@example.com`);
     assert.equal(missingParamsRes.status, 400, 'missing object param should return 400');
+    const missingParamsBody = (await missingParamsRes.json()) as { error: { code: string } };
+    assert.equal(missingParamsBody.error.code, 'BAD_REQUEST');
+
+    const invalidUserRes = await fetch(`${base}/perms?user=bad-email&object=Case`);
+    assert.equal(invalidUserRes.status, 400, 'invalid user email should return 400');
+
+    const invalidFieldRes = await fetch(`${base}/impact?field=not_a_field`);
+    assert.equal(invalidFieldRes.status, 400, 'invalid field format should return 400');
 
     const automationRes = await fetch(`${base}/automation?object=Case`);
     assert.equal(automationRes.status, 200, 'automation endpoint should return 200');
@@ -172,6 +202,8 @@ async function run(): Promise<void> {
     const automationOppBody = (await automationOppRes.json()) as {
       status: string;
       automations: Array<{ type: string; name: string; rel: string }>;
+      totalAutomations: number;
+      truncated: boolean;
     };
     assert.equal(automationOppBody.status, 'implemented');
     assert.ok(
@@ -182,18 +214,24 @@ async function run(): Promise<void> {
       automationOppBody.automations.some((item) => item.name === 'OpportunityImpactService'),
       'automation should include apex class for Opportunity'
     );
+    assert.equal(automationOppBody.totalAutomations >= automationOppBody.automations.length, true);
+    assert.equal(automationOppBody.truncated, false);
 
     const impactPositiveRes = await fetch(`${base}/impact?field=Opportunity.StageName`);
     assert.equal(impactPositiveRes.status, 200, 'impact positive should return 200');
     const impactPositive = (await impactPositiveRes.json()) as {
       status: string;
       paths: Array<{ from: string; rel: string; to: string }>;
+      totalPaths: number;
+      truncated: boolean;
     };
     assert.equal(impactPositive.status, 'implemented', 'impact endpoint should be implemented');
     assert.ok(
       impactPositive.paths.some((item) => item.to === 'Opportunity.StageName'),
       'impact should include field-level path'
     );
+    assert.equal(impactPositive.totalPaths >= impactPositive.paths.length, true);
+    assert.equal(impactPositive.truncated, false);
 
     const impactNegativeRes = await fetch(`${base}/impact?field=Lead.Unused__c`);
     assert.equal(impactNegativeRes.status, 200, 'impact negative should return 200');
@@ -249,6 +287,29 @@ async function run(): Promise<void> {
       body: JSON.stringify({ query: '', maxCitations: 0 })
     });
     assert.equal(askBadRequest.status, 400, 'ask should validate request body');
+    const askBadRequestBody = (await askBadRequest.json()) as { error: { code: string } };
+    assert.equal(askBadRequestBody.error.code, 'BAD_REQUEST');
+
+    const askTooManyCitations = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: 'hello', maxCitations: 50 })
+    });
+    assert.equal(askTooManyCitations.status, 400, 'ask should reject too many citations');
+
+    const metricsRes = await fetch(`${base}/metrics`);
+    assert.equal(metricsRes.status, 200, 'metrics should return 200');
+    const metricsBody = (await metricsRes.json()) as {
+      status: string;
+      totalRequests: number;
+      byRoute: Array<{ path: string; method: string; requestCount: number }>;
+    };
+    assert.equal(metricsBody.status, 'ok');
+    assert.ok(metricsBody.totalRequests > 0, 'metrics should track requests');
+    assert.ok(
+      metricsBody.byRoute.some((route) => route.path.includes('/refresh') && route.requestCount > 0),
+      'metrics should include refresh route'
+    );
 
     console.log('integration passed');
   } finally {
