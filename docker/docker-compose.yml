@@ -45,7 +45,6 @@ services:
       - ../data:/app/data
       - ../fixtures:/app/fixtures:ro
       - ../manifest:/app/manifest:ro
-      - ../.secrets:/app/.secrets:ro
 
   web:
     build:
