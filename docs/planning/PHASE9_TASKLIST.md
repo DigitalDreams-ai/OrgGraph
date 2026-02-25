@@ -1,6 +1,6 @@
-# OrgGraph Phase 9 Task List (Postgres Migration + Reliability)
+# OrgGraph Phase 9 Task List (Postgres Migration + Reliability + Metadata Expansion)
 
-Goal: migrate the graph backend from SQLite to Postgres with zero functional regressions, measurable performance gains, and safe rollback.
+Goal: migrate the graph backend from SQLite to Postgres with zero functional regressions, measurable performance gains, safe rollback, and expanded ontology/parser support for additional Salesforce metadata.
 
 ## Entry Criteria
 - [x] Phase 8 quality gates passed (ontology constraints + parser precision + confidence consistency)
@@ -12,12 +12,21 @@ Goal: migrate the graph backend from SQLite to Postgres with zero functional reg
 - [x] `/perms`, `/automation`, `/impact`, and `/ask` parity validated against SQLite baseline
 - [x] Refresh and query SLOs meet or exceed SQLite baseline on representative org snapshot
 - [x] Rollback to SQLite remains documented and tested
+- [ ] Ontology supports additional metadata as first-class node/relationship types where needed
+- [ ] Parsers ingest selected additional metadata into deterministic graph payloads
+- [ ] Query behavior remains deterministic with expanded metadata coverage
 
 ## Scope
 - Introduce Postgres graph backend behind existing graph service interface
 - Preserve deterministic behavior and response shape compatibility
 - Add migration, benchmark, and rollback tooling
 - Keep LLM expansion minimal and optional
+- Expand metadata/ontology coverage for richer org analysis:
+  - `CustomObject` (object/field semantics)
+  - `PermissionSetGroup`
+  - `CustomPermission`
+  - `ConnectedApp` (or equivalent external client app metadata)
+  - Optional UI/automation metadata staging set: `ApexPage`, `LightningComponentBundle`, `AuraDefinitionBundle`, `QuickAction`, `Layout`
 
 ## Not In Phase 9
 - Chroma/vector store rollout by default
@@ -65,6 +74,28 @@ Goal: migrate the graph backend from SQLite to Postgres with zero functional reg
 - [x] Add dashboards/alerts for connection failures and latency regressions
 - [x] Define backup/retention strategy for Postgres volumes
 - [x] Document routine DB maintenance (vacuum/analyze equivalent tasks)
+
+## 7. Ontology & Parser Expansion
+
+- [ ] Add new ontology node/relationship types for selected metadata expansion targets
+- [ ] Update ontology constraints for all new relationship patterns
+- [ ] Implement ingestion parsers for:
+  - `CustomObject` (object/field metadata projection)
+  - `PermissionSetGroup`
+  - `CustomPermission`
+  - `ConnectedApp` / external client app metadata
+- [ ] Add staged parsers (feature-flagged or gated) for:
+  - `ApexPage`, `LightningComponentBundle`, `AuraDefinitionBundle`, `QuickAction`, `Layout`
+- [ ] Ensure confidence scoring + consistency checks apply to new parser outputs
+- [ ] Preserve deterministic node/edge ordering with expanded metadata set
+
+## 8. Validation for Expanded Coverage
+
+- [ ] Add parser tests for each new metadata type
+- [ ] Add ontology constraint tests for new nodes/relationships
+- [ ] Add integration tests showing endpoint behavior with expanded graph coverage
+- [ ] Run sandbox retrieval + refresh + smoke queries and capture before/after result deltas
+- [ ] Confirm no regression in refresh runtime and query latency beyond agreed budget
 
 ## Completion Notes
 
