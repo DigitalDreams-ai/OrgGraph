@@ -26,31 +26,31 @@ Goal: add production-safe LLM capabilities for explanation and synthesis while p
 
 ## 1. LLM Architecture
 
-- [ ] Define `LlmProvider` interface (`generate`, `health`, `tokenUsage`, `modelInfo`)
-- [ ] Add provider selector (`LLM_PROVIDER=openai|anthropic|none`)
-- [ ] Keep deterministic planner + graph calls as source of truth
-- [ ] Add response contract for citations, confidence, and fallback reason
+- [x] Define `LlmProvider` interface (`generate`, `health`, `tokenUsage`, `modelInfo`)
+- [x] Add provider selector (`LLM_PROVIDER=openai|anthropic|none`)
+- [x] Keep deterministic planner + graph calls as source of truth
+- [x] Add response contract for citations, confidence, and fallback reason
 
 ## 2. Provider Integrations
 
-- [ ] Implement OpenAI provider (chat/responses API)
-- [ ] Implement Anthropic provider (messages API)
-- [ ] Add model config envs (separate defaults per provider)
-- [ ] Normalize output format across providers
+- [x] Implement OpenAI provider (chat/responses API)
+- [x] Implement Anthropic provider (messages API)
+- [x] Add model config envs (separate defaults per provider)
+- [x] Normalize output format across providers
 
 ## 3. Prompting & Response Policy
 
 - [ ] Create strict system prompt: graph truth first, no uncited claims
-- [ ] Add citation-grounded synthesis template using evidence snippets
+- [x] Add citation-grounded synthesis template using evidence snippets
 - [ ] Add refusal behavior for low-confidence/insufficient evidence cases
-- [ ] Add deterministic fallback when provider call fails or times out
+- [x] Add deterministic fallback when provider call fails or times out
 
 ## 4. API & Runtime Controls
 
-- [ ] Extend `/ask` with mode controls (`deterministic`, `llm_assist`)
+- [x] Extend `/ask` with mode controls (`deterministic`, `llm_assist`)
 - [ ] Add max token/latency/cost guards per request
-- [ ] Add request-level provider/model override for testing
-- [ ] Add kill-switch env flags for instant LLM disable
+- [x] Add request-level provider/model override for testing
+- [x] Add kill-switch env flags for instant LLM disable
 
 ## 5. Testing & Evaluation
 
@@ -75,7 +75,7 @@ Goal: add production-safe LLM capabilities for explanation and synthesis while p
 
 ## Provider Configuration Checklist
 
-- [ ] `.env.example` includes OpenAI + Anthropic settings
+- [x] `.env.example` includes OpenAI + Anthropic settings
 - [ ] Runtime docs explain provider selection and model pinning
 - [ ] Fallback behavior documented when one provider is degraded
 - [ ] Local smoke script validates both provider configs (without exposing keys)
