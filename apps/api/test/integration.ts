@@ -45,11 +45,34 @@ async function run(): Promise<void> {
     });
     assert.equal(refreshRes.status, 201, 'refresh should return 201');
     const refreshBody = (await refreshRes.json()) as {
+      mode: string;
+      skipped: boolean;
       nodeCount: number;
       edgeCount: number;
     };
+    assert.equal(refreshBody.mode, 'full', 'default refresh mode should be full');
+    assert.equal(refreshBody.skipped, false, 'default refresh should not skip');
     assert.ok(refreshBody.nodeCount > 0, 'refresh should create nodes');
     assert.ok(refreshBody.edgeCount > 0, 'refresh should create edges');
+
+    const refreshIncrementalRes = await fetch(`${base}/refresh`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ mode: 'incremental' })
+    });
+    assert.equal(refreshIncrementalRes.status, 201, 'incremental refresh should return 201');
+    const refreshIncrementalBody = (await refreshIncrementalRes.json()) as {
+      mode: string;
+      skipped: boolean;
+      skipReason?: string;
+      nodeCount: number;
+      edgeCount: number;
+    };
+    assert.equal(refreshIncrementalBody.mode, 'incremental');
+    assert.equal(refreshIncrementalBody.skipped, true, 'incremental refresh should skip unchanged fixtures');
+    assert.equal(refreshIncrementalBody.skipReason, 'no_changes_detected');
+    assert.ok(refreshIncrementalBody.nodeCount > 0);
+    assert.ok(refreshIncrementalBody.edgeCount > 0);
 
     const malformedRefreshRes = await fetch(`${base}/refresh`, {
       method: 'POST',
@@ -57,6 +80,13 @@ async function run(): Promise<void> {
       body: JSON.stringify({ fixturesPath: 42 })
     });
     assert.equal(malformedRefreshRes.status, 400, 'refresh should reject malformed fixturesPath');
+
+    const malformedModeRes = await fetch(`${base}/refresh`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ mode: 'delta' })
+    });
+    assert.equal(malformedModeRes.status, 400, 'refresh should reject invalid mode');
 
     const brokenRoot = fs.mkdtempSync(path.join(workspaceRoot, 'fixtures', 'tmp-broken-'));
     const brokenProfilesPath = path.join(brokenRoot, 'profiles');

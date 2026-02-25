@@ -64,14 +64,17 @@ export class EvidenceStoreService implements EvidenceStore {
     return { documentCount: docs.length, sourcePath: this.indexPath };
   }
 
-  search(query: string, maxResults: number): EvidenceSearchResult[] {
-    if (!fs.existsSync(this.indexPath)) {
-      return [];
-    }
+  getDocumentCount(): number {
+    const parsed = this.readIndex();
+    return parsed.documents.length;
+  }
 
-    const raw = fs.readFileSync(this.indexPath, 'utf8');
-    const parsed = JSON.parse(raw) as { documents?: EvidenceDocument[] };
-    const docs = parsed.documents ?? [];
+  getIndexPath(): string {
+    return this.indexPath;
+  }
+
+  search(query: string, maxResults: number): EvidenceSearchResult[] {
+    const docs = this.readIndex().documents;
     const tokens = this.tokenize(query);
 
     const ranked = docs
@@ -82,6 +85,16 @@ export class EvidenceStoreService implements EvidenceStore {
       .map((item) => ({ ...item.doc, score: item.score }));
 
     return ranked;
+  }
+
+  private readIndex(): { documents: EvidenceDocument[] } {
+    if (!fs.existsSync(this.indexPath)) {
+      return { documents: [] };
+    }
+
+    const raw = fs.readFileSync(this.indexPath, 'utf8');
+    const parsed = JSON.parse(raw) as { documents?: EvidenceDocument[] };
+    return { documents: parsed.documents ?? [] };
   }
 
   private chunkText(text: string, maxChunkChars: number): string[] {

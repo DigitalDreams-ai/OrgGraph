@@ -13,8 +13,23 @@ services:
       PERMISSIONS_FIXTURES_PATH: /app/fixtures/permissions
       USER_PROFILE_MAP_PATH: /app/fixtures/permissions/user-profile-map.json
       EVIDENCE_INDEX_PATH: /app/data/evidence/index.json
+      REFRESH_STATE_PATH: /app/data/refresh/state.json
     ports:
       - "3100:3000"
     volumes:
       - ../data:/app/data
       - ../fixtures:/app/fixtures:ro
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    container_name: orggraph-web
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+      NEXT_PUBLIC_API_BASE: http://api:3000
+    depends_on:
+      - api
+    ports:
+      - "3101:3000"
