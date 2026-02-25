@@ -29,6 +29,11 @@ npm run sf:export-user-map
 curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full"}'
 ```
 
+## Enable Staged UI Metadata Ingestion
+```bash
+INGEST_UI_METADATA_ENABLED=true curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full"}'
+```
+
 ## Query Endpoints
 ```bash
 curl "http://localhost:3100/perms?user=sbingham@shulman-hill.com.uat&object=litify_pm__Intake__c"

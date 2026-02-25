@@ -21,9 +21,8 @@ A Salesforce operational reasoning engine — ontology-first knowledge graph for
 - **Docker** — Already installed (Container Manager)
 - **SSH** — Enable in Control Panel → Terminal & SNMP
 - **Postgres** — Runs in container
-- **Chroma** — Runs in-process with NestJS app
 
-All OrgGraph services run under the Docker project **orggraphservices** for isolation and organization.
+All OrgGraph services run under the Docker project **orggraph** for isolation and organization.
 
 ### SSH Setup
 
@@ -64,7 +63,7 @@ Phase 1 user-to-profile resolution is read from `fixtures/permissions/user-profi
 
 ### Running the Stack
 
-All OrgGraph services run via Docker Compose under the project **orggraphservices**:
+All OrgGraph services run via Docker Compose under the project **orggraph**:
 
 ```bash
 cd /volume1/data/projects/OrgGraph
@@ -169,15 +168,16 @@ curl -X POST http://localhost:3100/org/retrieve \
   -d '{"runAuth":true,"runRetrieve":true,"autoRefresh":true}'
 ```
 
-See [ORG_INTEGRATION.md](./ORG_INTEGRATION.md) and [SANDBOX_CONNECT_CHECKLIST.md](./SANDBOX_CONNECT_CHECKLIST.md).
+See [ORG_INTEGRATION.md](./docs/runbooks/ORG_INTEGRATION.md) and [SANDBOX_CONNECT_CHECKLIST.md](./docs/runbooks/SANDBOX_CONNECT_CHECKLIST.md).
 
 ## Operator Docs
 
-- Usage guide: [ORGGRAPH_USAGE_GUIDE.md](./ORGGRAPH_USAGE_GUIDE.md)
-- Quick commands: [ORGGRAPH_CHEATSHEET.md](./ORGGRAPH_CHEATSHEET.md)
-- Production promotion gate: [PRODUCTION_PROMOTION.md](./PRODUCTION_PROMOTION.md)
-- Release checklist: [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)
-- Postgres migration: [POSTGRES_MIGRATION.md](./POSTGRES_MIGRATION.md)
+- Documentation index: [docs/README.md](./docs/README.md)
+- Usage guide: [docs/USAGE_GUIDE.md](./docs/USAGE_GUIDE.md)
+- Quick commands: [docs/CHEATSHEET.md](./docs/CHEATSHEET.md)
+- Production promotion gate: [docs/runbooks/PRODUCTION_PROMOTION.md](./docs/runbooks/PRODUCTION_PROMOTION.md)
+- Release checklist: [docs/releases/RELEASE_CHECKLIST.md](./docs/releases/RELEASE_CHECKLIST.md)
+- Postgres migration: [docs/runbooks/POSTGRES_MIGRATION.md](./docs/runbooks/POSTGRES_MIGRATION.md)
 
 ## Operational Environment Variables
 
@@ -228,6 +228,6 @@ DATABASE_URL=postgres://orggraph:orggraph@postgres:5432/orggraph
 
 ## Plan
 
-- Current active phase: **Phase 8** (ontology constraints, parser precision, confidence/consistency hardening).
-- See [PHASE8_TASKLIST.md](./docs/planning/PHASE8_TASKLIST.md) for current priorities and gates.
+- Current active phase: **Phase 10 planning** (LLM support plan) with Phase 9 implementation completed.
+- See [PHASE9_TASKLIST.md](./docs/planning/PHASE9_TASKLIST.md) for completed Postgres + metadata expansion scope.
 - See [PLAN_v1_Monorepo.md](./docs/planning/PLAN_v1_Monorepo.md) for the master roadmap.

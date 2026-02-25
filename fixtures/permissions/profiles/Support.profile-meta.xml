@@ -23,4 +23,12 @@
     <enabled>true</enabled>
     <name>ApproveUninstalledConnectedApps</name>
   </userPermissions>
+  <customPermissions>
+    <enabled>true</enabled>
+    <name>CanApproveIntake</name>
+  </customPermissions>
+  <applicationVisibilities>
+    <application>OrgGraphAPI</application>
+    <visible>true</visible>
+  </applicationVisibilities>
 </PermissionSet>

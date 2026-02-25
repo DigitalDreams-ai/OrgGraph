@@ -12,9 +12,9 @@ Goal: migrate the graph backend from SQLite to Postgres with zero functional reg
 - [x] `/perms`, `/automation`, `/impact`, and `/ask` parity validated against SQLite baseline
 - [x] Refresh and query SLOs meet or exceed SQLite baseline on representative org snapshot
 - [x] Rollback to SQLite remains documented and tested
-- [ ] Ontology supports additional metadata as first-class node/relationship types where needed
-- [ ] Parsers ingest selected additional metadata into deterministic graph payloads
-- [ ] Query behavior remains deterministic with expanded metadata coverage
+- [x] Ontology supports additional metadata as first-class node/relationship types where needed
+- [x] Parsers ingest selected additional metadata into deterministic graph payloads
+- [x] Query behavior remains deterministic with expanded metadata coverage
 
 ## Scope
 - Introduce Postgres graph backend behind existing graph service interface
@@ -77,28 +77,30 @@ Goal: migrate the graph backend from SQLite to Postgres with zero functional reg
 
 ## 7. Ontology & Parser Expansion
 
-- [ ] Add new ontology node/relationship types for selected metadata expansion targets
-- [ ] Update ontology constraints for all new relationship patterns
-- [ ] Implement ingestion parsers for:
+- [x] Add new ontology node/relationship types for selected metadata expansion targets
+- [x] Update ontology constraints for all new relationship patterns
+- [x] Implement ingestion parsers for:
   - `CustomObject` (object/field metadata projection)
   - `PermissionSetGroup`
   - `CustomPermission`
   - `ConnectedApp` / external client app metadata
-- [ ] Add staged parsers (feature-flagged or gated) for:
+- [x] Add staged parsers (feature-flagged or gated) for:
   - `ApexPage`, `LightningComponentBundle`, `AuraDefinitionBundle`, `QuickAction`, `Layout`
-- [ ] Ensure confidence scoring + consistency checks apply to new parser outputs
-- [ ] Preserve deterministic node/edge ordering with expanded metadata set
+- [x] Ensure confidence scoring + consistency checks apply to new parser outputs
+- [x] Preserve deterministic node/edge ordering with expanded metadata set
 
 ## 8. Validation for Expanded Coverage
 
-- [ ] Add parser tests for each new metadata type
-- [ ] Add ontology constraint tests for new nodes/relationships
-- [ ] Add integration tests showing endpoint behavior with expanded graph coverage
-- [ ] Run sandbox retrieval + refresh + smoke queries and capture before/after result deltas
-- [ ] Confirm no regression in refresh runtime and query latency beyond agreed budget
+- [x] Add parser tests for each new metadata type
+- [x] Add ontology constraint tests for new nodes/relationships
+- [x] Add integration tests showing endpoint behavior with expanded graph coverage
+- [x] Run sandbox retrieval + refresh + smoke queries and capture before/after result deltas
+- [x] Confirm no regression in refresh runtime and query latency beyond agreed budget
 
 ## Completion Notes
 
 - Parity covered by automated `backend-parity` integration test (`sqlite` vs `postgres` via `pg-mem`).
 - Docker compose now defaults API service to Postgres backend.
-- Migration and rollback procedures documented in `POSTGRES_MIGRATION.md`.
+- Migration and rollback procedures documented in `docs/runbooks/POSTGRES_MIGRATION.md`.
+- Metadata expansion added for `CustomObject`, `PermissionSetGroup`, `CustomPermission`, `ConnectedApp`, plus gated staged UI parsers (`INGEST_UI_METADATA_ENABLED=true`) for `ApexPage`, `LightningComponentBundle`, `AuraDefinitionBundle`, `QuickAction`, and `Layout`.
+- Validation coverage extended with dedicated parser tests and ontology constraint checks for new node/relationship patterns.

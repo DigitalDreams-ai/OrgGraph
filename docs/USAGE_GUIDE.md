@@ -64,6 +64,20 @@ curl -X POST http://localhost:3100/refresh \
 Expected readiness source path after live refresh:
 - `checks.fixtures.sourcePath` should be `/app/data/sf-project/force-app/main/default`
 
+Optional staged UI metadata ingestion:
+```bash
+INGEST_UI_METADATA_ENABLED=true curl -X POST http://localhost:3100/refresh \
+  -H 'content-type: application/json' \
+  -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full"}'
+```
+
+Expanded metadata coverage in current build includes:
+- `CustomObject` / object-field projection
+- `PermissionSetGroup`
+- `CustomPermission`
+- `ConnectedApp`
+- staged UI metadata (`ApexPage`, `LightningComponentBundle`, `AuraDefinitionBundle`, `QuickAction`, `Layout`) when enabled
+
 ## 8. Query OrgGraph
 
 ### 8.1 Permissions
@@ -122,6 +136,7 @@ curl -X POST http://localhost:3100/refresh \
   -H 'content-type: application/json' \
   -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full"}'
 ```
+If refresh state was produced from a different runtime context, `/ready` now automatically falls back to current runtime path resolution.
 
 ### 10.3 Web container unhealthy
 Rebuild and restart:
@@ -134,17 +149,10 @@ docker compose -f docker/docker-compose.yml up -d --build web
 npm run test:web-smoke
 ```
 
-## 11. Phase 7 Validation Harness
+## 11. Extended Validation Harness
 ```bash
-# Live endpoint smoke + artifacts
 npm run phase7:smoke-live
-
-# Capture baseline snapshots
 npm run phase7:snapshot
-
-# Compare current counts to last baseline with threshold checks
 npm run phase7:regression
-
-# Show latest ingest summary + low-confidence sources
 npm run ingest:report
 ```
