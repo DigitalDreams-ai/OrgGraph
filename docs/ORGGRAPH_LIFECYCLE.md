@@ -148,6 +148,23 @@ flowchart TD
     S --> X[/metrics + logs + Dozzle]
 ```
 
+ASCII fallback:
+
+```text
+Startup -> Config/Backend Init -> Metadata Source (Fixtures or Retrieved SF)
+       -> Refresh Trigger -> Refresh Lock
+       -> (busy => 409) OR (free => fingerprint/incremental check)
+       -> Parse (Permissions/Trigger/Class/Flow)
+       -> Merge deterministic payload
+       -> Ontology validation
+       -> (violation => 400) OR (ok => graph rebuild)
+       -> Evidence reindex
+       -> State + audit + ontology report
+       -> Query serving (/perms, /perms/system, /automation, /impact, /ask)
+       -> Web proxy/UI
+       -> Metrics + logs (Dozzle)
+```
+
 ## Visual: Runtime Components
 
 ```mermaid
@@ -170,4 +187,16 @@ graph LR
 
     API --> Metrics[Metrics + Logs]
     Metrics --> Dozzle[Dozzle / Docker Logs]
+```
+
+ASCII fallback:
+
+```text
+Operator/Scripts ---> API Controllers ---> Ingestion Service ---> Parsers ---> Ontology ---> Graph Store
+         |                   |                    |                                   |
+         |                   |                    +---> Evidence Index                +---> Query/Analysis/Ask
+         |                   |                    +---> Refresh State/Audit           +---> API responses
+         +----> Web UI ----> Web /api proxy -----------------------------------------> API
+
+API ---> Metrics/Logs ---> Dozzle
 ```
