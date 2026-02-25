@@ -15,6 +15,7 @@ export class AppConfigService {
     this.validateOptionalString('SF_CLIENT_ID');
     this.validateOptionalString('SF_JWT_KEY_PATH');
     this.validateOptionalString('SF_USERNAME');
+    this.validateOptionalString('SF_BASE_URL');
     this.validateOptionalString('SF_INSTANCE_URL');
     this.validateOptionalString('SF_LOGIN_DOMAIN');
     this.validateOptionalString('SF_CLIENT_SECRET');
@@ -99,11 +100,15 @@ export class AppConfigService {
   }
 
   sfInstanceUrl(): string | undefined {
-    return process.env.SF_INSTANCE_URL;
+    return process.env.SF_INSTANCE_URL ?? this.sfBaseUrl();
+  }
+
+  sfBaseUrl(): string {
+    return process.env.SF_BASE_URL?.trim() || 'https://test.salesforce.com';
   }
 
   sfLoginDomain(): string {
-    return process.env.SF_LOGIN_DOMAIN?.trim() || 'https://test.salesforce.com';
+    return process.env.SF_LOGIN_DOMAIN?.trim() || this.sfBaseUrl();
   }
 
   sfClientSecret(): string | undefined {

@@ -42,7 +42,8 @@ if [ "$SF_AUTH_MODE" = "sfdx_url" ]; then
 fi
 
 if [ "$SF_AUTH_MODE" = "oauth_refresh_token" ]; then
-  SF_LOGIN_DOMAIN="${SF_LOGIN_DOMAIN:-https://test.salesforce.com}"
+  SF_BASE_URL="${SF_BASE_URL:-https://test.salesforce.com}"
+  SF_LOGIN_DOMAIN="${SF_LOGIN_DOMAIN:-$SF_BASE_URL}"
   SF_LOGIN_DOMAIN="${SF_LOGIN_DOMAIN%/}"
   SF_CLIENT_ID="${SF_CLIENT_ID:-}"
   SF_CLIENT_SECRET="${SF_CLIENT_SECRET:-}"
@@ -121,10 +122,11 @@ NODE
 fi
 
 if [ "$SF_AUTH_MODE" = "jwt" ]; then
+  SF_BASE_URL="${SF_BASE_URL:-https://test.salesforce.com}"
   SF_CLIENT_ID="${SF_CLIENT_ID:-}"
   SF_JWT_KEY_PATH="${SF_JWT_KEY_PATH:-}"
   SF_USERNAME="${SF_USERNAME:-}"
-  SF_INSTANCE_URL="${SF_INSTANCE_URL:-https://test.salesforce.com}"
+  SF_INSTANCE_URL="${SF_INSTANCE_URL:-$SF_BASE_URL}"
 
   if [ -z "$SF_CLIENT_ID" ] || [ -z "$SF_JWT_KEY_PATH" ] || [ -z "$SF_USERNAME" ]; then
     echo "JWT mode requires SF_CLIENT_ID, SF_JWT_KEY_PATH, SF_USERNAME"

@@ -9,6 +9,7 @@
 
 ## 2) Configure NAS Environment
 - [ ] Confirm login domain: `https://test.salesforce.com`.
+- [ ] Set `SF_BASE_URL` to the org host you want to target (quick switch variable).
 - [ ] Set `SF_INTEGRATION_ENABLED=true`.
 - [ ] Set `SF_AUTH_MODE=oauth_refresh_token`.
 - [ ] Set `SF_LOGIN_DOMAIN=https://test.salesforce.com`.

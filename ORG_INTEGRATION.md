@@ -17,6 +17,7 @@ This runbook connects OrgGraph to a Salesforce sandbox, retrieves metadata, and 
 - `SF_PARSE_PATH=data/sf-project/force-app/main/default`
 
 External Client App OAuth mode:
+- `SF_BASE_URL=https://test.salesforce.com` (single switch value for org host)
 - `SF_LOGIN_DOMAIN=https://test.salesforce.com`
 - `SF_CLIENT_ID=<external-client-app-consumer-key>`
 - `SF_CLIENT_SECRET=<external-client-app-consumer-secret>`
@@ -28,7 +29,7 @@ JWT mode:
 - `SF_CLIENT_ID=<connected-app-client-id>`
 - `SF_JWT_KEY_PATH=<path-to-server-key>`
 - `SF_USERNAME=<integration-user>`
-- `SF_INSTANCE_URL=https://test.salesforce.com`
+- `SF_INSTANCE_URL=<optional override; defaults to SF_BASE_URL>`
 
 ## Initial Setup
 1. Ensure `sf` CLI is installed and in `PATH`.
