@@ -15,6 +15,13 @@ function run(): void {
   assert.equal(parsed.reasoningSummary, 'Grounded');
   assert.deepEqual(parsed.citationsUsed, ['ev_1', 'ev_2']);
 
+  const numericCitations = parseLlmJsonResponse(
+    '{"answer":"Result","reasoning_summary":"Grounded","citations_used":[1,"[2]"]}',
+    'anthropic',
+    'claude-test'
+  );
+  assert.deepEqual(numericCitations.citationsUsed, ['1', '[2]']);
+
   let missingAnswer: unknown;
   try {
     parseLlmJsonResponse('{"reasoning_summary":"x","citations_used":[]}', 'anthropic', 'claude-test');

@@ -1,8 +1,13 @@
 import { Injectable, type LogLevel } from '@nestjs/common';
+import { existsSync, readFileSync } from 'node:fs';
+import { isAbsolute, resolve } from 'node:path';
 
 @Injectable()
 export class AppConfigService {
   constructor() {
+    this.applyConfigFileDefaults();
+
+    this.validateOptionalString('ORGGRAPH_CONFIG_PATH');
     this.validateOptionalString('DATABASE_URL');
     this.validateOptionalString('GRAPH_BACKEND');
     this.validateOptionalString('PERMISSIONS_FIXTURES_PATH');
@@ -298,8 +303,41 @@ export class AppConfigService {
       return;
     }
 
-    if (typeof value !== 'string' || value.trim().length === 0) {
-      throw new Error(`Invalid ${name}: expected non-empty string`);
+    if (typeof value !== 'string') {
+      throw new Error(`Invalid ${name}: expected string`);
+    }
+  }
+
+  private applyConfigFileDefaults(): void {
+    const configPathRaw = process.env.ORGGRAPH_CONFIG_PATH?.trim();
+    if (!configPathRaw) {
+      return;
+    }
+
+    const configPath = isAbsolute(configPathRaw) ? configPathRaw : resolve(process.cwd(), configPathRaw);
+    if (!existsSync(configPath)) {
+      throw new Error(`ORGGRAPH_CONFIG_PATH not found: ${configPath}`);
+    }
+
+    const raw = readFileSync(configPath, 'utf8');
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error(`ORGGRAPH_CONFIG_PATH must contain a JSON object: ${configPath}`);
+    }
+
+    const entries = Object.entries(parsed as Record<string, unknown>);
+    for (const [key, value] of entries) {
+      if (value === null || value === undefined) {
+        continue;
+      }
+      if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') {
+        throw new Error(`Invalid config value type for ${key} in ${configPath}`);
+      }
+
+      const existing = process.env[key];
+      if (existing === undefined || existing.trim() === '') {
+        process.env[key] = String(value);
+      }
     }
   }
 }

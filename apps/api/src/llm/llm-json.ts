@@ -42,7 +42,17 @@ export function parseLlmJsonResponse(
   }
 
   const citations = Array.isArray(parsed.citations_used)
-    ? parsed.citations_used.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    ? parsed.citations_used
+        .map((item) => {
+          if (typeof item === 'string') {
+            return item.trim();
+          }
+          if (typeof item === 'number' && Number.isFinite(item)) {
+            return String(item);
+          }
+          return '';
+        })
+        .filter((item) => item.length > 0)
     : [];
 
   return {

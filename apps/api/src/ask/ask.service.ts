@@ -164,10 +164,14 @@ export class AskService {
             }
           );
 
-          const validCitationIds = new Set(citations.map((citation) => citation.id));
-          const citedIds = llmResult.citationsUsed.filter((id) => validCitationIds.has(id));
+          const citedIds = this.resolveCitedIds(
+            llmResult.citationsUsed,
+            citations.map((citation) => citation.id),
+            llmResult.rawText
+          );
           if (citations.length > 0 && citedIds.length === 0) {
-            throw new Error('LLM response did not reference provided citations');
+            const observed = llmResult.citationsUsed.length > 0 ? llmResult.citationsUsed.join(',') : '(none)';
+            throw new Error(`LLM response did not reference provided citations (observed: ${observed})`);
           }
 
           answer = llmResult.answer;
@@ -229,5 +233,52 @@ export class AskService {
       }
     }
     return [...byKey.values()].sort((a, b) => b.score - a.score);
+  }
+
+  private resolveCitedIds(
+    rawCitations: string[],
+    validCitationIds: string[],
+    rawLlmText?: string
+  ): string[] {
+    const validSet = new Set(validCitationIds);
+    const resolved = new Set<string>();
+
+    for (const raw of rawCitations) {
+      const normalized = raw.trim();
+      if (!normalized) {
+        continue;
+      }
+
+      if (validSet.has(normalized)) {
+        resolved.add(normalized);
+        continue;
+      }
+
+      const embeddedId = normalized.match(/(ev_[a-z0-9]+)/i)?.[1];
+      if (embeddedId && validSet.has(embeddedId)) {
+        resolved.add(embeddedId);
+        continue;
+      }
+
+      const numeric = normalized.replace(/[^\d]/g, '');
+      if (numeric.length > 0) {
+        const idx = Number(numeric);
+        if (Number.isInteger(idx) && idx >= 1 && idx <= validCitationIds.length) {
+          resolved.add(validCitationIds[idx - 1]);
+        }
+      }
+    }
+
+    if (resolved.size === 0 && rawLlmText) {
+      const matches = rawLlmText.match(/\[(\d+)\]/g) ?? [];
+      for (const match of matches) {
+        const idx = Number(match.replace(/[^\d]/g, ''));
+        if (Number.isInteger(idx) && idx >= 1 && idx <= validCitationIds.length) {
+          resolved.add(validCitationIds[idx - 1]);
+        }
+      }
+    }
+
+    return [...resolved];
   }
 }

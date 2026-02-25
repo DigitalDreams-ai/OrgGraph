@@ -35,6 +35,42 @@ async function run(): Promise<void> {
   process.env.USER_PROFILE_MAP_PATH = userMapPath;
   process.env.EVIDENCE_INDEX_PATH = evidencePath;
   process.env.SF_INTEGRATION_ENABLED = 'false';
+  process.env.LLM_ENABLED = 'true';
+  process.env.LLM_PROVIDER = 'anthropic';
+  process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
+  process.env.ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001';
+  const mockAnthropicUrl = 'https://anthropic.mock.local/v1/messages';
+  process.env.ANTHROPIC_BASE_URL = mockAnthropicUrl;
+
+  const originalFetch = globalThis.fetch.bind(globalThis);
+  globalThis.fetch = async (
+    input: string | URL | Request,
+    init?: RequestInit
+  ): Promise<Response> => {
+    const url =
+      typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+    if (url === mockAnthropicUrl) {
+      return new Response(
+        JSON.stringify({
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                answer: 'Mocked Anthropic answer grounded in citation [1].',
+                reasoning_summary: 'Mocked for integration coverage.',
+                citations_used: [1]
+              })
+            }
+          ]
+        }),
+        {
+          status: 200,
+          headers: { 'content-type': 'application/json' }
+        }
+      );
+    }
+    return originalFetch(input as RequestInfo | URL, init);
+  };
 
   const app = await NestFactory.create(AppModule, { logger: false });
   await app.listen(0);
@@ -445,6 +481,26 @@ async function run(): Promise<void> {
     assert.equal(askLlmAssist.llm.used, false);
     assert.match(String(askLlmAssist.llm.fallbackReason ?? ''), /provider is none|disabled/i);
 
+    const askLlmAnthropicRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'What touches Opportunity.StageName?',
+        mode: 'llm_assist',
+        llm: { provider: 'anthropic' }
+      })
+    });
+    assert.equal(askLlmAnthropicRes.status, 201, 'ask llm anthropic should return 201');
+    const askLlmAnthropic = (await askLlmAnthropicRes.json()) as {
+      mode: string;
+      answer: string;
+      llm: { used: boolean; provider: string; model?: string };
+    };
+    assert.equal(askLlmAnthropic.mode, 'llm_assist');
+    assert.equal(askLlmAnthropic.llm.used, true);
+    assert.equal(askLlmAnthropic.llm.provider, 'anthropic');
+    assert.match(askLlmAnthropic.answer, /Mocked Anthropic answer/);
+
     const askBadRequest = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -486,6 +542,7 @@ async function run(): Promise<void> {
 
     console.log('integration passed');
   } finally {
+    globalThis.fetch = originalFetch;
     await app.close();
     if (fs.existsSync(dbPath)) {
       fs.rmSync(dbPath, { force: true });

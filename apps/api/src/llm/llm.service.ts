@@ -105,6 +105,8 @@ export class LlmService {
       'You are assisting OrgGraph. Deterministic graph output is the source of truth.',
       'Only produce claims that are supported by provided citations.',
       'If citations are insufficient, keep answer conservative and state uncertainty.',
+      'Use citation ids in citations_used, or citation indexes like [1], [2], [3].',
+      'Keep answer concise and actionable. Prefer a one-line summary plus short bullet points.',
       'Return strict JSON only with keys: answer, reasoning_summary, citations_used.',
       'citations_used must contain citation ids from the provided list.',
       '',
@@ -113,7 +115,7 @@ export class LlmService {
       `Planned intent: ${request.plan.intent}`,
       `Plan entities: ${JSON.stringify(request.plan.entities)}`,
       '',
-      'Citations:',
+      'Citations (indexed):',
       citations.length > 0 ? citations : '(none provided)'
     ].join('\n');
   }
@@ -159,7 +161,8 @@ export class LlmService {
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI request failed (${response.status})`);
+        const details = await this.extractErrorDetails(response);
+        throw new Error(`OpenAI request failed (${response.status}): ${details}`);
       }
 
       const body = (await response.json()) as {
@@ -211,7 +214,8 @@ export class LlmService {
       });
 
       if (!response.ok) {
-        throw new Error(`Anthropic request failed (${response.status})`);
+        const details = await this.extractErrorDetails(response);
+        throw new Error(`Anthropic request failed (${response.status}): ${details}`);
       }
 
       const body = (await response.json()) as {
@@ -225,6 +229,42 @@ export class LlmService {
       return parseLlmJsonResponse(text, 'anthropic', model);
     } finally {
       clearTimeout(timeout);
+    }
+  }
+
+  private async extractErrorDetails(response: Response): Promise<string> {
+    try {
+      const raw = await response.text();
+      if (!raw) {
+        return 'no response body';
+      }
+      try {
+        const parsed = JSON.parse(raw) as
+          | { error?: { message?: string; type?: string } }
+          | { message?: string; type?: string };
+        if (parsed && typeof parsed === 'object') {
+          const errorObj = 'error' in parsed ? parsed.error : parsed;
+          if (errorObj && typeof errorObj === 'object') {
+            const type =
+              'type' in errorObj && typeof errorObj.type === 'string'
+                ? `type=${errorObj.type} `
+                : '';
+            const message =
+              'message' in errorObj && typeof errorObj.message === 'string'
+                ? errorObj.message
+                : '';
+            const combined = `${type}${message}`.trim();
+            if (combined.length > 0) {
+              return combined;
+            }
+          }
+        }
+      } catch {
+        // fall back to raw excerpt
+      }
+      return raw.replace(/\s+/g, ' ').slice(0, 280);
+    } catch {
+      return 'failed to read error response body';
     }
   }
 }

@@ -70,6 +70,18 @@ After retrieve + refresh:
 5. `GET /impact?field=<known-object.field>`
 6. `POST /ask` with a known query
 
+## LLM Provider Switch (No Rebuild)
+To switch between OpenAI and Anthropic quickly:
+1. Set provider default in `config/api.docker.json`:
+- `LLM_PROVIDER=openai` or `LLM_PROVIDER=anthropic`
+2. Keep secrets in `.env`:
+- `OPENAI_API_KEY=...`
+- `ANTHROPIC_API_KEY=...`
+3. Recreate API only (no image rebuild):
+`docker compose -f docker/docker-compose.yml up -d --no-deps --force-recreate api`
+4. Verify:
+`POST /ask` with `{ "mode": "llm_assist" }` and check `llm.provider` + `llm.used`.
+
 ## Rollback
 If retrieve/refresh fails:
 1. Keep previous deployed image and config.
