@@ -15,6 +15,9 @@ services:
       EVIDENCE_INDEX_PATH: /app/data/evidence/index.json
       REFRESH_STATE_PATH: /app/data/refresh/state.json
       REFRESH_AUDIT_PATH: /app/data/refresh/audit.jsonl
+      ONTOLOGY_REPORT_PATH: /app/data/refresh/ontology-report.json
+      MIN_CONFIDENCE_DEFAULT: medium
+      ASK_CONSISTENCY_CHECK_ENABLED: "true"
       SF_INTEGRATION_ENABLED: "false"
       SF_AUTH_MODE: sfdx_url
       SF_AUTH_URL_PATH: /app/.secrets/sandbox.sfdx-url.txt

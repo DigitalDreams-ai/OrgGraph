@@ -9,6 +9,15 @@ ARTIFACT_DIR="${ORGGRAPH_SMOKE_ARTIFACT_DIR:-artifacts/phase7-live-smoke}"
 
 mkdir -p "$ARTIFACT_DIR"
 
+notify() {
+  status="$1"
+  message="$2"
+  if [ -x "./scripts/phase8-alert-hook.sh" ]; then
+    ./scripts/phase8-alert-hook.sh "$status" "$message" || true
+  fi
+}
+trap 'notify "error" "phase7 live smoke failed"' INT TERM HUP
+
 curl -sS "$API_BASE/ready" > "$ARTIFACT_DIR/ready.json"
 curl -sS "$API_BASE/perms?user=$USER_EMAIL&object=$OBJECT_API" > "$ARTIFACT_DIR/perms.json"
 curl -sS "$API_BASE/automation?object=Opportunity&strict=true" > "$ARTIFACT_DIR/automation.json"
@@ -18,5 +27,5 @@ curl -sS -X POST "$API_BASE/ask" \
   -d "{\"query\":\"What touches $FIELD_API?\"}" > "$ARTIFACT_DIR/ask.json"
 
 echo "{\"status\":\"passed\",\"artifactDir\":\"$ARTIFACT_DIR\"}" > "$ARTIFACT_DIR/result.json"
+notify "ok" "phase7 live smoke passed"
 echo "phase7 live smoke passed"
-

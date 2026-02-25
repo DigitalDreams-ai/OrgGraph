@@ -11,22 +11,25 @@ Define the go/no-go process for promoting OrgGraph from sandbox metadata to prod
 - No new parser warnings that materially change operator conclusions.
 
 ## Pre-Promotion Checklist
-1. Capture baseline snapshot:
+1. Run promotion dry-run:
+`npm run phase8:promotion-dry-run`
+2. Create restore point:
+`npm run phase8:restore-point:create`
+3. Capture baseline snapshot:
 `npm run phase7:snapshot`
-2. Validate latest ingest summary:
+4. Validate latest ingest summary:
 `npm run ingest:report`
-3. Confirm secrets are current and scoped:
+5. Confirm secrets are current and scoped:
 `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_TOKEN_STORE_PATH`
-4. Confirm rollback artifacts exist:
-- previous `data/orggraph.db`
-- previous `data/evidence/index.json`
-- previous image tags
-5. Confirm operator sign-off on validation outputs.
+6. Confirm rollback artifacts exist in `data/refresh/restore-points/<stamp>`
+7. Confirm operator sign-off on validation outputs and append promotion log:
+`ORGGRAPH_OPERATOR=<name> npm run phase8:promotion-log -- promoted`
 
 ## Rollback Procedure
 1. Stop stack:
 `docker compose -f docker/docker-compose.yml down`
-2. Restore known-good `data/orggraph.db` and `data/evidence/index.json`.
+2. Restore known-good snapshot:
+`npm run phase8:restore-point:apply -- <restore-point-stamp>`
 3. Start stack with previous image tag or previous commit:
 `docker compose -f docker/docker-compose.yml up -d`
 4. Verify:
@@ -47,3 +50,14 @@ Define the go/no-go process for promoting OrgGraph from sandbox metadata to prod
 - Manual cadence (recommended now): run retrieve + refresh on demand before major analysis sessions.
 - Optional scheduled cadence (later): daily retrieve + incremental refresh with alerting on regression threshold failures.
 
+## Retention + Alerts
+- Prune restore-point and promotion-log artifacts:
+`ORGGRAPH_RETENTION_DAYS=30 npm run phase8:retention-prune`
+- Optional alert hook for smoke/regression scripts:
+`ORGGRAPH_ALERT_WEBHOOK_URL=https://...`
+
+## Monthly Accuracy Review
+1. Select 10-20 representative business questions.
+2. Run `/perms`, `/automation`, `/impact`, `/ask` and store artifacts.
+3. Record precision findings and parser warning trends.
+4. Create follow-up issues for ontology/parsing improvements before next promotion.
