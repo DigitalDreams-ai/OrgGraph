@@ -168,7 +168,12 @@ export class PermissionsParserService {
   }
 
   private entityNameFromFilename(file: string): string {
-    return file.replace(/\.(profile-meta|permissionset-meta)?\.xml$/i, '').replace(/\.xml$/i, '');
+    const raw = file.replace(/\.(profile-meta|permissionset-meta)?\.xml$/i, '').replace(/\.xml$/i, '');
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      return raw;
+    }
   }
 
   private normalizeField(fieldName?: string): string | undefined {

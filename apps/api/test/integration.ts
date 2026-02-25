@@ -12,20 +12,27 @@ async function run(): Promise<void> {
   const workspaceRoot = resolveWorkspaceRoot();
   const dbPath = path.join(workspaceRoot, 'data', 'orggraph.integration.db');
   const evidencePath = path.join(workspaceRoot, 'data', 'evidence.integration.json');
+  const userMapPath = path.join(workspaceRoot, 'data', 'user-profile-map.integration.json');
 
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   if (fs.existsSync(dbPath)) {
     fs.rmSync(dbPath, { force: true });
   }
+  fs.writeFileSync(
+    userMapPath,
+    JSON.stringify(
+      {
+        'jane@example.com': ['Support', 'Support']
+      },
+      null,
+      2
+    ) + '\n',
+    'utf8'
+  );
 
   process.env.DATABASE_URL = `file:${dbPath}`;
   process.env.PERMISSIONS_FIXTURES_PATH = path.join(workspaceRoot, 'fixtures', 'permissions');
-  process.env.USER_PROFILE_MAP_PATH = path.join(
-    workspaceRoot,
-    'fixtures',
-    'permissions',
-    'user-profile-map.json'
-  );
+  process.env.USER_PROFILE_MAP_PATH = userMapPath;
   process.env.EVIDENCE_INDEX_PATH = evidencePath;
   process.env.SF_INTEGRATION_ENABLED = 'false';
 
@@ -162,15 +169,27 @@ async function run(): Promise<void> {
       granted: boolean;
       objectGranted: boolean;
       paths: unknown[];
+      principalsChecked: string[];
+      mappingStatus: string;
+      warnings: string[];
     };
     assert.equal(permsPositive.granted, true, 'jane should have object grant');
     assert.equal(permsPositive.objectGranted, true, 'objectGranted should be true');
     assert.ok(permsPositive.paths.length > 0, 'paths should include a deterministic path');
+    assert.deepEqual(permsPositive.principalsChecked, ['Support']);
+    assert.equal(permsPositive.mappingStatus, 'resolved');
+    assert.equal(permsPositive.warnings.length, 0);
 
     const permsUnknownUserRes = await fetch(`${base}/perms?user=missing@example.com&object=Case`);
     assert.equal(permsUnknownUserRes.status, 200, 'unknown user should still return 200');
-    const permsUnknownUser = (await permsUnknownUserRes.json()) as { granted: boolean };
+    const permsUnknownUser = (await permsUnknownUserRes.json()) as {
+      granted: boolean;
+      mappingStatus: string;
+      warnings: string[];
+    };
     assert.equal(permsUnknownUser.granted, false, 'unknown user should not have grant');
+    assert.equal(permsUnknownUser.mappingStatus, 'unmapped_user');
+    assert.ok(permsUnknownUser.warnings.length > 0);
 
     const fieldPositiveRes = await fetch(
       `${base}/perms?user=jane@example.com&object=Case&field=Case.Status`
@@ -339,6 +358,9 @@ async function run(): Promise<void> {
     await app.close();
     if (fs.existsSync(dbPath)) {
       fs.rmSync(dbPath, { force: true });
+    }
+    if (fs.existsSync(userMapPath)) {
+      fs.rmSync(userMapPath, { force: true });
     }
     if (fs.existsSync(evidencePath)) {
       fs.rmSync(evidencePath, { force: true });

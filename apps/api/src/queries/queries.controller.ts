@@ -23,6 +23,8 @@ export class QueriesController {
     totalPaths: number;
     truncated: boolean;
     explanation: string;
+    mappingStatus: 'resolved' | 'unmapped_user' | 'map_missing';
+    warnings: string[];
   } {
     if (!user || !object) {
       throw new BadRequestException('user and object query params are required');
