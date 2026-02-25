@@ -35,3 +35,9 @@ export function resolveUserProfileMapPath(mapPath?: string): string {
   const raw = mapPath?.trim() || 'fixtures/permissions/user-profile-map.json';
   return path.resolve(workspaceRoot, raw);
 }
+
+export function resolveEvidenceIndexPath(indexPath?: string): string {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const raw = indexPath?.trim() || 'data/evidence/index.json';
+  return path.resolve(workspaceRoot, raw);
+}

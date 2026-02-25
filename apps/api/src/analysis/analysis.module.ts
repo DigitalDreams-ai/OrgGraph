@@ -6,6 +6,7 @@ import { AnalysisService } from './analysis.service';
 @Module({
   imports: [GraphModule],
   providers: [AnalysisService],
-  controllers: [AnalysisController]
+  controllers: [AnalysisController],
+  exports: [AnalysisService]
 })
 export class AnalysisModule {}
