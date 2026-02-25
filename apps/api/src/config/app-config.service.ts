@@ -33,6 +33,18 @@ export class AppConfigService {
     this.validateOptionalString('SF_AUTO_REFRESH_AFTER_RETRIEVE');
     this.validateOptionalString('MIN_CONFIDENCE_DEFAULT');
     this.validateOptionalString('ASK_CONSISTENCY_CHECK_ENABLED');
+    this.validateOptionalString('ASK_DEFAULT_MODE');
+    this.validateOptionalString('LLM_ENABLED');
+    this.validateOptionalString('LLM_PROVIDER');
+    this.validateOptionalString('LLM_ALLOW_PROVIDER_OVERRIDE');
+    this.validateOptionalString('LLM_TIMEOUT_MS');
+    this.validateOptionalString('LLM_MAX_OUTPUT_TOKENS');
+    this.validateOptionalString('OPENAI_API_KEY');
+    this.validateOptionalString('OPENAI_MODEL');
+    this.validateOptionalString('OPENAI_BASE_URL');
+    this.validateOptionalString('ANTHROPIC_API_KEY');
+    this.validateOptionalString('ANTHROPIC_MODEL');
+    this.validateOptionalString('ANTHROPIC_BASE_URL');
     this.validateOptionalString('INGEST_UI_METADATA_ENABLED');
     this.validateOptionalString('ORGGRAPH_LOG_LEVEL');
     this.validateOptionalString('ORGGRAPH_HTTP_LOG_ENABLED');
@@ -183,6 +195,62 @@ export class AppConfigService {
 
   askConsistencyCheckEnabled(): boolean {
     return (process.env.ASK_CONSISTENCY_CHECK_ENABLED || 'true').trim().toLowerCase() === 'true';
+  }
+
+  askDefaultMode(): 'deterministic' | 'llm_assist' {
+    const raw = (process.env.ASK_DEFAULT_MODE || 'deterministic').trim().toLowerCase();
+    if (raw !== 'deterministic' && raw !== 'llm_assist') {
+      throw new Error(`Invalid ASK_DEFAULT_MODE: ${raw}`);
+    }
+    return raw;
+  }
+
+  llmEnabled(): boolean {
+    return (process.env.LLM_ENABLED || 'false').trim().toLowerCase() === 'true';
+  }
+
+  llmProvider(): 'none' | 'openai' | 'anthropic' {
+    const raw = (process.env.LLM_PROVIDER || 'none').trim().toLowerCase();
+    if (raw !== 'none' && raw !== 'openai' && raw !== 'anthropic') {
+      throw new Error(`Invalid LLM_PROVIDER: ${raw}`);
+    }
+    return raw;
+  }
+
+  llmAllowProviderOverride(): boolean {
+    return (process.env.LLM_ALLOW_PROVIDER_OVERRIDE || 'true').trim().toLowerCase() === 'true';
+  }
+
+  llmTimeoutMs(): number {
+    return this.readPositiveInt('LLM_TIMEOUT_MS', 12000, 500, 120000);
+  }
+
+  llmMaxOutputTokens(): number {
+    return this.readPositiveInt('LLM_MAX_OUTPUT_TOKENS', 400, 32, 4096);
+  }
+
+  openaiApiKey(): string | undefined {
+    return process.env.OPENAI_API_KEY;
+  }
+
+  openaiModel(): string {
+    return process.env.OPENAI_MODEL?.trim() || 'gpt-4.1-mini';
+  }
+
+  openaiBaseUrl(): string {
+    return process.env.OPENAI_BASE_URL?.trim() || 'https://api.openai.com/v1/chat/completions';
+  }
+
+  anthropicApiKey(): string | undefined {
+    return process.env.ANTHROPIC_API_KEY;
+  }
+
+  anthropicModel(): string {
+    return process.env.ANTHROPIC_MODEL?.trim() || 'claude-3-5-haiku-20241022';
+  }
+
+  anthropicBaseUrl(): string {
+    return process.env.ANTHROPIC_BASE_URL?.trim() || 'https://api.anthropic.com/v1/messages';
   }
 
   ingestUiMetadataEnabled(): boolean {
