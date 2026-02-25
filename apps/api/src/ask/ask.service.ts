@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AnalysisService } from '../analysis/analysis.service';
 import { AppConfigService } from '../config/app-config.service';
 import { EvidenceStoreService } from '../evidence/evidence-store.service';
+import { LlmService } from '../llm/llm.service';
 import { QueriesService } from '../queries/queries.service';
 import { PlannerService } from '../planner/planner.service';
 import type { AskRequest, AskResponse } from './ask.types';
@@ -9,13 +10,15 @@ import type { AskRequest, AskResponse } from './ask.types';
 @Injectable()
 export class AskService {
   private readonly logger = new Logger(AskService.name);
+  private static readonly LLM_MIN_CONFIDENCE = 0.6;
 
   constructor(
     private readonly configService: AppConfigService,
     private readonly planner: PlannerService,
     private readonly queries: QueriesService,
     private readonly analysis: AnalysisService,
-    private readonly evidence: EvidenceStoreService
+    private readonly evidence: EvidenceStoreService,
+    private readonly llmService: LlmService
   ) {}
 
   async ask(input: AskRequest): Promise<AskResponse> {
@@ -46,6 +49,7 @@ export class AskService {
     }));
 
     let answer = 'No deterministic plan matched the query.';
+    let deterministicAnswer = answer;
     let confidence = 0.2;
     let consistency: AskResponse['consistency'] = {
       checked: false,
@@ -58,6 +62,7 @@ export class AskService {
       const object = plan.entities.object ?? 'Case';
       const result = await this.queries.perms(user, object, plan.entities.field);
       answer = result.explanation;
+      deterministicAnswer = result.explanation;
       confidence = result.granted ? 0.86 : 0.62;
       consistency = {
         checked: false,
@@ -74,6 +79,7 @@ export class AskService {
         includeLowConfidence
       );
       answer = result.explanation;
+      deterministicAnswer = result.explanation;
       confidence = result.automations.length > 0 ? 0.82 : 0.58;
       consistency = {
         checked: consistencyCheck,
@@ -93,6 +99,7 @@ export class AskService {
         includeLowConfidence
       );
       answer = result.explanation;
+      deterministicAnswer = result.explanation;
       confidence = result.paths.length > 0 ? 0.8 : 0.55;
       if (consistencyCheck) {
         const verification = await this.analysis.impact(
@@ -121,12 +128,97 @@ export class AskService {
         };
       }
     }
+    deterministicAnswer = answer;
+
+    const requestedMode = input.mode ?? this.llmService.defaultMode();
+    const llmEnabled = this.llmService.isEnabled();
+    let mode: AskResponse['mode'] = requestedMode;
+    let llm: AskResponse['llm'] = {
+      enabled: llmEnabled,
+      used: false,
+      provider: input.llm?.provider ?? this.configService.llmProvider()
+    };
+
+    if (requestedMode === 'llm_assist') {
+      if (!llmEnabled) {
+        mode = 'deterministic';
+        llm = {
+          ...llm,
+          used: false,
+          fallbackReason: 'llm disabled by configuration'
+        };
+      } else if (citations.length === 0 || confidence < AskService.LLM_MIN_CONFIDENCE) {
+        mode = 'deterministic';
+        llm = {
+          ...llm,
+          used: false,
+          fallbackReason: 'insufficient evidence for llm_assist'
+        };
+        answer = deterministicAnswer;
+      } else {
+        const llmStartedAt = Date.now();
+        try {
+          const llmResult = await this.llmService.generate(
+            {
+              query: input.query,
+              deterministicAnswer,
+              plan,
+              citations
+            },
+            {
+              provider: input.llm?.provider,
+              model: input.llm?.model,
+              timeoutMs: input.llm?.timeoutMs,
+              maxOutputTokens: input.llm?.maxOutputTokens
+            }
+          );
+
+          const citedIds = this.resolveCitedIds(
+            llmResult.citationsUsed,
+            citations.map((citation) => citation.id),
+            llmResult.rawText
+          );
+          if (citations.length > 0 && citedIds.length === 0) {
+            const observed = llmResult.citationsUsed.length > 0 ? llmResult.citationsUsed.join(',') : '(none)';
+            throw new Error(`LLM response did not reference provided citations (observed: ${observed})`);
+          }
+
+          answer = llmResult.answer;
+          confidence = Math.min(0.97, confidence + 0.03);
+          llm = {
+            enabled: true,
+            used: true,
+            provider: llmResult.provider,
+            model: llmResult.model,
+            latencyMs: Date.now() - llmStartedAt
+          };
+        } catch (error) {
+          mode = 'deterministic';
+          llm = {
+            ...llm,
+            used: false,
+            fallbackReason: error instanceof Error ? error.message : 'unknown llm error',
+            latencyMs: Date.now() - llmStartedAt
+          };
+          answer = deterministicAnswer;
+        }
+      }
+    } else {
+      mode = 'deterministic';
+      llm = {
+        ...llm,
+        used: false
+      };
+    }
 
     const response: AskResponse = {
       answer,
+      deterministicAnswer,
       plan,
       citations,
       confidence,
+      mode,
+      llm,
       consistency,
       status: 'implemented'
     };
@@ -150,5 +242,52 @@ export class AskService {
       }
     }
     return [...byKey.values()].sort((a, b) => b.score - a.score);
+  }
+
+  private resolveCitedIds(
+    rawCitations: string[],
+    validCitationIds: string[],
+    rawLlmText?: string
+  ): string[] {
+    const validSet = new Set(validCitationIds);
+    const resolved = new Set<string>();
+
+    for (const raw of rawCitations) {
+      const normalized = raw.trim();
+      if (!normalized) {
+        continue;
+      }
+
+      if (validSet.has(normalized)) {
+        resolved.add(normalized);
+        continue;
+      }
+
+      const embeddedId = normalized.match(/(ev_[a-z0-9]+)/i)?.[1];
+      if (embeddedId && validSet.has(embeddedId)) {
+        resolved.add(embeddedId);
+        continue;
+      }
+
+      const numeric = normalized.replace(/[^\d]/g, '');
+      if (numeric.length > 0) {
+        const idx = Number(numeric);
+        if (Number.isInteger(idx) && idx >= 1 && idx <= validCitationIds.length) {
+          resolved.add(validCitationIds[idx - 1]);
+        }
+      }
+    }
+
+    if (resolved.size === 0 && rawLlmText) {
+      const matches = rawLlmText.match(/\[(\d+)\]/g) ?? [];
+      for (const match of matches) {
+        const idx = Number(match.replace(/[^\d]/g, ''));
+        if (Number.isInteger(idx) && idx >= 1 && idx <= validCitationIds.length) {
+          resolved.add(validCitationIds[idx - 1]);
+        }
+      }
+    }
+
+    return [...resolved];
   }
 }

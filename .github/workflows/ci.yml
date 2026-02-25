@@ -53,6 +53,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Ensure env file for compose
+        run: |
+          if [ ! -f .env ]; then
+            cp .env.sample .env
+          fi
+
       - name: Build and start stack
         run: docker compose -f docker/docker-compose.yml up -d --build
 

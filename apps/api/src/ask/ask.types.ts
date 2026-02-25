@@ -1,4 +1,5 @@
 import type { AskPlan } from '../planner/planner.types';
+import type { LlmProviderName } from '../llm/llm.types';
 
 export interface AskRequest {
   query: string;
@@ -6,6 +7,13 @@ export interface AskRequest {
   maxCitations?: number;
   includeLowConfidence?: boolean;
   consistencyCheck?: boolean;
+  mode?: 'deterministic' | 'llm_assist';
+  llm?: {
+    provider?: LlmProviderName;
+    model?: string;
+    timeoutMs?: number;
+    maxOutputTokens?: number;
+  };
 }
 
 export interface AskCitation {
@@ -18,9 +26,19 @@ export interface AskCitation {
 
 export interface AskResponse {
   answer: string;
+  deterministicAnswer: string;
   plan: AskPlan;
   citations: AskCitation[];
   confidence: number;
+  mode: 'deterministic' | 'llm_assist';
+  llm: {
+    enabled: boolean;
+    used: boolean;
+    provider: LlmProviderName;
+    model?: string;
+    fallbackReason?: string;
+    latencyMs?: number;
+  };
   consistency: {
     checked: boolean;
     aligned: boolean;

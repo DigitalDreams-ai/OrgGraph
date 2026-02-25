@@ -70,6 +70,30 @@ After retrieve + refresh:
 5. `GET /impact?field=<known-object.field>`
 6. `POST /ask` with a known query
 
+## LLM Provider Switch (No Rebuild)
+To switch between OpenAI and Anthropic quickly:
+1. Set provider default in `config/api.docker.json`:
+- `LLM_PROVIDER=openai` or `LLM_PROVIDER=anthropic`
+2. Keep secrets in `.env`:
+- `OPENAI_API_KEY=...`
+- `ANTHROPIC_API_KEY=...`
+3. Recreate API only (no image rebuild):
+`docker compose -f docker/docker-compose.yml up -d --no-deps --force-recreate api`
+4. Verify:
+`POST /ask` with `{ "mode": "llm_assist" }` and check `llm.provider` + `llm.used`.
+
+## LLM Fallback Behavior (Mission-Critical)
+- If provider is disabled/misconfigured, `/ask` returns deterministic answer with `llm.used=false`.
+- If provider errors (rate limit, quota, invalid model), `/ask` returns deterministic answer with detailed `llm.fallbackReason`.
+- If evidence confidence is too low, `/ask` refuses llm-assist and returns deterministic answer with:
+`llm.fallbackReason=insufficient evidence for llm_assist`
+- Request-level overrides for `llm.timeoutMs` and `llm.maxOutputTokens` are capped at configured global limits.
+
+## Local Provider Smoke
+Run quick provider checks without rebuilding images:
+`./scripts/llm-provider-smoke.sh anthropic`
+`./scripts/llm-provider-smoke.sh openai`
+
 ## Rollback
 If retrieve/refresh fails:
 1. Keep previous deployed image and config.

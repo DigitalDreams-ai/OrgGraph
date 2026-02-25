@@ -24,33 +24,11 @@ services:
       dockerfile: docker/Dockerfile
     container_name: orggraph-api
     restart: unless-stopped
+    env_file:
+      - ../.env
     environment:
-      PORT: "3000"
-      GRAPH_BACKEND: postgres
-      DATABASE_URL: postgres://orggraph:orggraph@postgres:5432/orggraph
-      PERMISSIONS_FIXTURES_PATH: /app/data/sf-project/force-app/main/default
-      USER_PROFILE_MAP_PATH: /app/data/sf-user-principals.json
-      EVIDENCE_INDEX_PATH: /app/data/evidence/index.json
-      REFRESH_STATE_PATH: /app/data/refresh/state.json
-      REFRESH_AUDIT_PATH: /app/data/refresh/audit.jsonl
-      ONTOLOGY_REPORT_PATH: /app/data/refresh/ontology-report.json
-      MIN_CONFIDENCE_DEFAULT: medium
-      ASK_CONSISTENCY_CHECK_ENABLED: "true"
-      ORGGRAPH_LOG_LEVEL: log,warn,error,debug
-      ORGGRAPH_HTTP_LOG_ENABLED: "true"
-      SF_INTEGRATION_ENABLED: "false"
-      SF_AUTH_MODE: sfdx_url
-      SF_AUTH_URL_PATH: /app/.secrets/sandbox.sfdx-url.txt
-      SF_ALIAS: orggraph-sandbox
-      SF_BASE_URL: https://test.salesforce.com
-      SF_PROJECT_PATH: /app/data/sf-project
-      SF_MANIFEST_PATH: /app/manifest/package.xml
-      SF_PARSE_PATH: /app/data/sf-project/force-app/main/default
-      SF_WAIT_MINUTES: "15"
-      SF_RETRY_COUNT: "2"
-      SF_RETRY_DELAY_MS: "1500"
-      SF_TIMEOUT_SECONDS: "900"
-      SF_AUTO_REFRESH_AFTER_RETRIEVE: "true"
+      ORGGRAPH_CONFIG_PATH: /app/config/api.docker.json
+      PORT: "${PORT:-3000}"
     ports:
       - "3100:3000"
     healthcheck:
@@ -67,6 +45,7 @@ services:
       start_period: 15s
     volumes:
       - ../data:/app/data
+      - ../config:/app/config:ro
       - ../fixtures:/app/fixtures:ro
       - ../manifest:/app/manifest:ro
     depends_on:

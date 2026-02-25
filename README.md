@@ -194,6 +194,16 @@ REFRESH_AUDIT_PATH=data/refresh/audit.jsonl
 ONTOLOGY_REPORT_PATH=data/refresh/ontology-report.json
 MIN_CONFIDENCE_DEFAULT=medium
 ASK_CONSISTENCY_CHECK_ENABLED=true
+ASK_DEFAULT_MODE=deterministic
+LLM_ENABLED=false
+LLM_PROVIDER=none
+LLM_ALLOW_PROVIDER_OVERRIDE=true
+LLM_TIMEOUT_MS=12000
+LLM_MAX_OUTPUT_TOKENS=400
+OPENAI_MODEL=gpt-4.1-mini
+OPENAI_BASE_URL=https://api.openai.com/v1/chat/completions
+ANTHROPIC_MODEL=claude-3-5-haiku-20241022
+ANTHROPIC_BASE_URL=https://api.anthropic.com/v1/messages
 ORGGRAPH_LOG_LEVEL=log,warn,error,debug
 ORGGRAPH_HTTP_LOG_ENABLED=true
 
@@ -223,6 +233,17 @@ DATABASE_URL=postgres://orggraph:orggraph@postgres:5432/orggraph
 4. If web builds fail on Synology due `@eaDir` artifacts, run `./scripts/clean-eadir.sh`
 5. Rebuild stack after updates: `docker compose -f docker/docker-compose.yml up -d --build`
 6. For Dozzle-friendly request logs, ensure `ORGGRAPH_HTTP_LOG_ENABLED=true` (api) and `ORGGRAPH_WEB_LOG_ENABLED=true` (web)
+
+## LLM Ask Mode (Phase 10)
+
+- Deterministic remains default (`ASK_DEFAULT_MODE=deterministic`).
+- Enable LLM assist by setting `LLM_ENABLED=true` and `LLM_PROVIDER=openai` or `LLM_PROVIDER=anthropic`.
+- `/ask` supports request mode override:
+```bash
+curl -X POST http://localhost:3100/ask \
+  -H 'content-type: application/json' \
+  -d '{"query":"What touches Opportunity.StageName?","mode":"llm_assist","llm":{"provider":"openai"}}'
+```
 
 ---
 
