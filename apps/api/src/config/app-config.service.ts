@@ -7,6 +7,7 @@ export class AppConfigService {
     this.validateOptionalString('PERMISSIONS_FIXTURES_PATH');
     this.validateOptionalString('USER_PROFILE_MAP_PATH');
     this.validateOptionalString('EVIDENCE_INDEX_PATH');
+    this.validateOptionalString('REFRESH_STATE_PATH');
     this.validateOptionalString('PORT');
   }
 
@@ -38,6 +39,10 @@ export class AppConfigService {
 
   evidenceIndexPath(): string | undefined {
     return process.env.EVIDENCE_INDEX_PATH;
+  }
+
+  refreshStatePath(): string | undefined {
+    return process.env.REFRESH_STATE_PATH;
   }
 
   private validateOptionalString(name: string): void {

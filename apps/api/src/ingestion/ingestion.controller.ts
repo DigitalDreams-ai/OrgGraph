@@ -1,8 +1,9 @@
 import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
-import { IngestionService } from './ingestion.service';
+import { IngestionService, type RefreshMode } from './ingestion.service';
 
 interface RefreshBody {
   fixturesPath?: unknown;
+  mode?: unknown;
 }
 
 @Controller()
@@ -11,6 +12,9 @@ export class IngestionController {
 
   @Post('/refresh')
   refresh(@Body() body: RefreshBody = {}): {
+    mode: RefreshMode;
+    skipped: boolean;
+    skipReason?: 'no_changes_detected';
     nodeCount: number;
     edgeCount: number;
     evidenceCount: number;
@@ -22,6 +26,13 @@ export class IngestionController {
     if (body.fixturesPath !== undefined && typeof body.fixturesPath !== 'string') {
       throw new BadRequestException('fixturesPath must be a string');
     }
-    return this.ingestionService.refresh(body.fixturesPath);
+    if (body.mode !== undefined && body.mode !== 'full' && body.mode !== 'incremental') {
+      throw new BadRequestException('mode must be one of: full, incremental');
+    }
+
+    return this.ingestionService.refresh({
+      fixturesPath: body.fixturesPath as string | undefined,
+      mode: body.mode as RefreshMode | undefined
+    });
   }
 }

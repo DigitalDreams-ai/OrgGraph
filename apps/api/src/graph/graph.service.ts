@@ -29,6 +29,12 @@ export class GraphService implements OnModuleDestroy {
     return this.dbPath;
   }
 
+  getCounts(): { nodeCount: number; edgeCount: number } {
+    const nodes = this.db.prepare('SELECT COUNT(*) as value FROM nodes').get() as { value: number };
+    const edges = this.db.prepare('SELECT COUNT(*) as value FROM edges').get() as { value: number };
+    return { nodeCount: nodes.value, edgeCount: edges.value };
+  }
+
   fullRebuild(payload: GraphPayload): { nodeCount: number; edgeCount: number } {
     const insertNode = this.db.prepare(
       `INSERT INTO nodes (id, type, name, meta, created_at)

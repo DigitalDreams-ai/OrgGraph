@@ -41,3 +41,9 @@ export function resolveEvidenceIndexPath(indexPath?: string): string {
   const raw = indexPath?.trim() || 'data/evidence/index.json';
   return path.resolve(workspaceRoot, raw);
 }
+
+export function resolveRefreshStatePath(statePath?: string): string {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const raw = statePath?.trim() || 'data/refresh/state.json';
+  return path.resolve(workspaceRoot, raw);
+}
