@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -41,6 +41,8 @@ interface RefreshOptions {
 
 @Injectable()
 export class IngestionService {
+  private refreshInProgress = false;
+
   constructor(
     private readonly configService: AppConfigService,
     private readonly graphService: GraphService,
@@ -66,106 +68,115 @@ export class IngestionService {
     parserStats: ParserStats[];
     ontology: OntologyConstraintReport;
   }> {
-    const mode: RefreshMode = options.mode ?? 'full';
-    const sourcePath = resolveFixturesPath(
-      options.fixturesPath ?? this.configService.permissionsFixturesPath()
-    );
-    const statePath = resolveRefreshStatePath(this.configService.refreshStatePath());
-    const auditPath = resolveRefreshAuditPath(this.configService.refreshAuditPath());
-    const ontologyReportPath = resolveOntologyReportPath(this.configService.ontologyReportPath());
-    const start = Date.now();
-    const fingerprint = this.buildFixtureFingerprint(sourcePath);
+    if (this.refreshInProgress) {
+      throw new ConflictException('refresh already in progress');
+    }
+    this.refreshInProgress = true;
 
-    if (mode === 'incremental' && (await this.canSkipRefresh(sourcePath, statePath, fingerprint))) {
-      const counts = await this.graphService.getCounts();
-      const parserStats = this.readState(statePath)?.parserStats ?? [];
-      const ontology = this.readOntologyReport(ontologyReportPath);
-      this.appendAuditEntry(auditPath, {
+    try {
+      const mode: RefreshMode = options.mode ?? 'full';
+      const sourcePath = resolveFixturesPath(
+        options.fixturesPath ?? this.configService.permissionsFixturesPath()
+      );
+      const statePath = resolveRefreshStatePath(this.configService.refreshStatePath());
+      const auditPath = resolveRefreshAuditPath(this.configService.refreshAuditPath());
+      const ontologyReportPath = resolveOntologyReportPath(this.configService.ontologyReportPath());
+      const start = Date.now();
+      const fingerprint = this.buildFixtureFingerprint(sourcePath);
+
+      if (mode === 'incremental' && (await this.canSkipRefresh(sourcePath, statePath, fingerprint))) {
+        const counts = await this.graphService.getCounts();
+        const parserStats = this.readState(statePath)?.parserStats ?? [];
+        const ontology = this.readOntologyReport(ontologyReportPath);
+        this.appendAuditEntry(auditPath, {
+          sourcePath,
+          fingerprint,
+          refreshedAt: new Date().toISOString(),
+          parserStats,
+          nodeCount: counts.nodeCount,
+          edgeCount: counts.edgeCount,
+          evidenceCount: this.evidenceStore.getDocumentCount(),
+          mode,
+          ontology
+        });
+        return {
+          mode,
+          skipped: true,
+          skipReason: 'no_changes_detected',
+          ...counts,
+          evidenceCount: this.evidenceStore.getDocumentCount(),
+          elapsedMs: Date.now() - start,
+          sourcePath,
+          databasePath: this.graphService.getDatabasePath(),
+          evidenceIndexPath: this.evidenceStore.getIndexPath(),
+          parserStats,
+          ontology
+        };
+      }
+
+      let payload: GraphPayload;
+      try {
+        const permissionsPayload = this.parserService.parseFromFixtures(sourcePath);
+        const triggerPayload = this.triggerParserService.parseFromFixtures(sourcePath);
+        const classPayload = this.classParserService.parseFromFixtures(sourcePath);
+        const flowPayload = this.flowParserService.parseFromFixtures(sourcePath);
+        payload = this.mergePayloads(permissionsPayload, triggerPayload, classPayload, flowPayload);
+      } catch (error) {
+        if (
+          error instanceof PermissionsParseError ||
+          error instanceof ApexTriggerParseError ||
+          error instanceof ApexClassParseError ||
+          error instanceof FlowParseError
+        ) {
+          throw new BadRequestException(error.message);
+        }
+        throw error;
+      }
+      const ontology = this.constraintsService.validate(payload);
+      if (ontology.violationCount > 0) {
+        const first = ontology.violations[0];
+        throw new BadRequestException(
+          `Ontology constraint violation: ${first.message}`
+        );
+      }
+      this.writeOntologyReport(ontologyReportPath, ontology);
+      const counts = await this.graphService.fullRebuild(payload);
+      const evidence = this.evidenceStore.reindexFromFixtures(sourcePath);
+      const parserStats = [
+        this.parserService.getLastStats(),
+        this.triggerParserService.getLastStats(),
+        this.classParserService.getLastStats(),
+        this.flowParserService.getLastStats()
+      ];
+      const state: RefreshState = {
         sourcePath,
         fingerprint,
         refreshedAt: new Date().toISOString(),
         parserStats,
         nodeCount: counts.nodeCount,
         edgeCount: counts.edgeCount,
-        evidenceCount: this.evidenceStore.getDocumentCount(),
+        evidenceCount: evidence.documentCount,
         mode,
         ontology
-      });
+      };
+      this.writeState(statePath, state);
+      this.appendAuditEntry(auditPath, state);
+
       return {
         mode,
-        skipped: true,
-        skipReason: 'no_changes_detected',
+        skipped: false,
         ...counts,
-        evidenceCount: this.evidenceStore.getDocumentCount(),
+        evidenceCount: evidence.documentCount,
         elapsedMs: Date.now() - start,
         sourcePath,
         databasePath: this.graphService.getDatabasePath(),
-        evidenceIndexPath: this.evidenceStore.getIndexPath(),
+        evidenceIndexPath: evidence.sourcePath,
         parserStats,
         ontology
       };
+    } finally {
+      this.refreshInProgress = false;
     }
-
-    let payload: GraphPayload;
-    try {
-      const permissionsPayload = this.parserService.parseFromFixtures(sourcePath);
-      const triggerPayload = this.triggerParserService.parseFromFixtures(sourcePath);
-      const classPayload = this.classParserService.parseFromFixtures(sourcePath);
-      const flowPayload = this.flowParserService.parseFromFixtures(sourcePath);
-      payload = this.mergePayloads(permissionsPayload, triggerPayload, classPayload, flowPayload);
-    } catch (error) {
-      if (
-        error instanceof PermissionsParseError ||
-        error instanceof ApexTriggerParseError ||
-        error instanceof ApexClassParseError ||
-        error instanceof FlowParseError
-      ) {
-        throw new BadRequestException(error.message);
-      }
-      throw error;
-    }
-    const ontology = this.constraintsService.validate(payload);
-    if (ontology.violationCount > 0) {
-      const first = ontology.violations[0];
-      throw new BadRequestException(
-        `Ontology constraint violation: ${first.message}`
-      );
-    }
-    this.writeOntologyReport(ontologyReportPath, ontology);
-    const counts = await this.graphService.fullRebuild(payload);
-    const evidence = this.evidenceStore.reindexFromFixtures(sourcePath);
-    const parserStats = [
-      this.parserService.getLastStats(),
-      this.triggerParserService.getLastStats(),
-      this.classParserService.getLastStats(),
-      this.flowParserService.getLastStats()
-    ];
-    const state: RefreshState = {
-      sourcePath,
-      fingerprint,
-      refreshedAt: new Date().toISOString(),
-      parserStats,
-      nodeCount: counts.nodeCount,
-      edgeCount: counts.edgeCount,
-      evidenceCount: evidence.documentCount,
-      mode,
-      ontology
-    };
-    this.writeState(statePath, state);
-    this.appendAuditEntry(auditPath, state);
-
-    return {
-      mode,
-      skipped: false,
-      ...counts,
-      evidenceCount: evidence.documentCount,
-      elapsedMs: Date.now() - start,
-      sourcePath,
-      databasePath: this.graphService.getDatabasePath(),
-      evidenceIndexPath: evidence.sourcePath,
-      parserStats,
-      ontology
-    };
   }
 
   async getLatestIngestSummary(): Promise<{
