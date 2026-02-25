@@ -34,6 +34,11 @@ This document describes how OrgGraph works end-to-end, from startup through retr
   - apex trigger parser
   - apex class parser
   - flow parser
+  - custom object parser
+  - permission set group parser
+  - custom permission parser
+  - connected app parser
+  - staged UI metadata parser (feature gated by `INGEST_UI_METADATA_ENABLED=true`)
 - Output from each parser:
   - nodes
   - edges
@@ -89,6 +94,7 @@ This document describes how OrgGraph works end-to-end, from startup through retr
 - Metrics interceptor records route status and latency.
 - `/metrics` exposes request metrics and DB backend.
 - Logging supports detailed Dozzle visibility with reduced readiness-noise filtering.
+- `/ready` reports the active fixtures path for the current runtime context and ignores stale cross-runtime state paths.
 - Docker healthchecks keep services supervised.
 
 ## 14. Iteration Loop
@@ -123,11 +129,21 @@ flowchart TD
     L --> L2[Apex Trigger Parser]
     L --> L3[Apex Class Parser]
     L --> L4[Flow Parser]
+    L --> L5[Custom Object Parser]
+    L --> L6[Permission Set Group Parser]
+    L --> L7[Custom Permission Parser]
+    L --> L8[Connected App Parser]
+    L --> L9[Staged UI Metadata Parser]
 
     L1 --> M[Merge Deterministic Graph Payload]
     L2 --> M
     L3 --> M
     L4 --> M
+    L5 --> M
+    L6 --> M
+    L7 --> M
+    L8 --> M
+    L9 --> M
 
     M --> N[Ontology Constraint Validation]
     N -->|violation| O[400 Bad Request]
@@ -187,16 +203,4 @@ graph LR
 
     API --> Metrics[Metrics + Logs]
     Metrics --> Dozzle[Dozzle / Docker Logs]
-```
-
-ASCII fallback:
-
-```text
-Operator/Scripts ---> API Controllers ---> Ingestion Service ---> Parsers ---> Ontology ---> Graph Store
-         |                   |                    |                                   |
-         |                   |                    +---> Evidence Index                +---> Query/Analysis/Ask
-         |                   |                    +---> Refresh State/Audit           +---> API responses
-         +----> Web UI ----> Web /api proxy -----------------------------------------> API
-
-API ---> Metrics/Logs ---> Dozzle
 ```
