@@ -9,6 +9,7 @@ SF_ALIAS="${SF_ALIAS:-orggraph-sandbox}"
 SF_PROJECT_PATH="${SF_PROJECT_PATH:-$ROOT_DIR/data/sf-project}"
 
 mkdir -p "$SF_PROJECT_PATH"
+mkdir -p "$SF_PROJECT_PATH/force-app"
 
 if [ ! -f "$SF_PROJECT_PATH/sfdx-project.json" ]; then
   cat > "$SF_PROJECT_PATH/sfdx-project.json" << 'JSON'

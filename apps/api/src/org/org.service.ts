@@ -219,6 +219,7 @@ export class OrgService {
 
   private ensureProjectScaffold(projectPath: string): void {
     fs.mkdirSync(projectPath, { recursive: true });
+    fs.mkdirSync(path.join(projectPath, 'force-app'), { recursive: true });
     const sfdxProjectPath = path.join(projectPath, 'sfdx-project.json');
     if (!fs.existsSync(sfdxProjectPath)) {
       const scaffold = {
