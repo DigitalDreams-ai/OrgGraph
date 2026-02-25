@@ -6,6 +6,7 @@ import { ApexTriggerParserService } from './apex-trigger-parser.service';
 import { FlowParserService } from './flow-parser.service';
 import { IngestionController } from './ingestion.controller';
 import { IngestionService } from './ingestion.service';
+import { OntologyConstraintsService } from './ontology-constraints.service';
 import { PermissionsParserService } from './permissions-parser.service';
 
 @Module({
@@ -15,7 +16,8 @@ import { PermissionsParserService } from './permissions-parser.service';
     PermissionsParserService,
     ApexTriggerParserService,
     ApexClassParserService,
-    FlowParserService
+    FlowParserService,
+    OntologyConstraintsService
   ],
   controllers: [IngestionController],
   exports: [
@@ -23,7 +25,8 @@ import { PermissionsParserService } from './permissions-parser.service';
     PermissionsParserService,
     ApexTriggerParserService,
     ApexClassParserService,
-    FlowParserService
+    FlowParserService,
+    OntologyConstraintsService
   ]
 })
 export class IngestionModule {}

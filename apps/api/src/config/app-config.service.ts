@@ -9,6 +9,7 @@ export class AppConfigService {
     this.validateOptionalString('EVIDENCE_INDEX_PATH');
     this.validateOptionalString('REFRESH_STATE_PATH');
     this.validateOptionalString('REFRESH_AUDIT_PATH');
+    this.validateOptionalString('ONTOLOGY_REPORT_PATH');
     this.validateOptionalString('SF_INTEGRATION_ENABLED');
     this.validateOptionalString('SF_AUTH_MODE');
     this.validateOptionalString('SF_AUTH_URL_PATH');
@@ -68,6 +69,10 @@ export class AppConfigService {
 
   refreshAuditPath(): string | undefined {
     return process.env.REFRESH_AUDIT_PATH;
+  }
+
+  ontologyReportPath(): string | undefined {
+    return process.env.ONTOLOGY_REPORT_PATH;
   }
 
   sfIntegrationEnabled(): boolean {

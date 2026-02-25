@@ -63,11 +63,13 @@ async function run(): Promise<void> {
       skipped: boolean;
       nodeCount: number;
       edgeCount: number;
+      ontology: { violationCount: number; warningCount: number };
     };
     assert.equal(refreshBody.mode, 'full', 'default refresh mode should be full');
     assert.equal(refreshBody.skipped, false, 'default refresh should not skip');
     assert.ok(refreshBody.nodeCount > 0, 'refresh should create nodes');
     assert.ok(refreshBody.edgeCount > 0, 'refresh should create edges');
+    assert.equal(refreshBody.ontology.violationCount, 0, 'refresh should not emit ontology violations');
 
     const readyRes = await fetch(`${base}/ready`);
     assert.equal(readyRes.status, 200, 'ready should return 200');
@@ -85,10 +87,14 @@ async function run(): Promise<void> {
       latest?: { parserStats?: Array<{ parser: string }> };
       lowConfidenceSources: unknown[];
       auditPath: string;
+      ontologyReportPath: string;
+      ontology: { violationCount: number };
     };
     assert.ok(Array.isArray(ingestLatestBody.lowConfidenceSources));
     assert.equal(typeof ingestLatestBody.auditPath, 'string');
+    assert.equal(typeof ingestLatestBody.ontologyReportPath, 'string');
     assert.ok((ingestLatestBody.latest?.parserStats?.length ?? 0) >= 1);
+    assert.equal(ingestLatestBody.ontology.violationCount, 0);
 
     const refreshIncrementalRes = await fetch(`${base}/refresh`, {
       method: 'POST',

@@ -5,11 +5,18 @@ import path from 'node:path';
 import { AppConfigService } from '../config/app-config.service';
 import { EvidenceStoreService } from '../evidence/evidence-store.service';
 import { GraphService } from '../graph/graph.service';
-import { resolveFixturesPath, resolveRefreshAuditPath, resolveRefreshStatePath } from '../common/path';
+import {
+  resolveFixturesPath,
+  resolveOntologyReportPath,
+  resolveRefreshAuditPath,
+  resolveRefreshStatePath
+} from '../common/path';
 import type { GraphPayload } from '../graph/graph.types';
 import { ApexClassParseError, ApexClassParserService } from './apex-class-parser.service';
 import { ApexTriggerParseError, ApexTriggerParserService } from './apex-trigger-parser.service';
 import { FlowParseError, FlowParserService } from './flow-parser.service';
+import type { OntologyConstraintReport } from './ontology-constraints.service';
+import { OntologyConstraintsService } from './ontology-constraints.service';
 import type { ParserStats } from './parser-stats';
 import { PermissionsParseError, PermissionsParserService } from './permissions-parser.service';
 
@@ -24,6 +31,7 @@ interface RefreshState {
   edgeCount: number;
   evidenceCount: number;
   mode: RefreshMode;
+  ontology: OntologyConstraintReport;
 }
 
 interface RefreshOptions {
@@ -40,7 +48,8 @@ export class IngestionService {
     private readonly parserService: PermissionsParserService,
     private readonly triggerParserService: ApexTriggerParserService,
     private readonly classParserService: ApexClassParserService,
-    private readonly flowParserService: FlowParserService
+    private readonly flowParserService: FlowParserService,
+    private readonly constraintsService: OntologyConstraintsService
   ) {}
 
   refresh(options: RefreshOptions = {}): {
@@ -55,6 +64,7 @@ export class IngestionService {
     databasePath: string;
     evidenceIndexPath: string;
     parserStats: ParserStats[];
+    ontology: OntologyConstraintReport;
   } {
     const mode: RefreshMode = options.mode ?? 'full';
     const sourcePath = resolveFixturesPath(
@@ -62,12 +72,14 @@ export class IngestionService {
     );
     const statePath = resolveRefreshStatePath(this.configService.refreshStatePath());
     const auditPath = resolveRefreshAuditPath(this.configService.refreshAuditPath());
+    const ontologyReportPath = resolveOntologyReportPath(this.configService.ontologyReportPath());
     const start = Date.now();
     const fingerprint = this.buildFixtureFingerprint(sourcePath);
 
     if (mode === 'incremental' && this.canSkipRefresh(sourcePath, statePath, fingerprint)) {
       const counts = this.graphService.getCounts();
       const parserStats = this.readState(statePath)?.parserStats ?? [];
+      const ontology = this.readOntologyReport(ontologyReportPath);
       this.appendAuditEntry(auditPath, {
         sourcePath,
         fingerprint,
@@ -76,7 +88,8 @@ export class IngestionService {
         nodeCount: counts.nodeCount,
         edgeCount: counts.edgeCount,
         evidenceCount: this.evidenceStore.getDocumentCount(),
-        mode
+        mode,
+        ontology
       });
       return {
         mode,
@@ -88,7 +101,8 @@ export class IngestionService {
         sourcePath,
         databasePath: this.graphService.getDatabasePath(),
         evidenceIndexPath: this.evidenceStore.getIndexPath(),
-        parserStats
+        parserStats,
+        ontology
       };
     }
 
@@ -110,6 +124,14 @@ export class IngestionService {
       }
       throw error;
     }
+    const ontology = this.constraintsService.validate(payload);
+    if (ontology.violationCount > 0) {
+      const first = ontology.violations[0];
+      throw new BadRequestException(
+        `Ontology constraint violation: ${first.message}`
+      );
+    }
+    this.writeOntologyReport(ontologyReportPath, ontology);
     const counts = this.graphService.fullRebuild(payload);
     const evidence = this.evidenceStore.reindexFromFixtures(sourcePath);
     const parserStats = [
@@ -126,7 +148,8 @@ export class IngestionService {
       nodeCount: counts.nodeCount,
       edgeCount: counts.edgeCount,
       evidenceCount: evidence.documentCount,
-      mode
+      mode,
+      ontology
     };
     this.writeState(statePath, state);
     this.appendAuditEntry(auditPath, state);
@@ -140,7 +163,8 @@ export class IngestionService {
       sourcePath,
       databasePath: this.graphService.getDatabasePath(),
       evidenceIndexPath: evidence.sourcePath,
-      parserStats
+      parserStats,
+      ontology
     };
   }
 
@@ -148,13 +172,18 @@ export class IngestionService {
     latest?: RefreshState;
     lowConfidenceSources: Array<{ source: string; count: number }>;
     auditPath: string;
+    ontologyReportPath: string;
+    ontology: OntologyConstraintReport;
   } {
     const statePath = resolveRefreshStatePath(this.configService.refreshStatePath());
     const auditPath = resolveRefreshAuditPath(this.configService.refreshAuditPath());
+    const ontologyReportPath = resolveOntologyReportPath(this.configService.ontologyReportPath());
     return {
       latest: this.readState(statePath),
       lowConfidenceSources: this.graphService.getLowConfidenceSummary(10),
-      auditPath
+      auditPath,
+      ontologyReportPath,
+      ontology: this.readOntologyReport(ontologyReportPath)
     };
   }
 
@@ -198,7 +227,19 @@ export class IngestionService {
         nodeCount: typeof parsed.nodeCount === 'number' ? parsed.nodeCount : 0,
         edgeCount: typeof parsed.edgeCount === 'number' ? parsed.edgeCount : 0,
         evidenceCount: typeof parsed.evidenceCount === 'number' ? parsed.evidenceCount : 0,
-        mode: parsed.mode === 'incremental' ? 'incremental' : 'full'
+        mode: parsed.mode === 'incremental' ? 'incremental' : 'full',
+        ontology:
+          typeof parsed.ontology === 'object' && parsed.ontology !== null
+            ? (parsed.ontology as OntologyConstraintReport)
+            : {
+                validatedAt: new Date(0).toISOString(),
+                nodeCount: 0,
+                edgeCount: 0,
+                violationCount: 0,
+                warningCount: 0,
+                violations: [],
+                warnings: []
+              }
       };
     } catch {
       return undefined;
@@ -213,6 +254,39 @@ export class IngestionService {
   private appendAuditEntry(auditPath: string, state: RefreshState): void {
     fs.mkdirSync(path.dirname(auditPath), { recursive: true });
     fs.appendFileSync(auditPath, `${JSON.stringify(state)}\n`, 'utf8');
+  }
+
+  private writeOntologyReport(reportPath: string, report: OntologyConstraintReport): void {
+    fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2), 'utf8');
+  }
+
+  private readOntologyReport(reportPath: string): OntologyConstraintReport {
+    if (!fs.existsSync(reportPath)) {
+      return {
+        validatedAt: new Date(0).toISOString(),
+        nodeCount: 0,
+        edgeCount: 0,
+        violationCount: 0,
+        warningCount: 0,
+        violations: [],
+        warnings: []
+      };
+    }
+
+    try {
+      return JSON.parse(fs.readFileSync(reportPath, 'utf8')) as OntologyConstraintReport;
+    } catch {
+      return {
+        validatedAt: new Date(0).toISOString(),
+        nodeCount: 0,
+        edgeCount: 0,
+        violationCount: 0,
+        warningCount: 0,
+        violations: [],
+        warnings: []
+      };
+    }
   }
 
   private buildFixtureFingerprint(sourcePath: string): string {
