@@ -67,8 +67,8 @@ Expected readiness source path after live refresh:
 
 ### 8.1 Permissions
 ```bash
-curl "http://localhost:3100/perms?user=aaugust@shulman-hill.com.uat&object=litify_pm__Intake__c"
-curl "http://localhost:3100/perms?user=aaugust@shulman-hill.com.uat&object=litify_pm__Intake__c&field=litify_pm__Intake__c.OwnerId"
+curl "http://localhost:3100/perms?user=sbingham@shulman-hill.com.uat&object=litify_pm__Intake__c"
+curl "http://localhost:3100/perms?user=sbingham@shulman-hill.com.uat&object=litify_pm__Intake__c&field=litify_pm__Intake__c.OwnerId"
 ```
 
 Read these response fields:
@@ -102,7 +102,7 @@ curl -X POST http://localhost:3101/api/query \
 
 curl -X POST http://localhost:3101/api/query \
   -H 'content-type: application/json' \
-  -d '{"endpoint":"perms","params":{"user":"aaugust@shulman-hill.com.uat","object":"litify_pm__Intake__c"}}'
+  -d '{"endpoint":"perms","params":{"user":"sbingham@shulman-hill.com.uat","object":"litify_pm__Intake__c"}}'
 ```
 
 ## 10. Common Troubleshooting

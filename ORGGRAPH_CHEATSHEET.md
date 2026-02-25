@@ -30,7 +30,7 @@ curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -
 
 ## Query Endpoints
 ```bash
-curl "http://localhost:3100/perms?user=aaugust@shulman-hill.com.uat&object=litify_pm__Intake__c"
+curl "http://localhost:3100/perms?user=sbingham@shulman-hill.com.uat&object=litify_pm__Intake__c"
 curl "http://localhost:3100/automation?object=Opportunity"
 curl "http://localhost:3100/impact?field=Opportunity.StageName"
 curl -X POST http://localhost:3100/ask -H 'content-type: application/json' -d '{"query":"What touches Opportunity.StageName?"}'
