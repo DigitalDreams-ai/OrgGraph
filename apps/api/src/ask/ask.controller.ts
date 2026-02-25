@@ -14,7 +14,7 @@ export class AskController {
   constructor(private readonly askService: AskService) {}
 
   @Post('/ask')
-  ask(@Body() body: AskRequest): AskResponse {
+  async ask(@Body() body: AskRequest): Promise<AskResponse> {
     if (!body || typeof body.query !== 'string' || body.query.trim().length === 0) {
       throw new BadRequestException('query is required');
     }
@@ -51,7 +51,7 @@ export class AskController {
     }
 
     try {
-      return this.askService.ask(body);
+      return await this.askService.ask(body);
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;

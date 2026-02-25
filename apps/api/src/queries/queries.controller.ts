@@ -6,12 +6,12 @@ export class QueriesController {
   constructor(private readonly queriesService: QueriesService) {}
 
   @Get('/perms')
-  perms(
+  async perms(
     @Query('user') user?: string,
     @Query('object') object?: string,
     @Query('field') field?: string,
     @Query('limit') limitRaw?: string
-  ): {
+  ): Promise<{
     user: string;
     object: string;
     field?: string;
@@ -25,7 +25,7 @@ export class QueriesController {
     explanation: string;
     mappingStatus: 'resolved' | 'unmapped_user' | 'map_missing';
     warnings: string[];
-  } {
+  }> {
     if (!user || !object) {
       throw new BadRequestException('user and object query params are required');
     }

@@ -52,7 +52,7 @@ export class IngestionService {
     private readonly constraintsService: OntologyConstraintsService
   ) {}
 
-  refresh(options: RefreshOptions = {}): {
+  async refresh(options: RefreshOptions = {}): Promise<{
     mode: RefreshMode;
     skipped: boolean;
     skipReason?: 'no_changes_detected';
@@ -65,7 +65,7 @@ export class IngestionService {
     evidenceIndexPath: string;
     parserStats: ParserStats[];
     ontology: OntologyConstraintReport;
-  } {
+  }> {
     const mode: RefreshMode = options.mode ?? 'full';
     const sourcePath = resolveFixturesPath(
       options.fixturesPath ?? this.configService.permissionsFixturesPath()
@@ -76,8 +76,8 @@ export class IngestionService {
     const start = Date.now();
     const fingerprint = this.buildFixtureFingerprint(sourcePath);
 
-    if (mode === 'incremental' && this.canSkipRefresh(sourcePath, statePath, fingerprint)) {
-      const counts = this.graphService.getCounts();
+    if (mode === 'incremental' && (await this.canSkipRefresh(sourcePath, statePath, fingerprint))) {
+      const counts = await this.graphService.getCounts();
       const parserStats = this.readState(statePath)?.parserStats ?? [];
       const ontology = this.readOntologyReport(ontologyReportPath);
       this.appendAuditEntry(auditPath, {
@@ -132,7 +132,7 @@ export class IngestionService {
       );
     }
     this.writeOntologyReport(ontologyReportPath, ontology);
-    const counts = this.graphService.fullRebuild(payload);
+    const counts = await this.graphService.fullRebuild(payload);
     const evidence = this.evidenceStore.reindexFromFixtures(sourcePath);
     const parserStats = [
       this.parserService.getLastStats(),
@@ -168,26 +168,26 @@ export class IngestionService {
     };
   }
 
-  getLatestIngestSummary(): {
+  async getLatestIngestSummary(): Promise<{
     latest?: RefreshState;
     lowConfidenceSources: Array<{ source: string; count: number }>;
     auditPath: string;
     ontologyReportPath: string;
     ontology: OntologyConstraintReport;
-  } {
+  }> {
     const statePath = resolveRefreshStatePath(this.configService.refreshStatePath());
     const auditPath = resolveRefreshAuditPath(this.configService.refreshAuditPath());
     const ontologyReportPath = resolveOntologyReportPath(this.configService.ontologyReportPath());
     return {
       latest: this.readState(statePath),
-      lowConfidenceSources: this.graphService.getLowConfidenceSummary(10),
+      lowConfidenceSources: await this.graphService.getLowConfidenceSummary(10),
       auditPath,
       ontologyReportPath,
       ontology: this.readOntologyReport(ontologyReportPath)
     };
   }
 
-  private canSkipRefresh(sourcePath: string, statePath: string, fingerprint: string): boolean {
+  private async canSkipRefresh(sourcePath: string, statePath: string, fingerprint: string): Promise<boolean> {
     const previous = this.readState(statePath);
     if (!previous) {
       return false;
@@ -197,7 +197,7 @@ export class IngestionService {
       return false;
     }
 
-    if (!fs.existsSync(this.graphService.getDatabasePath())) {
+    if (!(await this.graphService.canServeQueries())) {
       return false;
     }
 

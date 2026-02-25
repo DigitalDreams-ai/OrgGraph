@@ -17,7 +17,12 @@ export class QueriesService {
     this.userProfileMapPath = resolveUserProfileMapPath(this.configService.userProfileMapPath());
   }
 
-  perms(user: string, object: string, field?: string, limit = QueriesService.DEFAULT_LIMIT): {
+  async perms(
+    user: string,
+    object: string,
+    field?: string,
+    limit = QueriesService.DEFAULT_LIMIT
+  ): Promise<{
     user: string;
     object: string;
     field?: string;
@@ -31,7 +36,7 @@ export class QueriesService {
     explanation: string;
     mappingStatus: 'resolved' | 'unmapped_user' | 'map_missing';
     warnings: string[];
-  } {
+  }> {
     const mapResult = this.readUserProfileMap();
     const principalsChecked = mapResult.map[user.toLowerCase()] ?? [];
     const mappingStatus = mapResult.exists
@@ -40,7 +45,7 @@ export class QueriesService {
         : 'unmapped_user'
       : 'map_missing';
     const warnings = this.buildWarnings(mappingStatus, user);
-    const objectPaths = this.graphService.findObjectPermPaths(principalsChecked, object);
+    const objectPaths = await this.graphService.findObjectPermPaths(principalsChecked, object);
     const objectGranted = objectPaths.length > 0;
 
     if (!field) {
@@ -77,7 +82,7 @@ export class QueriesService {
       };
     }
 
-    const fieldPaths = this.graphService.findFieldPermPaths(principalsChecked, object, field);
+    const fieldPaths = await this.graphService.findFieldPermPaths(principalsChecked, object, field);
     const fieldGranted = fieldPaths.length > 0;
     if (!objectGranted) {
       return {

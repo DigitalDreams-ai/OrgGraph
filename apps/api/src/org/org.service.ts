@@ -100,7 +100,7 @@ export class OrgService {
 
       if (autoRefresh) {
         const refreshStarted = Date.now();
-        const refreshResult = this.ingestionService.refresh({
+        const refreshResult = await this.ingestionService.refresh({
           fixturesPath: parsePath,
           mode: 'full'
         });

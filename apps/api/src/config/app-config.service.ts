@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 export class AppConfigService {
   constructor() {
     this.validateOptionalString('DATABASE_URL');
+    this.validateOptionalString('GRAPH_BACKEND');
     this.validateOptionalString('PERMISSIONS_FIXTURES_PATH');
     this.validateOptionalString('USER_PROFILE_MAP_PATH');
     this.validateOptionalString('EVIDENCE_INDEX_PATH');
@@ -51,6 +52,14 @@ export class AppConfigService {
 
   databaseUrl(): string | undefined {
     return process.env.DATABASE_URL;
+  }
+
+  graphBackend(): 'sqlite' | 'postgres' {
+    const raw = (process.env.GRAPH_BACKEND || 'sqlite').trim().toLowerCase();
+    if (raw !== 'sqlite' && raw !== 'postgres') {
+      throw new Error(`Invalid GRAPH_BACKEND: ${raw}`);
+    }
+    return raw;
   }
 
   permissionsFixturesPath(): string | undefined {
