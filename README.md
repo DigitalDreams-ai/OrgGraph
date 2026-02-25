@@ -194,9 +194,12 @@ REFRESH_AUDIT_PATH=data/refresh/audit.jsonl
 ONTOLOGY_REPORT_PATH=data/refresh/ontology-report.json
 MIN_CONFIDENCE_DEFAULT=medium
 ASK_CONSISTENCY_CHECK_ENABLED=true
+ORGGRAPH_LOG_LEVEL=log,warn,error,debug
+ORGGRAPH_HTTP_LOG_ENABLED=true
 
 # Web
 NEXT_PUBLIC_API_BASE=http://localhost:3100
+ORGGRAPH_WEB_LOG_ENABLED=true
 ```
 
 Postgres runtime example:
@@ -219,6 +222,7 @@ DATABASE_URL=postgres://orggraph:orggraph@postgres:5432/orggraph
 3. Metrics snapshot: `curl http://localhost:3100/metrics`
 4. If web builds fail on Synology due `@eaDir` artifacts, run `./scripts/clean-eadir.sh`
 5. Rebuild stack after updates: `docker compose -f docker/docker-compose.yml up -d --build`
+6. For Dozzle-friendly request logs, ensure `ORGGRAPH_HTTP_LOG_ENABLED=true` (api) and `ORGGRAPH_WEB_LOG_ENABLED=true` (web)
 
 ---
 

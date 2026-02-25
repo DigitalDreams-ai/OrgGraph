@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, type LogLevel } from '@nestjs/common';
 
 @Injectable()
 export class AppConfigService {
@@ -33,6 +33,8 @@ export class AppConfigService {
     this.validateOptionalString('SF_AUTO_REFRESH_AFTER_RETRIEVE');
     this.validateOptionalString('MIN_CONFIDENCE_DEFAULT');
     this.validateOptionalString('ASK_CONSISTENCY_CHECK_ENABLED');
+    this.validateOptionalString('ORGGRAPH_LOG_LEVEL');
+    this.validateOptionalString('ORGGRAPH_HTTP_LOG_ENABLED');
     this.validateOptionalString('PORT');
   }
 
@@ -180,6 +182,23 @@ export class AppConfigService {
 
   askConsistencyCheckEnabled(): boolean {
     return (process.env.ASK_CONSISTENCY_CHECK_ENABLED || 'true').trim().toLowerCase() === 'true';
+  }
+
+  nestLogLevels(): LogLevel[] {
+    const raw = (process.env.ORGGRAPH_LOG_LEVEL || 'log,warn,error').trim().toLowerCase();
+    const parsed = raw
+      .split(',')
+      .map((token) => token.trim())
+      .filter((token) => token.length > 0) as LogLevel[];
+    const allowed: ReadonlySet<string> = new Set(['log', 'error', 'warn', 'debug', 'verbose', 'fatal']);
+    if (parsed.length === 0 || parsed.some((level) => !allowed.has(level))) {
+      throw new Error(`Invalid ORGGRAPH_LOG_LEVEL: ${raw}`);
+    }
+    return parsed;
+  }
+
+  httpLogEnabled(): boolean {
+    return (process.env.ORGGRAPH_HTTP_LOG_ENABLED || 'false').trim().toLowerCase() === 'true';
   }
 
   private readPositiveInt(

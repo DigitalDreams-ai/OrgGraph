@@ -38,6 +38,8 @@ services:
       ONTOLOGY_REPORT_PATH: /app/data/refresh/ontology-report.json
       MIN_CONFIDENCE_DEFAULT: medium
       ASK_CONSISTENCY_CHECK_ENABLED: "true"
+      ORGGRAPH_LOG_LEVEL: log,warn,error,debug
+      ORGGRAPH_HTTP_LOG_ENABLED: "true"
       SF_INTEGRATION_ENABLED: "false"
       SF_AUTH_MODE: sfdx_url
       SF_AUTH_URL_PATH: /app/.secrets/sandbox.sfdx-url.txt
@@ -85,6 +87,7 @@ services:
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
       NEXT_PUBLIC_API_BASE: http://api:3000
+      ORGGRAPH_WEB_LOG_ENABLED: "true"
     depends_on:
       api:
         condition: service_healthy
