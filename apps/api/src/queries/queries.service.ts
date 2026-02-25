@@ -6,6 +6,8 @@ import { resolveUserProfileMapPath } from '../common/path';
 
 @Injectable()
 export class QueriesService {
+  private static readonly DEFAULT_LIMIT = 25;
+
   private readonly userProfileMapPath: string;
 
   constructor(
@@ -15,7 +17,7 @@ export class QueriesService {
     this.userProfileMapPath = resolveUserProfileMapPath(this.configService.userProfileMapPath());
   }
 
-  perms(user: string, object: string, field?: string): {
+  perms(user: string, object: string, field?: string, limit = QueriesService.DEFAULT_LIMIT): {
     user: string;
     object: string;
     field?: string;
@@ -24,6 +26,8 @@ export class QueriesService {
     granted: boolean;
     objectGranted: boolean;
     fieldGranted?: boolean;
+    totalPaths: number;
+    truncated: boolean;
     explanation: string;
   } {
     const userProfileMap = this.readUserProfileMap();
@@ -41,17 +45,23 @@ export class QueriesService {
           paths: [],
           granted: false,
           objectGranted: false,
+          totalPaths: 0,
+          truncated: false,
           explanation: 'no object grant path found'
         };
       }
+
+      const sliced = objectPaths.slice(0, limit);
 
       return {
         user,
         object,
         principalsChecked,
-        paths: objectPaths,
+        paths: sliced,
         granted: true,
         objectGranted: true,
+        totalPaths: objectPaths.length,
+        truncated: objectPaths.length > sliced.length,
         explanation: `${user} can edit ${object} via ${objectPaths[0].principal}`
       };
     }
@@ -68,6 +78,8 @@ export class QueriesService {
         granted: false,
         objectGranted: false,
         fieldGranted: false,
+        totalPaths: 0,
+        truncated: false,
         explanation: `${user} has no object-level edit path to ${object}`
       };
     }
@@ -82,19 +94,25 @@ export class QueriesService {
         granted: false,
         objectGranted: true,
         fieldGranted: false,
+        totalPaths: 0,
+        truncated: false,
         explanation: `${user} has object access to ${object} but no field-level edit path to ${field}`
       };
     }
+
+    const sliced = fieldPaths.slice(0, limit);
 
     return {
       user,
       object,
       field,
       principalsChecked,
-      paths: fieldPaths,
+      paths: sliced,
       granted: true,
       objectGranted: true,
       fieldGranted: true,
+      totalPaths: fieldPaths.length,
+      truncated: fieldPaths.length > sliced.length,
       explanation: `${user} can edit ${field} via ${fieldPaths[0].principal}`
     };
   }
