@@ -67,7 +67,12 @@ export class HealthController {
       const raw = fs.readFileSync(statePath, 'utf8');
       const parsed = JSON.parse(raw) as { sourcePath?: string };
       if (typeof parsed.sourcePath === 'string' && parsed.sourcePath.trim().length > 0) {
-        return parsed.sourcePath;
+        const runtimeStatePath = parsed.sourcePath.trim();
+        // Refresh state can be generated from a different runtime context (host vs container).
+        // Only trust the stored source path when it exists in the current runtime.
+        if (fs.existsSync(runtimeStatePath)) {
+          return runtimeStatePath;
+        }
       }
       return configuredPath;
     } catch {
