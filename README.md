@@ -177,12 +177,14 @@ See [ORG_INTEGRATION.md](./ORG_INTEGRATION.md) and [SANDBOX_CONNECT_CHECKLIST.md
 - Quick commands: [ORGGRAPH_CHEATSHEET.md](./ORGGRAPH_CHEATSHEET.md)
 - Production promotion gate: [PRODUCTION_PROMOTION.md](./PRODUCTION_PROMOTION.md)
 - Release checklist: [RELEASE_CHECKLIST.md](./RELEASE_CHECKLIST.md)
+- Postgres migration: [POSTGRES_MIGRATION.md](./POSTGRES_MIGRATION.md)
 
 ## Operational Environment Variables
 
 ```bash
 # API
 PORT=3000
+GRAPH_BACKEND=sqlite
 DATABASE_URL=file:./data/orggraph.db
 PERMISSIONS_FIXTURES_PATH=fixtures/permissions
 USER_PROFILE_MAP_PATH=fixtures/permissions/user-profile-map.json
@@ -195,6 +197,12 @@ ASK_CONSISTENCY_CHECK_ENABLED=true
 
 # Web
 NEXT_PUBLIC_API_BASE=http://localhost:3100
+```
+
+Postgres runtime example:
+```bash
+GRAPH_BACKEND=postgres
+DATABASE_URL=postgres://orggraph:orggraph@postgres:5432/orggraph
 ```
 
 ## Architecture Notes

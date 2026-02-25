@@ -1,6 +1,25 @@
 name: orggraph
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: orggraph-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: orggraph
+      POSTGRES_PASSWORD: orggraph
+      POSTGRES_DB: orggraph
+    ports:
+      - "5432:5432"
+    volumes:
+      - ../data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orggraph -d orggraph"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+
   api:
     build:
       context: ..
@@ -9,7 +28,8 @@ services:
     restart: unless-stopped
     environment:
       PORT: "3000"
-      DATABASE_URL: file:/app/data/orggraph.db
+      GRAPH_BACKEND: postgres
+      DATABASE_URL: postgres://orggraph:orggraph@postgres:5432/orggraph
       PERMISSIONS_FIXTURES_PATH: /app/data/sf-project/force-app/main/default
       USER_PROFILE_MAP_PATH: /app/data/sf-user-principals.json
       EVIDENCE_INDEX_PATH: /app/data/evidence/index.json
@@ -49,6 +69,9 @@ services:
       - ../data:/app/data
       - ../fixtures:/app/fixtures:ro
       - ../manifest:/app/manifest:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   web:
     build:
