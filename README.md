@@ -71,7 +71,12 @@ cd /volume1/data/projects/OrgGraph
 docker compose -f docker/docker-compose.yml up -d
 ```
 
-See `docker/docker-compose.yml` for API configuration. The compose file uses `name: orggraphservices` to keep containers grouped in Container Manager.
+See `docker/docker-compose.yml` for service configuration. The compose file uses `name: orggraph` to keep containers grouped in Container Manager.
+
+### Service Endpoints
+
+- API: `http://<nas-ip>:3100`
+- Web Console (Phase 4): `http://<nas-ip>:3101`
 
 ---
 
@@ -83,6 +88,16 @@ og impact field Account.Foo__c
 og perms user jane@example.com
 og automation object Case
 og ask "What touches Opportunity.StageName?"
+```
+
+## API Quick Usage
+
+```bash
+# Full refresh (default mode)
+curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{}'
+
+# Incremental refresh (skip when fixtures unchanged)
+curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"mode":"incremental"}'
 ```
 
 ---

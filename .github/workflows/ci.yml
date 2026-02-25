@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - phase2
+      - phase4
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -40,3 +41,6 @@ jobs:
 
       - name: Build API
         run: pnpm --filter api build
+
+      - name: Build Web
+        run: pnpm --filter web build
