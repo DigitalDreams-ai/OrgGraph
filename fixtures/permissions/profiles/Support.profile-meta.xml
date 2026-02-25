@@ -19,4 +19,8 @@
     <object>Case</object>
     <viewAllRecords>false</viewAllRecords>
   </objectPermissions>
+  <userPermissions>
+    <enabled>true</enabled>
+    <name>ApproveUninstalledConnectedApps</name>
+  </userPermissions>
 </PermissionSet>

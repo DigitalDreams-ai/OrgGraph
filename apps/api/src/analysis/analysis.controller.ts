@@ -6,14 +6,14 @@ export class AnalysisController {
   constructor(private readonly analysisService: AnalysisService) {}
 
   @Get('/impact')
-  impact(
+  async impact(
     @Query('field') field?: string,
     @Query('limit') limitRaw?: string,
     @Query('strict') strictRaw?: string,
     @Query('debug') debugRaw?: string,
     @Query('explain') explainRaw?: string,
     @Query('includeLowConfidence') includeLowConfidenceRaw?: string
-  ): {
+  ): Promise<{
     field: string;
     relationsChecked: string[];
     paths: Array<{ from: string; rel: string; to: string; confidence: 'high' | 'medium' | 'low'; score: number }>;
@@ -26,7 +26,7 @@ export class AnalysisController {
     explain?: { scoring: { relBaseScore: Record<string, number>; confidenceWeights: Record<string, number> } };
     debug?: { raw: unknown[] };
     status: 'implemented';
-  } {
+  }> {
     if (!field) {
       throw new BadRequestException('field query param is required');
     }
@@ -59,13 +59,13 @@ export class AnalysisController {
   }
 
   @Get('/automation')
-  automation(
+  async automation(
     @Query('object') object?: string,
     @Query('limit') limitRaw?: string,
     @Query('strict') strictRaw?: string,
     @Query('explain') explainRaw?: string,
     @Query('includeLowConfidence') includeLowConfidenceRaw?: string
-  ): {
+  ): Promise<{
     object: string;
     relationsChecked: string[];
     automations: Array<{ type: string; name: string; rel: string; confidence: 'high' | 'medium' | 'low'; score: number }>;
@@ -77,7 +77,7 @@ export class AnalysisController {
     explainMode: boolean;
     explain?: { scoring: { relBaseScore: Record<string, number>; confidenceWeights: Record<string, number> } };
     status: 'scaffold' | 'implemented';
-  } {
+  }> {
     if (!object) {
       throw new BadRequestException('object query param is required');
     }

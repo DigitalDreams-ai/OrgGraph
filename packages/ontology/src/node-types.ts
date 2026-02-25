@@ -1,6 +1,7 @@
 export const NODE_TYPES = {
   OBJECT: 'Object',
   FIELD: 'Field',
+  SYSTEM_PERMISSION: 'SystemPermission',
   PROFILE: 'Profile',
   PERMISSION_SET: 'PermissionSet',
   APEX_CLASS: 'ApexClass',

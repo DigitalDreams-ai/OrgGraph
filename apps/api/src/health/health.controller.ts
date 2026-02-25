@@ -19,21 +19,27 @@ export class HealthController {
   }
 
   @Get('/ready')
-  ready(): {
+  async ready(): Promise<{
     status: 'ready';
     checks: {
-      db: { ok: boolean; nodeCount: number; edgeCount: number };
+      db: { ok: boolean; backend: string; storageRef: string; nodeCount: number; edgeCount: number };
       fixtures: { ok: boolean; sourcePath: string };
       evidence: { ok: boolean; indexPath: string };
     };
-  } {
+  }> {
     try {
-      const dbCounts = this.graphService.getCounts();
+      const dbCounts = await this.graphService.getCounts();
       const fixturesPath = this.resolveReportedFixturesPath();
       const evidencePath = this.evidenceStore.getIndexPath();
 
       const checks = {
-        db: { ok: true, nodeCount: dbCounts.nodeCount, edgeCount: dbCounts.edgeCount },
+        db: {
+          ok: true,
+          backend: this.graphService.backend(),
+          storageRef: this.graphService.getDatabasePath(),
+          nodeCount: dbCounts.nodeCount,
+          edgeCount: dbCounts.edgeCount
+        },
         fixtures: { ok: fs.existsSync(fixturesPath), sourcePath: fixturesPath },
         evidence: { ok: fs.existsSync(evidencePath), indexPath: evidencePath }
       };

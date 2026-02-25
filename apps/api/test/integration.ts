@@ -75,10 +75,11 @@ async function run(): Promise<void> {
     assert.equal(readyRes.status, 200, 'ready should return 200');
     const readyBody = (await readyRes.json()) as {
       status: string;
-      checks: { db: { ok: boolean }; fixtures: { ok: boolean } };
+      checks: { db: { ok: boolean; backend: string }; fixtures: { ok: boolean } };
     };
     assert.equal(readyBody.status, 'ready');
     assert.equal(readyBody.checks.db.ok, true);
+    assert.equal(readyBody.checks.db.backend, 'sqlite');
     assert.equal(readyBody.checks.fixtures.ok, true);
 
     const ingestLatestRes = await fetch(`${base}/ingest/latest`);
@@ -207,6 +208,34 @@ async function run(): Promise<void> {
     assert.equal(permsUnknownUser.granted, false, 'unknown user should not have grant');
     assert.equal(permsUnknownUser.mappingStatus, 'unmapped_user');
     assert.ok(permsUnknownUser.warnings.length > 0);
+
+    const systemPermPositiveRes = await fetch(
+      `${base}/perms/system?user=jane@example.com&permission=ApproveUninstalledConnectedApps`
+    );
+    assert.equal(systemPermPositiveRes.status, 200, 'system permission positive should return 200');
+    const systemPermPositive = (await systemPermPositiveRes.json()) as {
+      granted: boolean;
+      totalPaths: number;
+      paths: Array<{ permission: string }>;
+    };
+    assert.equal(
+      systemPermPositive.granted,
+      true,
+      'jane should have ApproveUninstalledConnectedApps'
+    );
+    assert.ok(systemPermPositive.totalPaths > 0, 'system permission should include at least one path');
+    assert.equal(systemPermPositive.paths[0]?.permission, 'ApproveUninstalledConnectedApps');
+
+    const systemPermNegativeRes = await fetch(
+      `${base}/perms/system?user=jane@example.com&permission=ManageSandboxes`
+    );
+    assert.equal(systemPermNegativeRes.status, 200, 'system permission negative should return 200');
+    const systemPermNegative = (await systemPermNegativeRes.json()) as { granted: boolean };
+    assert.equal(
+      systemPermNegative.granted,
+      false,
+      'jane should not have ManageSandboxes in fixtures'
+    );
 
     const fieldPositiveRes = await fetch(
       `${base}/perms?user=jane@example.com&object=Case&field=Case.Status`
@@ -412,10 +441,12 @@ async function run(): Promise<void> {
     assert.equal(metricsRes.status, 200, 'metrics should return 200');
     const metricsBody = (await metricsRes.json()) as {
       status: string;
+      dbBackend: string;
       totalRequests: number;
       byRoute: Array<{ path: string; method: string; requestCount: number }>;
     };
     assert.equal(metricsBody.status, 'ok');
+    assert.equal(metricsBody.dbBackend, 'sqlite');
     assert.ok(metricsBody.totalRequests > 0, 'metrics should track requests');
     assert.ok(
       metricsBody.byRoute.some((route) => route.path.includes('/refresh') && route.requestCount > 0),

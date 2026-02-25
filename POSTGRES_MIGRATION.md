@@ -1,0 +1,50 @@
+# Postgres Migration Guide (Phase 9)
+
+## Purpose
+Migrate OrgGraph graph storage from SQLite to Postgres with parity validation and rollback safety.
+
+## Backend Switch
+- SQLite mode:
+`GRAPH_BACKEND=sqlite`
+`DATABASE_URL=file:./data/orggraph.db`
+- Postgres mode:
+`GRAPH_BACKEND=postgres`
+`DATABASE_URL=postgres://orggraph:orggraph@postgres:5432/orggraph`
+
+## Staged Cutover
+1. Baseline snapshot in SQLite mode:
+- `npm run phase7:snapshot`
+- `npm run phase7:regression`
+2. Build Postgres target and migrate data:
+- `ORGGRAPH_POSTGRES_URL=postgres://... npm run phase9:migrate-sqlite-to-postgres`
+3. Switch backend config to Postgres.
+4. Run parity checks:
+- `pnpm --filter api test`
+- `npm run phase7:smoke-live`
+- `npm run phase7:regression`
+5. Capture benchmark:
+- `npm run phase9:benchmark`
+
+## Rollback
+1. Switch config back to SQLite:
+- `GRAPH_BACKEND=sqlite`
+- `DATABASE_URL=file:./data/orggraph.db`
+2. Restart stack:
+- `docker compose -f docker/docker-compose.yml up -d`
+3. Validate:
+- `curl http://localhost:3100/ready`
+- `npm run phase7:smoke-live`
+
+## Backup / Retention
+- Postgres data volume path (docker compose): `data/postgres`
+- Before major cutover, archive `data/postgres` and `data/orggraph.db`.
+- Keep at least 7 daily restore points and 4 weekly snapshots.
+- Use `npm run phase8:retention-prune` for regular cleanup of refresh artifacts.
+
+## Maintenance
+- Check DB readiness: `curl http://localhost:3100/ready`
+- Run benchmark monthly: `npm run phase9:benchmark`
+- Vacuum/analyze cadence:
+  - `VACUUM (ANALYZE);` weekly for heavy churn periods
+  - `ANALYZE;` after large refresh/import runs
+

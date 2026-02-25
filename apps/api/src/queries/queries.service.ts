@@ -17,7 +17,12 @@ export class QueriesService {
     this.userProfileMapPath = resolveUserProfileMapPath(this.configService.userProfileMapPath());
   }
 
-  perms(user: string, object: string, field?: string, limit = QueriesService.DEFAULT_LIMIT): {
+  async perms(
+    user: string,
+    object: string,
+    field?: string,
+    limit = QueriesService.DEFAULT_LIMIT
+  ): Promise<{
     user: string;
     object: string;
     field?: string;
@@ -31,7 +36,7 @@ export class QueriesService {
     explanation: string;
     mappingStatus: 'resolved' | 'unmapped_user' | 'map_missing';
     warnings: string[];
-  } {
+  }> {
     const mapResult = this.readUserProfileMap();
     const principalsChecked = mapResult.map[user.toLowerCase()] ?? [];
     const mappingStatus = mapResult.exists
@@ -40,7 +45,7 @@ export class QueriesService {
         : 'unmapped_user'
       : 'map_missing';
     const warnings = this.buildWarnings(mappingStatus, user);
-    const objectPaths = this.graphService.findObjectPermPaths(principalsChecked, object);
+    const objectPaths = await this.graphService.findObjectPermPaths(principalsChecked, object);
     const objectGranted = objectPaths.length > 0;
 
     if (!field) {
@@ -77,7 +82,7 @@ export class QueriesService {
       };
     }
 
-    const fieldPaths = this.graphService.findFieldPermPaths(principalsChecked, object, field);
+    const fieldPaths = await this.graphService.findFieldPermPaths(principalsChecked, object, field);
     const fieldGranted = fieldPaths.length > 0;
     if (!objectGranted) {
       return {
@@ -129,6 +134,54 @@ export class QueriesService {
       totalPaths: fieldPaths.length,
       truncated: fieldPaths.length > sliced.length,
       explanation: `${user} can edit ${field} via ${fieldPaths[0].principal}`,
+      mappingStatus,
+      warnings
+    };
+  }
+
+  async systemPermission(
+    user: string,
+    permission: string,
+    limit = QueriesService.DEFAULT_LIMIT
+  ): Promise<{
+    user: string;
+    permission: string;
+    principalsChecked: string[];
+    paths: Array<{ principal: string; permission: string; path: Array<{ from: string; rel: string; to: string }> }>;
+    granted: boolean;
+    totalPaths: number;
+    truncated: boolean;
+    explanation: string;
+    mappingStatus: 'resolved' | 'unmapped_user' | 'map_missing';
+    warnings: string[];
+  }> {
+    const mapResult = this.readUserProfileMap();
+    const principalsChecked = mapResult.map[user.toLowerCase()] ?? [];
+    const mappingStatus = mapResult.exists
+      ? principalsChecked.length > 0
+        ? 'resolved'
+        : 'unmapped_user'
+      : 'map_missing';
+    const warnings = this.buildWarnings(mappingStatus, user);
+    const paths = await this.graphService.findSystemPermissionPaths(principalsChecked, permission);
+    const sliced = paths.slice(0, limit);
+    const granted = paths.length > 0;
+
+    return {
+      user,
+      permission,
+      principalsChecked,
+      paths: sliced.map((item) => ({
+        principal: item.principal,
+        permission: item.object,
+        path: item.path
+      })),
+      granted,
+      totalPaths: paths.length,
+      truncated: paths.length > sliced.length,
+      explanation: granted
+        ? `${user} has ${permission} via ${paths[0].principal}`
+        : `${user} does not have ${permission}`,
       mappingStatus,
       warnings
     };

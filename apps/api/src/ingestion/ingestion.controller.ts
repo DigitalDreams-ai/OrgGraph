@@ -13,7 +13,7 @@ export class IngestionController {
   constructor(private readonly ingestionService: IngestionService) {}
 
   @Post('/refresh')
-  refresh(@Body() body: RefreshBody = {}): {
+  async refresh(@Body() body: RefreshBody = {}): Promise<{
     mode: RefreshMode;
     skipped: boolean;
     skipReason?: 'no_changes_detected';
@@ -26,7 +26,7 @@ export class IngestionController {
     evidenceIndexPath: string;
     parserStats: ParserStats[];
     ontology: OntologyConstraintReport;
-  } {
+  }> {
     if (body.fixturesPath !== undefined && typeof body.fixturesPath !== 'string') {
       throw new BadRequestException('fixturesPath must be a string');
     }
@@ -44,13 +44,13 @@ export class IngestionController {
   }
 
   @Get('/ingest/latest')
-  latestIngest(): {
+  async latestIngest(): Promise<{
     latest?: unknown;
     lowConfidenceSources: Array<{ source: string; count: number }>;
     auditPath: string;
     ontologyReportPath: string;
     ontology: OntologyConstraintReport;
-  } {
+  }> {
     return this.ingestionService.getLatestIngestSummary();
   }
 }

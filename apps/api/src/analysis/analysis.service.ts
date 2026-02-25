@@ -17,14 +17,14 @@ export class AnalysisService {
     private readonly configService: AppConfigService
   ) {}
 
-  impact(
+  async impact(
     field: string,
     limit = AnalysisService.DEFAULT_LIMIT,
     strict = false,
     debug = false,
     explain = false,
     includeLowConfidence = false
-  ): {
+  ): Promise<{
     field: string;
     relationsChecked: string[];
     paths: Array<{ from: string; rel: string; to: string; confidence: 'high' | 'medium' | 'low'; score: number }>;
@@ -37,11 +37,11 @@ export class AnalysisService {
     explain?: { scoring: { relBaseScore: Record<string, number>; confidenceWeights: Record<string, number> } };
     debug?: { raw: unknown[] };
     status: 'implemented';
-  } {
+  }> {
     const minConfidence = includeLowConfidence
       ? 'low'
       : this.resolveMinConfidence(strict);
-    const hits = this.graphService.findImpactForField(field);
+    const hits = await this.graphService.findImpactForField(field);
     const ranked = hits
       .map((hit) => ({
         ...hit,
@@ -96,13 +96,13 @@ export class AnalysisService {
     };
   }
 
-  automation(
+  async automation(
     object: string,
     limit = AnalysisService.DEFAULT_LIMIT,
     strict = false,
     explain = false,
     includeLowConfidence = false
-  ): {
+  ): Promise<{
     object: string;
     relationsChecked: string[];
     automations: Array<{ type: string; name: string; rel: string; confidence: 'high' | 'medium' | 'low'; score: number }>;
@@ -114,12 +114,11 @@ export class AnalysisService {
     explainMode: boolean;
     explain?: { scoring: { relBaseScore: Record<string, number>; confidenceWeights: Record<string, number> } };
     status: 'scaffold' | 'implemented';
-  } {
+  }> {
     const minConfidence = includeLowConfidence
       ? 'low'
       : this.resolveMinConfidence(strict);
-    const all = this.graphService
-      .findAutomationsForObject(object)
+    const all = (await this.graphService.findAutomationsForObject(object))
       .map((row) => {
         const confidence = this.parseConfidence(row.meta);
         return {

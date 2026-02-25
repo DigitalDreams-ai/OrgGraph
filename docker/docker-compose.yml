@@ -1,6 +1,23 @@
 name: orggraph
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: orggraph-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: orggraph
+      POSTGRES_PASSWORD: orggraph
+      POSTGRES_DB: orggraph
+    volumes:
+      - ../data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orggraph -d orggraph"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+
   api:
     build:
       context: ..
@@ -9,7 +26,8 @@ services:
     restart: unless-stopped
     environment:
       PORT: "3000"
-      DATABASE_URL: file:/app/data/orggraph.db
+      GRAPH_BACKEND: postgres
+      DATABASE_URL: postgres://orggraph:orggraph@postgres:5432/orggraph
       PERMISSIONS_FIXTURES_PATH: /app/data/sf-project/force-app/main/default
       USER_PROFILE_MAP_PATH: /app/data/sf-user-principals.json
       EVIDENCE_INDEX_PATH: /app/data/evidence/index.json
@@ -18,6 +36,8 @@ services:
       ONTOLOGY_REPORT_PATH: /app/data/refresh/ontology-report.json
       MIN_CONFIDENCE_DEFAULT: medium
       ASK_CONSISTENCY_CHECK_ENABLED: "true"
+      ORGGRAPH_LOG_LEVEL: log,warn,error,debug
+      ORGGRAPH_HTTP_LOG_ENABLED: "true"
       SF_INTEGRATION_ENABLED: "false"
       SF_AUTH_MODE: sfdx_url
       SF_AUTH_URL_PATH: /app/.secrets/sandbox.sfdx-url.txt
@@ -49,17 +69,23 @@ services:
       - ../data:/app/data
       - ../fixtures:/app/fixtures:ro
       - ../manifest:/app/manifest:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   web:
     build:
       context: ..
       dockerfile: docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_BUILD_VERSION: ${ORGGRAPH_WEB_VERSION:-dev-local}
     container_name: orggraph-web
     restart: unless-stopped
     environment:
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
       NEXT_PUBLIC_API_BASE: http://api:3000
+      ORGGRAPH_WEB_LOG_ENABLED: "true"
     depends_on:
       api:
         condition: service_healthy

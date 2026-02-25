@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, type LogLevel } from '@nestjs/common';
 
 @Injectable()
 export class AppConfigService {
   constructor() {
     this.validateOptionalString('DATABASE_URL');
+    this.validateOptionalString('GRAPH_BACKEND');
     this.validateOptionalString('PERMISSIONS_FIXTURES_PATH');
     this.validateOptionalString('USER_PROFILE_MAP_PATH');
     this.validateOptionalString('EVIDENCE_INDEX_PATH');
@@ -32,6 +33,8 @@ export class AppConfigService {
     this.validateOptionalString('SF_AUTO_REFRESH_AFTER_RETRIEVE');
     this.validateOptionalString('MIN_CONFIDENCE_DEFAULT');
     this.validateOptionalString('ASK_CONSISTENCY_CHECK_ENABLED');
+    this.validateOptionalString('ORGGRAPH_LOG_LEVEL');
+    this.validateOptionalString('ORGGRAPH_HTTP_LOG_ENABLED');
     this.validateOptionalString('PORT');
   }
 
@@ -51,6 +54,14 @@ export class AppConfigService {
 
   databaseUrl(): string | undefined {
     return process.env.DATABASE_URL;
+  }
+
+  graphBackend(): 'sqlite' | 'postgres' {
+    const raw = (process.env.GRAPH_BACKEND || 'sqlite').trim().toLowerCase();
+    if (raw !== 'sqlite' && raw !== 'postgres') {
+      throw new Error(`Invalid GRAPH_BACKEND: ${raw}`);
+    }
+    return raw;
   }
 
   permissionsFixturesPath(): string | undefined {
@@ -171,6 +182,23 @@ export class AppConfigService {
 
   askConsistencyCheckEnabled(): boolean {
     return (process.env.ASK_CONSISTENCY_CHECK_ENABLED || 'true').trim().toLowerCase() === 'true';
+  }
+
+  nestLogLevels(): LogLevel[] {
+    const raw = (process.env.ORGGRAPH_LOG_LEVEL || 'log,warn,error').trim().toLowerCase();
+    const parsed = raw
+      .split(',')
+      .map((token) => token.trim())
+      .filter((token) => token.length > 0) as LogLevel[];
+    const allowed: ReadonlySet<string> = new Set(['log', 'error', 'warn', 'debug', 'verbose', 'fatal']);
+    if (parsed.length === 0 || parsed.some((level) => !allowed.has(level))) {
+      throw new Error(`Invalid ORGGRAPH_LOG_LEVEL: ${raw}`);
+    }
+    return parsed;
+  }
+
+  httpLogEnabled(): boolean {
+    return (process.env.ORGGRAPH_HTTP_LOG_ENABLED || 'false').trim().toLowerCase() === 'true';
   }
 
   private readPositiveInt(

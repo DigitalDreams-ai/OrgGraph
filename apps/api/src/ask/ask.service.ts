@@ -18,7 +18,7 @@ export class AskService {
     private readonly evidence: EvidenceStoreService
   ) {}
 
-  ask(input: AskRequest): AskResponse {
+  async ask(input: AskRequest): Promise<AskResponse> {
     const startedAt = Date.now();
     const plan = this.planner.plan(input.query);
     const includeLowConfidence = input.includeLowConfidence === true;
@@ -56,7 +56,7 @@ export class AskService {
     if (plan.intent === 'perms' || plan.intent === 'mixed') {
       const user = plan.entities.user ?? 'jane@example.com';
       const object = plan.entities.object ?? 'Case';
-      const result = this.queries.perms(user, object, plan.entities.field);
+      const result = await this.queries.perms(user, object, plan.entities.field);
       answer = result.explanation;
       confidence = result.granted ? 0.86 : 0.62;
       consistency = {
@@ -66,7 +66,7 @@ export class AskService {
       };
     } else if (plan.intent === 'automation') {
       const object = plan.entities.object ?? 'Case';
-      const result = this.analysis.automation(
+      const result = await this.analysis.automation(
         object,
         undefined,
         false,
@@ -84,7 +84,7 @@ export class AskService {
       };
     } else if (plan.intent === 'impact') {
       const field = plan.entities.field ?? 'Opportunity.StageName';
-      const result = this.analysis.impact(
+      const result = await this.analysis.impact(
         field,
         undefined,
         false,
@@ -95,7 +95,7 @@ export class AskService {
       answer = result.explanation;
       confidence = result.paths.length > 0 ? 0.8 : 0.55;
       if (consistencyCheck) {
-        const verification = this.analysis.impact(
+        const verification = await this.analysis.impact(
           field,
           undefined,
           false,
