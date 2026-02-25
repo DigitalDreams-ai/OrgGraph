@@ -380,11 +380,17 @@ async function run(): Promise<void> {
       status: string;
       plan: { intent: string };
       citations: unknown[];
+      mode: string;
+      llm: { enabled: boolean; used: boolean; provider: string; fallbackReason?: string };
+      deterministicAnswer: string;
       consistency: { checked: boolean; aligned: boolean };
     };
     assert.equal(askPerms.status, 'implemented');
     assert.equal(askPerms.plan.intent, 'perms');
     assert.ok(askPerms.citations.length > 0, 'ask should include citations');
+    assert.equal(askPerms.mode, 'deterministic');
+    assert.equal(askPerms.llm.used, false);
+    assert.equal(typeof askPerms.deterministicAnswer, 'string');
     assert.equal(askPerms.consistency.checked, false);
     assert.equal(askPerms.consistency.aligned, true);
 
@@ -421,6 +427,24 @@ async function run(): Promise<void> {
     assert.equal(askUnknown.plan.intent, 'unknown');
     assert.match(askUnknown.answer, /No deterministic plan/i);
 
+    const askLlmAssistRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'What touches Opportunity.StageName?',
+        mode: 'llm_assist',
+        llm: { provider: 'none' }
+      })
+    });
+    assert.equal(askLlmAssistRes.status, 201, 'ask llm assist should still return deterministic fallback');
+    const askLlmAssist = (await askLlmAssistRes.json()) as {
+      mode: string;
+      llm: { used: boolean; fallbackReason?: string };
+    };
+    assert.equal(askLlmAssist.mode, 'deterministic');
+    assert.equal(askLlmAssist.llm.used, false);
+    assert.match(String(askLlmAssist.llm.fallbackReason ?? ''), /provider is none|disabled/i);
+
     const askBadRequest = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -436,6 +460,13 @@ async function run(): Promise<void> {
       body: JSON.stringify({ query: 'hello', maxCitations: 50 })
     });
     assert.equal(askTooManyCitations.status, 400, 'ask should reject too many citations');
+
+    const askInvalidMode = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: 'hello', mode: 'chatty' })
+    });
+    assert.equal(askInvalidMode.status, 400, 'ask should reject invalid mode');
 
     const metricsRes = await fetch(`${base}/metrics`);
     assert.equal(metricsRes.status, 200, 'metrics should return 200');
