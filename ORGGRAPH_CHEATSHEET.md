@@ -11,6 +11,7 @@ docker compose -f docker/docker-compose.yml down
 ```bash
 curl http://localhost:3100/health
 curl http://localhost:3100/ready
+curl http://localhost:3100/ingest/latest
 curl http://localhost:3101/api/health
 curl http://localhost:3101/api/ready
 ```
@@ -47,6 +48,10 @@ curl -X POST http://localhost:3101/api/query -H 'content-type: application/json'
 npm exec --yes pnpm@9.12.3 -- --filter api test
 npm exec --yes pnpm@9.12.3 -- --filter api build
 npm run test:web-smoke
+npm run phase7:smoke-live
+npm run phase7:snapshot
+npm run phase7:regression
+npm run ingest:report
 ```
 
 ## Fast Fixes

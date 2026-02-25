@@ -22,6 +22,7 @@ docker compose -f docker/docker-compose.yml up -d --build
 curl http://localhost:3100/health
 curl http://localhost:3100/ready
 curl http://localhost:3100/metrics
+curl http://localhost:3100/ingest/latest
 curl http://localhost:3101/api/health
 curl http://localhost:3101/api/ready
 ```
@@ -130,4 +131,19 @@ docker compose -f docker/docker-compose.yml up -d --build web
 ### 10.4 Validate full web flow quickly
 ```bash
 npm run test:web-smoke
+```
+
+## 11. Phase 7 Validation Harness
+```bash
+# Live endpoint smoke + artifacts
+npm run phase7:smoke-live
+
+# Capture baseline snapshots
+npm run phase7:snapshot
+
+# Compare current counts to last baseline with threshold checks
+npm run phase7:regression
+
+# Show latest ingest summary + low-confidence sources
+npm run ingest:report
 ```
