@@ -105,6 +105,64 @@ curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -
 curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"mode":"incremental"}'
 ```
 
+## Salesforce Org Integration (Phase 6)
+
+Phase 6 adds sandbox-first org retrieval and refresh.
+
+### Prerequisites
+
+1. Install Salesforce CLI (`sf`) on NAS host.
+2. Create secrets directory:
+`mkdir -p /volume1/data/projects/OrgGraph/.secrets`
+3. Ensure env file exists at repo root:
+`cp .env.sample .env` (or `cp .env.example .env`)
+4. Create an External Client App in sandbox org and enable OAuth scopes:
+- `refresh_token`
+- `api`
+- `web`
+5. Set OAuth values in `.env` (scripts auto-load this file):
+- `SF_BASE_URL=https://test.salesforce.com` (single variable to switch org host)
+- `SF_AUTH_MODE=oauth_refresh_token`
+- `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REDIRECT_URI`
+6. Generate authorization URL and authorize once:
+`npm run sf:oauth:url`
+7. Paste returned OAuth `code` into `.secrets/sf-auth-code.txt`, then exchange:
+`npm run sf:oauth:exchange`
+8. Review/adjust retrieve manifest:
+`manifest/package.xml`
+
+### Commands
+
+```bash
+# Print authorize URL for External Client App flow
+npm run sf:oauth:url
+
+# Exchange auth code for token store (.secrets/sf-oauth-token.json)
+npm run sf:oauth:exchange
+
+# Auth only
+npm run sf:auth
+
+# Retrieve metadata only
+npm run sf:retrieve
+
+# Auth + retrieve + API refresh
+npm run sf:retrieve-refresh
+
+# Verbose output for auth/retrieve/refresh pipeline
+SF_VERBOSE=true npm run sf:retrieve-refresh
+```
+
+### API Trigger
+
+```bash
+curl -X POST http://localhost:3100/org/retrieve \
+  -H 'content-type: application/json' \
+  -d '{"runAuth":true,"runRetrieve":true,"autoRefresh":true}'
+```
+
+See [ORG_INTEGRATION.md](./ORG_INTEGRATION.md) and [SANDBOX_CONNECT_CHECKLIST.md](./SANDBOX_CONNECT_CHECKLIST.md).
+
 ## Operational Environment Variables
 
 ```bash

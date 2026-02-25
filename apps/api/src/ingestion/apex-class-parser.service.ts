@@ -18,7 +18,8 @@ export class ApexClassParseError extends Error {
 @Injectable()
 export class ApexClassParserService {
   parseFromFixtures(rootPath: string): GraphPayload {
-    const classesDir = path.join(rootPath, 'apex-classes');
+    const classesDir = this.resolveClassesDir(rootPath);
+    const tolerateMissingDeclaration = path.basename(classesDir) === 'classes';
     const nodesById = new Map<string, GraphNode>();
     const edgesById = new Map<string, GraphEdge>();
 
@@ -31,7 +32,29 @@ export class ApexClassParserService {
     for (const file of files) {
       const filePath = path.join(classesDir, file);
       const source = fs.readFileSync(filePath, 'utf8');
-      const parsed = this.parseClassSource(source, filePath);
+      let parsed:
+        | {
+            className: string;
+            queriedObjects: string[];
+            queriedFields: string[];
+            writtenObjects: string[];
+          }
+        | undefined;
+      try {
+        parsed = this.parseClassSource(source, filePath);
+      } catch (error) {
+        if (
+          tolerateMissingDeclaration &&
+          error instanceof ApexClassParseError &&
+          error.reason.includes('missing class/interface/enum declaration')
+        ) {
+          continue;
+        }
+        throw error;
+      }
+      if (!parsed) {
+        continue;
+      }
 
       const classNode = this.upsertNode(nodesById, {
         type: NODE_TYPES.APEX_CLASS,
@@ -110,25 +133,39 @@ export class ApexClassParserService {
     };
   }
 
+  private resolveClassesDir(rootPath: string): string {
+    const candidates = ['apex-classes', 'classes'];
+    for (const name of candidates) {
+      const dir = path.join(rootPath, name);
+      if (fs.existsSync(dir)) {
+        return dir;
+      }
+    }
+    return path.join(rootPath, candidates[0]);
+  }
+
   private parseClassSource(source: string, filePath: string): {
     className: string;
     queriedObjects: string[];
     queriedFields: string[];
     writtenObjects: string[];
   } {
-    const classMatch = source.match(/\bclass\s+([A-Za-z_][A-Za-z0-9_]*)\b/);
+    const scrubbed = this.stripComments(source);
+    const classMatch = scrubbed.match(
+      /(?:^|\n)\s*(?:(?:global|public|private|protected|virtual|abstract|static|final|with\s+sharing|without\s+sharing|inherited\s+sharing)\s+)*(class|interface|enum)\s+([A-Za-z_][A-Za-z0-9_]*)(?:[\s\S]{0,240}?)\{/m
+    );
     if (!classMatch) {
-      throw new ApexClassParseError(filePath, 'missing class declaration');
+      throw new ApexClassParseError(filePath, 'missing class/interface/enum declaration');
     }
 
-    const className = classMatch[1];
-    const variableTypes = this.parseVariableTypes(source);
+    const className = classMatch[2];
+    const variableTypes = this.parseVariableTypes(scrubbed);
 
     const queriedObjects = new Set<string>();
     const queriedFields = new Set<string>();
 
     const soqlRegex = /\[\s*select\s+([\s\S]*?)\s+from\s+([A-Za-z_][A-Za-z0-9_]*)\b/gi;
-    for (const match of source.matchAll(soqlRegex)) {
+    for (const match of scrubbed.matchAll(soqlRegex)) {
       const fields = match[1]
         .split(',')
         .map((part) => part.trim())
@@ -147,7 +184,7 @@ export class ApexClassParserService {
 
     const writtenObjects = new Set<string>();
     const dmlRegex = /\b(update|insert|upsert|delete)\s+([A-Za-z_][A-Za-z0-9_]*)\b/gi;
-    for (const match of source.matchAll(dmlRegex)) {
+    for (const match of scrubbed.matchAll(dmlRegex)) {
       const token = match[2];
       const resolved = variableTypes.get(token) ?? token;
       if (resolved[0] === resolved[0].toUpperCase()) {
@@ -161,6 +198,12 @@ export class ApexClassParserService {
       queriedFields: [...queriedFields].sort((a, b) => a.localeCompare(b)),
       writtenObjects: [...writtenObjects].sort((a, b) => a.localeCompare(b))
     };
+  }
+
+  private stripComments(source: string): string {
+    return source
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|\s)\/\/.*$/gm, '$1');
   }
 
   private parseVariableTypes(source: string): Map<string, string> {

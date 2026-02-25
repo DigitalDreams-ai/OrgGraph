@@ -9,6 +9,11 @@
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "test:web-smoke": "./scripts/web-smoke.sh"
+    "test:web-smoke": "./scripts/web-smoke.sh",
+    "sf:auth": "./scripts/sf-auth.sh",
+    "sf:oauth:url": "./scripts/sf-oauth-authorize-url.sh",
+    "sf:oauth:exchange": "./scripts/sf-oauth-token-exchange.sh",
+    "sf:retrieve": "./scripts/sf-retrieve.sh",
+    "sf:retrieve-refresh": "./scripts/sf-retrieve-refresh.sh"
   }
 }

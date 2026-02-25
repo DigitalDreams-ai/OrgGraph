@@ -9,7 +9,7 @@
     "lint": "echo 'lint not configured yet'",
     "test": "pnpm test:validation && pnpm test:parser && pnpm test:integration",
     "test:integration": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/integration.ts",
-    "test:parser": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/parser-errors.ts && ts-node --transpile-only test/apex-class-parser.ts && ts-node --transpile-only test/flow-parser.ts && ts-node --transpile-only test/planner.ts && ts-node --transpile-only test/evidence-store.ts",
+    "test:parser": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/parser-errors.ts && ts-node --transpile-only test/apex-class-parser.ts && ts-node --transpile-only test/flow-parser.ts && ts-node --transpile-only test/planner.ts && ts-node --transpile-only test/evidence-store.ts && ts-node --transpile-only test/org-service.ts",
     "test:validation": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/validation.ts",
     "typecheck": "pnpm --filter @orggraph/ontology build && tsc -p tsconfig.json --noEmit"
   },

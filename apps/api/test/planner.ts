@@ -14,6 +14,13 @@ function run(): void {
   assert.equal(impactPlan.entities.field, 'Opportunity.StageName');
   assert.equal(impactPlan.entities.object, 'Opportunity');
 
+  const customImpactPlan = planner.plan(
+    'What touches litify_pm__Matter__c.litify_pm__Status__c?'
+  );
+  assert.equal(customImpactPlan.intent, 'impact');
+  assert.equal(customImpactPlan.entities.field, 'litify_pm__Matter__c.litify_pm__Status__c');
+  assert.equal(customImpactPlan.entities.object, 'litify_pm__Matter__c');
+
   const autoPlan = planner.plan('What runs on object Opportunity?');
   assert.equal(autoPlan.intent, 'automation');
   assert.equal(autoPlan.entities.object, 'Opportunity');

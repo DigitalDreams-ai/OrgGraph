@@ -11,6 +11,11 @@ interface PermissionEntity {
   fieldPermissions?: unknown;
 }
 
+interface ParsedPermissionFile {
+  PermissionSet?: PermissionEntity;
+  Profile?: PermissionEntity;
+}
+
 export class PermissionsParseError extends Error {
   constructor(
     readonly filePath: string,
@@ -34,14 +39,14 @@ export class PermissionsParserService {
     const edgesById = new Map<string, GraphEdge>();
 
     this.parseEntityDir({
-      dirPath: path.join(rootPath, 'profiles'),
+      dirPath: this.resolveEntityDir(rootPath, ['profiles']),
       entityType: NODE_TYPES.PROFILE,
       nodesById,
       edgesById
     });
 
     this.parseEntityDir({
-      dirPath: path.join(rootPath, 'permission-sets'),
+      dirPath: this.resolveEntityDir(rootPath, ['permission-sets', 'permissionsets']),
       entityType: NODE_TYPES.PERMISSION_SET,
       nodesById,
       edgesById
@@ -62,6 +67,16 @@ export class PermissionsParserService {
       nodes,
       edges
     };
+  }
+
+  private resolveEntityDir(rootPath: string, candidates: string[]): string {
+    for (const name of candidates) {
+      const dirPath = path.join(rootPath, name);
+      if (fs.existsSync(dirPath)) {
+        return dirPath;
+      }
+    }
+    return path.join(rootPath, candidates[0]);
   }
 
   private parseEntityDir(params: {
@@ -85,7 +100,10 @@ export class PermissionsParserService {
       const entityName = this.entityNameFromFilename(file);
       const xml = fs.readFileSync(filePath, 'utf8');
       const parsed = this.parsePermissionFile(xml, filePath);
-      const body = parsed.PermissionSet ?? {};
+      const body =
+        entityType === NODE_TYPES.PROFILE
+          ? parsed.Profile ?? parsed.PermissionSet ?? {}
+          : parsed.PermissionSet ?? parsed.Profile ?? {};
 
       const principal = this.upsertNode(nodesById, {
         type: entityType,
@@ -174,14 +192,14 @@ export class PermissionsParserService {
     return value ? [value as T] : [];
   }
 
-  private parsePermissionFile(xml: string, filePath: string): { PermissionSet?: PermissionEntity } {
+  private parsePermissionFile(xml: string, filePath: string): ParsedPermissionFile {
     try {
-      const parsed = this.parser.parse(xml) as { PermissionSet?: PermissionEntity };
+      const parsed = this.parser.parse(xml) as ParsedPermissionFile;
       if (!parsed || typeof parsed !== 'object') {
         throw new PermissionsParseError(filePath, 'parsed XML is not an object');
       }
-      if (!parsed.PermissionSet) {
-        throw new PermissionsParseError(filePath, 'missing PermissionSet root element');
+      if (!parsed.PermissionSet && !parsed.Profile) {
+        throw new PermissionsParseError(filePath, 'missing PermissionSet or Profile root element');
       }
       return parsed;
     } catch (error) {

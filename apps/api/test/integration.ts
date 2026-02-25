@@ -27,6 +27,7 @@ async function run(): Promise<void> {
     'user-profile-map.json'
   );
   process.env.EVIDENCE_INDEX_PATH = evidencePath;
+  process.env.SF_INTEGRATION_ENABLED = 'false';
 
   const app = await NestFactory.create(AppModule, { logger: false });
   await app.listen(0);
@@ -109,6 +110,28 @@ async function run(): Promise<void> {
     assert.equal(malformedModeRes.status, 400, 'refresh should reject invalid mode');
     const malformedModeBody = (await malformedModeRes.json()) as { error: { code: string } };
     assert.equal(malformedModeBody.error.code, 'BAD_REQUEST');
+
+    const orgRetrieveDisabledRes = await fetch(`${base}/org/retrieve`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{}'
+    });
+    assert.equal(
+      orgRetrieveDisabledRes.status,
+      400,
+      'org retrieve should reject when SF integration is disabled'
+    );
+    const orgRetrieveDisabledBody = (await orgRetrieveDisabledRes.json()) as {
+      error: { code: string; message: string };
+    };
+    assert.equal(orgRetrieveDisabledBody.error.code, 'BAD_REQUEST');
+
+    const orgRetrieveBadBodyRes = await fetch(`${base}/org/retrieve`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ runAuth: 'yes' })
+    });
+    assert.equal(orgRetrieveBadBodyRes.status, 400, 'org retrieve should validate boolean body flags');
 
     const brokenRoot = fs.mkdtempSync(path.join(workspaceRoot, 'fixtures', 'tmp-broken-'));
     const brokenProfilesPath = path.join(brokenRoot, 'profiles');

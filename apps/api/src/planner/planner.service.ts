@@ -52,8 +52,16 @@ export class PlannerService {
   }
 
   private extractField(input: string): string | undefined {
-    const match = input.match(/\b([A-Z][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b/);
-    return match?.[0];
+    const pattern = /\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b/g;
+    for (const match of input.matchAll(pattern)) {
+      const index = match.index ?? 0;
+      const before = index > 0 ? input[index - 1] : '';
+      if (before === '@') {
+        continue;
+      }
+      return match[0];
+    }
+    return undefined;
   }
 
   private extractObject(input: string, field?: string): string | undefined {
