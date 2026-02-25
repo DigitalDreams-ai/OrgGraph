@@ -30,6 +30,17 @@ export class AskController {
       throw new BadRequestException('maxCitations must be an integer between 1 and 20');
     }
 
+    if (
+      body.includeLowConfidence !== undefined &&
+      typeof body.includeLowConfidence !== 'boolean'
+    ) {
+      throw new BadRequestException('includeLowConfidence must be a boolean');
+    }
+
+    if (body.consistencyCheck !== undefined && typeof body.consistencyCheck !== 'boolean') {
+      throw new BadRequestException('consistencyCheck must be a boolean');
+    }
+
     if (body.context !== undefined) {
       if (typeof body.context !== 'object' || body.context === null || Array.isArray(body.context)) {
         throw new BadRequestException('context must be a key-value object');

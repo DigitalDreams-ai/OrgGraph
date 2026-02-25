@@ -5,7 +5,7 @@ import path from 'node:path';
 import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
 import { stableId } from '../common/ids';
 import type { GraphEdge, GraphNode, GraphPayload } from '../graph/graph.types';
-import type { ParserStats } from './parser-stats';
+import { createParserStats, type ParserStats } from './parser-stats';
 
 interface PermissionEntity {
   objectPermissions?: unknown;
@@ -29,13 +29,7 @@ export class PermissionsParseError extends Error {
 
 @Injectable()
 export class PermissionsParserService {
-  private lastStats: ParserStats = {
-    parser: 'permissions',
-    filesDiscovered: 0,
-    filesParsed: 0,
-    filesSkipped: 0,
-    warnings: []
-  };
+  private lastStats: ParserStats = createParserStats('permissions');
 
   private readonly parser = new XMLParser({
     ignoreAttributes: false,
@@ -46,13 +40,7 @@ export class PermissionsParserService {
   parseFromFixtures(rootPath: string): GraphPayload {
     const nodesById = new Map<string, GraphNode>();
     const edgesById = new Map<string, GraphEdge>();
-    this.lastStats = {
-      parser: 'permissions',
-      filesDiscovered: 0,
-      filesParsed: 0,
-      filesSkipped: 0,
-      warnings: []
-    };
+    this.lastStats = createParserStats('permissions');
 
     this.parseEntityDir({
       dirPath: this.resolveEntityDir(rootPath, ['profiles']),

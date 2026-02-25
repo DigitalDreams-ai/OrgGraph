@@ -30,6 +30,8 @@ export class AppConfigService {
     this.validateOptionalString('SF_RETRY_DELAY_MS');
     this.validateOptionalString('SF_TIMEOUT_SECONDS');
     this.validateOptionalString('SF_AUTO_REFRESH_AFTER_RETRIEVE');
+    this.validateOptionalString('MIN_CONFIDENCE_DEFAULT');
+    this.validateOptionalString('ASK_CONSISTENCY_CHECK_ENABLED');
     this.validateOptionalString('PORT');
   }
 
@@ -157,6 +159,18 @@ export class AppConfigService {
 
   sfAutoRefreshAfterRetrieve(): boolean {
     return (process.env.SF_AUTO_REFRESH_AFTER_RETRIEVE || 'true').trim().toLowerCase() === 'true';
+  }
+
+  minConfidenceDefault(): 'low' | 'medium' | 'high' {
+    const raw = (process.env.MIN_CONFIDENCE_DEFAULT || 'medium').trim().toLowerCase();
+    if (raw !== 'low' && raw !== 'medium' && raw !== 'high') {
+      throw new Error(`Invalid MIN_CONFIDENCE_DEFAULT: ${raw}`);
+    }
+    return raw as 'low' | 'medium' | 'high';
+  }
+
+  askConsistencyCheckEnabled(): boolean {
+    return (process.env.ASK_CONSISTENCY_CHECK_ENABLED || 'true').trim().toLowerCase() === 'true';
   }
 
   private readPositiveInt(

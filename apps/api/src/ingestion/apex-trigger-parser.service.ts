@@ -4,7 +4,7 @@ import path from 'node:path';
 import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
 import { stableId } from '../common/ids';
 import type { GraphEdge, GraphNode, GraphPayload } from '../graph/graph.types';
-import type { ParserStats } from './parser-stats';
+import { createParserStats, type ParserStats } from './parser-stats';
 
 export class ApexTriggerParseError extends Error {
   constructor(
@@ -18,25 +18,13 @@ export class ApexTriggerParseError extends Error {
 
 @Injectable()
 export class ApexTriggerParserService {
-  private lastStats: ParserStats = {
-    parser: 'apex-trigger',
-    filesDiscovered: 0,
-    filesParsed: 0,
-    filesSkipped: 0,
-    warnings: []
-  };
+  private lastStats: ParserStats = createParserStats('apex-trigger');
 
   parseFromFixtures(rootPath: string): GraphPayload {
     const triggersDir = this.resolveTriggersDir(rootPath);
     const nodesById = new Map<string, GraphNode>();
     const edgesById = new Map<string, GraphEdge>();
-    this.lastStats = {
-      parser: 'apex-trigger',
-      filesDiscovered: 0,
-      filesParsed: 0,
-      filesSkipped: 0,
-      warnings: []
-    };
+    this.lastStats = createParserStats('apex-trigger');
 
     if (!fs.existsSync(triggersDir)) {
       return { nodes: [], edges: [] };

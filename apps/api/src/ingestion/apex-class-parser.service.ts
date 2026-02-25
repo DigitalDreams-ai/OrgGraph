@@ -4,7 +4,7 @@ import path from 'node:path';
 import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
 import { stableId } from '../common/ids';
 import type { GraphEdge, GraphNode, GraphPayload } from '../graph/graph.types';
-import type { ParserStats } from './parser-stats';
+import { createParserStats, recordParserWarning, type ParserStats } from './parser-stats';
 
 export class ApexClassParseError extends Error {
   constructor(
@@ -29,26 +29,14 @@ export class ApexClassParserService {
     'Test'
   ]);
 
-  private lastStats: ParserStats = {
-    parser: 'apex-class',
-    filesDiscovered: 0,
-    filesParsed: 0,
-    filesSkipped: 0,
-    warnings: []
-  };
+  private lastStats: ParserStats = createParserStats('apex-class');
 
   parseFromFixtures(rootPath: string): GraphPayload {
     const classesDir = this.resolveClassesDir(rootPath);
     const tolerateMissingDeclaration = path.basename(classesDir) === 'classes';
     const nodesById = new Map<string, GraphNode>();
     const edgesById = new Map<string, GraphEdge>();
-    this.lastStats = {
-      parser: 'apex-class',
-      filesDiscovered: 0,
-      filesParsed: 0,
-      filesSkipped: 0,
-      warnings: []
-    };
+    this.lastStats = createParserStats('apex-class');
 
     if (!fs.existsSync(classesDir)) {
       return { nodes: [], edges: [] };
@@ -223,11 +211,39 @@ export class ApexClassParserService {
       const token = match[2];
       const resolved = variableTypes.get(token) ?? token;
       if (ApexClassParserService.IGNORED_OBJECT_TOKENS.has(resolved)) {
-        this.lastStats.warnings.push(`ignored likely non-sObject DML token "${resolved}" in ${filePath}`);
+        recordParserWarning(
+          this.lastStats,
+          'noise',
+          `ignored likely non-sObject DML token "${resolved}" in ${filePath}`
+        );
         continue;
       }
       if (resolved[0] === resolved[0].toUpperCase()) {
         writtenObjects.add(resolved);
+      }
+    }
+
+    const dbDmlRegex =
+      /\bDatabase\.(?:update|insert|upsert|delete)\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\b/gi;
+    for (const match of scrubbed.matchAll(dbDmlRegex)) {
+      const token = match[1];
+      const resolved = variableTypes.get(token) ?? token;
+      if (ApexClassParserService.IGNORED_OBJECT_TOKENS.has(resolved)) {
+        recordParserWarning(
+          this.lastStats,
+          'noise',
+          `ignored likely non-sObject Database.* token "${resolved}" in ${filePath}`
+        );
+        continue;
+      }
+      if (resolved[0] === resolved[0].toUpperCase()) {
+        writtenObjects.add(resolved);
+      } else {
+        recordParserWarning(
+          this.lastStats,
+          'ambiguous',
+          `could not confidently resolve Database.* target "${token}" in ${filePath}`
+        );
       }
     }
 
@@ -260,6 +276,25 @@ export class ApexClassParserService {
       if (type[0] === type[0].toUpperCase()) {
         map.set(variable, type);
       }
+    }
+
+    const newDecl = /\b([A-Za-z_][A-Za-z0-9_]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*new\s+([A-Za-z_][A-Za-z0-9_]*)\b/g;
+    for (const match of source.matchAll(newDecl)) {
+      const declaredType = match[1];
+      const variable = match[2];
+      const constructedType = match[3];
+      const resolved = declaredType[0] === declaredType[0].toUpperCase() ? declaredType : constructedType;
+      if (resolved[0] === resolved[0].toUpperCase()) {
+        map.set(variable, resolved);
+      }
+    }
+
+    const queryAssign =
+      /\b([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\[\s*select\s+[\s\S]*?\s+from\s+([A-Za-z_][A-Za-z0-9_]*)\b/gi;
+    for (const match of source.matchAll(queryAssign)) {
+      const variable = match[1];
+      const objectType = match[2];
+      map.set(variable, objectType);
     }
 
     return map;

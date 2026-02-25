@@ -4,6 +4,8 @@ export interface AskRequest {
   query: string;
   context?: Record<string, string | number | boolean>;
   maxCitations?: number;
+  includeLowConfidence?: boolean;
+  consistencyCheck?: boolean;
 }
 
 export interface AskCitation {
@@ -19,6 +21,11 @@ export interface AskResponse {
   plan: AskPlan;
   citations: AskCitation[];
   confidence: number;
+  consistency: {
+    checked: boolean;
+    aligned: boolean;
+    reason: string;
+  };
   status: 'implemented';
 }
 

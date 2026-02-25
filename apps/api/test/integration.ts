@@ -251,6 +251,8 @@ async function run(): Promise<void> {
       status: string;
       automations: Array<{ type: string; name: string; rel: string; confidence: string; score: number }>;
       strictMode: boolean;
+      minConfidenceApplied: string;
+      explainMode: boolean;
     };
     assert.equal(automationBody.status, 'implemented', 'automation endpoint should be implemented');
     assert.ok(automationBody.automations.length > 0, 'automation should return at least one item');
@@ -258,6 +260,21 @@ async function run(): Promise<void> {
     assert.equal(automationBody.automations[0].rel, 'TRIGGERS_ON');
     assert.equal(typeof automationBody.automations[0].score, 'number');
     assert.equal(automationBody.strictMode, false);
+    assert.equal(automationBody.minConfidenceApplied, 'medium');
+    assert.equal(automationBody.explainMode, false);
+
+    const automationExplainRes = await fetch(
+      `${base}/automation?object=Case&explain=true&includeLowConfidence=true`
+    );
+    assert.equal(automationExplainRes.status, 200, 'automation explain should return 200');
+    const automationExplainBody = (await automationExplainRes.json()) as {
+      explainMode: boolean;
+      minConfidenceApplied: string;
+      explain?: { scoring?: { relBaseScore?: Record<string, number> } };
+    };
+    assert.equal(automationExplainBody.explainMode, true);
+    assert.equal(automationExplainBody.minConfidenceApplied, 'low');
+    assert.equal(typeof automationExplainBody.explain?.scoring?.relBaseScore?.QUERIES, 'number');
 
     const automationOppRes = await fetch(`${base}/automation?object=Opportunity`);
     assert.equal(automationOppRes.status, 200, 'automation opportunity endpoint should return 200');
@@ -287,6 +304,8 @@ async function run(): Promise<void> {
       totalPaths: number;
       truncated: boolean;
       strictMode: boolean;
+      minConfidenceApplied: string;
+      explainMode: boolean;
     };
     assert.equal(impactPositive.status, 'implemented', 'impact endpoint should be implemented');
     assert.ok(
@@ -296,12 +315,25 @@ async function run(): Promise<void> {
     assert.equal(impactPositive.totalPaths >= impactPositive.paths.length, true);
     assert.equal(impactPositive.truncated, false);
     assert.equal(impactPositive.strictMode, false);
+    assert.equal(impactPositive.minConfidenceApplied, 'medium');
+    assert.equal(impactPositive.explainMode, false);
     assert.equal(typeof impactPositive.paths[0].score, 'number');
 
-    const impactStrictRes = await fetch(`${base}/impact?field=Opportunity.StageName&strict=true&debug=true`);
+    const impactStrictRes = await fetch(
+      `${base}/impact?field=Opportunity.StageName&strict=true&debug=true&explain=true`
+    );
     assert.equal(impactStrictRes.status, 200, 'impact strict/debug should return 200');
-    const impactStrict = (await impactStrictRes.json()) as { strictMode: boolean; debug?: { raw: unknown[] } };
+    const impactStrict = (await impactStrictRes.json()) as {
+      strictMode: boolean;
+      minConfidenceApplied: string;
+      explainMode: boolean;
+      explain?: { scoring?: { confidenceWeights?: Record<string, number> } };
+      debug?: { raw: unknown[] };
+    };
     assert.equal(impactStrict.strictMode, true);
+    assert.equal(impactStrict.minConfidenceApplied, 'medium');
+    assert.equal(impactStrict.explainMode, true);
+    assert.equal(typeof impactStrict.explain?.scoring?.confidenceWeights?.high, 'number');
     assert.ok(Array.isArray(impactStrict.debug?.raw));
 
     const impactNegativeRes = await fetch(`${base}/impact?field=Lead.Unused__c`);
@@ -319,10 +351,13 @@ async function run(): Promise<void> {
       status: string;
       plan: { intent: string };
       citations: unknown[];
+      consistency: { checked: boolean; aligned: boolean };
     };
     assert.equal(askPerms.status, 'implemented');
     assert.equal(askPerms.plan.intent, 'perms');
     assert.ok(askPerms.citations.length > 0, 'ask should include citations');
+    assert.equal(askPerms.consistency.checked, false);
+    assert.equal(askPerms.consistency.aligned, true);
 
     const askAutomationRes = await fetch(`${base}/ask`, {
       method: 'POST',
@@ -339,8 +374,13 @@ async function run(): Promise<void> {
       body: JSON.stringify({ query: 'What touches Opportunity.StageName?' })
     });
     assert.equal(askImpactRes.status, 201, 'ask impact should return 201');
-    const askImpact = (await askImpactRes.json()) as { plan: { intent: string } };
+    const askImpact = (await askImpactRes.json()) as {
+      plan: { intent: string };
+      consistency: { checked: boolean; aligned: boolean; reason: string };
+    };
     assert.equal(askImpact.plan.intent, 'impact');
+    assert.equal(askImpact.consistency.checked, true);
+    assert.equal(askImpact.consistency.aligned, true);
 
     const askUnknownRes = await fetch(`${base}/ask`, {
       method: 'POST',
