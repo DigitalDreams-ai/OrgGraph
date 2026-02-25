@@ -77,6 +77,11 @@ See `docker/docker-compose.yml` for service configuration. The compose file uses
 
 - API: `http://<nas-ip>:3100`
 - Web Console (Phase 4): `http://<nas-ip>:3101`
+- API Health: `GET /health`
+- API Readiness: `GET /ready`
+- API Metrics: `GET /metrics`
+- Web Health: `GET /api/health`
+- Web Readiness: `GET /api/ready`
 
 ---
 
@@ -99,6 +104,36 @@ curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -
 # Incremental refresh (skip when fixtures unchanged)
 curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"mode":"incremental"}'
 ```
+
+## Operational Environment Variables
+
+```bash
+# API
+PORT=3000
+DATABASE_URL=file:./data/orggraph.db
+PERMISSIONS_FIXTURES_PATH=fixtures/permissions
+USER_PROFILE_MAP_PATH=fixtures/permissions/user-profile-map.json
+EVIDENCE_INDEX_PATH=data/evidence/index.json
+REFRESH_STATE_PATH=data/refresh/state.json
+
+# Web
+NEXT_PUBLIC_API_BASE=http://localhost:3100
+```
+
+## Architecture Notes
+
+- API (`apps/api`): deterministic graph/evidence processing and query endpoints.
+- Web (`apps/web`): operator console and API proxy routes (`/api/query`, `/api/ready`, `/api/health`).
+- Data volume (`data/`): SQLite db, evidence index, and refresh state.
+- Fixtures (`fixtures/permissions`): deterministic parser source for refresh/rebuild.
+
+## Troubleshooting
+
+1. Health endpoints: `curl http://localhost:3100/health` and `curl http://localhost:3100/ready`
+2. Web readiness: `curl http://localhost:3101/api/ready`
+3. Metrics snapshot: `curl http://localhost:3100/metrics`
+4. If web builds fail on Synology due `@eaDir` artifacts, run `./scripts/clean-eadir.sh`
+5. Rebuild stack after updates: `docker compose -f docker/docker-compose.yml up -d --build`
 
 ---
 
