@@ -9,8 +9,6 @@ services:
       POSTGRES_USER: orggraph
       POSTGRES_PASSWORD: orggraph
       POSTGRES_DB: orggraph
-    ports:
-      - "5432:5432"
     volumes:
       - ../data/postgres:/var/lib/postgresql/data
     healthcheck:
