@@ -19,6 +19,7 @@ import { PermissionsParserService } from './permissions-parser.service';
   ],
   controllers: [IngestionController],
   exports: [
+    IngestionService,
     PermissionsParserService,
     ApexTriggerParserService,
     ApexClassParserService,

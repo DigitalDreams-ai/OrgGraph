@@ -47,3 +47,21 @@ export function resolveRefreshStatePath(statePath?: string): string {
   const raw = statePath?.trim() || 'data/refresh/state.json';
   return path.resolve(workspaceRoot, raw);
 }
+
+export function resolveSfProjectPath(projectPath?: string): string {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const raw = projectPath?.trim() || 'data/sf-project';
+  return path.resolve(workspaceRoot, raw);
+}
+
+export function resolveSfManifestPath(manifestPath?: string): string {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const raw = manifestPath?.trim() || 'manifest/package.xml';
+  return path.resolve(workspaceRoot, raw);
+}
+
+export function resolveSfParsePath(parsePath?: string): string {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const raw = parsePath?.trim() || 'data/sf-project/force-app/main/default';
+  return path.resolve(workspaceRoot, raw);
+}
