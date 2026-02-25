@@ -60,6 +60,7 @@ prisma/migrations/**/migration_lock.toml
 # Misc
 *.tsbuildinfo
 .cache/
+artifacts/
 
 # docs
 docs/
