@@ -72,8 +72,11 @@ This document describes how OrgGraph works end-to-end, from startup through retr
   - parser stats
   - counts
   - ontology summary
+  - semantic diff summary
+  - meaning change summary
   - mode and timestamp
 - Audit log appends run summary for historical trace.
+- Semantic snapshot file stores compact digests and type/relation counts for deterministic drift comparison.
 
 ## 11. Query Serving
 - Query endpoints operate on graph + evidence:
@@ -86,6 +89,7 @@ This document describes how OrgGraph works end-to-end, from startup through retr
   - `/ask/proof/:proofId` (proof artifact lookup)
   - `/ask/replay` (deterministic replay check by replay token/proof id)
 - `/ask` uses planner/orchestration but remains grounded in deterministic graph results and evidence citations.
+- `/ask` also writes proof artifacts and metric timeline records for replay and trend tracking.
 
 ## 12. Web Operator Layer
 - Web UI posts to `/api/query` proxy.
