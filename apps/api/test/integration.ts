@@ -40,11 +40,13 @@ async function run(): Promise<void> {
   );
 
   process.env.DATABASE_URL = `file:${dbPath}`;
+  process.env.GRAPH_BACKEND = 'sqlite';
   process.env.PERMISSIONS_FIXTURES_PATH = path.join(workspaceRoot, 'fixtures', 'permissions');
   process.env.USER_PROFILE_MAP_PATH = userMapPath;
   process.env.EVIDENCE_INDEX_PATH = evidencePath;
   process.env.SEMANTIC_SNAPSHOT_PATH = semanticSnapshotPath;
   process.env.SF_INTEGRATION_ENABLED = 'false';
+  process.env.ASK_DEFAULT_MODE = 'deterministic';
   process.env.LLM_ENABLED = 'true';
   process.env.LLM_PROVIDER = 'anthropic';
   process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
@@ -214,7 +216,9 @@ async function run(): Promise<void> {
     });
     assert.equal(orgRetrieveBadBodyRes.status, 400, 'org retrieve should validate boolean body flags');
 
-    const brokenRoot = fs.mkdtempSync(path.join(workspaceRoot, 'fixtures', 'tmp-broken-'));
+    const brokenTempBase = path.join(workspaceRoot, 'data');
+    fs.mkdirSync(brokenTempBase, { recursive: true });
+    const brokenRoot = fs.mkdtempSync(path.join(brokenTempBase, 'tmp-broken-'));
     const brokenProfilesPath = path.join(brokenRoot, 'profiles');
     fs.mkdirSync(brokenProfilesPath, { recursive: true });
     fs.writeFileSync(

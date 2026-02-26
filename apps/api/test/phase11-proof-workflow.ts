@@ -27,6 +27,7 @@ async function run(): Promise<void> {
   );
 
   process.env.DATABASE_URL = `file:${dbPath}`;
+  process.env.GRAPH_BACKEND = 'sqlite';
   process.env.PERMISSIONS_FIXTURES_PATH = path.join(workspaceRoot, 'fixtures', 'permissions');
   process.env.USER_PROFILE_MAP_PATH = userMapPath;
   process.env.EVIDENCE_INDEX_PATH = evidencePath;
