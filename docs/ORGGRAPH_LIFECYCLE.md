@@ -82,6 +82,9 @@ This document describes how OrgGraph works end-to-end, from startup through retr
   - `/automation`
   - `/impact`
   - `/ask`
+- Phase 11 additions for deterministic traceability:
+  - `/ask/proof/:proofId` (proof artifact lookup)
+  - `/ask/replay` (deterministic replay check by replay token/proof id)
 - `/ask` uses planner/orchestration but remains grounded in deterministic graph results and evidence citations.
 
 ## 12. Web Operator Layer

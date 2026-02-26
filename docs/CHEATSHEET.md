@@ -41,6 +41,8 @@ curl "http://localhost:3100/perms/system?user=sbingham@shulman-hill.com.uat&perm
 curl "http://localhost:3100/automation?object=Opportunity"
 curl "http://localhost:3100/impact?field=Opportunity.StageName"
 curl -X POST http://localhost:3100/ask -H 'content-type: application/json' -d '{"query":"What touches Opportunity.StageName?"}'
+curl "http://localhost:3100/ask/proof/<proofId>"
+curl -X POST http://localhost:3100/ask/replay -H 'content-type: application/json' -d '{"replayToken":"<replayToken>"}'
 ```
 
 ## Web Proxy (`/api/query`)

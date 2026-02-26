@@ -33,10 +33,10 @@ Goal: build a true differentiator by making context a deterministic, composable 
 
 ## 1. Define the Semantic Core (No Implementation Drift)
 
-- [ ] Adopt and enforce canonical terminology from `ORGGRAPH_LEXICON.md` in API/docs
-- [ ] Define `SCU` (Semantic Context Unit) schema:
+- [x] Adopt and enforce canonical terminology from `ORGGRAPH_LEXICON.md` in API/docs
+- [x] Define `SCU` (Semantic Context Unit) schema:
 - Identity, type, invariants, dependencies, provenance, confidence policy
-- [ ] Define composition operators:
+- [x] Define composition operators:
 - `overlay`, `intersect`, `constrain`, `specialize`, `supersede`
 - [ ] Define conflict semantics:
 - what happens when two SCUs disagree
@@ -44,17 +44,17 @@ Goal: build a true differentiator by making context a deterministic, composable 
 
 ## 2. Build Derivation as First-Class Data
 
-- [ ] Add typed derivation edges:
+- [x] Add typed derivation edges:
 - `DERIVED_FROM`, `SUPPORTS`, `CONTRADICTS`, `REQUIRES`, `INVALIDATED_BY`, `SUPERSEDES`
-- [ ] Add `/ask` trace mode returning:
+- [x] Add `/ask` trace mode returning:
 - selected plan, executed operators, evidence IDs, rejected branches
-- [ ] Ensure trace can be replayed deterministically from persisted state
+- [x] Ensure trace can be replayed deterministically from persisted state
 
 ## 3. Quantify Meaning (Deterministically)
 
-- [ ] Implement baseline metrics:
+- [x] Implement baseline metrics:
 - `grounding_score`, `constraint_satisfaction`, `ambiguity_score`, `stability_score`, `delta_novelty`
-- [ ] Add per-answer quality envelope:
+- [x] Add per-answer quality envelope:
 - hard fail if grounding/constraints below threshold
 - [ ] Track these metrics over time per org snapshot
 

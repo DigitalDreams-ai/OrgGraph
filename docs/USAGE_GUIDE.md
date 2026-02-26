@@ -108,6 +108,24 @@ curl -X POST http://localhost:3100/ask \
   -d '{"query":"What touches Opportunity.StageName?"}'
 ```
 
+Ask responses now include deterministic proof fields:
+- `trustLevel`: `trusted`, `conditional`, or `refused`
+- `policy`: applied thresholds for grounding/constraints/ambiguity
+- `metrics`: deterministic meaning metrics
+- `proof`: `proofId`, `replayToken`, `snapshotId`, operators, rejected branches
+
+Lookup a stored proof artifact:
+```bash
+curl "http://localhost:3100/ask/proof/<proofId>"
+```
+
+Replay a proof deterministically:
+```bash
+curl -X POST http://localhost:3100/ask/replay \
+  -H 'content-type: application/json' \
+  -d '{"replayToken":"<replayToken>"}'
+```
+
 ## 9. Web Query Proxy
 Web route supports either `kind` or `endpoint`, and either `payload` or `params`.
 
