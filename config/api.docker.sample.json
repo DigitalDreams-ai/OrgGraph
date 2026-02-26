@@ -12,6 +12,8 @@
   "MIN_CONFIDENCE_DEFAULT": "medium",
   "ASK_CONSISTENCY_CHECK_ENABLED": true,
   "ASK_DEFAULT_MODE": "llm_assist",
+  "ASK_LLM_MAX_LATENCY_MS": 12000,
+  "ASK_LLM_COST_BUDGET_USD": 0.02,
   "ASK_PROOF_STORE_PATH": "/app/data/ask/proofs.jsonl",
   "ASK_METRICS_PATH": "/app/data/ask/metrics.jsonl",
   "META_CONTEXT_PATH": "/app/data/meta/context.json",

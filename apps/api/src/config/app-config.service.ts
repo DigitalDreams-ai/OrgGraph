@@ -57,6 +57,8 @@ export class AppConfigService {
     this.validateOptionalString('SF_AUTO_REFRESH_AFTER_RETRIEVE');
     this.validateOptionalString('MIN_CONFIDENCE_DEFAULT');
     this.validateOptionalString('ASK_CONSISTENCY_CHECK_ENABLED');
+    this.validateOptionalString('ASK_LLM_MAX_LATENCY_MS');
+    this.validateOptionalString('ASK_LLM_COST_BUDGET_USD');
     this.validateOptionalString('ASK_DEFAULT_MODE');
     this.validateOptionalString('LLM_ENABLED');
     this.validateOptionalString('LLM_PROVIDER');
@@ -311,6 +313,14 @@ export class AppConfigService {
       throw new Error(`Invalid ASK_DEFAULT_MODE: ${raw}`);
     }
     return raw;
+  }
+
+  askLlmMaxLatencyMs(): number {
+    return this.readPositiveInt('ASK_LLM_MAX_LATENCY_MS', 12000, 500, 120000);
+  }
+
+  askLlmCostBudgetUsd(): number {
+    return this.readFloatInRange('ASK_LLM_COST_BUDGET_USD', 0.02, 0, 5);
   }
 
   llmEnabled(): boolean {

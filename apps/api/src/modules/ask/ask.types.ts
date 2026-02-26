@@ -106,6 +106,12 @@ export interface AskResponse {
     model?: string;
     fallbackReason?: string;
     latencyMs?: number;
+    tokenUsage?: {
+      input: number;
+      output: number;
+      total: number;
+    };
+    estimatedCostUsd?: number;
   };
   consistency: {
     checked: boolean;
@@ -257,6 +263,19 @@ export interface AskMetricsExportResponse {
     avgAmbiguityScore: number;
     avgRiskSurfaceScore: number;
     latestRecordedAt: string;
+  }>;
+  byProvider: Array<{
+    provider: LlmProviderName;
+    model?: string;
+    count: number;
+    successCount: number;
+    errorCount: number;
+    errorRate: number;
+    avgLatencyMs?: number;
+    avgInputTokens?: number;
+    avgOutputTokens?: number;
+    avgTotalTokens?: number;
+    avgEstimatedCostUsd?: number;
   }>;
 }
 

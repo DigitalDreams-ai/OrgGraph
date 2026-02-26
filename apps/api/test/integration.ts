@@ -51,9 +51,15 @@ async function run(): Promise<void> {
   process.env.ASK_DEFAULT_MODE = 'deterministic';
   process.env.LLM_ENABLED = 'true';
   process.env.LLM_PROVIDER = 'anthropic';
+  process.env.LLM_ALLOW_PROVIDER_OVERRIDE = 'true';
+  process.env.ASK_LLM_COST_BUDGET_USD = '0.05';
   process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
   process.env.ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001';
   const mockAnthropicUrl = 'https://anthropic.mock.local/v1/messages';
+  process.env.OPENAI_API_KEY = 'test-openai-key';
+  process.env.OPENAI_MODEL = 'gpt-4.1-mini';
+  const mockOpenAiUrl = 'https://openai.mock.local/v1/chat/completions';
+  process.env.OPENAI_BASE_URL = mockOpenAiUrl;
   process.env.ANTHROPIC_BASE_URL = mockAnthropicUrl;
 
   const originalFetch = globalThis.fetch.bind(globalThis);
@@ -66,6 +72,10 @@ async function run(): Promise<void> {
     if (url === mockAnthropicUrl) {
       return new Response(
         JSON.stringify({
+          usage: {
+            input_tokens: 120,
+            output_tokens: 55
+          },
           content: [
             {
               type: 'text',
@@ -74,6 +84,32 @@ async function run(): Promise<void> {
                 reasoning_summary: 'Mocked for integration coverage.',
                 citations_used: [1]
               })
+            }
+          ]
+        }),
+        {
+          status: 200,
+          headers: { 'content-type': 'application/json' }
+        }
+      );
+    }
+    if (url === mockOpenAiUrl) {
+      return new Response(
+        JSON.stringify({
+          usage: {
+            prompt_tokens: 110,
+            completion_tokens: 44,
+            total_tokens: 154
+          },
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  answer: 'Mocked OpenAI answer grounded in citation [1].',
+                  reasoning_summary: 'Mocked for integration coverage.',
+                  citations_used: [1]
+                })
+              }
             }
           ]
         }),
@@ -739,12 +775,54 @@ async function run(): Promise<void> {
     const askLlmAnthropic = (await askLlmAnthropicRes.json()) as {
       mode: string;
       answer: string;
-      llm: { used: boolean; provider: string; model?: string };
+      deterministicAnswer: string;
+      plan: { intent: string };
+      llm: {
+        used: boolean;
+        provider: string;
+        model?: string;
+        tokenUsage?: { total: number };
+        estimatedCostUsd?: number;
+      };
     };
     assert.equal(askLlmAnthropic.mode, 'llm_assist');
     assert.equal(askLlmAnthropic.llm.used, true);
     assert.equal(askLlmAnthropic.llm.provider, 'anthropic');
     assert.match(askLlmAnthropic.answer, /Mocked Anthropic answer/);
+    assert.ok((askLlmAnthropic.llm.tokenUsage?.total ?? 0) > 0);
+    assert.ok((askLlmAnthropic.llm.estimatedCostUsd ?? 0) > 0);
+
+    const askLlmOpenAiRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'What touches Opportunity.StageName?',
+        mode: 'llm_assist',
+        llm: { provider: 'openai' }
+      })
+    });
+    assert.equal(askLlmOpenAiRes.status, 201, 'ask llm openai should return 201');
+    const askLlmOpenAi = (await askLlmOpenAiRes.json()) as {
+      mode: string;
+      answer: string;
+      deterministicAnswer: string;
+      plan: { intent: string };
+      llm: {
+        used: boolean;
+        provider: string;
+        model?: string;
+        tokenUsage?: { total: number };
+        estimatedCostUsd?: number;
+      };
+    };
+    assert.equal(askLlmOpenAi.mode, 'llm_assist');
+    assert.equal(askLlmOpenAi.llm.used, true);
+    assert.equal(askLlmOpenAi.llm.provider, 'openai');
+    assert.match(askLlmOpenAi.answer, /Mocked OpenAI answer/);
+    assert.ok((askLlmOpenAi.llm.tokenUsage?.total ?? 0) > 0);
+    assert.ok((askLlmOpenAi.llm.estimatedCostUsd ?? 0) > 0);
+    assert.equal(askLlmOpenAi.plan.intent, askLlmAnthropic.plan.intent);
+    assert.equal(askLlmOpenAi.deterministicAnswer, askLlmAnthropic.deterministicAnswer);
 
     const askProofRes = await fetch(`${base}/ask/proof/${askPerms.proof.proofId}`);
     assert.equal(askProofRes.status, 200, 'ask proof lookup should return 200');
@@ -833,10 +911,17 @@ async function run(): Promise<void> {
       status: string;
       totalRecords: number;
       bySnapshot: Array<{ snapshotId: string; count: number }>;
+      byProvider: Array<{ provider: string; count: number; successCount: number; errorRate: number }>;
     };
     assert.equal(askMetricsExportBody.status, 'implemented');
     assert.ok(askMetricsExportBody.totalRecords > 0);
     assert.ok(askMetricsExportBody.bySnapshot.length > 0);
+    assert.ok(askMetricsExportBody.byProvider.length > 0);
+    assert.ok(
+      askMetricsExportBody.byProvider.some(
+        (provider) => provider.provider === 'anthropic' || provider.provider === 'openai'
+      )
+    );
 
     const metaContextRes = await fetch(`${base}/meta/context`);
     assert.equal(metaContextRes.status, 200, 'meta context should return 200');

@@ -168,13 +168,27 @@ export class LlmService {
       }
 
       const body = (await response.json()) as {
+        usage?: {
+          prompt_tokens?: number;
+          completion_tokens?: number;
+          total_tokens?: number;
+        };
         choices?: Array<{ message?: { content?: string } }>;
       };
       const content = body.choices?.[0]?.message?.content;
       if (!content) {
         throw new Error('OpenAI response missing message content');
       }
-      return parseLlmJsonResponse(content, 'openai', model);
+      const tokenUsage = this.normalizeTokenUsage(
+        body.usage?.prompt_tokens,
+        body.usage?.completion_tokens,
+        body.usage?.total_tokens
+      );
+      return {
+        ...parseLlmJsonResponse(content, 'openai', model),
+        tokenUsage,
+        estimatedCostUsd: this.estimateCostUsd('openai', model, tokenUsage)
+      };
     } finally {
       clearTimeout(timeout);
     }
@@ -221,6 +235,10 @@ export class LlmService {
       }
 
       const body = (await response.json()) as {
+        usage?: {
+          input_tokens?: number;
+          output_tokens?: number;
+        };
         content?: Array<{ type?: string; text?: string }>;
       };
       const text = body.content?.find((item) => item.type === 'text')?.text;
@@ -228,7 +246,15 @@ export class LlmService {
         throw new Error('Anthropic response missing text content');
       }
 
-      return parseLlmJsonResponse(text, 'anthropic', model);
+      const tokenUsage = this.normalizeTokenUsage(
+        body.usage?.input_tokens,
+        body.usage?.output_tokens
+      );
+      return {
+        ...parseLlmJsonResponse(text, 'anthropic', model),
+        tokenUsage,
+        estimatedCostUsd: this.estimateCostUsd('anthropic', model, tokenUsage)
+      };
     } finally {
       clearTimeout(timeout);
     }
@@ -268,5 +294,57 @@ export class LlmService {
     } catch {
       return 'failed to read error response body';
     }
+  }
+
+  private normalizeTokenUsage(
+    inputRaw: number | undefined,
+    outputRaw: number | undefined,
+    totalRaw?: number
+  ): { input: number; output: number; total: number } | undefined {
+    const input = Number.isFinite(inputRaw) ? Math.max(0, Math.trunc(inputRaw as number)) : undefined;
+    const output = Number.isFinite(outputRaw)
+      ? Math.max(0, Math.trunc(outputRaw as number))
+      : undefined;
+    if (input === undefined || output === undefined) {
+      return undefined;
+    }
+    const total = Number.isFinite(totalRaw)
+      ? Math.max(0, Math.trunc(totalRaw as number))
+      : input + output;
+    return { input, output, total };
+  }
+
+  private estimateCostUsd(
+    provider: 'openai' | 'anthropic',
+    model: string,
+    tokenUsage?: { input: number; output: number; total: number }
+  ): number | undefined {
+    if (!tokenUsage) {
+      return undefined;
+    }
+    const normalizedModel = model.toLowerCase();
+    const ratesByProvider: Record<
+      'openai' | 'anthropic',
+      Array<{ match: RegExp; inputPerMillionUsd: number; outputPerMillionUsd: number }>
+    > = {
+      openai: [
+        { match: /gpt-4\.1-mini/, inputPerMillionUsd: 0.4, outputPerMillionUsd: 1.6 },
+        { match: /gpt-4\.1/, inputPerMillionUsd: 2, outputPerMillionUsd: 8 },
+        { match: /gpt-4o-mini/, inputPerMillionUsd: 0.15, outputPerMillionUsd: 0.6 }
+      ],
+      anthropic: [
+        { match: /claude-haiku-4-5|claude-3-5-haiku/, inputPerMillionUsd: 0.8, outputPerMillionUsd: 4 },
+        { match: /claude-3-7-sonnet|claude-sonnet-4/, inputPerMillionUsd: 3, outputPerMillionUsd: 15 }
+      ]
+    };
+    const selectedRate =
+      ratesByProvider[provider].find((item) => item.match.test(normalizedModel)) ??
+      (provider === 'openai'
+        ? { match: /.*/, inputPerMillionUsd: 2, outputPerMillionUsd: 8 }
+        : { match: /.*/, inputPerMillionUsd: 3, outputPerMillionUsd: 15 });
+
+    const inputCost = (tokenUsage.input / 1_000_000) * selectedRate.inputPerMillionUsd;
+    const outputCost = (tokenUsage.output / 1_000_000) * selectedRate.outputPerMillionUsd;
+    return Number((inputCost + outputCost).toFixed(8));
   }
 }
