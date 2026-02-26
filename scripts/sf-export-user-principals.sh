@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-ROOT_DIR="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
+ROOT_DIR="$(env CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
 . "$ROOT_DIR/scripts/load-dotenv.sh"
 
 SF_ALIAS="${SF_ALIAS:-orggraph-sandbox}"

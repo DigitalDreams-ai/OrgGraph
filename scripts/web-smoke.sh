@@ -12,7 +12,7 @@ WEB_SMOKE_REFRESH_MODE="${WEB_SMOKE_REFRESH_MODE:-incremental}"
 mkdir -p "$ARTIFACT_DIR"
 
 health_code="$(curl -sS -o "$ARTIFACT_DIR/web-health.json" -w '%{http_code}' "$BASE_URL/api/health")"
-for i in $(seq 1 20); do
+for _ in $(seq 1 20); do
   health_code="$(curl -sS -o "$ARTIFACT_DIR/web-health.json" -w '%{http_code}' "$BASE_URL/api/health" || true)"
   if [ "$health_code" = "200" ]; then
     break
@@ -24,7 +24,7 @@ if [ "$health_code" != "200" ]; then
   exit 1
 fi
 
-for i in $(seq 1 25); do
+for _ in $(seq 1 25); do
   ready_code="$(curl -sS -o "$ARTIFACT_DIR/web-ready.json" -w '%{http_code}' "$BASE_URL/api/ready" || true)"
   if [ "$ready_code" = "200" ]; then
     break
