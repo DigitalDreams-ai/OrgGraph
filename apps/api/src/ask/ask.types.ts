@@ -2,12 +2,28 @@ import type { AskPlan } from '../planner/planner.types';
 import type { LlmProviderName } from '../llm/llm.types';
 import type { CompositionOperator, DerivationRelation } from '@orggraph/ontology';
 
+export type AskTraceLevel = 'compact' | 'standard' | 'full';
+
+export type AskRejectionReasonCode =
+  | 'NO_OBJECT_OR_FIELD_GRANT'
+  | 'NO_IMPACT_PATHS'
+  | 'NO_AUTOMATION_MATCH'
+  | 'NO_DETERMINISTIC_INTENT'
+  | 'POLICY_ENVELOPE_REJECTED';
+
+export interface AskRejectedBranch {
+  branch: string;
+  reasonCode: AskRejectionReasonCode;
+  reason: string;
+}
+
 export interface AskRequest {
   query: string;
   context?: Record<string, string | number | boolean>;
   maxCitations?: number;
   includeLowConfidence?: boolean;
   consistencyCheck?: boolean;
+  traceLevel?: AskTraceLevel;
   mode?: 'deterministic' | 'llm_assist';
   llm?: {
     provider?: LlmProviderName;
@@ -56,12 +72,14 @@ export interface AskProofArtifact {
   generatedAt: string;
   snapshotId: string;
   policyId: string;
+  traceLevel: AskTraceLevel;
   request: AskRequest;
   plan: AskPlan;
   operatorsExecuted: CompositionOperator[];
-  rejectedBranches: Array<{ branch: string; reason: string }>;
+  rejectedBranches: AskRejectedBranch[];
   derivationEdges: AskDerivationEdge[];
   citationIds: string[];
+  executionTrace?: string[];
   trustLevel: AskTrustLevel;
   metrics: AskMeaningMetrics;
   responseSummary: {
@@ -69,6 +87,8 @@ export interface AskProofArtifact {
     deterministicAnswer: string;
     confidence: number;
     mode: 'deterministic' | 'llm_assist';
+    corePayloadFingerprint: string;
+    corePayloadJson: string;
   };
 }
 
@@ -99,8 +119,9 @@ export interface AskResponse {
     proofId: string;
     replayToken: string;
     snapshotId: string;
+    traceLevel: AskTraceLevel;
     operatorsExecuted: CompositionOperator[];
-    rejectedBranches: Array<{ branch: string; reason: string }>;
+    rejectedBranches: AskRejectedBranch[];
   };
   status: 'implemented';
 }
@@ -119,6 +140,7 @@ export interface AskReplayResponse {
   replayToken: string;
   proofId: string;
   matched: boolean;
+  corePayloadMatched: boolean;
   snapshotId: string;
   policyId: string;
   original: {
