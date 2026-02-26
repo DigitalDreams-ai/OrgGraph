@@ -115,6 +115,7 @@ export interface AskResponse {
   policy: AskPolicyEnvelope;
   metrics: AskMeaningMetrics;
   trustLevel: AskTrustLevel;
+  refusalReasons?: string[];
   proof: {
     proofId: string;
     replayToken: string;
@@ -141,6 +142,7 @@ export interface AskReplayResponse {
   proofId: string;
   matched: boolean;
   corePayloadMatched: boolean;
+  metricsMatched: boolean;
   snapshotId: string;
   policyId: string;
   original: {
@@ -149,6 +151,7 @@ export interface AskReplayResponse {
     confidence: number;
     mode: 'deterministic' | 'llm_assist';
     trustLevel: AskTrustLevel;
+    metrics: AskMeaningMetrics;
   };
   replayed: {
     answer: string;
@@ -156,8 +159,47 @@ export interface AskReplayResponse {
     confidence: number;
     mode: 'deterministic' | 'llm_assist';
     trustLevel: AskTrustLevel;
+    metrics: AskMeaningMetrics;
   };
   status: 'implemented';
+}
+
+export interface AskPolicyValidateRequest {
+  groundingThreshold?: number;
+  constraintThreshold?: number;
+  ambiguityMaxThreshold?: number;
+  dryRun?: boolean;
+}
+
+export interface AskPolicyValidateResponse {
+  policyId: string;
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+  thresholds: {
+    groundingThreshold: number;
+    constraintThreshold: number;
+    ambiguityMaxThreshold: number;
+  };
+  dryRun: boolean;
+  status: 'implemented';
+}
+
+export interface AskMetricsExportResponse {
+  status: 'implemented';
+  totalRecords: number;
+  bySnapshot: Array<{
+    snapshotId: string;
+    count: number;
+    trusted: number;
+    conditional: number;
+    refused: number;
+    avgGroundingScore: number;
+    avgConstraintSatisfaction: number;
+    avgAmbiguityScore: number;
+    avgRiskSurfaceScore: number;
+    latestRecordedAt: string;
+  }>;
 }
 
 export interface AskInternalErrorEnvelope {

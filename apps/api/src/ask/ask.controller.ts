@@ -11,6 +11,9 @@ import {
 import { AskService } from './ask.service';
 import type {
   AskInternalErrorEnvelope,
+  AskMetricsExportResponse,
+  AskPolicyValidateRequest,
+  AskPolicyValidateResponse,
   AskProofLookupResponse,
   AskReplayRequest,
   AskReplayResponse,
@@ -137,6 +140,34 @@ export class AskController {
       throw new BadRequestException('proofId is required');
     }
     return this.askService.getProof(proofId.trim());
+  }
+
+  @Get('/ask/metrics/export')
+  exportMetrics(): AskMetricsExportResponse {
+    return this.askService.exportMetrics();
+  }
+
+  @Post('/ask/policy/validate')
+  validatePolicy(@Body() body: AskPolicyValidateRequest): AskPolicyValidateResponse {
+    if (body === undefined || body === null) {
+      return this.askService.validatePolicy({ dryRun: false });
+    }
+    if (typeof body !== 'object' || Array.isArray(body)) {
+      throw new BadRequestException('body must be an object');
+    }
+    for (const [name, value] of Object.entries({
+      groundingThreshold: body.groundingThreshold,
+      constraintThreshold: body.constraintThreshold,
+      ambiguityMaxThreshold: body.ambiguityMaxThreshold
+    })) {
+      if (value !== undefined && (typeof value !== 'number' || Number.isNaN(value))) {
+        throw new BadRequestException(`${name} must be a number`);
+      }
+    }
+    if (body.dryRun !== undefined && typeof body.dryRun !== 'boolean') {
+      throw new BadRequestException('dryRun must be a boolean');
+    }
+    return this.askService.validatePolicy(body);
   }
 
   @Post('/ask/replay')
