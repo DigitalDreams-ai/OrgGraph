@@ -44,6 +44,7 @@ curl "http://localhost:3100/impact?field=Opportunity.StageName"
 curl -X POST http://localhost:3100/ask -H 'content-type: application/json' -d '{"query":"What touches Opportunity.StageName?"}'
 curl "http://localhost:3100/ask/proof/<proofId>"
 curl -X POST http://localhost:3100/ask/replay -H 'content-type: application/json' -d '{"replayToken":"<replayToken>"}'
+curl -X POST http://localhost:3100/ask -H 'content-type: application/json' -d '{"query":"What touches Opportunity.StageName?","traceLevel":"full","mode":"deterministic"}'
 ```
 
 ## Web Proxy (`/api/query`)
@@ -63,6 +64,8 @@ npm run phase7:regression
 npm run ingest:report
 npm exec --yes pnpm@9.12.3 -- --filter api test:phase11-proof
 npm exec --yes pnpm@9.12.3 -- --filter api test:phase11-sandbox
+npm run phase12:replay-regression
+npm run phase12:replay-load
 ```
 
 ## Fast Fixes

@@ -51,6 +51,15 @@ export class AskController {
     }
 
     if (
+      body.traceLevel !== undefined &&
+      body.traceLevel !== 'compact' &&
+      body.traceLevel !== 'standard' &&
+      body.traceLevel !== 'full'
+    ) {
+      throw new BadRequestException("traceLevel must be 'compact', 'standard', or 'full'");
+    }
+
+    if (
       body.mode !== undefined &&
       body.mode !== 'deterministic' &&
       body.mode !== 'llm_assist'

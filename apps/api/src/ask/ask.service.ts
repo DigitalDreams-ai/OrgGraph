@@ -16,10 +16,12 @@ import type {
   AskMeaningMetrics,
   AskProofArtifact,
   AskProofLookupResponse,
+  AskRejectedBranch,
   AskReplayRequest,
   AskReplayResponse,
   AskRequest,
   AskResponse,
+  AskTraceLevel,
   AskTrustLevel
 } from './ask.types';
 
@@ -76,7 +78,10 @@ export class AskService {
 
     const replayRun = await this.execute(proof.request, false);
     const replayed = replayRun.response;
+    const replayedCorePayloadJson = this.buildCorePayloadJson(replayed);
+    const corePayloadMatched = replayedCorePayloadJson === proof.responseSummary.corePayloadJson;
     const matched =
+      corePayloadMatched &&
       replayed.deterministicAnswer === proof.responseSummary.deterministicAnswer &&
       replayed.plan.intent === proof.plan.intent &&
       replayed.policy.policyId === proof.policyId &&
@@ -86,6 +91,7 @@ export class AskService {
       replayToken: proof.replayToken,
       proofId: proof.proofId,
       matched,
+      corePayloadMatched,
       snapshotId: proof.snapshotId,
       policyId: proof.policyId,
       original: {
@@ -115,6 +121,7 @@ export class AskService {
     const consistencyCheck =
       input.consistencyCheck ?? this.configService.askConsistencyCheckEnabled();
     const maxCitations = Math.max(1, Math.min(20, input.maxCitations ?? 5));
+    const traceLevel: AskTraceLevel = input.traceLevel ?? 'standard';
     const snapshotId = this.readSnapshotId();
     const policy = {
       policyId: this.buildPolicyId(),
@@ -151,7 +158,15 @@ export class AskService {
       reason: 'consistency check not applicable'
     };
     const operatorsExecuted: CompositionOperator[] = [COMPOSITION_OPERATORS.SPECIALIZE];
-    const rejectedBranches: Array<{ branch: string; reason: string }> = [];
+    const executionTrace: string[] = [`intent=${plan.intent}`, `traceLevel=${traceLevel}`];
+    const rejectedBranches: AskRejectedBranch[] = [];
+    const reject = (
+      branch: string,
+      reasonCode: AskRejectedBranch['reasonCode'],
+      reason: string
+    ): void => {
+      rejectedBranches.push({ branch, reasonCode, reason });
+    };
 
     if (plan.intent === 'mixed') {
       operatorsExecuted.push(
@@ -168,6 +183,10 @@ export class AskService {
       answer =
         `Release-risk + permission-impact: ${releaseRisk} risk for changing ${field}. ` +
         `${perms.explanation}. ${impact.explanation}.`;
+      executionTrace.push(
+        `mixed.perms.granted=${String(perms.granted)}`,
+        `mixed.impact.paths=${String(impact.totalPaths)}`
+      );
       deterministicAnswer = answer;
       confidence = perms.granted && impact.totalPaths > 0 ? 0.9 : 0.72;
       consistency = {
@@ -176,16 +195,10 @@ export class AskService {
         reason: 'mixed intent composed deterministically from perms + impact'
       };
       if (!perms.granted) {
-        rejectedBranches.push({
-          branch: 'queries.perms',
-          reason: 'user lacks object/field grant for release scenario'
-        });
+        reject('queries.perms', 'NO_OBJECT_OR_FIELD_GRANT', 'user lacks object/field grant for release scenario');
       }
       if (impact.totalPaths === 0) {
-        rejectedBranches.push({
-          branch: 'analysis.impact',
-          reason: 'no impact paths found for release scenario'
-        });
+        reject('analysis.impact', 'NO_IMPACT_PATHS', 'no impact paths found for release scenario');
       }
     } else if (plan.intent === 'perms') {
       operatorsExecuted.push(COMPOSITION_OPERATORS.CONSTRAIN, COMPOSITION_OPERATORS.INTERSECT);
@@ -201,10 +214,11 @@ export class AskService {
         reason: 'perms intent uses deterministic query directly'
       };
       if (!result.granted) {
-        rejectedBranches.push({
-          branch: 'queries.perms',
-          reason: 'no granting path found for requested principal/object'
-        });
+        reject(
+          'queries.perms',
+          'NO_OBJECT_OR_FIELD_GRANT',
+          'no granting path found for requested principal/object'
+        );
       }
     } else if (plan.intent === 'automation') {
       operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.INTERSECT);
@@ -227,10 +241,11 @@ export class AskService {
           : 'consistency check disabled'
       };
       if (result.automations.length === 0) {
-        rejectedBranches.push({
-          branch: 'analysis.automation',
-          reason: 'no automation relation matched for requested object'
-        });
+        reject(
+          'analysis.automation',
+          'NO_AUTOMATION_MATCH',
+          'no automation relation matched for requested object'
+        );
       }
     } else if (plan.intent === 'impact') {
       operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.CONSTRAIN);
@@ -273,16 +288,10 @@ export class AskService {
         };
       }
       if (result.paths.length === 0) {
-        rejectedBranches.push({
-          branch: 'analysis.impact',
-          reason: 'no impact paths found for requested field'
-        });
+        reject('analysis.impact', 'NO_IMPACT_PATHS', 'no impact paths found for requested field');
       }
     } else {
-      rejectedBranches.push({
-        branch: 'planner.default',
-        reason: 'no deterministic graph intent matched query'
-      });
+      reject('planner.default', 'NO_DETERMINISTIC_INTENT', 'no deterministic graph intent matched query');
     }
     deterministicAnswer = answer;
 
@@ -389,10 +398,7 @@ export class AskService {
         used: false,
         fallbackReason: llm.fallbackReason ?? 'policy envelope rejected response'
       };
-      rejectedBranches.push({
-        branch: 'policy.envelope',
-        reason: 'grounding/constraint thresholds not met'
-      });
+      reject('policy.envelope', 'POLICY_ENVELOPE_REJECTED', 'grounding/constraint thresholds not met');
     }
 
     const derivationEdges = [
@@ -413,27 +419,41 @@ export class AskService {
     const proofSeed = `${snapshotId}|${policy.policyId}|${input.query}|${deterministicAnswer}|${mode}`;
     const proofId = stableId('proof', proofSeed, includeCreatedAtInProof ? new Date().toISOString() : '');
     const replayToken = stableId('trace', proofId, snapshotId, policy.policyId);
-    const proof: AskProofArtifact = {
+    const corePayloadJson = this.buildCorePayloadJson({
+      deterministicAnswer,
+      mode,
+      plan,
+      policyId: policy.policyId,
+      trustLevel,
+      metrics
+    });
+    const corePayloadFingerprint = stableId('core', corePayloadJson);
+    const fullProof: AskProofArtifact = {
       proofId,
       replayToken,
       generatedAt: new Date().toISOString(),
       snapshotId,
       policyId: policy.policyId,
+      traceLevel,
       request: input,
       plan,
       operatorsExecuted,
       rejectedBranches,
       derivationEdges,
       citationIds: citations.map((citation) => citation.id),
+      executionTrace,
       trustLevel,
       metrics,
       responseSummary: {
         answer,
         deterministicAnswer,
         confidence,
-        mode
+        mode,
+        corePayloadFingerprint,
+        corePayloadJson
       }
     };
+    const proof = this.applyTraceLevel(fullProof, traceLevel);
 
     const response: AskResponse = {
       answer,
@@ -451,6 +471,7 @@ export class AskService {
         proofId,
         replayToken,
         snapshotId,
+        traceLevel,
         operatorsExecuted,
         rejectedBranches
       },
@@ -497,6 +518,70 @@ export class AskService {
       stabilityScore,
       deltaNovelty,
       riskSurfaceScore
+    };
+  }
+
+  private buildCorePayloadJson(input: {
+    deterministicAnswer: string;
+    mode: AskResponse['mode'];
+    plan: AskResponse['plan'];
+    policyId: string;
+    trustLevel: AskTrustLevel;
+    metrics: AskMeaningMetrics;
+  }): string;
+  private buildCorePayloadJson(input: AskResponse): string;
+  private buildCorePayloadJson(
+    input:
+      | {
+          deterministicAnswer: string;
+          mode: AskResponse['mode'];
+          plan: AskResponse['plan'];
+          policyId: string;
+          trustLevel: AskTrustLevel;
+          metrics: AskMeaningMetrics;
+        }
+      | AskResponse
+  ): string {
+    const payload =
+      'policy' in input
+        ? {
+            deterministicAnswer: input.deterministicAnswer,
+            mode: input.mode,
+            plan: input.plan,
+            policyId: input.policy.policyId,
+            trustLevel: input.trustLevel,
+            metrics: input.metrics
+          }
+        : {
+            deterministicAnswer: input.deterministicAnswer,
+            mode: input.mode,
+            plan: input.plan,
+            policyId: input.policyId,
+            trustLevel: input.trustLevel,
+            metrics: input.metrics
+          };
+    return JSON.stringify(payload);
+  }
+
+  private applyTraceLevel(proof: AskProofArtifact, level: AskTraceLevel): AskProofArtifact {
+    if (level === 'full') {
+      return proof;
+    }
+    if (level === 'compact') {
+      return {
+        ...proof,
+        operatorsExecuted: proof.operatorsExecuted.slice(0, 1),
+        rejectedBranches: proof.rejectedBranches.slice(0, 2),
+        derivationEdges: [],
+        citationIds: proof.citationIds.slice(0, 3),
+        executionTrace: undefined
+      };
+    }
+    return {
+      ...proof,
+      derivationEdges: proof.derivationEdges.slice(0, 12),
+      citationIds: proof.citationIds.slice(0, 10),
+      executionTrace: undefined
     };
   }
 
