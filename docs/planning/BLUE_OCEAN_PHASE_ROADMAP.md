@@ -16,6 +16,8 @@ Turn Orgumented into a replayable semantic decision runtime for Salesforce archi
 8. `Phase 18` - WebUI-first auth/runtime alignment using CumulusCI `3.78.0`
 9. `Phase 19` - Org-wide metadata retrieval UX (VS Code Org Browser style)
 10. `Phase 20` - WebUI capability overhaul and operator experience hardening
+11. `Phase 21` - LLM reliability, citation integrity, and budget guardrails
+12. `Phase 22` - LLM rollout governance, regression benchmarking, and ops hardening
 
 ## Gate Policy
 - No phase starts without entry criteria met.
@@ -39,5 +41,5 @@ Turn Orgumented into a replayable semantic decision runtime for Salesforce archi
 ## Primary References
 - `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
 - `docs/planning/ORGUMENTED_LEXICON.md`
-- `docs/planning/PHASE11_TASKLIST.md` through `PHASE20_TASKLIST.md`
+- `docs/planning/PHASE11_TASKLIST.md` through `PHASE22_TASKLIST.md`
 - `docs/planning/SUCCESS_GATES_CHECKLIST.md`
