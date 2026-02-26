@@ -1,0 +1,51 @@
+name: Scripts Lint
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/scripts-lint.yml'
+  push:
+    branches:
+      - main
+      - 'phase*'
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/scripts-lint.yml'
+
+concurrency:
+  group: scripts-lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: ShellCheck
+        run: docker run --rm -v "$PWD":/mnt koalaman/shellcheck:stable -x scripts/*.sh
+
+      - name: Enforce executable bit for directly invoked scripts
+        run: |
+          refs="$( \
+            { grep -RhoE '\./scripts/[A-Za-z0-9._/-]+\.sh' .github/workflows package.json || true; } \
+            | sed 's#^\./##' \
+            | sort -u \
+          )"
+          bad=""
+          for script in $refs; do
+            mode="$(git ls-files -s "$script" | awk '{print $1}')"
+            if [ -z "$mode" ]; then
+              continue
+            fi
+            if [ "$mode" != "100755" ]; then
+              bad="$bad\n$script"
+            fi
+          done
+          if [ -n "$bad" ]; then
+            echo "Scripts missing executable bit:"
+            printf '%b\n' "$bad"
+            exit 1
+          fi

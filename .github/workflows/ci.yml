@@ -5,9 +5,11 @@ on:
   push:
     branches:
       - main
-      - phase2
-      - phase4
-      - phase5
+      - 'phase*'
+
+permissions:
+  contents: read
+  pull-requests: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -48,7 +50,7 @@ jobs:
 
   web-smoke:
     runs-on: ubuntu-latest
-    needs: validate
+    needs: [validate]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,7 +66,7 @@ jobs:
 
       - name: Wait for services
         run: |
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:3101/api/ready >/dev/null; then
               exit 0
             fi
@@ -75,9 +77,6 @@ jobs:
 
       - name: Run web smoke checks
         run: ./scripts/web-smoke.sh
-
-      - name: Run semantic drift gate
-        run: ./scripts/phase14-drift-gate.sh artifacts/phase14-drift-gate.json
 
       - name: Capture compose logs
         if: failure()
@@ -91,6 +90,62 @@ jobs:
         with:
           name: web-smoke-artifacts
           path: artifacts/
+
+      - name: Stop stack
+        if: always()
+        run: docker compose -f docker/docker-compose.yml down -v
+
+  drift-gate:
+    runs-on: ubuntu-latest
+    needs: [validate]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure env file for compose
+        run: |
+          if [ ! -f .env ]; then
+            cp .env.sample .env
+          fi
+
+      - name: Build and start stack
+        run: docker compose -f docker/docker-compose.yml up -d --build
+
+      - name: Wait for API
+        run: |
+          for _ in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:3100/ready >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "api did not become ready in time"
+          exit 1
+
+      - name: Run semantic drift gate
+        run: ./scripts/phase14-drift-gate.sh artifacts/phase14-drift-gate.json
+
+      - name: Upload drift artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-gate-artifacts
+          path: artifacts/phase14-drift-gate.json
+          if-no-files-found: ignore
+
+      - name: Capture compose logs
+        if: failure()
+        run: |
+          mkdir -p artifacts
+          docker compose -f docker/docker-compose.yml logs > artifacts/compose-logs-drift.txt
+
+      - name: Upload drift failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-gate-failure-logs
+          path: artifacts/compose-logs-drift.txt
+          if-no-files-found: ignore
 
       - name: Stop stack
         if: always()
