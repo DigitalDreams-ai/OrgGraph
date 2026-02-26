@@ -24,8 +24,8 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME_API: ${{ github.repository }}/orgumented-api
-  IMAGE_NAME_WEB: ${{ github.repository }}/orgumented-web
+  IMAGE_NAME_API: ${{ github.repository_owner }}/orgumented-api
+  IMAGE_NAME_WEB: ${{ github.repository_owner }}/orgumented-web
 
 jobs:
   docker:
