@@ -30,6 +30,7 @@ curl "http://localhost:3100/refresh/diff/<snapshotA>/<snapshotB>"
 ## Sandbox Retrieve + Refresh
 ```bash
 npm run sf:auth
+curl http://localhost:3100/org/status
 npm run sf:retrieve
 npm run sf:export-user-map
 curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full"}'

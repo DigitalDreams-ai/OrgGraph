@@ -17,10 +17,27 @@ export interface OrgRetrieveResponse {
   startedAt: string;
   completedAt: string;
   integrationEnabled: boolean;
-  authMode: 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
   alias: string;
   projectPath: string;
   manifestPath: string;
   parsePath: string;
   steps: OrgStepResult[];
+}
+
+export interface OrgStatusResponse {
+  integrationEnabled: boolean;
+  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  alias: string;
+  cci: {
+    installed: boolean;
+    version?: string;
+    requiredVersion: string;
+    versionPinned: boolean;
+    message: string;
+  };
+  sf: {
+    installed: boolean;
+    message: string;
+  };
 }

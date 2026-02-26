@@ -22,6 +22,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+      args:
+        CCI_VERSION: "${CCI_VERSION:-3.78.0}"
     container_name: orgumented-api
     restart: unless-stopped
     env_file:

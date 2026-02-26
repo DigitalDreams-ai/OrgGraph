@@ -4,8 +4,8 @@
 This runbook connects Orgumented to a Salesforce sandbox, retrieves metadata, and refreshes graph/evidence from retrieved source.
 
 ## Current vs Planned Auth Path
-- Current implemented: External Client App OAuth refresh-token flow.
-- Planned primary (Phase 18+): WebUI-first auth via CumulusCI `3.78.0` (`cci`), with legacy OAuth retained as fallback during migration.
+- Current primary: CumulusCI `3.78.0` (`cci`) auth mode (`SF_AUTH_MODE=cci`).
+- Legacy fallback: External Client App OAuth refresh-token flow (`SF_AUTH_MODE=oauth_refresh_token`).
 
 ## Safety Rules
 - Use sandbox first. Do not start with production.
@@ -14,7 +14,8 @@ This runbook connects Orgumented to a Salesforce sandbox, retrieves metadata, an
 
 ## Required Environment Variables
 - `SF_INTEGRATION_ENABLED=true`
-- `SF_AUTH_MODE=oauth_refresh_token` (recommended)
+- `SF_AUTH_MODE=cci` (recommended)
+- `CCI_VERSION_PIN=3.78.0`
 - `SF_ALIAS=orgumented-sandbox`
 - `SF_PROJECT_PATH=data/sf-project`
 - `SF_MANIFEST_PATH=manifest/package.xml`

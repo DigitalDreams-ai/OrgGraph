@@ -36,6 +36,7 @@ export class AppConfigService {
     this.validateOptionalString('DRIFT_ALLOWLIST_RELATIONS');
     this.validateOptionalString('SF_INTEGRATION_ENABLED');
     this.validateOptionalString('SF_AUTH_MODE');
+    this.validateOptionalString('CCI_VERSION_PIN');
     this.validateOptionalString('SF_AUTH_URL_PATH');
     this.validateOptionalString('SF_ALIAS');
     this.validateOptionalString('SF_CLIENT_ID');
@@ -208,12 +209,16 @@ export class AppConfigService {
     return (process.env.SF_INTEGRATION_ENABLED || 'false').trim().toLowerCase() === 'true';
   }
 
-  sfAuthMode(): 'sfdx_url' | 'jwt' | 'oauth_refresh_token' {
-    const mode = (process.env.SF_AUTH_MODE || 'oauth_refresh_token').trim().toLowerCase();
-    if (mode !== 'sfdx_url' && mode !== 'jwt' && mode !== 'oauth_refresh_token') {
+  sfAuthMode(): 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token' {
+    const mode = (process.env.SF_AUTH_MODE || 'cci').trim().toLowerCase();
+    if (mode !== 'cci' && mode !== 'sfdx_url' && mode !== 'jwt' && mode !== 'oauth_refresh_token') {
       throw new Error(`Invalid SF_AUTH_MODE: ${mode}`);
     }
-    return mode as 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+    return mode as 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  }
+
+  cciVersionPin(): string {
+    return process.env.CCI_VERSION_PIN?.trim() || '3.78.0';
   }
 
   sfAuthUrlPath(): string | undefined {

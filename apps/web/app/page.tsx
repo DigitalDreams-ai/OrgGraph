@@ -2,7 +2,15 @@
 
 import { useMemo, useState } from 'react';
 
-type QueryKind = 'refresh' | 'perms' | 'permsSystem' | 'automation' | 'impact' | 'ask';
+type QueryKind =
+  | 'refresh'
+  | 'perms'
+  | 'permsSystem'
+  | 'automation'
+  | 'impact'
+  | 'ask'
+  | 'orgStatus'
+  | 'orgRetrieve';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
 const BUILD_VERSION = process.env.NEXT_PUBLIC_BUILD_VERSION || 'dev-local';
@@ -35,6 +43,9 @@ export default function Page(): JSX.Element {
   const [maxCitationsRaw, setMaxCitationsRaw] = useState('5');
   const [consistencyCheck, setConsistencyCheck] = useState(true);
   const [askContextRaw, setAskContextRaw] = useState('{}');
+  const [orgRunAuth, setOrgRunAuth] = useState(true);
+  const [orgRunRetrieve, setOrgRunRetrieve] = useState(true);
+  const [orgAutoRefresh, setOrgAutoRefresh] = useState(true);
 
   const endpointHint = useMemo(() => {
     if (kind === 'refresh') {
@@ -51,6 +62,12 @@ export default function Page(): JSX.Element {
     }
     if (kind === 'impact') {
       return 'GET /impact?field=...&limit=...&strict=...&debug=...&explain=...&includeLowConfidence=...';
+    }
+    if (kind === 'orgStatus') {
+      return 'GET /org/status';
+    }
+    if (kind === 'orgRetrieve') {
+      return 'POST /org/retrieve';
     }
     return 'POST /ask';
   }, [kind]);
@@ -138,6 +155,10 @@ export default function Page(): JSX.Element {
       const payload =
         kind === 'refresh'
           ? { mode: refreshMode }
+          : kind === 'orgStatus'
+            ? {}
+            : kind === 'orgRetrieve'
+              ? { runAuth: orgRunAuth, runRetrieve: orgRunRetrieve, autoRefresh: orgAutoRefresh }
           : kind === 'perms'
             ? { user, object: objectName, field: fieldName, limit }
             : kind === 'permsSystem'
@@ -223,7 +244,7 @@ export default function Page(): JSX.Element {
 
       <section className="panel">
         <div className="tab-row">
-          {(['ask', 'refresh', 'perms', 'permsSystem', 'automation', 'impact'] as const).map((value) => (
+          {(['ask', 'refresh', 'orgStatus', 'orgRetrieve', 'perms', 'permsSystem', 'automation', 'impact'] as const).map((value) => (
             <button
               key={value}
               type="button"
@@ -249,6 +270,38 @@ export default function Page(): JSX.Element {
               <option value="full">full</option>
             </select>
           </div>
+        ) : null}
+
+        {kind === 'orgRetrieve' ? (
+          <>
+            <div className="row checkbox-row">
+              <label htmlFor="orgRunAuth">Run Auth Validation</label>
+              <input
+                id="orgRunAuth"
+                type="checkbox"
+                checked={orgRunAuth}
+                onChange={(e) => setOrgRunAuth(e.target.checked)}
+              />
+            </div>
+            <div className="row checkbox-row">
+              <label htmlFor="orgRunRetrieve">Run Metadata Retrieve</label>
+              <input
+                id="orgRunRetrieve"
+                type="checkbox"
+                checked={orgRunRetrieve}
+                onChange={(e) => setOrgRunRetrieve(e.target.checked)}
+              />
+            </div>
+            <div className="row checkbox-row">
+              <label htmlFor="orgAutoRefresh">Auto Refresh Graph</label>
+              <input
+                id="orgAutoRefresh"
+                type="checkbox"
+                checked={orgAutoRefresh}
+                onChange={(e) => setOrgAutoRefresh(e.target.checked)}
+              />
+            </div>
+          </>
         ) : null}
 
         {kind === 'ask' ? (

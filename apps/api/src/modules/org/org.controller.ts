@@ -1,6 +1,6 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Post } from '@nestjs/common';
 import { OrgService } from './org.service';
-import type { OrgRetrieveRequest, OrgRetrieveResponse } from './org.types';
+import type { OrgRetrieveRequest, OrgRetrieveResponse, OrgStatusResponse } from './org.types';
 
 interface OrgRetrieveBody {
   runAuth?: unknown;
@@ -11,6 +11,11 @@ interface OrgRetrieveBody {
 @Controller()
 export class OrgController {
   constructor(private readonly orgService: OrgService) {}
+
+  @Get('/org/status')
+  async status(): Promise<OrgStatusResponse> {
+    return this.orgService.status();
+  }
 
   @Post('/org/retrieve')
   async retrieve(@Body() body: OrgRetrieveBody = {}): Promise<OrgRetrieveResponse> {
@@ -35,4 +40,3 @@ export class OrgController {
     }
   }
 }
-

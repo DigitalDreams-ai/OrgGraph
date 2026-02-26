@@ -11,7 +11,7 @@ import {
 import { AppConfigService } from '../../config/app-config.service';
 import { IngestionService } from '../ingestion/ingestion.service';
 import { CommandRunnerService } from './command-runner.service';
-import type { OrgRetrieveRequest, OrgRetrieveResponse, OrgStepResult } from './org.types';
+import type { OrgRetrieveRequest, OrgRetrieveResponse, OrgStatusResponse, OrgStepResult } from './org.types';
 
 @Injectable()
 export class OrgService {
@@ -22,6 +22,41 @@ export class OrgService {
     private readonly ingestionService: IngestionService,
     private readonly commandRunner: CommandRunnerService
   ) {}
+
+  async status(): Promise<OrgStatusResponse> {
+    const integrationEnabled = this.configService.sfIntegrationEnabled();
+    const authMode = this.configService.sfAuthMode();
+    const alias = this.configService.sfAlias();
+    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
+    const cciRequiredVersion = this.configService.cciVersionPin();
+
+    const sfProbe = await this.probeCommand('sf', ['--version'], projectPath);
+    const cciProbe = await this.probeCommand('cci', ['version'], projectPath);
+    const cciVersion = this.extractCciVersion(cciProbe.stdout, cciProbe.stderr);
+    const cciVersionPinned = cciProbe.exitCode === 0 && cciVersion === cciRequiredVersion;
+
+    return {
+      integrationEnabled,
+      authMode,
+      alias,
+      sf: {
+        installed: sfProbe.exitCode === 0,
+        message: sfProbe.exitCode === 0 ? 'sf CLI available' : 'sf CLI not found in PATH'
+      },
+      cci: {
+        installed: cciProbe.exitCode === 0,
+        version: cciVersion,
+        requiredVersion: cciRequiredVersion,
+        versionPinned: cciVersionPinned,
+        message:
+          cciProbe.exitCode === 0
+            ? cciVersionPinned
+              ? 'cci available and version-pinned'
+              : `cci available but version mismatch (expected ${cciRequiredVersion})`
+            : 'cci not found in PATH'
+      }
+    };
+  }
 
   async retrieveAndRefresh(input: OrgRetrieveRequest = {}): Promise<OrgRetrieveResponse> {
     const startedAtIso = new Date().toISOString();
@@ -190,7 +225,7 @@ export class OrgService {
   private appendAuditEntry(entry: {
     status: 'completed' | 'failed';
     alias: string;
-    authMode: 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+    authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
     projectPath: string;
     manifestPath: string;
     parsePath: string;
@@ -217,6 +252,38 @@ export class OrgService {
     }
   }
 
+  private async probeCommand(
+    command: string,
+    args: string[],
+    cwd: string
+  ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+    try {
+      const result = await this.commandRunner.run(command, args, {
+        cwd,
+        timeoutMs: 30_000
+      });
+      return { exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { exitCode: 1, stdout: '', stderr: message };
+    }
+  }
+
+  private async ensureCciBinaryInstalled(projectPath: string): Promise<void> {
+    const result = await this.commandRunner.run('cci', ['version'], {
+      cwd: projectPath,
+      timeoutMs: 30_000
+    });
+    if (result.exitCode !== 0) {
+      throw new Error('cci not found in PATH');
+    }
+    const version = this.extractCciVersion(result.stdout, result.stderr);
+    const required = this.configService.cciVersionPin();
+    if (version !== required) {
+      throw new Error(`cci version mismatch: expected ${required}, received ${version || 'unknown'}`);
+    }
+  }
+
   private ensureProjectScaffold(projectPath: string): void {
     fs.mkdirSync(projectPath, { recursive: true });
     fs.mkdirSync(path.join(projectPath, 'force-app'), { recursive: true });
@@ -239,10 +306,32 @@ export class OrgService {
   }
 
   private async runAuth(
-    authMode: 'sfdx_url' | 'jwt' | 'oauth_refresh_token',
+    authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token',
     alias: string,
     projectPath: string
   ): Promise<void> {
+    if (authMode === 'cci') {
+      await this.ensureCciBinaryInstalled(projectPath);
+      const cciList = await this.commandRunner.run('cci', ['org', 'list', '--json'], {
+        cwd: projectPath,
+        timeoutMs: 60_000
+      });
+      if (cciList.exitCode !== 0) {
+        throw new Error('cci org list failed; ensure CCI keychain is initialized for this environment');
+      }
+      const sfAliasCheck = await this.commandRunner.run(
+        'sf',
+        ['org', 'display', '--target-org', alias, '--json'],
+        { cwd: projectPath, timeoutMs: 30_000 }
+      );
+      if (sfAliasCheck.exitCode !== 0) {
+        throw new Error(
+          `No authenticated org for alias ${alias}. Connect via cci first, then retry /org/retrieve.`
+        );
+      }
+      return;
+    }
+
     if (authMode === 'sfdx_url') {
       const authUrlPath = this.configService.sfAuthUrlPath();
       if (!authUrlPath) {
@@ -347,6 +436,12 @@ export class OrgService {
       ],
       projectPath
     );
+  }
+
+  private extractCciVersion(stdout: string, stderr: string): string | undefined {
+    const text = `${stdout}\n${stderr}`.trim();
+    const match = text.match(/(\d+\.\d+\.\d+)/);
+    return match ? match[1] : undefined;
   }
 
   private async resolveOrRefreshOAuthToken(input: {
