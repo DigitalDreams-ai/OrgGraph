@@ -1,10 +1,22 @@
-import { BadRequestException, Body, Controller, Get, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { OrgService } from './org.service';
-import type { OrgRetrieveRequest, OrgRetrieveResponse, OrgStatusResponse } from './org.types';
+import type {
+  OrgMetadataCatalogResponse,
+  OrgMetadataRetrieveRequest,
+  OrgMetadataRetrieveResponse,
+  OrgRetrieveRequest,
+  OrgRetrieveResponse,
+  OrgStatusResponse
+} from './org.types';
 
 interface OrgRetrieveBody {
   runAuth?: unknown;
   runRetrieve?: unknown;
+  autoRefresh?: unknown;
+}
+
+interface OrgMetadataRetrieveBody {
+  selections?: unknown;
   autoRefresh?: unknown;
 }
 
@@ -29,6 +41,54 @@ export class OrgController {
       autoRefresh: body.autoRefresh as boolean | undefined
     };
     return this.orgService.retrieveAndRefresh(request);
+  }
+
+  @Get('/org/metadata/catalog')
+  async metadataCatalog(
+    @Query('q') q?: string,
+    @Query('limit') limitRaw?: string
+  ): Promise<OrgMetadataCatalogResponse> {
+    const limit = limitRaw ? Number(limitRaw) : undefined;
+    if (limitRaw && (!Number.isInteger(limit) || (limit as number) < 1 || (limit as number) > 5000)) {
+      throw new BadRequestException('limit must be an integer between 1 and 5000');
+    }
+    return this.orgService.metadataCatalog({
+      search: q?.trim() || undefined,
+      limit
+    });
+  }
+
+  @Post('/org/metadata/retrieve')
+  async metadataRetrieve(
+    @Body() body: OrgMetadataRetrieveBody = {}
+  ): Promise<OrgMetadataRetrieveResponse> {
+    this.ensureBoolean('autoRefresh', body.autoRefresh);
+    if (!Array.isArray(body.selections) || body.selections.length === 0) {
+      throw new BadRequestException('selections must be a non-empty array');
+    }
+    const selections = body.selections.map((item) => {
+      if (!item || typeof item !== 'object') {
+        throw new BadRequestException('each selection must be an object');
+      }
+      const type = (item as { type?: unknown }).type;
+      const members = (item as { members?: unknown }).members;
+      if (typeof type !== 'string' || type.trim().length === 0) {
+        throw new BadRequestException('selection.type must be a non-empty string');
+      }
+      if (members !== undefined && (!Array.isArray(members) || members.some((m) => typeof m !== 'string'))) {
+        throw new BadRequestException('selection.members must be an array of strings');
+      }
+      return {
+        type: type.trim(),
+        members: (members as string[] | undefined)?.map((m) => m.trim()).filter((m) => m.length > 0)
+      };
+    });
+
+    const input: OrgMetadataRetrieveRequest = {
+      selections,
+      autoRefresh: body.autoRefresh as boolean | undefined
+    };
+    return this.orgService.retrieveSelectedMetadata(input);
   }
 
   private ensureBoolean(name: string, value: unknown): void {

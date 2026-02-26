@@ -302,6 +302,33 @@ async function run(): Promise<void> {
     });
     assert.equal(orgRetrieveBadBodyRes.status, 400, 'org retrieve should validate boolean body flags');
 
+    const metadataCatalogRes = await fetch(`${base}/org/metadata/catalog?limit=50`);
+    assert.equal(metadataCatalogRes.status, 200, 'metadata catalog should return 200');
+    const metadataCatalogBody = (await metadataCatalogRes.json()) as {
+      source: string;
+      totalTypes: number;
+      types: Array<{ type: string }>;
+    };
+    assert.equal(metadataCatalogBody.source, 'local');
+    assert.ok(metadataCatalogBody.totalTypes > 0);
+    assert.ok(metadataCatalogBody.types.some((item) => item.type === 'CustomObject'));
+
+    const metadataSearchRes = await fetch(`${base}/org/metadata/catalog?q=case&limit=50`);
+    assert.equal(metadataSearchRes.status, 200, 'metadata catalog search should return 200');
+
+    const metadataRetrieveRes = await fetch(`${base}/org/metadata/retrieve`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        selections: [{ type: 'CustomObject', members: ['Account'] }]
+      })
+    });
+    assert.equal(
+      metadataRetrieveRes.status,
+      400,
+      'metadata retrieve should reject when SF integration is disabled'
+    );
+
     const brokenTempBase = path.join(workspaceRoot, 'data');
     fs.mkdirSync(brokenTempBase, { recursive: true });
     const brokenRoot = fs.mkdtempSync(path.join(brokenTempBase, 'tmp-broken-'));

@@ -11,7 +11,15 @@ import {
 import { AppConfigService } from '../../config/app-config.service';
 import { IngestionService } from '../ingestion/ingestion.service';
 import { CommandRunnerService } from './command-runner.service';
-import type { OrgRetrieveRequest, OrgRetrieveResponse, OrgStatusResponse, OrgStepResult } from './org.types';
+import type {
+  OrgMetadataCatalogResponse,
+  OrgMetadataRetrieveRequest,
+  OrgMetadataRetrieveResponse,
+  OrgRetrieveRequest,
+  OrgRetrieveResponse,
+  OrgStatusResponse,
+  OrgStepResult
+} from './org.types';
 
 @Injectable()
 export class OrgService {
@@ -599,6 +607,184 @@ export class OrgService {
       refresh_token: parsed.refresh_token,
       instance_url: parsed.instance_url
     };
+  }
+
+  async metadataCatalog(input: { search?: string; limit?: number }): Promise<OrgMetadataCatalogResponse> {
+    const parsePath = resolveSfParsePath(this.configService.sfParsePath());
+    const search = input.search?.trim().toLowerCase();
+    const limit = input.limit ?? 200;
+    const warnings: string[] = [];
+    if (!fs.existsSync(parsePath)) {
+      warnings.push(`parse path not found: ${parsePath}`);
+      return {
+        source: 'local',
+        refreshedAt: new Date().toISOString(),
+        search: input.search,
+        totalTypes: 0,
+        types: [],
+        warnings
+      };
+    }
+
+    const typeMembers = new Map<string, Set<string>>();
+    const walk = (dir: string): void => {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.name === '@eaDir') {
+          continue;
+        }
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(fullPath);
+          continue;
+        }
+        const rel = path.relative(parsePath, fullPath);
+        const parts = rel.split(path.sep);
+        if (parts.length < 2) {
+          continue;
+        }
+        const type = this.inferMetadataType(parts[0], entry.name);
+        const member = entry.name.replace(/\.[^.]+(?:\.[^.]+)?$/, '');
+        if (!typeMembers.has(type)) {
+          typeMembers.set(type, new Set());
+        }
+        typeMembers.get(type)?.add(member);
+      }
+    };
+    walk(parsePath);
+
+    let types = Array.from(typeMembers.entries())
+      .map(([type, members]) => ({
+        type,
+        memberCount: members.size,
+        members: Array.from(members)
+          .sort((a, b) => a.localeCompare(b))
+          .map((name) => ({ name }))
+      }))
+      .sort((a, b) => a.type.localeCompare(b.type));
+
+    if (search) {
+      types = types
+        .map((item) => ({
+          ...item,
+          members: item.members.filter(
+            (member) =>
+              member.name.toLowerCase().includes(search) || item.type.toLowerCase().includes(search)
+          )
+        }))
+        .filter((item) => item.members.length > 0 || item.type.toLowerCase().includes(search))
+        .map((item) => ({ ...item, memberCount: item.members.length }));
+    }
+
+    const limited = types.slice(0, limit);
+    if (types.length > limit) {
+      warnings.push(`result truncated to limit=${limit}`);
+    }
+
+    return {
+      source: 'local',
+      refreshedAt: new Date().toISOString(),
+      search: input.search,
+      totalTypes: types.length,
+      types: limited,
+      warnings
+    };
+  }
+
+  async retrieveSelectedMetadata(input: OrgMetadataRetrieveRequest): Promise<OrgMetadataRetrieveResponse> {
+    if (!this.configService.sfIntegrationEnabled()) {
+      throw new BadRequestException({
+        message: 'Salesforce integration is disabled',
+        details: {
+          code: 'SF_INTEGRATION_DISABLED',
+          hint: 'Set SF_INTEGRATION_ENABLED=true to enable selective metadata retrieve'
+        }
+      });
+    }
+
+    const alias = this.configService.sfAlias();
+    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
+    const parsePath = resolveSfParsePath(this.configService.sfParsePath());
+    const autoRefresh = input.autoRefresh ?? this.configService.sfAutoRefreshAfterRetrieve();
+    const startedAt = new Date().toISOString();
+
+    await this.ensureSfBinaryInstalled(projectPath);
+    if (this.configService.sfAuthMode() === 'cci') {
+      await this.ensureCciBinaryInstalled(projectPath);
+    }
+
+    const metadataArgs: string[] = [];
+    for (const selection of input.selections) {
+      const type = selection.type.trim();
+      if (selection.members && selection.members.length > 0) {
+        for (const member of selection.members) {
+          metadataArgs.push(`${type}:${member}`);
+        }
+      } else {
+        metadataArgs.push(type);
+      }
+    }
+    if (metadataArgs.length === 0) {
+      throw new BadRequestException('no valid metadata selections supplied');
+    }
+
+    const waitMinutes = this.configService.sfWaitMinutes();
+    const args = [
+      'project',
+      'retrieve',
+      'start',
+      '--target-org',
+      alias,
+      '--wait',
+      String(waitMinutes),
+      '--json'
+    ];
+    for (const metadataArg of metadataArgs) {
+      args.push('--metadata', metadataArg);
+    }
+    await this.runSfCommandWithRetry(args, projectPath);
+
+    const response: OrgMetadataRetrieveResponse = {
+      status: 'completed',
+      startedAt,
+      completedAt: new Date().toISOString(),
+      alias,
+      parsePath,
+      metadataArgs,
+      autoRefresh
+    };
+
+    if (autoRefresh) {
+      const refreshed = await this.ingestionService.refresh({
+        fixturesPath: parsePath,
+        mode: 'full'
+      });
+      response.refresh = {
+        nodeCount: refreshed.nodeCount,
+        edgeCount: refreshed.edgeCount,
+        evidenceCount: refreshed.evidenceCount
+      };
+    }
+    return response;
+  }
+
+  private inferMetadataType(folderName: string, fileName: string): string {
+    const normalizedFolder = folderName.toLowerCase();
+    if (normalizedFolder === 'objects') return 'CustomObject';
+    if (normalizedFolder === 'flows') return 'Flow';
+    if (normalizedFolder === 'classes') return 'ApexClass';
+    if (normalizedFolder === 'triggers') return 'ApexTrigger';
+    if (normalizedFolder === 'permissionsets') return 'PermissionSet';
+    if (normalizedFolder === 'profiles') return 'Profile';
+    if (normalizedFolder === 'permissionsetgroups') return 'PermissionSetGroup';
+    if (normalizedFolder === 'connectedapps') return 'ConnectedApp';
+    if (normalizedFolder === 'custompermissions') return 'CustomPermission';
+
+    if (fileName.includes('.flow-meta.xml')) return 'Flow';
+    if (fileName.includes('.cls')) return 'ApexClass';
+    if (fileName.includes('.trigger')) return 'ApexTrigger';
+    if (fileName.includes('.object-meta.xml')) return 'CustomObject';
+    return folderName;
   }
 
   private async runRetrieve(alias: string, projectPath: string, manifestPath: string): Promise<void> {

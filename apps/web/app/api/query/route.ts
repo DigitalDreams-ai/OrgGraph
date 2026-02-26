@@ -11,7 +11,9 @@ type QueryKind =
   | 'impact'
   | 'ask'
   | 'orgStatus'
-  | 'orgRetrieve';
+  | 'orgRetrieve'
+  | 'metadataCatalog'
+  | 'metadataRetrieve';
 
 interface QueryRequest {
   kind?: QueryKind;
@@ -89,6 +91,26 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
       }
     };
   }
+  if (request.kind === 'metadataCatalog') {
+    const params = new URLSearchParams();
+    appendParam(params, 'q', body.q);
+    appendParam(params, 'limit', body.limit);
+    return { url: `${API_BASE}/org/metadata/catalog?${params.toString()}`, init: { method: 'GET' } };
+  }
+
+  if (request.kind === 'metadataRetrieve') {
+    return {
+      url: `${API_BASE}/org/metadata/retrieve`,
+      init: {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          selections: Array.isArray(body.selections) ? body.selections : [],
+          autoRefresh: typeof body.autoRefresh === 'boolean' ? body.autoRefresh : undefined
+        })
+      }
+    };
+  }
 
   if (request.kind === 'perms') {
     const params = new URLSearchParams();
@@ -156,7 +178,20 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     const kind = kindRaw as QueryKind;
-    if (!['refresh', 'perms', 'permsSystem', 'automation', 'impact', 'ask', 'orgStatus', 'orgRetrieve'].includes(kind)) {
+    if (
+      ![
+        'refresh',
+        'perms',
+        'permsSystem',
+        'automation',
+        'impact',
+        'ask',
+        'orgStatus',
+        'orgRetrieve',
+        'metadataCatalog',
+        'metadataRetrieve'
+      ].includes(kind)
+    ) {
       return NextResponse.json(
         { error: { code: 'BAD_REQUEST', message: 'invalid query kind' } },
         { status: 400 }

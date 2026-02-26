@@ -10,7 +10,9 @@ type QueryKind =
   | 'impact'
   | 'ask'
   | 'orgStatus'
-  | 'orgRetrieve';
+  | 'orgRetrieve'
+  | 'metadataCatalog'
+  | 'metadataRetrieve';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
 const BUILD_VERSION = process.env.NEXT_PUBLIC_BUILD_VERSION || 'dev-local';
@@ -46,6 +48,11 @@ export default function Page(): JSX.Element {
   const [orgRunAuth, setOrgRunAuth] = useState(true);
   const [orgRunRetrieve, setOrgRunRetrieve] = useState(true);
   const [orgAutoRefresh, setOrgAutoRefresh] = useState(true);
+  const [metadataSearch, setMetadataSearch] = useState('');
+  const [metadataAutoRefresh, setMetadataAutoRefresh] = useState(true);
+  const [metadataSelectionsRaw, setMetadataSelectionsRaw] = useState(
+    JSON.stringify([{ type: 'CustomObject', members: ['Account'] }], null, 2)
+  );
 
   const endpointHint = useMemo(() => {
     if (kind === 'refresh') {
@@ -68,6 +75,12 @@ export default function Page(): JSX.Element {
     }
     if (kind === 'orgRetrieve') {
       return 'POST /org/retrieve';
+    }
+    if (kind === 'metadataCatalog') {
+      return 'GET /org/metadata/catalog?q=...&limit=...';
+    }
+    if (kind === 'metadataRetrieve') {
+      return 'POST /org/metadata/retrieve';
     }
     return 'POST /ask';
   }, [kind]);
@@ -151,6 +164,13 @@ export default function Page(): JSX.Element {
       const limit = parseOptionalInt(limitRaw);
       const maxCitations = parseOptionalInt(maxCitationsRaw);
       const askContext = parseContext(askContextRaw);
+      let metadataSelections: Array<{ type: string; members?: string[] }> = [];
+      if (kind === 'metadataRetrieve') {
+        const parsed = JSON.parse(metadataSelectionsRaw) as unknown;
+        if (Array.isArray(parsed)) {
+          metadataSelections = parsed as Array<{ type: string; members?: string[] }>;
+        }
+      }
 
       const payload =
         kind === 'refresh'
@@ -159,6 +179,10 @@ export default function Page(): JSX.Element {
             ? {}
             : kind === 'orgRetrieve'
               ? { runAuth: orgRunAuth, runRetrieve: orgRunRetrieve, autoRefresh: orgAutoRefresh }
+              : kind === 'metadataCatalog'
+                ? { q: metadataSearch, limit }
+                : kind === 'metadataRetrieve'
+                  ? { selections: metadataSelections, autoRefresh: metadataAutoRefresh }
           : kind === 'perms'
             ? { user, object: objectName, field: fieldName, limit }
             : kind === 'permsSystem'
@@ -244,7 +268,20 @@ export default function Page(): JSX.Element {
 
       <section className="panel">
         <div className="tab-row">
-          {(['ask', 'refresh', 'orgStatus', 'orgRetrieve', 'perms', 'permsSystem', 'automation', 'impact'] as const).map((value) => (
+          {(
+            [
+              'ask',
+              'refresh',
+              'orgStatus',
+              'orgRetrieve',
+              'metadataCatalog',
+              'metadataRetrieve',
+              'perms',
+              'permsSystem',
+              'automation',
+              'impact'
+            ] as const
+          ).map((value) => (
             <button
               key={value}
               type="button"
@@ -299,6 +336,40 @@ export default function Page(): JSX.Element {
                 type="checkbox"
                 checked={orgAutoRefresh}
                 onChange={(e) => setOrgAutoRefresh(e.target.checked)}
+              />
+            </div>
+          </>
+        ) : null}
+
+        {kind === 'metadataCatalog' ? (
+          <div className="row">
+            <label htmlFor="metadataSearch">Keyword Search (optional)</label>
+            <input
+              id="metadataSearch"
+              value={metadataSearch}
+              onChange={(e) => setMetadataSearch(e.target.value)}
+            />
+          </div>
+        ) : null}
+
+        {kind === 'metadataRetrieve' ? (
+          <>
+            <div className="row checkbox-row">
+              <label htmlFor="metadataAutoRefresh">Auto Refresh Graph</label>
+              <input
+                id="metadataAutoRefresh"
+                type="checkbox"
+                checked={metadataAutoRefresh}
+                onChange={(e) => setMetadataAutoRefresh(e.target.checked)}
+              />
+            </div>
+            <div className="row">
+              <label htmlFor="metadataSelections">Selections JSON</label>
+              <textarea
+                id="metadataSelections"
+                value={metadataSelectionsRaw}
+                onChange={(e) => setMetadataSelectionsRaw(e.target.value)}
+                rows={6}
               />
             </div>
           </>
