@@ -163,6 +163,19 @@ npm run phase12:replay-regression
 npm run phase12:replay-load
 ```
 
+### 8.5 Ask Architecture Decision (Phase 15)
+```bash
+curl -X POST http://localhost:3100/ask/architecture \
+  -H 'content-type: application/json' \
+  -d '{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName"}'
+```
+
+Response includes deterministic engines:
+- `engines.permissionBlastRadius`
+- `engines.automationCollision`
+- `engines.releaseRisk`
+- `composite.trustLevel`, `composite.topRiskDrivers`, `composite.replayToken`
+
 ## 9. Web Query Proxy
 Web route supports either `kind` or `endpoint`, and either `payload` or `params`.
 

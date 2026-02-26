@@ -3,8 +3,8 @@
 Goal: deliver flagship Salesforce architecture decisions using semantic runtime primitives.
 
 ## Entry Criteria
-- [ ] Phase 14 complete
-- [ ] Diff and drift governance operating in CI and local runtime
+- [x] Phase 14 complete
+- [x] Diff and drift governance operating in CI and local runtime
 
 ## Exit Criteria
 - [ ] Three decision engines are live with proof-backed outputs
@@ -12,17 +12,17 @@ Goal: deliver flagship Salesforce architecture decisions using semantic runtime 
 - [ ] Architect-facing reports are reproducible via replay tokens
 
 ## Scope
-- Permission exposure engine
-- Automation impact collision engine
-- Release readiness risk engine
-- Composite architectural judgment output
+- [x] Permission exposure engine
+- [x] Automation impact collision engine
+- [x] Release readiness risk engine
+- [x] Composite architectural judgment output
 
 ## Deliverables
-- [ ] Decision engine: permission blast radius under role/profile/perm-set composition
-- [ ] Decision engine: automation conflict and side-effect path ranking
-- [ ] Decision engine: release risk from semantic deltas + policy constraints
-- [ ] Composite result payload with trust level, replay token, and top risk drivers
-- [ ] Runbook for architect review workflow
+- [x] Decision engine: permission blast radius under role/profile/perm-set composition
+- [x] Decision engine: automation conflict and side-effect path ranking
+- [x] Decision engine: release risk from semantic deltas + policy constraints
+- [x] Composite result payload with trust level, replay token, and top risk drivers
+- [x] Runbook for architect review workflow
 
 ## Test Gates
 - [ ] Benchmark corpus with known outcomes for all three engines
@@ -32,9 +32,15 @@ Goal: deliver flagship Salesforce architecture decisions using semantic runtime 
 
 ## Risks and Controls
 - Risk: model complexity harms explainability
-  - [ ] Enforce max explanation depth + ranked top-k reasons
+  - [x] Enforce max explanation depth + ranked top-k reasons
 - Risk: domain edge cases
-  - [ ] Add deterministic fallback for unsupported relation patterns
+  - [x] Add deterministic fallback for unsupported relation patterns
 
 ## Definition of Done
 - [ ] OrgGraph provides materially better architecture decisions with proof, not just query responses
+
+## Phase 15 Implementation Notes
+- Added deterministic endpoint: `POST /ask/architecture`
+- Engine payload includes proof paths, collision ranking, release-risk score, and replay token
+- Integration coverage added in `apps/api/test/integration.ts`
+- Benchmark/lift gates remain open for Phase 16+ measurement cycle

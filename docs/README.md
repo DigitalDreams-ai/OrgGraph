@@ -35,6 +35,7 @@
 - [Postgres Migration](./runbooks/POSTGRES_MIGRATION.md)
 - [Production Promotion](./runbooks/PRODUCTION_PROMOTION.md)
 - [Semantic Drift Triage](./runbooks/SEMANTIC_DRIFT_TRIAGE.md)
+- [Architect Review Workflow](./runbooks/ARCHITECT_REVIEW_WORKFLOW.md)
 
 ## Releases
 - [Release Checklist](./releases/RELEASE_CHECKLIST.md)
