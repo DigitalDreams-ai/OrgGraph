@@ -127,18 +127,27 @@ curl -X POST http://localhost:3100/org/session/disconnect
 
 ## 8. Query Orgumented
 
-### 8.0 WebUI Workflow-First Operation (Phase 24)
-WebUI now mirrors operator workflow stages directly:
-- Connect
-- Retrieve
-- Refresh
-- Analyze
-- Ask/Proof
+### 8.0 WebUI Product Workflow (Phase 25)
+WebUI is now organized into task-first tabs:
+- `Connect`
+- `Org Browser`
+- `Refresh & Build`
+- `Analyze`
+- `Ask`
+- `Proofs & Metrics`
+- `System`
 
-WebUI runtime surfaces include:
-- run-state timeline (session, latest snapshot, trust indicator)
-- operator diagnostics (recent categorized errors, readiness, non-secret config mode summary)
-- Ask proof/trust side panel (policy + proof token context beside deterministic summary)
+Operator flow:
+1. Connect alias/session in `Connect`.
+2. Browse and select metadata in `Org Browser`.
+3. Retrieve selected metadata and refresh graph.
+4. Run deterministic checks in `Analyze` and `Ask`.
+5. Inspect replay/proof/metrics in `Proofs & Metrics`.
+
+UI quality gates in this phase include:
+- desktop browser screenshot proof: `artifacts/phase25-workflow-ui.png`
+- mobile browser screenshot proof: `artifacts/phase25-mobile-ui.png`
+- browser smoke script: `npm run test:ui-smoke`
 
 ### 8.1 Permissions
 ```bash

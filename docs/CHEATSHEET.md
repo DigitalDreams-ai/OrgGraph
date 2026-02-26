@@ -77,6 +77,7 @@ curl -X POST http://localhost:3101/api/query -H 'content-type: application/json'
 npm exec --yes pnpm@9.12.3 -- --filter api test
 npm exec --yes pnpm@9.12.3 -- --filter api build
 npm run test:web-smoke
+npm run test:ui-smoke
 # Optional: run smoke against retrieved org metadata instead of fixtures
 WEB_SMOKE_USE_SF_PROJECT=1 npm run test:web-smoke
 # Optional: require CCI org auth validation in smoke (sandbox/local operator check)
@@ -94,6 +95,15 @@ npm run phase14:drift-report -- latest latest artifacts/phase14-drift-report.jso
 npm run phase14:drift-gate
 ./scripts/phase17-benchmark.sh
 ```
+
+## WebUI Tabs (Phase 25)
+- `Connect`: auth path + session/alias actions
+- `Org Browser`: searchable metadata tree + retrieval cart
+- `Refresh & Build`: full/incremental refresh + snapshot diff
+- `Analyze`: permissions/automation/impact workflows
+- `Ask`: deterministic answer + proof envelope + optional elaboration
+- `Proofs & Metrics`: proof lookup/replay + metrics export
+- `System`: diagnostics, meta-context, action telemetry
 
 ## Fast Fixes
 ```bash
