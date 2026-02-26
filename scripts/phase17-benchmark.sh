@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-ROOT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+ROOT_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
 API_URL="${API_URL:-http://127.0.0.1:3100}"
 OUT_PATH="${1:-$ROOT_DIR/artifacts/phase17-benchmark.json}"
 
