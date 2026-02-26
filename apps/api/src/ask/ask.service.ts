@@ -14,6 +14,9 @@ import { AskMetricsStoreService } from './ask-metrics-store.service';
 import { AskProofStoreService } from './ask-proof-store.service';
 import type {
   AskMeaningMetrics,
+  AskMetricsExportResponse,
+  AskPolicyValidateRequest,
+  AskPolicyValidateResponse,
   AskProofArtifact,
   AskProofLookupResponse,
   AskRejectedBranch,
@@ -63,6 +66,59 @@ export class AskService {
     return { proof, status: 'implemented' };
   }
 
+  exportMetrics(): AskMetricsExportResponse {
+    return this.metricsStore.exportSummary();
+  }
+
+  validatePolicy(input: AskPolicyValidateRequest): AskPolicyValidateResponse {
+    const thresholds = {
+      groundingThreshold:
+        input.groundingThreshold ?? this.configService.askGroundingScoreThreshold(),
+      constraintThreshold:
+        input.constraintThreshold ?? this.configService.askConstraintSatisfactionThreshold(),
+      ambiguityMaxThreshold:
+        input.ambiguityMaxThreshold ?? this.configService.askAmbiguityMaxThreshold()
+    };
+
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (thresholds.groundingThreshold < 0 || thresholds.groundingThreshold > 1) {
+      errors.push('groundingThreshold must be between 0 and 1');
+    }
+    if (thresholds.constraintThreshold < 0 || thresholds.constraintThreshold > 1) {
+      errors.push('constraintThreshold must be between 0 and 1');
+    }
+    if (thresholds.ambiguityMaxThreshold < 0 || thresholds.ambiguityMaxThreshold > 1) {
+      errors.push('ambiguityMaxThreshold must be between 0 and 1');
+    }
+    if (thresholds.constraintThreshold < thresholds.groundingThreshold) {
+      warnings.push(
+        'constraintThreshold is lower than groundingThreshold; this may admit under-constrained outputs'
+      );
+    }
+    if (thresholds.ambiguityMaxThreshold > 0.7) {
+      warnings.push('ambiguityMaxThreshold > 0.7 may over-label uncertain output as trusted');
+    }
+
+    const policyId = stableId(
+      'policy',
+      thresholds.groundingThreshold.toFixed(3),
+      thresholds.constraintThreshold.toFixed(3),
+      thresholds.ambiguityMaxThreshold.toFixed(3)
+    );
+
+    return {
+      policyId,
+      valid: errors.length === 0,
+      errors,
+      warnings,
+      thresholds,
+      dryRun: input.dryRun === true,
+      status: 'implemented'
+    };
+  }
+
   async replay(request: AskReplayRequest): Promise<AskReplayResponse> {
     const lookupValue = request.replayToken ?? request.proofId;
     if (!lookupValue) {
@@ -92,6 +148,8 @@ export class AskService {
       proofId: proof.proofId,
       matched,
       corePayloadMatched,
+      metricsMatched:
+        JSON.stringify(replayed.metrics) === JSON.stringify(proof.metrics),
       snapshotId: proof.snapshotId,
       policyId: proof.policyId,
       original: {
@@ -99,14 +157,16 @@ export class AskService {
         deterministicAnswer: proof.responseSummary.deterministicAnswer,
         confidence: proof.responseSummary.confidence,
         mode: proof.responseSummary.mode,
-        trustLevel: proof.trustLevel
+        trustLevel: proof.trustLevel,
+        metrics: proof.metrics
       },
       replayed: {
         answer: replayed.answer,
         deterministicAnswer: replayed.deterministicAnswer,
         confidence: replayed.confidence,
         mode: replayed.mode,
-        trustLevel: replayed.trustLevel
+        trustLevel: replayed.trustLevel,
+        metrics: replayed.metrics
       },
       status: 'implemented'
     };
@@ -124,7 +184,11 @@ export class AskService {
     const traceLevel: AskTraceLevel = input.traceLevel ?? 'standard';
     const snapshotId = this.readSnapshotId();
     const policy = {
-      policyId: this.buildPolicyId(),
+      policyId: this.buildPolicyId(
+        this.configService.askGroundingScoreThreshold(),
+        this.configService.askConstraintSatisfactionThreshold(),
+        this.configService.askAmbiguityMaxThreshold()
+      ),
       groundingThreshold: this.configService.askGroundingScoreThreshold(),
       constraintThreshold: this.configService.askConstraintSatisfactionThreshold(),
       ambiguityMaxThreshold: this.configService.askAmbiguityMaxThreshold()
@@ -388,6 +452,7 @@ export class AskService {
       rejectedBranchCount: rejectedBranches.length
     });
     const trustLevel = this.resolveTrustLevel(metrics, policy);
+    const refusalReasons: string[] = [];
 
     if (trustLevel === 'refused') {
       mode = 'deterministic';
@@ -399,6 +464,16 @@ export class AskService {
         fallbackReason: llm.fallbackReason ?? 'policy envelope rejected response'
       };
       reject('policy.envelope', 'POLICY_ENVELOPE_REJECTED', 'grounding/constraint thresholds not met');
+      if (metrics.groundingScore < policy.groundingThreshold) {
+        refusalReasons.push(
+          `grounding_score ${metrics.groundingScore.toFixed(3)} below threshold ${policy.groundingThreshold.toFixed(3)}`
+        );
+      }
+      if (metrics.constraintSatisfaction < policy.constraintThreshold) {
+        refusalReasons.push(
+          `constraint_satisfaction ${metrics.constraintSatisfaction.toFixed(3)} below threshold ${policy.constraintThreshold.toFixed(3)}`
+        );
+      }
     }
 
     const derivationEdges = [
@@ -467,6 +542,7 @@ export class AskService {
       policy,
       metrics,
       trustLevel,
+      refusalReasons: refusalReasons.length > 0 ? refusalReasons : undefined,
       proof: {
         proofId,
         replayToken,
@@ -605,12 +681,16 @@ export class AskService {
     return 'trusted';
   }
 
-  private buildPolicyId(): string {
+  private buildPolicyId(
+    groundingThreshold: number,
+    constraintThreshold: number,
+    ambiguityMaxThreshold: number
+  ): string {
     return stableId(
       'policy',
-      this.configService.askGroundingScoreThreshold().toFixed(3),
-      this.configService.askConstraintSatisfactionThreshold().toFixed(3),
-      this.configService.askAmbiguityMaxThreshold().toFixed(3)
+      groundingThreshold.toFixed(3),
+      constraintThreshold.toFixed(3),
+      ambiguityMaxThreshold.toFixed(3)
     );
   }
 
