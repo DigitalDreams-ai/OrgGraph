@@ -40,6 +40,7 @@ export interface OrgStatusResponse {
     installed: boolean;
     message: string;
   };
+  session?: OrgSessionStatusResponse;
 }
 
 export interface OrgMetadataMember {
@@ -92,4 +93,31 @@ export interface OrgMetadataRetrieveResponse {
     edgeCount: number;
     evidenceCount: number;
   };
+}
+
+export interface OrgSessionStatusResponse {
+  status: 'connected' | 'disconnected';
+  activeAlias: string;
+  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  connectedAt?: string;
+  disconnectedAt?: string;
+  lastError?: string;
+}
+
+export interface OrgSessionSwitchRequest {
+  alias: string;
+}
+
+export interface OrgSessionSwitchResponse {
+  status: 'connected';
+  activeAlias: string;
+  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  switchedAt: string;
+}
+
+export interface OrgSessionDisconnectResponse {
+  status: 'disconnected';
+  activeAlias: string;
+  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  disconnectedAt: string;
 }

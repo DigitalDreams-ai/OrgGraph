@@ -5,6 +5,9 @@ import { useMemo, useState } from 'react';
 type QueryKind =
   | 'refresh'
   | 'orgConnect'
+  | 'orgSession'
+  | 'orgSessionSwitch'
+  | 'orgSessionDisconnect'
   | 'perms'
   | 'permsSystem'
   | 'automation'
@@ -86,6 +89,7 @@ export default function Page(): JSX.Element {
   const [orgRunAuth, setOrgRunAuth] = useState(true);
   const [orgRunRetrieve, setOrgRunRetrieve] = useState(true);
   const [orgAutoRefresh, setOrgAutoRefresh] = useState(true);
+  const [orgSessionAlias, setOrgSessionAlias] = useState('orgumented-sandbox');
   const [metadataSearch, setMetadataSearch] = useState('');
   const [metadataMemberSearch, setMetadataMemberSearch] = useState('');
   const [metadataLimitRaw, setMetadataLimitRaw] = useState('200');
@@ -123,6 +127,15 @@ export default function Page(): JSX.Element {
     }
     if (kind === 'orgConnect') {
       return 'POST /org/retrieve (runAuth=true, runRetrieve=false, autoRefresh=false)';
+    }
+    if (kind === 'orgSession') {
+      return 'GET /org/session';
+    }
+    if (kind === 'orgSessionSwitch') {
+      return 'POST /org/session/switch';
+    }
+    if (kind === 'orgSessionDisconnect') {
+      return 'POST /org/session/disconnect';
     }
     if (kind === 'perms') {
       return 'GET /perms?user=...&object=...&field=...&limit=...';
@@ -348,6 +361,12 @@ export default function Page(): JSX.Element {
           ? { mode: refreshMode }
           : kind === 'orgConnect'
             ? {}
+          : kind === 'orgSession'
+            ? {}
+            : kind === 'orgSessionSwitch'
+              ? { alias: orgSessionAlias }
+              : kind === 'orgSessionDisconnect'
+                ? {}
           : kind === 'orgStatus'
             ? {}
             : kind === 'orgRetrieve'
@@ -541,7 +560,10 @@ export default function Page(): JSX.Element {
         <div className="tab-row">
           {(
             [
-              { label: 'Connect', values: ['orgConnect', 'orgStatus'] as const },
+              {
+                label: 'Connect',
+                values: ['orgSession', 'orgSessionSwitch', 'orgConnect', 'orgSessionDisconnect', 'orgStatus'] as const
+              },
               { label: 'Retrieve', values: ['orgRetrieve', 'metadataCatalog', 'metadataRetrieve'] as const },
               { label: 'Refresh', values: ['refresh', 'refreshDiff'] as const },
               { label: 'Analyze', values: ['perms', 'permsSystem', 'automation', 'impact', 'ask', 'askArchitecture'] as const },
@@ -572,6 +594,17 @@ export default function Page(): JSX.Element {
             CCI Connect Workflow: ensure `cci` is authenticated in this runtime, then run this action to validate
             org auth/session through the API path.
           </p>
+        ) : null}
+
+        {(kind === 'orgSessionSwitch' || kind === 'orgConnect') ? (
+          <div className="row">
+            <label htmlFor="orgSessionAlias">Session Alias</label>
+            <input
+              id="orgSessionAlias"
+              value={orgSessionAlias}
+              onChange={(e) => setOrgSessionAlias(e.target.value)}
+            />
+          </div>
         ) : null}
 
         {kind === 'refresh' ? (
@@ -683,6 +716,10 @@ export default function Page(): JSX.Element {
               />
             </div>
           </>
+        ) : null}
+
+        {kind === 'orgSession' ? (
+          <p className="endpoint-hint">Shows current active org alias session for this runtime.</p>
         ) : null}
 
         {kind === 'metadataCatalog' ? (
