@@ -21,7 +21,7 @@ async function run(): Promise<void> {
     return;
   }
 
-  const dbPath = path.join(workspaceRoot, 'data', 'orggraph.phase11-sandbox.db');
+  const dbPath = path.join(workspaceRoot, 'data', 'orgumented.phase11-sandbox.db');
   const evidencePath = path.join(workspaceRoot, 'data', 'evidence.phase11-sandbox.json');
   const userMapPath = path.join(workspaceRoot, 'data', 'user-profile-map.phase11-sandbox.json');
   const semanticSnapshotPath = path.join(workspaceRoot, 'data', 'refresh', 'semantic-snapshot.phase11.json');

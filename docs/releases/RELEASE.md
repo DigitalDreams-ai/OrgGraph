@@ -1,13 +1,13 @@
 # Release Checklist
 
 ## Scope
-This checklist defines repeatable NAS deployment and release steps for OrgGraph API + Web.
+This checklist defines repeatable NAS deployment and release steps for Orgumented API + Web.
 
 ## Versioning & Image Tags
 - Create release tags as `vMAJOR.MINOR.PATCH` (example: `v0.5.0`).
 - Docker workflow publishes both images on tagged pushes:
-  - `ghcr.io/<org>/<repo>/orggraph-api:<tag>`
-  - `ghcr.io/<org>/<repo>/orggraph-web:<tag>`
+  - `ghcr.io/<org>/<repo>/orgumented-api:<tag>`
+  - `ghcr.io/<org>/<repo>/orgumented-web:<tag>`
 - Keep `sha` tags for traceability and rollback.
 
 ## Pre-Release Checks

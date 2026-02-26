@@ -3,10 +3,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { AppConfigService } from '../src/config/app-config.service';
-import { EvidenceStoreService } from '../src/evidence/evidence-store.service';
+import { EvidenceStoreService } from '../src/modules/evidence/evidence-store.service';
 
 function run(): void {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orggraph-evidence-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orgumented-evidence-'));
   const fixtures = path.join(root, 'fixtures', 'permissions');
   const classes = path.join(fixtures, 'apex-classes');
   fs.mkdirSync(classes, { recursive: true });

@@ -1,4 +1,4 @@
-# OrgGraph Phase 8 Task List (Ontology + Precision + Consistency)
+# Orgumented Phase 8 Task List (Ontology + Precision + Consistency)
 
 Goal: strengthen reasoning quality by improving ontology constraints, parser precision, and confidence/consistency controls before introducing heavier retrieval infrastructure.
 

@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { NODE_TYPES } from '@orggraph/ontology';
-import { CustomPermissionParserService } from '../src/ingestion/custom-permission-parser.service';
+import { NODE_TYPES } from '@orgumented/ontology';
+import { CustomPermissionParserService } from '../src/modules/ingestion/custom-permission-parser.service';
 
 function run(): void {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orggraph-custom-perm-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orgumented-custom-perm-'));
   const dirPath = path.join(root, 'custom-permissions');
   fs.mkdirSync(dirPath, { recursive: true });
 

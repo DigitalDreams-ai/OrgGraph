@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { REL_TYPES } from '@orggraph/ontology';
-import { CustomObjectParserService } from '../src/ingestion/custom-object-parser.service';
+import { REL_TYPES } from '@orgumented/ontology';
+import { CustomObjectParserService } from '../src/modules/ingestion/custom-object-parser.service';
 
 function run(): void {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orggraph-custom-object-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orgumented-custom-object-'));
   const objectsPath = path.join(root, 'objects');
   fs.mkdirSync(objectsPath, { recursive: true });
 

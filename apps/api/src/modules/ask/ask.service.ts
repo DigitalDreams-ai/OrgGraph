@@ -1,0 +1,972 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import fs from 'node:fs';
+import { COMPOSITION_OPERATORS, DERIVATION_RELATIONS } from '@orgumented/ontology';
+import type { CompositionOperator } from '@orgumented/ontology';
+import { AnalysisService } from '../analysis/analysis.service';
+import { stableId } from '../../common/ids';
+import { resolveRefreshStatePath } from '../../common/path';
+import { AppConfigService } from '../../config/app-config.service';
+import { EvidenceStoreService } from '../evidence/evidence-store.service';
+import { LlmService } from '../llm/llm.service';
+import { PlannerService } from '../planner/planner.service';
+import { QueriesService } from '../queries/queries.service';
+import { AskMetricsStoreService } from './ask-metrics-store.service';
+import { AskProofStoreService } from './ask-proof-store.service';
+import type {
+  AskArchitectureDecisionRequest,
+  AskArchitectureDecisionResponse,
+  AskMeaningMetrics,
+  AskMetricsExportResponse,
+  AskPolicyValidateRequest,
+  AskPolicyValidateResponse,
+  AskProofArtifact,
+  AskProofLookupResponse,
+  AskRejectedBranch,
+  AskReplayRequest,
+  AskReplayResponse,
+  AskRequest,
+  AskResponse,
+  AskTraceLevel,
+  AskTrustLevel
+} from './ask.types';
+
+@Injectable()
+export class AskService {
+  private static readonly LLM_MIN_CONFIDENCE = 0.6;
+
+  constructor(
+    private readonly configService: AppConfigService,
+    private readonly planner: PlannerService,
+    private readonly queries: QueriesService,
+    private readonly analysis: AnalysisService,
+    private readonly evidence: EvidenceStoreService,
+    private readonly llmService: LlmService,
+    private readonly proofStore: AskProofStoreService,
+    private readonly metricsStore: AskMetricsStoreService
+  ) {}
+
+  async ask(input: AskRequest): Promise<AskResponse> {
+    const { response, proof } = await this.execute(input, true);
+    this.proofStore.append(proof);
+    this.metricsStore.append({
+      recordedAt: new Date().toISOString(),
+      snapshotId: proof.snapshotId,
+      policyId: proof.policyId,
+      query: input.query,
+      intent: proof.plan.intent,
+      trustLevel: proof.trustLevel,
+      metrics: proof.metrics
+    });
+    return response;
+  }
+
+  getProof(proofId: string): AskProofLookupResponse {
+    const proof = this.proofStore.findByProofId(proofId);
+    if (!proof) {
+      throw new NotFoundException(`proof not found: ${proofId}`);
+    }
+    return { proof, status: 'implemented' };
+  }
+
+  exportMetrics(): AskMetricsExportResponse {
+    return this.metricsStore.exportSummary();
+  }
+
+  validatePolicy(input: AskPolicyValidateRequest): AskPolicyValidateResponse {
+    const thresholds = {
+      groundingThreshold:
+        input.groundingThreshold ?? this.configService.askGroundingScoreThreshold(),
+      constraintThreshold:
+        input.constraintThreshold ?? this.configService.askConstraintSatisfactionThreshold(),
+      ambiguityMaxThreshold:
+        input.ambiguityMaxThreshold ?? this.configService.askAmbiguityMaxThreshold()
+    };
+
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (thresholds.groundingThreshold < 0 || thresholds.groundingThreshold > 1) {
+      errors.push('groundingThreshold must be between 0 and 1');
+    }
+    if (thresholds.constraintThreshold < 0 || thresholds.constraintThreshold > 1) {
+      errors.push('constraintThreshold must be between 0 and 1');
+    }
+    if (thresholds.ambiguityMaxThreshold < 0 || thresholds.ambiguityMaxThreshold > 1) {
+      errors.push('ambiguityMaxThreshold must be between 0 and 1');
+    }
+    if (thresholds.constraintThreshold < thresholds.groundingThreshold) {
+      warnings.push(
+        'constraintThreshold is lower than groundingThreshold; this may admit under-constrained outputs'
+      );
+    }
+    if (thresholds.ambiguityMaxThreshold > 0.7) {
+      warnings.push('ambiguityMaxThreshold > 0.7 may over-label uncertain output as trusted');
+    }
+
+    const policyId = stableId(
+      'policy',
+      thresholds.groundingThreshold.toFixed(3),
+      thresholds.constraintThreshold.toFixed(3),
+      thresholds.ambiguityMaxThreshold.toFixed(3)
+    );
+
+    return {
+      policyId,
+      valid: errors.length === 0,
+      errors,
+      warnings,
+      thresholds,
+      dryRun: input.dryRun === true,
+      status: 'implemented'
+    };
+  }
+
+  async replay(request: AskReplayRequest): Promise<AskReplayResponse> {
+    const lookupValue = request.replayToken ?? request.proofId;
+    if (!lookupValue) {
+      throw new NotFoundException('replayToken or proofId is required');
+    }
+
+    const proof = request.replayToken
+      ? this.proofStore.findByReplayToken(request.replayToken)
+      : this.proofStore.findByProofId(request.proofId as string);
+    if (!proof) {
+      throw new NotFoundException(`proof not found: ${lookupValue}`);
+    }
+
+    const replayRun = await this.execute(proof.request, false);
+    const replayed = replayRun.response;
+    const replayedCorePayloadJson = this.buildCorePayloadJson(replayed);
+    const corePayloadMatched = replayedCorePayloadJson === proof.responseSummary.corePayloadJson;
+    const matched =
+      corePayloadMatched &&
+      replayed.deterministicAnswer === proof.responseSummary.deterministicAnswer &&
+      replayed.plan.intent === proof.plan.intent &&
+      replayed.policy.policyId === proof.policyId &&
+      replayed.proof.snapshotId === proof.snapshotId;
+
+    return {
+      replayToken: proof.replayToken,
+      proofId: proof.proofId,
+      matched,
+      corePayloadMatched,
+      metricsMatched:
+        JSON.stringify(replayed.metrics) === JSON.stringify(proof.metrics),
+      snapshotId: proof.snapshotId,
+      policyId: proof.policyId,
+      original: {
+        answer: proof.responseSummary.answer,
+        deterministicAnswer: proof.responseSummary.deterministicAnswer,
+        confidence: proof.responseSummary.confidence,
+        mode: proof.responseSummary.mode,
+        trustLevel: proof.trustLevel,
+        metrics: proof.metrics
+      },
+      replayed: {
+        answer: replayed.answer,
+        deterministicAnswer: replayed.deterministicAnswer,
+        confidence: replayed.confidence,
+        mode: replayed.mode,
+        trustLevel: replayed.trustLevel,
+        metrics: replayed.metrics
+      },
+      status: 'implemented'
+    };
+  }
+
+  async architectureDecision(
+    input: AskArchitectureDecisionRequest
+  ): Promise<AskArchitectureDecisionResponse> {
+    const maxPaths = Math.max(1, Math.min(50, input.maxPaths ?? 10));
+    const perms = await this.queries.perms(input.user, input.object, input.field, maxPaths);
+    const automations = await this.analysis.automation(input.object, maxPaths, false, false, false);
+    const impact = await this.analysis.impact(input.field, maxPaths, false, false, false, false);
+
+    const permissionBlastRadius = {
+      granted: perms.granted,
+      principalCount: perms.principalsChecked.length,
+      pathCount: perms.paths.length,
+      blastRadiusScore: Number(
+        Math.min(
+          1,
+          (perms.granted ? 0.35 : 0.1) +
+            Math.min(0.45, perms.principalsChecked.length / 100) +
+            Math.min(0.2, perms.paths.length / 20)
+        ).toFixed(3)
+      ),
+      explanation: perms.explanation,
+      proofPaths: perms.paths
+    };
+
+    const relationBySource = new Map<string, Set<string>>();
+    for (const item of automations.automations) {
+      if (!relationBySource.has(item.name)) {
+        relationBySource.set(item.name, new Set());
+      }
+      relationBySource.get(item.name)?.add(item.rel);
+    }
+    for (const path of impact.paths) {
+      if (!relationBySource.has(path.from)) {
+        relationBySource.set(path.from, new Set());
+      }
+      relationBySource.get(path.from)?.add(path.rel);
+    }
+    const topCollisions = [...relationBySource.entries()]
+      .filter(([, relations]) => relations.size > 1)
+      .map(([source, relations]) => ({ source, relations: [...relations].sort() }))
+      .sort((a, b) => b.relations.length - a.relations.length || a.source.localeCompare(b.source))
+      .slice(0, 10);
+    const automationCollision = {
+      automationCount: automations.totalAutomations,
+      impactPathCount: impact.totalPaths,
+      collisionCount: topCollisions.length,
+      collisionScore: Number(
+        Math.min(
+          1,
+          Math.max(
+            automations.totalAutomations,
+            impact.totalPaths
+          ) === 0
+            ? 0
+            : topCollisions.length / Math.max(automations.totalAutomations, impact.totalPaths)
+        ).toFixed(3)
+      ),
+      explanation:
+        topCollisions.length > 0
+          ? `found ${topCollisions.length} source(s) with multi-relation automation/impact overlap`
+          : 'no multi-relation automation/impact overlap found',
+      topCollisions
+    };
+
+    const latestState = this.readRefreshState();
+    const diff = latestState?.semanticDiff ?? {
+      addedNodeCount: 0,
+      removedNodeCount: 0,
+      addedEdgeCount: 0,
+      removedEdgeCount: 0
+    };
+    const driftMagnitude =
+      Math.abs(diff.addedNodeCount) +
+      Math.abs(diff.removedNodeCount) +
+      Math.abs(diff.addedEdgeCount) +
+      Math.abs(diff.removedEdgeCount);
+    const releaseRiskScore = Number(
+      Math.min(
+        1,
+        permissionBlastRadius.blastRadiusScore * 0.35 +
+          automationCollision.collisionScore * 0.4 +
+          Math.min(1, driftMagnitude / 3000) * 0.25
+      ).toFixed(3)
+    );
+    const releaseRiskLevel: 'low' | 'medium' | 'high' =
+      releaseRiskScore >= 0.7 ? 'high' : releaseRiskScore >= 0.4 ? 'medium' : 'low';
+    const releaseRisk = {
+      level: releaseRiskLevel,
+      riskScore: releaseRiskScore,
+      explanation: `release risk is ${releaseRiskLevel} (score=${releaseRiskScore.toFixed(3)}) from permission blast radius, automation collisions, and semantic delta`,
+      semanticDiff: diff,
+      meaningChangeSummary: latestState?.meaningChangeSummary ?? 'meaning change summary unavailable'
+    };
+
+    const metrics = this.buildMetrics({
+      citationCount: 1,
+      confidence: Math.max(0.4, 1 - releaseRiskScore * 0.5),
+      consistencyChecked: true,
+      consistencyAligned: true,
+      intent: 'mixed',
+      rejectedBranchCount: perms.granted ? 0 : 1
+    });
+    metrics.ambiguityScore = Number(Math.min(1, releaseRiskScore * 0.9).toFixed(3));
+    metrics.riskSurfaceScore = Number(Math.min(1, releaseRiskScore).toFixed(3));
+    const policy = {
+      groundingThreshold: this.configService.askGroundingScoreThreshold(),
+      constraintThreshold: this.configService.askConstraintSatisfactionThreshold(),
+      ambiguityMaxThreshold: this.configService.askAmbiguityMaxThreshold()
+    };
+    const trustLevel = this.resolveTrustLevel(metrics, policy);
+    const topRiskDrivers = [
+      `permission blast radius score ${permissionBlastRadius.blastRadiusScore.toFixed(3)}`,
+      `automation collision score ${automationCollision.collisionScore.toFixed(3)}`,
+      `release semantic drift score ${Math.min(1, driftMagnitude / 3000).toFixed(3)}`
+    ];
+    const snapshotId = latestState?.snapshotId ?? this.readSnapshotId();
+    const replayToken = stableId(
+      'phase15-decision',
+      snapshotId,
+      input.user,
+      input.object,
+      input.field,
+      releaseRiskScore.toFixed(3)
+    );
+    const summary = `${releaseRisk.level} release risk for ${input.field}; trust=${trustLevel}`;
+
+    return {
+      user: input.user,
+      object: input.object,
+      field: input.field,
+      engines: {
+        permissionBlastRadius,
+        automationCollision,
+        releaseRisk
+      },
+      composite: {
+        trustLevel,
+        summary,
+        topRiskDrivers,
+        replayToken,
+        snapshotId
+      },
+      status: 'implemented'
+    };
+  }
+
+  private async execute(input: AskRequest, includeCreatedAtInProof: boolean): Promise<{
+    response: AskResponse;
+    proof: AskProofArtifact;
+  }> {
+    const plan = this.planner.plan(input.query);
+    const includeLowConfidence = input.includeLowConfidence === true;
+    const consistencyCheck =
+      input.consistencyCheck ?? this.configService.askConsistencyCheckEnabled();
+    const maxCitations = Math.max(1, Math.min(20, input.maxCitations ?? 5));
+    const traceLevel: AskTraceLevel = input.traceLevel ?? 'standard';
+    const snapshotId = this.readSnapshotId();
+    const policy = {
+      policyId: this.buildPolicyId(
+        this.configService.askGroundingScoreThreshold(),
+        this.configService.askConstraintSatisfactionThreshold(),
+        this.configService.askAmbiguityMaxThreshold()
+      ),
+      groundingThreshold: this.configService.askGroundingScoreThreshold(),
+      constraintThreshold: this.configService.askConstraintSatisfactionThreshold(),
+      ambiguityMaxThreshold: this.configService.askAmbiguityMaxThreshold()
+    };
+
+    let citationHits = this.evidence.search(input.query, maxCitations);
+    if (citationHits.length === 0) {
+      const fallbackTerms = [plan.entities.field, plan.entities.object, plan.entities.user]
+        .filter((x): x is string => Boolean(x))
+        .join(' ');
+      if (fallbackTerms.length > 0) {
+        citationHits = this.evidence.search(fallbackTerms, maxCitations);
+      }
+    }
+    citationHits = this.dedupeCitations(citationHits);
+
+    const citations = citationHits.map((hit) => ({
+      id: hit.id,
+      sourcePath: hit.sourcePath,
+      sourceType: hit.sourceType,
+      snippet: hit.chunkText.slice(0, 240),
+      score: hit.score
+    }));
+
+    let answer = 'No deterministic plan matched the query.';
+    let deterministicAnswer = answer;
+    let confidence = 0.2;
+    let consistency: AskResponse['consistency'] = {
+      checked: false,
+      aligned: true,
+      reason: 'consistency check not applicable'
+    };
+    const operatorsExecuted: CompositionOperator[] = [COMPOSITION_OPERATORS.SPECIALIZE];
+    const executionTrace: string[] = [`intent=${plan.intent}`, `traceLevel=${traceLevel}`];
+    const rejectedBranches: AskRejectedBranch[] = [];
+    const reject = (
+      branch: string,
+      reasonCode: AskRejectedBranch['reasonCode'],
+      reason: string
+    ): void => {
+      rejectedBranches.push({ branch, reasonCode, reason });
+    };
+
+    if (plan.intent === 'mixed') {
+      operatorsExecuted.push(
+        COMPOSITION_OPERATORS.OVERLAY,
+        COMPOSITION_OPERATORS.CONSTRAIN,
+        COMPOSITION_OPERATORS.INTERSECT
+      );
+      const user = plan.entities.user ?? 'jane@example.com';
+      const object = plan.entities.object ?? 'Opportunity';
+      const field = plan.entities.field ?? `${object}.StageName`;
+      const perms = await this.queries.perms(user, object, field);
+      const impact = await this.analysis.impact(field, undefined, false, false, false, includeLowConfidence);
+      const releaseRisk = impact.totalPaths > 0 ? 'elevated' : 'low';
+      answer =
+        `Release-risk + permission-impact: ${releaseRisk} risk for changing ${field}. ` +
+        `${perms.explanation}. ${impact.explanation}.`;
+      executionTrace.push(
+        `mixed.perms.granted=${String(perms.granted)}`,
+        `mixed.impact.paths=${String(impact.totalPaths)}`
+      );
+      deterministicAnswer = answer;
+      confidence = perms.granted && impact.totalPaths > 0 ? 0.9 : 0.72;
+      consistency = {
+        checked: consistencyCheck,
+        aligned: true,
+        reason: 'mixed intent composed deterministically from perms + impact'
+      };
+      if (!perms.granted) {
+        reject('queries.perms', 'NO_OBJECT_OR_FIELD_GRANT', 'user lacks object/field grant for release scenario');
+      }
+      if (impact.totalPaths === 0) {
+        reject('analysis.impact', 'NO_IMPACT_PATHS', 'no impact paths found for release scenario');
+      }
+    } else if (plan.intent === 'perms') {
+      operatorsExecuted.push(COMPOSITION_OPERATORS.CONSTRAIN, COMPOSITION_OPERATORS.INTERSECT);
+      const user = plan.entities.user ?? 'jane@example.com';
+      const object = plan.entities.object ?? 'Case';
+      const result = await this.queries.perms(user, object, plan.entities.field);
+      answer = result.explanation;
+      deterministicAnswer = result.explanation;
+      confidence = result.granted ? 0.86 : 0.62;
+      consistency = {
+        checked: false,
+        aligned: true,
+        reason: 'perms intent uses deterministic query directly'
+      };
+      if (!result.granted) {
+        reject(
+          'queries.perms',
+          'NO_OBJECT_OR_FIELD_GRANT',
+          'no granting path found for requested principal/object'
+        );
+      }
+    } else if (plan.intent === 'automation') {
+      operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.INTERSECT);
+      const object = plan.entities.object ?? 'Case';
+      const result = await this.analysis.automation(
+        object,
+        undefined,
+        false,
+        false,
+        includeLowConfidence
+      );
+      answer = result.explanation;
+      deterministicAnswer = result.explanation;
+      confidence = result.automations.length > 0 ? 0.82 : 0.58;
+      consistency = {
+        checked: consistencyCheck,
+        aligned: true,
+        reason: consistencyCheck
+          ? 'ask automation answer is sourced from /automation deterministic output'
+          : 'consistency check disabled'
+      };
+      if (result.automations.length === 0) {
+        reject(
+          'analysis.automation',
+          'NO_AUTOMATION_MATCH',
+          'no automation relation matched for requested object'
+        );
+      }
+    } else if (plan.intent === 'impact') {
+      operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.CONSTRAIN);
+      const field = plan.entities.field ?? 'Opportunity.StageName';
+      const result = await this.analysis.impact(
+        field,
+        undefined,
+        false,
+        false,
+        false,
+        includeLowConfidence
+      );
+      answer = result.explanation;
+      deterministicAnswer = result.explanation;
+      confidence = result.paths.length > 0 ? 0.8 : 0.55;
+      if (consistencyCheck) {
+        const verification = await this.analysis.impact(
+          field,
+          undefined,
+          false,
+          false,
+          false,
+          includeLowConfidence
+        );
+        const aligned =
+          verification.totalPaths === result.totalPaths &&
+          verification.explanation === result.explanation;
+        consistency = {
+          checked: true,
+          aligned,
+          reason: aligned
+            ? 'ask impact answer matches /impact deterministic output'
+            : 'ask impact answer diverged from /impact deterministic output'
+        };
+      } else {
+        consistency = {
+          checked: false,
+          aligned: true,
+          reason: 'consistency check disabled'
+        };
+      }
+      if (result.paths.length === 0) {
+        reject('analysis.impact', 'NO_IMPACT_PATHS', 'no impact paths found for requested field');
+      }
+    } else {
+      reject('planner.default', 'NO_DETERMINISTIC_INTENT', 'no deterministic graph intent matched query');
+    }
+    deterministicAnswer = answer;
+
+    const requestedMode = input.mode ?? this.llmService.defaultMode();
+    const llmEnabled = this.llmService.isEnabled();
+    let mode: AskResponse['mode'] = requestedMode;
+    let llm: AskResponse['llm'] = {
+      enabled: llmEnabled,
+      used: false,
+      provider: input.llm?.provider ?? this.configService.llmProvider()
+    };
+
+    if (requestedMode === 'llm_assist') {
+      if (!llmEnabled) {
+        mode = 'deterministic';
+        llm = {
+          ...llm,
+          used: false,
+          fallbackReason: 'llm disabled by configuration'
+        };
+      } else if (citations.length === 0 || confidence < AskService.LLM_MIN_CONFIDENCE) {
+        mode = 'deterministic';
+        llm = {
+          ...llm,
+          used: false,
+          fallbackReason: 'insufficient evidence for llm_assist'
+        };
+        answer = deterministicAnswer;
+      } else {
+        const llmStartedAt = Date.now();
+        try {
+          const llmResult = await this.llmService.generate(
+            {
+              query: input.query,
+              deterministicAnswer,
+              plan,
+              citations
+            },
+            {
+              provider: input.llm?.provider,
+              model: input.llm?.model,
+              timeoutMs: input.llm?.timeoutMs,
+              maxOutputTokens: input.llm?.maxOutputTokens
+            }
+          );
+
+          const citedIds = this.resolveCitedIds(
+            llmResult.citationsUsed,
+            citations.map((citation) => citation.id),
+            llmResult.rawText
+          );
+          if (citations.length > 0 && citedIds.length === 0) {
+            const observed =
+              llmResult.citationsUsed.length > 0 ? llmResult.citationsUsed.join(',') : '(none)';
+            throw new Error(
+              `LLM response did not reference provided citations (observed: ${observed})`
+            );
+          }
+
+          answer = llmResult.answer;
+          confidence = Math.min(0.97, confidence + 0.03);
+          llm = {
+            enabled: true,
+            used: true,
+            provider: llmResult.provider,
+            model: llmResult.model,
+            latencyMs: Date.now() - llmStartedAt
+          };
+        } catch (error) {
+          mode = 'deterministic';
+          llm = {
+            ...llm,
+            used: false,
+            fallbackReason: error instanceof Error ? error.message : 'unknown llm error',
+            latencyMs: Date.now() - llmStartedAt
+          };
+          answer = deterministicAnswer;
+        }
+      }
+    } else {
+      mode = 'deterministic';
+      llm = {
+        ...llm,
+        used: false
+      };
+    }
+
+    const metrics = this.buildMetrics({
+      citationCount: citations.length,
+      confidence,
+      consistencyChecked: consistency.checked,
+      consistencyAligned: consistency.aligned,
+      intent: plan.intent,
+      rejectedBranchCount: rejectedBranches.length
+    });
+    const trustLevel = this.resolveTrustLevel(metrics, policy);
+    const refusalReasons: string[] = [];
+
+    if (trustLevel === 'refused') {
+      mode = 'deterministic';
+      answer =
+        'Refused: insufficient deterministic support under the active policy envelope. Refine query or refresh metadata.';
+      llm = {
+        ...llm,
+        used: false,
+        fallbackReason: llm.fallbackReason ?? 'policy envelope rejected response'
+      };
+      reject('policy.envelope', 'POLICY_ENVELOPE_REJECTED', 'grounding/constraint thresholds not met');
+      if (metrics.groundingScore < policy.groundingThreshold) {
+        refusalReasons.push(
+          `grounding_score ${metrics.groundingScore.toFixed(3)} below threshold ${policy.groundingThreshold.toFixed(3)}`
+        );
+      }
+      if (metrics.constraintSatisfaction < policy.constraintThreshold) {
+        refusalReasons.push(
+          `constraint_satisfaction ${metrics.constraintSatisfaction.toFixed(3)} below threshold ${policy.constraintThreshold.toFixed(3)}`
+        );
+      }
+    }
+
+    const derivationEdges = [
+      {
+        id: stableId('der', plan.intent, 'plan', input.query),
+        rel: DERIVATION_RELATIONS.DERIVED_FROM,
+        from: 'plan',
+        to: plan.intent
+      },
+      ...citations.map((citation) => ({
+        id: stableId('der', citation.id, 'evidence', plan.intent),
+        rel: DERIVATION_RELATIONS.SUPPORTS,
+        from: citation.id,
+        to: 'claim_1'
+      }))
+    ];
+
+    const proofSeed = `${snapshotId}|${policy.policyId}|${input.query}|${deterministicAnswer}|${mode}`;
+    const proofId = stableId('proof', proofSeed, includeCreatedAtInProof ? new Date().toISOString() : '');
+    const replayToken = stableId('trace', proofId, snapshotId, policy.policyId);
+    const corePayloadJson = this.buildCorePayloadJson({
+      deterministicAnswer,
+      mode,
+      plan,
+      policyId: policy.policyId,
+      trustLevel,
+      metrics
+    });
+    const corePayloadFingerprint = stableId('core', corePayloadJson);
+    const fullProof: AskProofArtifact = {
+      proofId,
+      replayToken,
+      generatedAt: new Date().toISOString(),
+      snapshotId,
+      policyId: policy.policyId,
+      traceLevel,
+      request: input,
+      plan,
+      operatorsExecuted,
+      rejectedBranches,
+      derivationEdges,
+      citationIds: citations.map((citation) => citation.id),
+      executionTrace,
+      trustLevel,
+      metrics,
+      responseSummary: {
+        answer,
+        deterministicAnswer,
+        confidence,
+        mode,
+        corePayloadFingerprint,
+        corePayloadJson
+      }
+    };
+    const proof = this.applyTraceLevel(fullProof, traceLevel);
+
+    const response: AskResponse = {
+      answer,
+      deterministicAnswer,
+      plan,
+      citations,
+      confidence,
+      mode,
+      llm,
+      consistency,
+      policy,
+      metrics,
+      trustLevel,
+      refusalReasons: refusalReasons.length > 0 ? refusalReasons : undefined,
+      proof: {
+        proofId,
+        replayToken,
+        snapshotId,
+        traceLevel,
+        operatorsExecuted,
+        rejectedBranches
+      },
+      status: 'implemented'
+    };
+
+    return { response, proof };
+  }
+
+  private buildMetrics(input: {
+    citationCount: number;
+    confidence: number;
+    consistencyChecked: boolean;
+    consistencyAligned: boolean;
+    intent: string;
+    rejectedBranchCount: number;
+  }): AskMeaningMetrics {
+    const groundingScore = Math.max(
+      0,
+      Math.min(1, input.citationCount > 0 ? Math.min(1, 0.55 + input.confidence * 0.45) : 0.25)
+    );
+    const constraintSatisfaction = input.consistencyChecked
+      ? input.consistencyAligned
+        ? 1
+        : 0.55
+      : input.intent === 'unknown'
+        ? 0.7
+        : 0.92;
+    const ambiguityScore = Math.max(
+      0,
+      Math.min(1, input.intent === 'mixed' ? 0.5 : input.intent === 'unknown' ? 0.8 : 0.25)
+    );
+    const stabilityScore = input.consistencyChecked ? (input.consistencyAligned ? 1 : 0.6) : 0.9;
+    const deltaNovelty = input.intent === 'unknown' ? 0.1 : 0.28;
+    const riskSurfaceScore = Math.max(
+      0.1,
+      Math.min(1, 0.35 + input.rejectedBranchCount * 0.1 + (input.intent === 'impact' ? 0.15 : 0))
+    );
+
+    return {
+      groundingScore,
+      constraintSatisfaction,
+      ambiguityScore,
+      stabilityScore,
+      deltaNovelty,
+      riskSurfaceScore
+    };
+  }
+
+  private buildCorePayloadJson(input: {
+    deterministicAnswer: string;
+    mode: AskResponse['mode'];
+    plan: AskResponse['plan'];
+    policyId: string;
+    trustLevel: AskTrustLevel;
+    metrics: AskMeaningMetrics;
+  }): string;
+  private buildCorePayloadJson(input: AskResponse): string;
+  private buildCorePayloadJson(
+    input:
+      | {
+          deterministicAnswer: string;
+          mode: AskResponse['mode'];
+          plan: AskResponse['plan'];
+          policyId: string;
+          trustLevel: AskTrustLevel;
+          metrics: AskMeaningMetrics;
+        }
+      | AskResponse
+  ): string {
+    const payload =
+      'policy' in input
+        ? {
+            deterministicAnswer: input.deterministicAnswer,
+            mode: input.mode,
+            plan: input.plan,
+            policyId: input.policy.policyId,
+            trustLevel: input.trustLevel,
+            metrics: input.metrics
+          }
+        : {
+            deterministicAnswer: input.deterministicAnswer,
+            mode: input.mode,
+            plan: input.plan,
+            policyId: input.policyId,
+            trustLevel: input.trustLevel,
+            metrics: input.metrics
+          };
+    return JSON.stringify(payload);
+  }
+
+  private applyTraceLevel(proof: AskProofArtifact, level: AskTraceLevel): AskProofArtifact {
+    if (level === 'full') {
+      return proof;
+    }
+    if (level === 'compact') {
+      return {
+        ...proof,
+        operatorsExecuted: proof.operatorsExecuted.slice(0, 1),
+        rejectedBranches: proof.rejectedBranches.slice(0, 2),
+        derivationEdges: [],
+        citationIds: proof.citationIds.slice(0, 3),
+        executionTrace: undefined
+      };
+    }
+    return {
+      ...proof,
+      derivationEdges: proof.derivationEdges.slice(0, 12),
+      citationIds: proof.citationIds.slice(0, 10),
+      executionTrace: undefined
+    };
+  }
+
+  private resolveTrustLevel(
+    metrics: AskMeaningMetrics,
+    policy: {
+      groundingThreshold: number;
+      constraintThreshold: number;
+      ambiguityMaxThreshold: number;
+    }
+  ): AskTrustLevel {
+    if (
+      metrics.groundingScore < policy.groundingThreshold ||
+      metrics.constraintSatisfaction < policy.constraintThreshold
+    ) {
+      return 'refused';
+    }
+    if (metrics.ambiguityScore > policy.ambiguityMaxThreshold) {
+      return 'conditional';
+    }
+    return 'trusted';
+  }
+
+  private buildPolicyId(
+    groundingThreshold: number,
+    constraintThreshold: number,
+    ambiguityMaxThreshold: number
+  ): string {
+    return stableId(
+      'policy',
+      groundingThreshold.toFixed(3),
+      constraintThreshold.toFixed(3),
+      ambiguityMaxThreshold.toFixed(3)
+    );
+  }
+
+  private readSnapshotId(): string {
+    const refreshStatePath = resolveRefreshStatePath(this.configService.refreshStatePath());
+    try {
+      if (!fs.existsSync(refreshStatePath)) {
+        return 'snap_unavailable';
+      }
+      const raw = fs.readFileSync(refreshStatePath, 'utf8');
+      const parsed = JSON.parse(raw) as { fingerprint?: string };
+      const fingerprint = parsed.fingerprint?.trim();
+      if (!fingerprint) {
+        return 'snap_unavailable';
+      }
+      return `snap_${fingerprint.slice(0, 24)}`;
+    } catch {
+      return 'snap_unavailable';
+    }
+  }
+
+  private readRefreshState():
+    | {
+        snapshotId: string;
+        semanticDiff: {
+          addedNodeCount: number;
+          removedNodeCount: number;
+          addedEdgeCount: number;
+          removedEdgeCount: number;
+        };
+        meaningChangeSummary: string;
+      }
+    | undefined {
+    const refreshStatePath = resolveRefreshStatePath(this.configService.refreshStatePath());
+    try {
+      if (!fs.existsSync(refreshStatePath)) {
+        return undefined;
+      }
+      const raw = fs.readFileSync(refreshStatePath, 'utf8');
+      const parsed = JSON.parse(raw) as {
+        snapshotId?: string;
+        semanticDiff?: {
+          addedNodeCount?: number;
+          removedNodeCount?: number;
+          addedEdgeCount?: number;
+          removedEdgeCount?: number;
+        };
+        meaningChangeSummary?: string;
+      };
+      if (!parsed.snapshotId || typeof parsed.snapshotId !== 'string') {
+        return undefined;
+      }
+      return {
+        snapshotId: parsed.snapshotId,
+        semanticDiff: {
+          addedNodeCount: parsed.semanticDiff?.addedNodeCount ?? 0,
+          removedNodeCount: parsed.semanticDiff?.removedNodeCount ?? 0,
+          addedEdgeCount: parsed.semanticDiff?.addedEdgeCount ?? 0,
+          removedEdgeCount: parsed.semanticDiff?.removedEdgeCount ?? 0
+        },
+        meaningChangeSummary:
+          typeof parsed.meaningChangeSummary === 'string'
+            ? parsed.meaningChangeSummary
+            : 'meaning change summary unavailable'
+      };
+    } catch {
+      return undefined;
+    }
+  }
+
+  private dedupeCitations<T extends { sourcePath: string; chunkText: string; score: number }>(
+    hits: T[]
+  ): T[] {
+    const byKey = new Map<string, T>();
+    for (const hit of hits) {
+      const key = `${hit.sourcePath}|${hit.chunkText.trim()}`;
+      const existing = byKey.get(key);
+      if (!existing || hit.score > existing.score) {
+        byKey.set(key, hit);
+      }
+    }
+    return [...byKey.values()].sort((a, b) => b.score - a.score);
+  }
+
+  private resolveCitedIds(
+    rawCitations: string[],
+    validCitationIds: string[],
+    rawLlmText?: string
+  ): string[] {
+    const validSet = new Set(validCitationIds);
+    const resolved = new Set<string>();
+
+    for (const raw of rawCitations) {
+      const normalized = raw.trim();
+      if (!normalized) {
+        continue;
+      }
+
+      if (validSet.has(normalized)) {
+        resolved.add(normalized);
+        continue;
+      }
+
+      const embeddedId = normalized.match(/(ev_[a-z0-9]+)/i)?.[1];
+      if (embeddedId && validSet.has(embeddedId)) {
+        resolved.add(embeddedId);
+        continue;
+      }
+
+      const numeric = normalized.replace(/[^\d]/g, '');
+      if (numeric.length > 0) {
+        const idx = Number(numeric);
+        if (Number.isInteger(idx) && idx >= 1 && idx <= validCitationIds.length) {
+          resolved.add(validCitationIds[idx - 1]);
+        }
+      }
+    }
+
+    if (resolved.size === 0 && rawLlmText) {
+      const matches = rawLlmText.match(/\[(\d+)\]/g) ?? [];
+      for (const match of matches) {
+        const idx = Number(match.replace(/[^\d]/g, ''));
+        if (Number.isInteger(idx) && idx >= 1 && idx <= validCitationIds.length) {
+          resolved.add(validCitationIds[idx - 1]);
+        }
+      }
+    }
+
+    return [...resolved];
+  }
+}

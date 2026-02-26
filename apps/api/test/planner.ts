@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { PlannerService } from '../src/planner/planner.service';
+import { PlannerService } from '../src/modules/planner/planner.service';
 
 function run(): void {
   const planner = new PlannerService();

@@ -1,4 +1,4 @@
-# OrgGraph Phase 5 Task List (Hardening + Delivery)
+# Orgumented Phase 5 Task List (Hardening + Delivery)
 
 Goal: harden reliability and delivery workflows after Phase 4 so API/Web are production-ready on NAS with safer operations and better validation depth.
 

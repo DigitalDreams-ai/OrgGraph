@@ -1,18 +1,18 @@
-name: orggraph
+name: orgumented
 
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: orggraph-postgres
+    container_name: orgumented-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: orggraph
-      POSTGRES_PASSWORD: orggraph
-      POSTGRES_DB: orggraph
+      POSTGRES_USER: orgumented
+      POSTGRES_PASSWORD: orgumented
+      POSTGRES_DB: orgumented
     volumes:
       - ../data/postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U orggraph -d orggraph"]
+      test: ["CMD-SHELL", "pg_isready -U orgumented -d orgumented"]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -22,12 +22,12 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    container_name: orggraph-api
+    container_name: orgumented-api
     restart: unless-stopped
     env_file:
       - ../.env
     environment:
-      ORGGRAPH_CONFIG_PATH: /app/config/api.docker.json
+      ORGUMENTED_CONFIG_PATH: /app/config/api.docker.json
       PORT: "${PORT:-3000}"
     ports:
       - "3100:3000"
@@ -57,14 +57,14 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.web
       args:
-        NEXT_PUBLIC_BUILD_VERSION: ${ORGGRAPH_WEB_VERSION:-dev-local}
-    container_name: orggraph-web
+        NEXT_PUBLIC_BUILD_VERSION: ${ORGUMENTED_WEB_VERSION:-dev-local}
+    container_name: orgumented-web
     restart: unless-stopped
     environment:
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
       NEXT_PUBLIC_API_BASE: http://api:3000
-      ORGGRAPH_WEB_LOG_ENABLED: "true"
+      ORGUMENTED_WEB_LOG_ENABLED: "true"
     depends_on:
       api:
         condition: service_healthy

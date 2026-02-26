@@ -1,16 +1,16 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
-import { ApexClassParserService } from '../src/ingestion/apex-class-parser.service';
-import { ApexTriggerParserService } from '../src/ingestion/apex-trigger-parser.service';
-import { ConnectedAppParserService } from '../src/ingestion/connected-app-parser.service';
-import { CustomObjectParserService } from '../src/ingestion/custom-object-parser.service';
-import { CustomPermissionParserService } from '../src/ingestion/custom-permission-parser.service';
-import { FlowParserService } from '../src/ingestion/flow-parser.service';
-import { PermissionSetGroupParserService } from '../src/ingestion/permission-set-group-parser.service';
-import { PermissionsParserService } from '../src/ingestion/permissions-parser.service';
-import { StagedUiMetadataParserService } from '../src/ingestion/staged-ui-metadata-parser.service';
-import type { GraphPayload } from '../src/graph/graph.types';
+import { NODE_TYPES, REL_TYPES } from '@orgumented/ontology';
+import { ApexClassParserService } from '../src/modules/ingestion/apex-class-parser.service';
+import { ApexTriggerParserService } from '../src/modules/ingestion/apex-trigger-parser.service';
+import { ConnectedAppParserService } from '../src/modules/ingestion/connected-app-parser.service';
+import { CustomObjectParserService } from '../src/modules/ingestion/custom-object-parser.service';
+import { CustomPermissionParserService } from '../src/modules/ingestion/custom-permission-parser.service';
+import { FlowParserService } from '../src/modules/ingestion/flow-parser.service';
+import { PermissionSetGroupParserService } from '../src/modules/ingestion/permission-set-group-parser.service';
+import { PermissionsParserService } from '../src/modules/ingestion/permissions-parser.service';
+import { StagedUiMetadataParserService } from '../src/modules/ingestion/staged-ui-metadata-parser.service';
+import type { GraphPayload } from '../src/modules/graph/graph.types';
 
 function mergePayloads(...payloads: GraphPayload[]): GraphPayload {
   const nodesById = new Map<string, GraphPayload['nodes'][number]>();
@@ -72,7 +72,7 @@ function run(): void {
     (node) => node.type === NODE_TYPES.CUSTOM_PERMISSION && node.name === 'CanApproveIntake'
   );
   const connectedAppNode = payload.nodes.find(
-    (node) => node.type === NODE_TYPES.CONNECTED_APP && node.name === 'OrgGraphAPI'
+    (node) => node.type === NODE_TYPES.CONNECTED_APP && node.name === 'OrgumentedAPI'
   );
   const permissionSetGroupNode = payload.nodes.find(
     (node) => node.type === NODE_TYPES.PERMISSION_SET_GROUP && node.name === 'Support_Users'
@@ -120,7 +120,7 @@ function run(): void {
   assert.ok(statusFieldNode, 'Case.Status field node should exist');
   assert.ok(systemPermNode, 'ApproveUninstalledConnectedApps system permission node should exist');
   assert.ok(customPermNode, 'CanApproveIntake custom permission node should exist');
-  assert.ok(connectedAppNode, 'OrgGraphAPI connected app node should exist');
+  assert.ok(connectedAppNode, 'OrgumentedAPI connected app node should exist');
   assert.ok(permissionSetGroupNode, 'Support_Users permission set group node should exist');
   assert.ok(caseManagerPermissionSetNode, 'Case_Manager permission set node should exist');
   assert.ok(opportunityNode, 'Opportunity object node should exist');
@@ -171,7 +171,7 @@ function run(): void {
       edge.dstId === connectedAppNode.id &&
       edge.rel === REL_TYPES.USES_CONNECTED_APP
   );
-  assert.ok(usesConnectedAppEdge, 'Support should use OrgGraphAPI connected app');
+  assert.ok(usesConnectedAppEdge, 'Support should use OrgumentedAPI connected app');
 
   const includesPermissionSetEdge = payload.edges.find(
     (edge) =>

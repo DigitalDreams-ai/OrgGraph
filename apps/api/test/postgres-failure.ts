@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { AppConfigService } from '../src/config/app-config.service';
-import { GraphService } from '../src/graph/graph.service';
+import { GraphService } from '../src/modules/graph/graph.service';
 
 async function run(): Promise<void> {
   process.env.GRAPH_BACKEND = 'postgres';
-  process.env.DATABASE_URL = 'postgres://orggraph:orggraph@127.0.0.1:1/orggraph';
+  process.env.DATABASE_URL = 'postgres://orgumented:orgumented@127.0.0.1:1/orgumented';
 
   const config = new AppConfigService();
   const graph = new GraphService(config);

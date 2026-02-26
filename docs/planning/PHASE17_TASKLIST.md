@@ -1,4 +1,4 @@
-# OrgGraph Phase 17 Task List (Specialized Storage/Runtime Decision + Execution)
+# Orgumented Phase 17 Task List (Specialized Storage/Runtime Decision + Execution)
 
 Goal: decide and execute whether a specialized semantic store/runtime is warranted, based on measured lift and cost.
 

@@ -1,4 +1,4 @@
-# OrgGraph Phase 7 Task List (Reasoning Quality + Org Alignment)
+# Orgumented Phase 7 Task List (Reasoning Quality + Org Alignment)
 
 Goal: improve correctness and trust for live-org answers by tightening parser precision, resolving `/perms` org mapping, and adding production-grade validation gates.
 

@@ -3,13 +3,14 @@
 ## Core
 - [Usage Guide](./USAGE_GUIDE.md)
 - [Cheat Sheet](./CHEATSHEET.md)
-- [OrgGraph Lifecycle](./ORGGRAPH_LIFECYCLE.md)
+- [Orgumented Lifecycle](./ORGUMENTED_LIFECYCLE.md)
 
 ## Planning
 - [Master Plan](./planning/PLAN_v1_Monorepo.md)
 - [Blue Ocean Execution Plan](./planning/BLUE_OCEAN_EXECUTION_PLAN.md)
 - [Blue Ocean Phase Roadmap](./planning/BLUE_OCEAN_PHASE_ROADMAP.md)
-- [OrgGraph Lexicon](./planning/ORGGRAPH_LEXICON.md)
+- [Success Gates Checklist](./planning/SUCCESS_GATES_CHECKLIST.md)
+- [Orgumented Lexicon](./planning/ORGUMENTED_LEXICON.md)
 - [Phase 1](./planning/PHASE1_TASKLIST.md)
 - [Phase 2](./planning/PHASE2_TASKLIST.md)
 - [Phase 3](./planning/PHASE3_TASKLIST.md)
@@ -27,6 +28,9 @@
 - [Phase 15](./planning/PHASE15_TASKLIST.md)
 - [Phase 16](./planning/PHASE16_TASKLIST.md)
 - [Phase 17](./planning/PHASE17_TASKLIST.md)
+- [Phase 18](./planning/PHASE18_TASKLIST.md)
+- [Phase 19](./planning/PHASE19_TASKLIST.md)
+- [Phase 20](./planning/PHASE20_TASKLIST.md)
 - [Planning Archive](./planning/archive/)
 
 ## Runbooks

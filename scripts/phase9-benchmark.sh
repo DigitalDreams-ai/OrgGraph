@@ -1,9 +1,9 @@
 #!/bin/sh
 set -eu
 
-API_BASE="${ORGGRAPH_API_BASE:-http://127.0.0.1:3100}"
-OUTPUT_DIR="${ORGGRAPH_BENCHMARK_DIR:-artifacts/phase9-benchmark}"
-RUNS="${ORGGRAPH_BENCHMARK_RUNS:-5}"
+API_BASE="${ORGUMENTED_API_BASE:-http://127.0.0.1:3100}"
+OUTPUT_DIR="${ORGUMENTED_BENCHMARK_DIR:-artifacts/phase9-benchmark}"
+RUNS="${ORGUMENTED_BENCHMARK_RUNS:-5}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 OUT_FILE="$OUTPUT_DIR/$STAMP.json"
 

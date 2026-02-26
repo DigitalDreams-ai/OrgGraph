@@ -7,8 +7,8 @@ if [ "${1:-}" = "" ]; then
 fi
 
 STAMP="$1"
-ROOT="${ORGGRAPH_ROOT:-$(pwd)}"
-STORE_DIR="${ORGGRAPH_RESTORE_POINT_DIR:-$ROOT/data/refresh/restore-points}"
+ROOT="${ORGUMENTED_ROOT:-$(pwd)}"
+STORE_DIR="${ORGUMENTED_RESTORE_POINT_DIR:-$ROOT/data/refresh/restore-points}"
 SOURCE="$STORE_DIR/$STAMP"
 
 if [ ! -d "$SOURCE" ]; then
@@ -25,7 +25,7 @@ copy_back() {
   fi
 }
 
-copy_back "$SOURCE/data/orggraph.db" "$ROOT/data/orggraph.db"
+copy_back "$SOURCE/data/orgumented.db" "$ROOT/data/orgumented.db"
 copy_back "$SOURCE/data/evidence/index.json" "$ROOT/data/evidence/index.json"
 copy_back "$SOURCE/data/refresh/state.json" "$ROOT/data/refresh/state.json"
 copy_back "$SOURCE/data/refresh/ontology-report.json" "$ROOT/data/refresh/ontology-report.json"

@@ -7,7 +7,7 @@ export class AppConfigService {
   constructor() {
     this.applyConfigFileDefaults();
 
-    this.validateOptionalString('ORGGRAPH_CONFIG_PATH');
+    this.validateOptionalString('ORGUMENTED_CONFIG_PATH');
     this.validateOptionalString('DATABASE_URL');
     this.validateOptionalString('GRAPH_BACKEND');
     this.validateOptionalString('PERMISSIONS_FIXTURES_PATH');
@@ -69,8 +69,8 @@ export class AppConfigService {
     this.validateOptionalString('ANTHROPIC_MODEL');
     this.validateOptionalString('ANTHROPIC_BASE_URL');
     this.validateOptionalString('INGEST_UI_METADATA_ENABLED');
-    this.validateOptionalString('ORGGRAPH_LOG_LEVEL');
-    this.validateOptionalString('ORGGRAPH_HTTP_LOG_ENABLED');
+    this.validateOptionalString('ORGUMENTED_LOG_LEVEL');
+    this.validateOptionalString('ORGUMENTED_HTTP_LOG_ENABLED');
     this.validateOptionalString('PORT');
   }
 
@@ -221,7 +221,7 @@ export class AppConfigService {
   }
 
   sfAlias(): string {
-    return process.env.SF_ALIAS?.trim() || 'orggraph-sandbox';
+    return process.env.SF_ALIAS?.trim() || 'orgumented-sandbox';
   }
 
   sfClientId(): string | undefined {
@@ -361,20 +361,20 @@ export class AppConfigService {
   }
 
   nestLogLevels(): LogLevel[] {
-    const raw = (process.env.ORGGRAPH_LOG_LEVEL || 'log,warn,error').trim().toLowerCase();
+    const raw = (process.env.ORGUMENTED_LOG_LEVEL || 'log,warn,error').trim().toLowerCase();
     const parsed = raw
       .split(',')
       .map((token) => token.trim())
       .filter((token) => token.length > 0) as LogLevel[];
     const allowed: ReadonlySet<string> = new Set(['log', 'error', 'warn', 'debug', 'verbose', 'fatal']);
     if (parsed.length === 0 || parsed.some((level) => !allowed.has(level))) {
-      throw new Error(`Invalid ORGGRAPH_LOG_LEVEL: ${raw}`);
+      throw new Error(`Invalid ORGUMENTED_LOG_LEVEL: ${raw}`);
     }
     return parsed;
   }
 
   httpLogEnabled(): boolean {
-    return (process.env.ORGGRAPH_HTTP_LOG_ENABLED || 'false').trim().toLowerCase() === 'true';
+    return (process.env.ORGUMENTED_HTTP_LOG_ENABLED || 'false').trim().toLowerCase() === 'true';
   }
 
   private readPositiveInt(
@@ -425,20 +425,20 @@ export class AppConfigService {
   }
 
   private applyConfigFileDefaults(): void {
-    const configPathRaw = process.env.ORGGRAPH_CONFIG_PATH?.trim();
+    const configPathRaw = process.env.ORGUMENTED_CONFIG_PATH?.trim();
     if (!configPathRaw) {
       return;
     }
 
     const configPath = isAbsolute(configPathRaw) ? configPathRaw : resolve(process.cwd(), configPathRaw);
     if (!existsSync(configPath)) {
-      throw new Error(`ORGGRAPH_CONFIG_PATH not found: ${configPath}`);
+      throw new Error(`ORGUMENTED_CONFIG_PATH not found: ${configPath}`);
     }
 
     const raw = readFileSync(configPath, 'utf8');
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      throw new Error(`ORGGRAPH_CONFIG_PATH must contain a JSON object: ${configPath}`);
+      throw new Error(`ORGUMENTED_CONFIG_PATH must contain a JSON object: ${configPath}`);
     }
 
     const entries = Object.entries(parsed as Record<string, unknown>);

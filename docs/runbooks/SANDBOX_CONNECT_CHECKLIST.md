@@ -1,4 +1,7 @@
-# Sandbox Connection Checklist (External Client App OAuth)
+# Sandbox Connection Checklist (Legacy External Client App OAuth)
+
+This runbook documents the current legacy OAuth flow.
+Planned primary flow (Phase 18+) is WebUI-first authentication via CumulusCI `3.78.0`.
 
 ## 1) Create External Client App in Salesforce Sandbox
 - [x] In Sandbox org: Setup -> App Manager -> New External Client App.
@@ -42,7 +45,7 @@
 - [x] Run `npm run sf:retrieve-refresh`.
 - [x] Capture baseline node/edge/evidence counts.
 
-## 7) Verify OrgGraph Endpoints
+## 7) Verify Orgumented Endpoints
 - [x] `GET /ready` returns `status=ready`.
 - [ ] Run `npm run sf:export-user-map` (writes `USER_PROFILE_MAP_PATH`) before `/perms` validation.
 - [ ] `GET /perms` returns expected path for known test user/object.

@@ -1,6 +1,6 @@
 # Storage Rollback & Disaster Recovery
 
-This runbook covers storage/runtime rollback for OrgGraph.
+This runbook covers storage/runtime rollback for Orgumented.
 
 ## Baseline Safety
 

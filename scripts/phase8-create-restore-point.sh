@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
 
-ROOT="${ORGGRAPH_ROOT:-$(pwd)}"
-STORE_DIR="${ORGGRAPH_RESTORE_POINT_DIR:-$ROOT/data/refresh/restore-points}"
+ROOT="${ORGUMENTED_ROOT:-$(pwd)}"
+STORE_DIR="${ORGUMENTED_RESTORE_POINT_DIR:-$ROOT/data/refresh/restore-points}"
 STAMP="${1:-$(date +%Y%m%d-%H%M%S)}"
 TARGET="$STORE_DIR/$STAMP"
 
@@ -17,7 +17,7 @@ copy_if_exists() {
   fi
 }
 
-copy_if_exists "$ROOT/data/orggraph.db" "$TARGET/data/orggraph.db"
+copy_if_exists "$ROOT/data/orgumented.db" "$TARGET/data/orgumented.db"
 copy_if_exists "$ROOT/data/evidence/index.json" "$TARGET/data/evidence/index.json"
 copy_if_exists "$ROOT/data/refresh/state.json" "$TARGET/data/refresh/state.json"
 copy_if_exists "$ROOT/data/refresh/ontology-report.json" "$TARGET/data/refresh/ontology-report.json"

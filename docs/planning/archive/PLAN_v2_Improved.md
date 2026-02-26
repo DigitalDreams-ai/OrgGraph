@@ -1,10 +1,10 @@
-# OrgGraph — Improved Plan (v2)
+# Orgumented — Improved Plan (v2)
 
 **Target:** Personal org management · **Scope:** Simple, maintainable
 
 **Stack:** NestJS (API) + Postgres + Chroma (vectors) + Claude/OpenAI
 
-**Deployment:** Synology NAS. All services run in Docker under project **OrgGraph**.
+**Deployment:** Synology NAS. All services run in Docker under project **Orgumented**.
 
 ---
 
@@ -20,12 +20,12 @@ We compute dependency truth first. Retrieval second.
 
 # Project Structure
 
-**Path:** `/volume1/data/projects/orggraph` (NAS)
+**Path:** `/volume1/data/projects/orgumented` (NAS)
 
 NestJS-style layout: each domain is a self-contained module with its own entities, DTOs, and services.
 
 ```
-orggraph/
+orgumented/
 ├── src/
 │   ├── main.ts
 │   ├── app.module.ts
@@ -97,9 +97,9 @@ orggraph/
 │   ├── schema.prisma
 │   └── migrations/
 │
-├── docker/                            # OrgGraphServices
+├── docker/                            # OrgumentedServices
 │   ├── Dockerfile
-│   └── docker-compose.yml             # name: OrgGraphServices
+│   └── docker-compose.yml             # name: OrgumentedServices
 │
 ├── scripts/                           # One-off: seed, migrate
 │   └── refresh-graph.ts
@@ -202,7 +202,7 @@ og refresh [--full]
 
 ## Phase 1 — Foundation (2 weeks)
 - NestJS project + Postgres schema
-- `docker/Dockerfile` + `docker/docker-compose.yml` with `name: OrgGraphServices`
+- `docker/Dockerfile` + `docker/docker-compose.yml` with `name: OrgumentedServices`
 - `graph` module: node/edge CRUD, basic traversals
 - `sf-client`: metadata pull via `sf project retrieve`
 - Permissions parser → graph upsert
@@ -222,7 +222,7 @@ og refresh [--full]
 - Incremental refresh
 - Tree-sitter Apex (optional)
 - Next.js UI (optional)
-- Run via `docker compose -p OrgGraphServices up -d` on NAS
+- Run via `docker compose -p OrgumentedServices up -d` on NAS
 
 **Total:** ~6–8 weeks at a relaxed pace.
 
@@ -253,6 +253,6 @@ og ask "What touches Opportunity.StageName?"
 
 # Result
 
-**OrgGraph** — A Salesforce operational reasoning engine for your org. Not a code search tool.
+**Orgumented** — A Salesforce operational reasoning engine for your org. Not a code search tool.
 
 **Graph = Truth · LLM = Interpreter · Vectors = Supporting Evidence**

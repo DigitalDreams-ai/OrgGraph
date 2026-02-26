@@ -4,7 +4,7 @@ This file defines how coding agents should operate in this repository.
 
 ## 1) Mission
 
-OrgGraph is a deterministic semantic runtime for Salesforce architecture decisions.
+Orgumented is a deterministic semantic runtime for Salesforce architecture decisions.
 
 Priority order:
 1. Determinism
@@ -20,7 +20,7 @@ Do not optimize for novelty without measurable lift.
 Use these docs as primary direction:
 - `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
 - `docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md`
-- `docs/planning/ORGGRAPH_LEXICON.md`
+- `docs/planning/ORGUMENTED_LEXICON.md`
 - Active phase tasklist (`docs/planning/PHASE*_TASKLIST.md`)
 
 If docs conflict, prefer the latest active phase and blue-ocean execution plan.
@@ -88,7 +88,7 @@ When behavior changes, update:
 - relevant runbooks in `docs/runbooks/`
 - active phase tasklist status
 
-If terminology changes, update `docs/planning/ORGGRAPH_LEXICON.md`.
+If terminology changes, update `docs/planning/ORGUMENTED_LEXICON.md`.
 
 ## 10) Anti-Patterns to Avoid
 

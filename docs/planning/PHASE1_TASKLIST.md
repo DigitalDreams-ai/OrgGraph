@@ -1,4 +1,4 @@
-# OrgGraph Phase 1 Task List (Execution Order)
+# Orgumented Phase 1 Task List (Execution Order)
 
 Goal: deliver a deterministic permissions graph PoC that answers:
 "Why can't user X edit Object Y?"
@@ -18,7 +18,7 @@ Scope lock (Phase 1 only):
   - [x] `pnpm -v` (target pnpm 9+) - available via `npm exec --yes pnpm@9.12.3 -- ...`
   - [x] `docker --version`
   - [x] `docker compose version`
-- [x] Decide canonical repo path naming (`OrgGraph` vs `orggraph`) and standardize docs/scripts.
+- [x] Decide canonical repo path naming (`Orgumented` vs `orgumented`) and standardize docs/scripts.
 - [x] Add `.nvmrc` and root `packageManager` field in `package.json`.
 
 ## 2. Monorepo Bootstrap
@@ -114,7 +114,7 @@ Scope lock (Phase 1 only):
 - [x] `pnpm --filter api test:validation` passes.
 - [x] `POST /refresh` ingests fixture and reports counts.
 - [x] `GET /perms` returns deterministic path for known case.
-- [x] Docker compose runs successfully on Synology under project `orggraph`.
+- [x] Docker compose runs successfully on Synology under project `orgumented`.
 - [x] README updated with exact Phase 1 run commands.
 
 ## Status

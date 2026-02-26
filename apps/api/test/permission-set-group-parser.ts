@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { REL_TYPES } from '@orggraph/ontology';
-import { PermissionSetGroupParserService } from '../src/ingestion/permission-set-group-parser.service';
+import { REL_TYPES } from '@orgumented/ontology';
+import { PermissionSetGroupParserService } from '../src/modules/ingestion/permission-set-group-parser.service';
 
 function run(): void {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orggraph-permset-group-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orgumented-permset-group-'));
   const dirPath = path.join(root, 'permission-set-groups');
   fs.mkdirSync(dirPath, { recursive: true });
 

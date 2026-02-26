@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { REL_TYPES } from '@orggraph/ontology';
-import { ApexClassParserService } from '../src/ingestion/apex-class-parser.service';
-import { FlowParserService } from '../src/ingestion/flow-parser.service';
+import { REL_TYPES } from '@orgumented/ontology';
+import { ApexClassParserService } from '../src/modules/ingestion/apex-class-parser.service';
+import { FlowParserService } from '../src/modules/ingestion/flow-parser.service';
 
 function run(): void {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orggraph-parser-regression-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orgumented-parser-regression-'));
   const classesPath = path.join(root, 'apex-classes');
   const flowsPath = path.join(root, 'flows');
   fs.mkdirSync(classesPath, { recursive: true });

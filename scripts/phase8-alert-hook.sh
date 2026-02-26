@@ -9,7 +9,7 @@ if [ "$STATUS" = "" ] || [ "$MESSAGE" = "" ]; then
   exit 1
 fi
 
-WEBHOOK="${ORGGRAPH_ALERT_WEBHOOK_URL:-}"
+WEBHOOK="${ORGUMENTED_ALERT_WEBHOOK_URL:-}"
 if [ "$WEBHOOK" = "" ]; then
   echo "alert webhook not configured; skipping"
   exit 0

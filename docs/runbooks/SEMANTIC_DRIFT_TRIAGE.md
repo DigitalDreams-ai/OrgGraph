@@ -9,7 +9,7 @@ Provide a deterministic root-cause workflow when semantic drift changes exceed b
 
 ## 1. Capture Baseline Drift Report
 ```bash
-cd /volume1/data/projects/OrgGraph
+cd /volume1/data/projects/Orgumented
 ./scripts/phase14-drift-report.sh latest latest artifacts/phase14-drift-report.json
 ```
 

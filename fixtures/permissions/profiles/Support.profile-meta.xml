@@ -28,7 +28,7 @@
     <name>CanApproveIntake</name>
   </customPermissions>
   <applicationVisibilities>
-    <application>OrgGraphAPI</application>
+    <application>OrgumentedAPI</application>
     <visible>true</visible>
   </applicationVisibilities>
 </PermissionSet>

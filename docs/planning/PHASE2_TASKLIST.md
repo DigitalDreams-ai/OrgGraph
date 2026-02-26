@@ -1,4 +1,4 @@
-# OrgGraph Phase 2 Task List (Automation + Impact)
+# Orgumented Phase 2 Task List (Automation + Impact)
 
 Goal: answer
 - "What runs on Object X?"
@@ -63,7 +63,7 @@ Scope focus:
 - [x] `/automation?object=Case|Opportunity` returns relevant automation entities.
 - [x] `/impact?field=Account.Foo__c|Opportunity.StageName` returns deterministic path(s) or explicit no-path.
 - [x] `pnpm --filter api test` passes with Phase 2 fixtures.
-- [x] Dockerized API serves Phase 2 endpoints in NAS `orggraph` project.
+- [x] Dockerized API serves Phase 2 endpoints in NAS `orgumented` project.
 
 ## Status
 

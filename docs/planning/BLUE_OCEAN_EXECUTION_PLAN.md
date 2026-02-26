@@ -1,7 +1,7 @@
-# OrgGraph Blue Ocean Execution Plan
+# Orgumented Blue Ocean Execution Plan
 
 ## Objective
-Build OrgGraph into a deterministic semantic runtime for Salesforce architecture decisions, where every answer is replayable, auditable, and composition-first.
+Build Orgumented into a deterministic semantic runtime for Salesforce architecture decisions, where every answer is replayable, auditable, and composition-first.
 
 ## What Makes This Different
 - Context is a typed runtime system, not a token retrieval bundle.
@@ -9,7 +9,7 @@ Build OrgGraph into a deterministic semantic runtime for Salesforce architecture
 - Meaning is modeled as constrained composition over semantic units.
 - Semantic drift is measured and blocked before trust is lost.
 
-Language standard: use canonical terms defined in `docs/planning/ORGGRAPH_LEXICON.md`.
+Language standard: use canonical terms defined in `docs/planning/ORGUMENTED_LEXICON.md`.
 
 ## Non-Negotiable Product Laws
 - Deterministic by default: same snapshot + same query + same policy = same result.
@@ -148,7 +148,7 @@ flowchart LR
     G --> H[Deterministic Recommendation + Proof]
 ```
 
-This makes OrgGraph a decision runtime for:
+This makes Orgumented a decision runtime for:
 - permission blast radius,
 - automation side effects,
 - release-time semantic regressions,
@@ -179,6 +179,9 @@ Delay these until lift is proven:
 - lower mean time to trusted decision for architects.
 - lower false positive risk alerts under real sandbox metadata.
 
+Execution control reference:
+- `docs/planning/SUCCESS_GATES_CHECKLIST.md`
+
 ## Minimal Build Order
 1. Lock SCU schema and operator contracts.
 2. Add derivation relation persistence and proof artifacts.
@@ -193,7 +196,15 @@ Delay these until lift is proven:
 - No rollout when drift metrics regress beyond thresholds.
 
 ## Definition of Success
-OrgGraph becomes the system where Salesforce architects do not ask:
+Orgumented becomes the system where Salesforce architects do not ask:
 "What document should I read?"
 They ask:
 "What is the replayable semantic proof for this architectural decision, under this snapshot and policy?"
+
+## WebUI-First Operating Constraints
+- WebUI is the primary operator surface for auth, retrieval, refresh, analysis, and proof inspection.
+- Authentication path should be CCI-driven in primary UX (pin CumulusCI to `3.78.0`).
+- Metadata retrieval UX should be org-wide and selective (VS Code Org Browser style), not package.xml-all by default.
+- Ask UX should layer outputs:
+  - deterministic evidence summary first
+  - optional conversational elaboration second

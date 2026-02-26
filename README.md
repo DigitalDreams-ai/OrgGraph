@@ -1,4 +1,4 @@
-# OrgGraph
+# Orgumented
 
 A Salesforce operational reasoning engine — ontology-first knowledge graph for your org. Graph = Truth, LLM = Interpreter, Vectors = Evidence.
 
@@ -13,7 +13,7 @@ A Salesforce operational reasoning engine — ontology-first knowledge graph for
 | Hostname | DS1823xs |
 | IP | 10.0.1.10 |
 | SSH User | docker |
-| Project Path | `/volume1/data/projects/OrgGraph` |
+| Project Path | `/volume1/data/projects/Orgumented` |
 | Auth | SSH key (no password) |
 
 ### Prerequisites (Synology)
@@ -22,7 +22,7 @@ A Salesforce operational reasoning engine — ontology-first knowledge graph for
 - **SSH** — Enable in Control Panel → Terminal & SNMP
 - **Postgres** — Runs in container
 
-All OrgGraph services run under the Docker project **orggraph** for isolation and organization.
+All Orgumented services run under the Docker project **orgumented** for isolation and organization.
 
 ### SSH Setup
 
@@ -38,13 +38,13 @@ ssh-copy-id docker@10.0.1.10
 ### Development on NAS
 
 - Use **Cursor Remote SSH** or `ssh docker@DS1823xs`
-- Open `/volume1/data/projects/OrgGraph`
+- Open `/volume1/data/projects/Orgumented`
 - Work directly in the repo on the NAS
 
 ### Local Bootstrap (Phase 1)
 
 ```bash
-cd /volume1/data/projects/OrgGraph
+cd /volume1/data/projects/Orgumented
 
 # Preferred if pnpm is installed globally:
 pnpm install
@@ -63,14 +63,14 @@ Phase 1 user-to-profile resolution is read from `fixtures/permissions/user-profi
 
 ### Running the Stack
 
-All OrgGraph services run via Docker Compose under the project **orggraph**:
+All Orgumented services run via Docker Compose under the project **orgumented**:
 
 ```bash
-cd /volume1/data/projects/OrgGraph
+cd /volume1/data/projects/Orgumented
 docker compose -f docker/docker-compose.yml up -d
 ```
 
-See `docker/docker-compose.yml` for service configuration. The compose file uses `name: orggraph` to keep containers grouped in Container Manager.
+See `docker/docker-compose.yml` for service configuration. The compose file uses `name: orgumented` to keep containers grouped in Container Manager.
 
 ### Service Endpoints
 
@@ -112,7 +112,7 @@ Phase 6 adds sandbox-first org retrieval and refresh.
 
 1. Install Salesforce CLI (`sf`) on NAS host.
 2. Create secrets directory:
-`mkdir -p /volume1/data/projects/OrgGraph/.secrets`
+`mkdir -p /volume1/data/projects/Orgumented/.secrets`
 3. Ensure env file exists at repo root:
 `cp .env.sample .env` (or `cp .env.example .env`)
 4. Create an External Client App in sandbox org and enable OAuth scopes:
@@ -185,7 +185,7 @@ See [ORG_INTEGRATION.md](./docs/runbooks/ORG_INTEGRATION.md) and [SANDBOX_CONNEC
 # API
 PORT=3000
 GRAPH_BACKEND=sqlite
-DATABASE_URL=file:./data/orggraph.db
+DATABASE_URL=file:./data/orgumented.db
 PERMISSIONS_FIXTURES_PATH=fixtures/permissions
 USER_PROFILE_MAP_PATH=fixtures/permissions/user-profile-map.json
 EVIDENCE_INDEX_PATH=data/evidence/index.json
@@ -204,18 +204,18 @@ OPENAI_MODEL=gpt-4.1-mini
 OPENAI_BASE_URL=https://api.openai.com/v1/chat/completions
 ANTHROPIC_MODEL=claude-3-5-haiku-20241022
 ANTHROPIC_BASE_URL=https://api.anthropic.com/v1/messages
-ORGGRAPH_LOG_LEVEL=log,warn,error,debug
-ORGGRAPH_HTTP_LOG_ENABLED=true
+ORGUMENTED_LOG_LEVEL=log,warn,error,debug
+ORGUMENTED_HTTP_LOG_ENABLED=true
 
 # Web
 NEXT_PUBLIC_API_BASE=http://localhost:3100
-ORGGRAPH_WEB_LOG_ENABLED=true
+ORGUMENTED_WEB_LOG_ENABLED=true
 ```
 
 Postgres runtime example:
 ```bash
 GRAPH_BACKEND=postgres
-DATABASE_URL=postgres://orggraph:orggraph@postgres:5432/orggraph
+DATABASE_URL=postgres://orgumented:orgumented@postgres:5432/orgumented
 ```
 
 ## Architecture Notes
@@ -232,7 +232,7 @@ DATABASE_URL=postgres://orggraph:orggraph@postgres:5432/orggraph
 3. Metrics snapshot: `curl http://localhost:3100/metrics`
 4. If web builds fail on Synology due `@eaDir` artifacts, run `./scripts/clean-eadir.sh`
 5. Rebuild stack after updates: `docker compose -f docker/docker-compose.yml up -d --build`
-6. For Dozzle-friendly request logs, ensure `ORGGRAPH_HTTP_LOG_ENABLED=true` (api) and `ORGGRAPH_WEB_LOG_ENABLED=true` (web)
+6. For Dozzle-friendly request logs, ensure `ORGUMENTED_HTTP_LOG_ENABLED=true` (api) and `ORGUMENTED_WEB_LOG_ENABLED=true` (web)
 
 ## LLM Ask Mode (Phase 10)
 

@@ -197,7 +197,7 @@ export default function Page(): JSX.Element {
     <main className="page-shell">
       <section className="hero">
         <p className="hero-kicker">Operator Console</p>
-        <h1>OrgGraph Operator Workbench</h1>
+        <h1>Orgumented Operator Workbench</h1>
         <p>
           Run deterministic graph and evidence queries directly against the API. This UI is a thin operator surface,
           not a new source of truth.

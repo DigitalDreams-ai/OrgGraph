@@ -4,7 +4,7 @@ set -eu
 ROOT_DIR="$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)"
 . "$ROOT_DIR/scripts/load-dotenv.sh"
 SF_VERBOSE="${SF_VERBOSE:-false}"
-SF_ALIAS="${SF_ALIAS:-orggraph-sandbox}"
+SF_ALIAS="${SF_ALIAS:-orgumented-sandbox}"
 SF_PROJECT_PATH="${SF_PROJECT_PATH:-$ROOT_DIR/data/sf-project}"
 SF_MANIFEST_PATH="${SF_MANIFEST_PATH:-$ROOT_DIR/manifest/package.xml}"
 SF_WAIT_MINUTES="${SF_WAIT_MINUTES:-15}"

@@ -5,7 +5,7 @@ import {
   SCU_TYPES,
   composeScu,
   type SemanticContextUnit
-} from '@orggraph/ontology';
+} from '@orgumented/ontology';
 
 function scu(
   id: string,

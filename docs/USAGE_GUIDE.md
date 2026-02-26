@@ -1,7 +1,7 @@
-# OrgGraph Usage Guide
+# Orgumented Usage Guide
 
-## 1. What OrgGraph Does
-OrgGraph builds a deterministic graph from Salesforce metadata and answers:
+## 1. What Orgumented Does
+Orgumented builds a deterministic graph from Salesforce metadata and answers:
 - Who can edit what (`/perms`)
 - What automation runs on an object (`/automation`)
 - What might be impacted by a field change (`/impact`)
@@ -13,7 +13,7 @@ OrgGraph builds a deterministic graph from Salesforce metadata and answers:
 
 ## 3. Start the Stack
 ```bash
-cd /volume1/data/projects/OrgGraph
+cd /volume1/data/projects/Orgumented
 docker compose -f docker/docker-compose.yml up -d --build
 ```
 
@@ -48,7 +48,11 @@ Compare two snapshots deterministically:
 curl "http://localhost:3100/refresh/diff/<snapshotA>/<snapshotB>"
 ```
 
-## 6. Connect Sandbox Org (External Client App OAuth)
+## 6. Connect Sandbox Org (Current Legacy Flow)
+Current implemented flow in this build uses External Client App OAuth.
+Planned direction (Phase 18+) is WebUI-first CCI auth with CumulusCI `3.78.0`.
+
+### 6.1 Legacy External Client App OAuth
 1. Configure `.env` with Salesforce values (`SF_BASE_URL`, `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REDIRECT_URI`, etc.).
 2. Generate OAuth URL:
 ```bash
@@ -64,7 +68,13 @@ npm run sf:oauth:exchange
 npm run sf:auth
 ```
 
+### 6.2 Planned Primary Flow (Phase 18+)
+- WebUI-auth via `cci` will become primary operator path.
+- External Client App OAuth will remain legacy/fallback until migration completes.
+
 ## 7. Retrieve and Ingest Sandbox Metadata
+Avoid package.xml-all retrieval as default operator behavior.
+Use selective retrieval scope where possible.
 ```bash
 npm run sf:retrieve
 npm run sf:export-user-map
@@ -90,7 +100,7 @@ Expanded metadata coverage in current build includes:
 - `ConnectedApp`
 - staged UI metadata (`ApexPage`, `LightningComponentBundle`, `AuraDefinitionBundle`, `QuickAction`, `Layout`) when enabled
 
-## 8. Query OrgGraph
+## 8. Query Orgumented
 
 ### 8.1 Permissions
 ```bash
@@ -224,6 +234,8 @@ docker compose -f docker/docker-compose.yml up -d --build web
 ### 10.4 Validate full web flow quickly
 ```bash
 npm run test:web-smoke
+# Optional: opt-in to smoke against retrieved org metadata
+WEB_SMOKE_USE_SF_PROJECT=1 npm run test:web-smoke
 ```
 
 ## 11. Extended Validation Harness

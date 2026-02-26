@@ -10,7 +10,7 @@ function resolveWorkspaceRoot(): string {
 
 async function run(): Promise<void> {
   const workspaceRoot = resolveWorkspaceRoot();
-  const dbPath = path.join(workspaceRoot, 'data', 'orggraph.phase13-meaning.db');
+  const dbPath = path.join(workspaceRoot, 'data', 'orgumented.phase13-meaning.db');
   const evidencePath = path.join(workspaceRoot, 'data', 'evidence.phase13-meaning.json');
   const userMapPath = path.join(workspaceRoot, 'data', 'user-profile-map.phase13-meaning.json');
 

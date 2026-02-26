@@ -1,10 +1,11 @@
-# OrgGraph — Plan v3 (Monorepo, Validate First)
+# Orgumented — Plan v3 (Monorepo, Validate First)
 
 > Note: This file documents the original monorepo execution model.  
 > For current strategic execution (Phase 11+), use:
 > - `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
 > - `docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md`
-> - `docs/planning/PHASE11_TASKLIST.md` through `docs/planning/PHASE17_TASKLIST.md`
+> - `docs/planning/PHASE11_TASKLIST.md` through `docs/planning/PHASE20_TASKLIST.md`
+> - `docs/planning/SUCCESS_GATES_CHECKLIST.md`
 
 ## Current Status (2026-02-25)
 
@@ -19,7 +20,7 @@
 
 **Stack:** pnpm workspaces · NestJS (API) · SQLite → Postgres · Chroma · Claude/OpenAI (deferred)
 
-**Deployment:** Synology NAS. Docker project **OrgGraphServices**.
+**Deployment:** Synology NAS. Docker project **OrgumentedServices**.
 
 ---
 
@@ -35,10 +36,10 @@ We compute dependency truth first. Retrieval second. **Validate before scaling.*
 
 # Monorepo Structure
 
-**Path:** `/volume1/data/projects/orggraph`
+**Path:** `/volume1/data/projects/orgumented`
 
 ```
-orggraph/
+orgumented/
 ├── apps/
 │   ├── api/                          # NestJS — graph, ingestion, queries
 │   │   ├── src/
@@ -70,7 +71,7 @@ orggraph/
 │
 ├── docker/
 │   ├── Dockerfile
-│   └── docker-compose.yml            # name: OrgGraphServices
+│   └── docker-compose.yml            # name: OrgumentedServices
 │
 ├── fixtures/                         # Test metadata for validation
 │   └── permissions/
@@ -224,7 +225,7 @@ Body: { "query": "What touches Opportunity.StageName?" }
 - Incremental refresh (when full refresh is slow)
 - Next.js UI (`apps/web`)
 - Tree-sitter Apex (optional)
-- Run via `docker compose -f docker/docker-compose.yml -p OrgGraphServices up -d` on NAS
+- Run via `docker compose -f docker/docker-compose.yml -p OrgumentedServices up -d` on NAS
 
 ---
 
@@ -265,6 +266,6 @@ og ask "natural language"     # Phase 3
 
 # Result
 
-**OrgGraph** — A Salesforce operational reasoning engine. Monorepo. Validate with permissions first. Add automation, evidence, and LLM incrementally.
+**Orgumented** — A Salesforce operational reasoning engine. Monorepo. Validate with permissions first. Add automation, evidence, and LLM incrementally.
 
 **Graph = Truth · LLM = Interpreter · Vectors = Supporting Evidence**

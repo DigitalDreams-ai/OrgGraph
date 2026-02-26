@@ -1,11 +1,11 @@
 #!/bin/sh
 set -eu
 
-API_BASE="${ORGGRAPH_API_BASE:-http://127.0.0.1:3100}"
-USER_EMAIL="${ORGGRAPH_SMOKE_USER:-sbingham@shulman-hill.com.uat}"
-OBJECT_API="${ORGGRAPH_SMOKE_OBJECT:-litify_pm__Intake__c}"
-FIELD_API="${ORGGRAPH_SMOKE_FIELD:-Opportunity.StageName}"
-ARTIFACT_DIR="${ORGGRAPH_SMOKE_ARTIFACT_DIR:-artifacts/phase7-live-smoke}"
+API_BASE="${ORGUMENTED_API_BASE:-http://127.0.0.1:3100}"
+USER_EMAIL="${ORGUMENTED_SMOKE_USER:-sbingham@shulman-hill.com.uat}"
+OBJECT_API="${ORGUMENTED_SMOKE_OBJECT:-litify_pm__Intake__c}"
+FIELD_API="${ORGUMENTED_SMOKE_FIELD:-Opportunity.StageName}"
+ARTIFACT_DIR="${ORGUMENTED_SMOKE_ARTIFACT_DIR:-artifacts/phase7-live-smoke}"
 
 mkdir -p "$ARTIFACT_DIR"
 

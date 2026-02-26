@@ -1,12 +1,12 @@
 #!/bin/sh
 set -eu
 
-ROOT="${ORGGRAPH_ROOT:-$(pwd)}"
-SQLITE_PATH="${ORGGRAPH_SQLITE_PATH:-$ROOT/data/orggraph.db}"
-POSTGRES_URL="${ORGGRAPH_POSTGRES_URL:-${DATABASE_URL:-}}"
+ROOT="${ORGUMENTED_ROOT:-$(pwd)}"
+SQLITE_PATH="${ORGUMENTED_SQLITE_PATH:-$ROOT/data/orgumented.db}"
+POSTGRES_URL="${ORGUMENTED_POSTGRES_URL:-${DATABASE_URL:-}}"
 
 if [ "$POSTGRES_URL" = "" ]; then
-  echo "ORGGRAPH_POSTGRES_URL or DATABASE_URL must be set"
+  echo "ORGUMENTED_POSTGRES_URL or DATABASE_URL must be set"
   exit 1
 fi
 

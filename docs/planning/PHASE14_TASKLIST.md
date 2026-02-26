@@ -1,4 +1,4 @@
-# OrgGraph Phase 14 Task List (Semantic Diff + Drift Governance)
+# Orgumented Phase 14 Task List (Semantic Diff + Drift Governance)
 
 Goal: control semantic drift across refreshes with deterministic diffs and regression gates.
 

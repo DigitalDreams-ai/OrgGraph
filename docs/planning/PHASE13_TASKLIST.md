@@ -1,4 +1,4 @@
-# OrgGraph Phase 13 Task List (Meaning Metrics + Trust Gates)
+# Orgumented Phase 13 Task List (Meaning Metrics + Trust Gates)
 
 Goal: quantify meaning quality and enforce trust policy gates deterministically.
 
@@ -42,7 +42,7 @@ Goal: quantify meaning quality and enforce trust policy gates deterministically.
 ## Verification Snapshot (2026-02-26)
 
 - API suite in container passed:
-  - `docker exec orggraph-api sh -lc 'cd /app && pnpm --filter api test'`
+  - `docker exec orgumented-api sh -lc 'cd /app && pnpm --filter api test'`
 - Replay deterministic validation passed:
   - `./scripts/phase12-replay-regression.sh`
   - `PHASE12_REPLAY_REQUESTS=24 PHASE12_REPLAY_CONCURRENCY=6 ./scripts/phase12-replay-load.sh`

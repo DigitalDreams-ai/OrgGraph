@@ -53,8 +53,8 @@ mem_mib() {
   '
 }
 
-api_mem_mib="$(mem_mib "orggraph-api")"
-postgres_mem_mib="$(mem_mib "orggraph-postgres")"
+api_mem_mib="$(mem_mib "orgumented-api")"
+postgres_mem_mib="$(mem_mib "orgumented-postgres")"
 
 cat >"$OUT_PATH" <<JSON
 {

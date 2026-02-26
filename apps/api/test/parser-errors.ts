@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { PermissionsParseError, PermissionsParserService } from '../src/ingestion/permissions-parser.service';
+import { PermissionsParseError, PermissionsParserService } from '../src/modules/ingestion/permissions-parser.service';
 
 function run(): void {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orggraph-parser-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orgumented-parser-'));
   const profilesPath = path.join(root, 'profiles');
   fs.mkdirSync(profilesPath, { recursive: true });
 

@@ -8,7 +8,7 @@ SF_BASE_URL="${SF_BASE_URL:-https://test.salesforce.com}"
 SF_BASE_URL="${SF_BASE_URL%/}"
 SF_CLIENT_ID="${SF_CLIENT_ID:-}"
 SF_REDIRECT_URI="${SF_REDIRECT_URI:-http://localhost/callback}"
-SF_OAUTH_STATE="${SF_OAUTH_STATE:-orggraph-sandbox}"
+SF_OAUTH_STATE="${SF_OAUTH_STATE:-orgumented-sandbox}"
 
 if [ -z "$SF_CLIENT_ID" ]; then
   echo "SF_CLIENT_ID is required"

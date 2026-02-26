@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
-const WEB_LOG_ENABLED = (process.env.ORGGRAPH_WEB_LOG_ENABLED || 'false').trim().toLowerCase() === 'true';
+const WEB_LOG_ENABLED = (process.env.ORGUMENTED_WEB_LOG_ENABLED || 'false').trim().toLowerCase() === 'true';
 
 type QueryKind = 'refresh' | 'perms' | 'permsSystem' | 'automation' | 'impact' | 'ask';
 
