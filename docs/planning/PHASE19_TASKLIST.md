@@ -8,8 +8,8 @@ Goal: implement org-wide metadata retrieval UX in WebUI with VS Code Org Browser
 
 ## Exit Criteria
 - [ ] WebUI supports org-wide metadata type tree browsing
-- [ ] Expand/select retrieval works across metadata types (not limited to CustomObject)
-- [ ] Keyword search filters loaded metadata dynamically across types
+- [x] Expand/select retrieval works across metadata types (not limited to CustomObject)
+- [x] Keyword search filters loaded metadata dynamically across types
 
 ## Scope
 - Org-wide metadata type catalog in WebUI
@@ -19,14 +19,14 @@ Goal: implement org-wide metadata retrieval UX in WebUI with VS Code Org Browser
 
 ## Deliverables
 - [ ] Build metadata type tree with lazy load and multi-select
-- [ ] Implement keyword search over loaded type/member data
+- [x] Implement keyword search over loaded type/member data
 - [ ] Add “Refresh Types/Cache” controls and cache age indicators
 - [ ] Add guided fallback flow when Source API misses items
 - [ ] Add provenance tags in UI (`source_api`, `metadata_api`, `cache`)
 
 ## Test Gates
 - [ ] UI integration tests for browse/expand/select/search
-- [ ] Retrieval smoke on at least 3 metadata families (objects, flows, apex)
+- [x] Retrieval smoke on at least 3 metadata families (objects, flows, apex)
 - [ ] Deterministic retrieval job logs and reproducible run metadata
 - [ ] Performance baseline: interactive search latency acceptable under large catalogs
 
@@ -38,3 +38,13 @@ Goal: implement org-wide metadata retrieval UX in WebUI with VS Code Org Browser
 
 ## Definition of Done
 - [ ] WebUI retrieval experience is org-wide, selective, and operator-friendly without package.xml-all retrieval default
+
+## Current Status (2026-02-26)
+- Implemented in this slice:
+  - `GET /org/metadata/catalog` with keyword search and limit controls
+  - `POST /org/metadata/retrieve` for selective metadata retrieval by type/member (no package.xml requirement)
+  - WebUI operator tabs for `metadataCatalog` and `metadataRetrieve`
+- Remaining:
+  - full tree UX with lazy expand/collapse behavior
+  - cache age / refresh control UX
+  - fallback/provenance labeling for Source API vs Metadata API modes

@@ -41,3 +41,42 @@ export interface OrgStatusResponse {
     message: string;
   };
 }
+
+export interface OrgMetadataMember {
+  name: string;
+}
+
+export interface OrgMetadataType {
+  type: string;
+  memberCount: number;
+  members: OrgMetadataMember[];
+}
+
+export interface OrgMetadataCatalogResponse {
+  source: 'local' | 'mixed';
+  refreshedAt: string;
+  search?: string;
+  totalTypes: number;
+  types: OrgMetadataType[];
+  warnings: string[];
+}
+
+export interface OrgMetadataRetrieveRequest {
+  selections: Array<{ type: string; members?: string[] }>;
+  autoRefresh?: boolean;
+}
+
+export interface OrgMetadataRetrieveResponse {
+  status: 'completed';
+  startedAt: string;
+  completedAt: string;
+  alias: string;
+  parsePath: string;
+  metadataArgs: string[];
+  autoRefresh: boolean;
+  refresh?: {
+    nodeCount: number;
+    edgeCount: number;
+    evidenceCount: number;
+  };
+}
