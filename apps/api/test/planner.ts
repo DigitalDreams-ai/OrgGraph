@@ -39,6 +39,17 @@ function run(): void {
   const unknownPlan = planner.plan('hello world');
   assert.equal(unknownPlan.intent, 'unknown');
 
+  const mixedA = planner.plan(
+    'Can jane@example.com edit object Opportunity and what touches Opportunity.StageName?'
+  );
+  const mixedB = planner.plan(
+    'What touches Opportunity.StageName and can jane@example.com edit object Opportunity?'
+  );
+  assert.equal(mixedA.intent, 'mixed');
+  assert.equal(mixedA.graphCalls[0], 'queries.perms');
+  assert.equal(mixedA.graphCalls[mixedA.graphCalls.length - 1], 'analysis.impact');
+  assert.deepEqual(mixedA.graphCalls, mixedB.graphCalls, 'graphCalls ordering must be stable');
+
   console.log('planner test passed');
 }
 

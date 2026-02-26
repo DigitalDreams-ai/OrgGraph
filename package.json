@@ -24,9 +24,10 @@
     "phase8:restore-point:create": "./scripts/phase8-create-restore-point.sh",
     "phase8:restore-point:apply": "./scripts/phase8-restore-restore-point.sh",
     "phase8:promotion-log": "./scripts/phase8-promotion-log.sh",
-    "phase8:retention-prune": "./scripts/phase8-retention-prune.sh"
-    ,
+    "phase8:retention-prune": "./scripts/phase8-retention-prune.sh",
     "phase9:migrate-sqlite-to-postgres": "./scripts/phase9-migrate-sqlite-to-postgres.sh",
-    "phase9:benchmark": "./scripts/phase9-benchmark.sh"
+    "phase9:benchmark": "./scripts/phase9-benchmark.sh",
+    "phase12:replay-regression": "./scripts/phase12-replay-regression.sh",
+    "phase12:replay-load": "./scripts/phase12-replay-load.sh"
   }
 }
