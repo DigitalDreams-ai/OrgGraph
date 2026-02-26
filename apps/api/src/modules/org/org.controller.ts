@@ -7,6 +7,10 @@ import type {
   OrgMetadataRetrieveResponse,
   OrgRetrieveRequest,
   OrgRetrieveResponse,
+  OrgSessionDisconnectResponse,
+  OrgSessionStatusResponse,
+  OrgSessionSwitchRequest,
+  OrgSessionSwitchResponse,
   OrgStatusResponse
 } from './org.types';
 
@@ -28,6 +32,24 @@ export class OrgController {
   @Get('/org/status')
   async status(): Promise<OrgStatusResponse> {
     return this.orgService.status();
+  }
+
+  @Get('/org/session')
+  async sessionStatus(): Promise<OrgSessionStatusResponse> {
+    return this.orgService.sessionStatus();
+  }
+
+  @Post('/org/session/switch')
+  async sessionSwitch(@Body() body: Partial<OrgSessionSwitchRequest> = {}): Promise<OrgSessionSwitchResponse> {
+    if (!body.alias || typeof body.alias !== 'string' || body.alias.trim().length === 0) {
+      throw new BadRequestException('alias is required');
+    }
+    return this.orgService.switchSessionAlias(body.alias.trim());
+  }
+
+  @Post('/org/session/disconnect')
+  async sessionDisconnect(): Promise<OrgSessionDisconnectResponse> {
+    return this.orgService.disconnectSession();
   }
 
   @Post('/org/retrieve')

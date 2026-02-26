@@ -18,6 +18,9 @@ import type {
   OrgMetadataRetrieveResponse,
   OrgRetrieveRequest,
   OrgRetrieveResponse,
+  OrgSessionDisconnectResponse,
+  OrgSessionStatusResponse,
+  OrgSessionSwitchResponse,
   OrgStatusResponse,
   OrgStepResult
 } from './org.types';
@@ -35,7 +38,7 @@ export class OrgService {
   async status(): Promise<OrgStatusResponse> {
     const integrationEnabled = this.configService.sfIntegrationEnabled();
     const authMode = this.configService.sfAuthMode();
-    const alias = this.configService.sfAlias();
+    const alias = this.resolveActiveAlias();
     const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
     const cciRequiredVersion = this.configService.cciVersionPin();
 
@@ -63,7 +66,84 @@ export class OrgService {
               ? 'cci available and version-pinned'
               : `cci available but version mismatch (expected ${cciRequiredVersion})`
             : 'cci not found in PATH'
-      }
+      },
+      session: this.sessionStatus()
+    };
+  }
+
+  sessionStatus(): OrgSessionStatusResponse {
+    const authMode = this.configService.sfAuthMode();
+    const session = this.readSessionState();
+    if (!session || session.status !== 'connected') {
+      return {
+        status: 'disconnected',
+        activeAlias: this.configService.sfAlias(),
+        authMode,
+        disconnectedAt: session?.disconnectedAt,
+        lastError: session?.lastError
+      };
+    }
+    return {
+      status: 'connected',
+      activeAlias: session.activeAlias,
+      authMode,
+      connectedAt: session.connectedAt,
+      lastError: session.lastError
+    };
+  }
+
+  async switchSessionAlias(alias: string): Promise<OrgSessionSwitchResponse> {
+    const authMode = this.configService.sfAuthMode();
+    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
+    await this.ensureSfBinaryInstalled(projectPath);
+    const aliasCheck = await this.commandRunner.run(
+      'sf',
+      ['org', 'display', '--target-org', alias, '--json'],
+      { cwd: projectPath, timeoutMs: 30_000 }
+    );
+    if (aliasCheck.exitCode !== 0) {
+      this.writeSessionState({
+        status: 'disconnected',
+        activeAlias: this.configService.sfAlias(),
+        disconnectedAt: new Date().toISOString(),
+        lastError: `org alias not accessible: ${alias}`
+      });
+      this.appendAuthAudit('switch_failed', alias, authMode, 'org alias not accessible');
+      throw new BadRequestException({
+        message: `org alias not accessible: ${alias}`,
+        details: { code: 'SF_SESSION_SWITCH_DENIED' }
+      });
+    }
+    const switchedAt = new Date().toISOString();
+    this.writeSessionState({
+      status: 'connected',
+      activeAlias: alias,
+      connectedAt: switchedAt
+    });
+    this.appendAuthAudit('switch', alias, authMode, 'active alias switched');
+    return {
+      status: 'connected',
+      activeAlias: alias,
+      authMode,
+      switchedAt
+    };
+  }
+
+  disconnectSession(): OrgSessionDisconnectResponse {
+    const authMode = this.configService.sfAuthMode();
+    const activeAlias = this.resolveActiveAlias();
+    const disconnectedAt = new Date().toISOString();
+    this.writeSessionState({
+      status: 'disconnected',
+      activeAlias,
+      disconnectedAt
+    });
+    this.appendAuthAudit('disconnect', activeAlias, authMode, 'session disconnected by operator');
+    return {
+      status: 'disconnected',
+      activeAlias,
+      authMode,
+      disconnectedAt
     };
   }
 
@@ -76,7 +156,7 @@ export class OrgService {
 
     const integrationEnabled = this.configService.sfIntegrationEnabled();
     const authMode = this.configService.sfAuthMode();
-    const alias = this.configService.sfAlias();
+    const alias = this.resolveActiveAlias();
     const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
     const manifestPath = resolveSfManifestPath(this.configService.sfManifestPath());
     const parsePath = resolveSfParsePath(this.configService.sfParsePath());
@@ -96,7 +176,9 @@ export class OrgService {
       const validateStarted = Date.now();
       await this.ensureSfBinaryInstalled(projectPath);
       this.ensureProjectScaffold(projectPath);
-      this.ensureManifestFile(manifestPath);
+      if (runRetrieve) {
+        this.ensureManifestFile(manifestPath);
+      }
       steps.push({
         step: 'validate',
         status: 'completed',
@@ -108,6 +190,12 @@ export class OrgService {
       if (runAuth) {
         const authStarted = Date.now();
         await this.runAuth(authMode, alias, projectPath);
+        this.writeSessionState({
+          status: 'connected',
+          activeAlias: alias,
+          connectedAt: new Date().toISOString()
+        });
+        this.appendAuthAudit('connect', alias, authMode, 'session connected via org/retrieve');
         steps.push({
           step: 'auth',
           status: 'completed',
@@ -700,7 +788,7 @@ export class OrgService {
       });
     }
 
-    const alias = this.configService.sfAlias();
+    const alias = this.resolveActiveAlias();
     const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
     const parsePath = resolveSfParsePath(this.configService.sfParsePath());
     const autoRefresh = input.autoRefresh ?? this.configService.sfAutoRefreshAfterRetrieve();
@@ -917,6 +1005,80 @@ export class OrgService {
       return 'source_api_error';
     }
     return 'retrieve_command_error';
+  }
+
+  private resolveActiveAlias(): string {
+    const session = this.readSessionState();
+    if (session && session.status === 'connected' && session.activeAlias.trim().length > 0) {
+      return session.activeAlias;
+    }
+    return this.configService.sfAlias();
+  }
+
+  private getSessionStatePath(): string {
+    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
+    return path.join(path.dirname(projectPath), 'org-session-state.json');
+  }
+
+  private readSessionState():
+    | {
+        status: 'connected' | 'disconnected';
+        activeAlias: string;
+        connectedAt?: string;
+        disconnectedAt?: string;
+        lastError?: string;
+      }
+    | undefined {
+    const sessionPath = this.getSessionStatePath();
+    if (!fs.existsSync(sessionPath)) {
+      return undefined;
+    }
+    try {
+      const raw = fs.readFileSync(sessionPath, 'utf8');
+      return JSON.parse(raw) as {
+        status: 'connected' | 'disconnected';
+        activeAlias: string;
+        connectedAt?: string;
+        disconnectedAt?: string;
+        lastError?: string;
+      };
+    } catch {
+      return undefined;
+    }
+  }
+
+  private writeSessionState(state: {
+    status: 'connected' | 'disconnected';
+    activeAlias: string;
+    connectedAt?: string;
+    disconnectedAt?: string;
+    lastError?: string;
+  }): void {
+    const sessionPath = this.getSessionStatePath();
+    fs.mkdirSync(path.dirname(sessionPath), { recursive: true });
+    fs.writeFileSync(sessionPath, JSON.stringify(state, null, 2), 'utf8');
+  }
+
+  private appendAuthAudit(
+    action: 'connect' | 'switch' | 'disconnect' | 'switch_failed',
+    alias: string,
+    authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token',
+    message: string
+  ): void {
+    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
+    const auditPath = path.join(path.dirname(projectPath), 'auth-session-audit.log');
+    fs.mkdirSync(path.dirname(auditPath), { recursive: true });
+    fs.appendFileSync(
+      auditPath,
+      `${JSON.stringify({
+        action,
+        alias,
+        authMode,
+        message,
+        timestamp: new Date().toISOString()
+      })}\n`,
+      'utf8'
+    );
   }
 
   private inferMetadataType(folderName: string, fileName: string): string {

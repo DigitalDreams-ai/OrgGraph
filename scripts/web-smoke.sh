@@ -57,9 +57,15 @@ run_query impact '{"field":"Opportunity.StageName"}'
 run_query ask '{"query":"What touches Opportunity.StageName?","maxCitations":5}'
 
 if [ "${WEB_SMOKE_REQUIRE_ORG_AUTH:-0}" = "1" ]; then
+  WEB_SMOKE_ORG_ALIAS="${WEB_SMOKE_ORG_ALIAS:-orgumented-sandbox}"
+  run_query orgSession '{}'
+  run_query orgSessionSwitch "{\"alias\":\"$WEB_SMOKE_ORG_ALIAS\"}"
   run_query orgConnect '{}'
+  run_query orgStatus '{}'
+  run_query orgRetrieve '{"runAuth":false,"runRetrieve":false,"autoRefresh":false}'
   run_query metadataMembers '{"type":"CustomObject","q":"Account","limit":1000,"refresh":true}'
   run_query metadataRetrieve '{"selections":[{"type":"CustomObject","members":["Account"]}],"autoRefresh":false}'
+  run_query orgSessionDisconnect '{}'
 fi
 
 echo '{"status":"passed"}' > "$ARTIFACT_DIR/web-smoke-result.json"
