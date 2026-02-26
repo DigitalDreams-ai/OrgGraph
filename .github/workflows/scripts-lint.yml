@@ -29,11 +29,25 @@ jobs:
         with:
           scandir: ./scripts
 
-      - name: Enforce executable bit for shell scripts
+      - name: Enforce executable bit for directly invoked scripts
         run: |
-          bad="$(git ls-files -s scripts/*.sh | awk '$1 != \"100755\" {print $4}')"
+          refs="$( \
+            { grep -RhoE '\./scripts/[A-Za-z0-9._/-]+\.sh' .github/workflows package.json || true; } \
+            | sed 's#^\./##' \
+            | sort -u \
+          )"
+          bad=""
+          for script in $refs; do
+            mode="$(git ls-files -s "$script" | awk '{print $1}')"
+            if [ -z "$mode" ]; then
+              continue
+            fi
+            if [ "$mode" != "100755" ]; then
+              bad="$bad\n$script"
+            fi
+          done
           if [ -n "$bad" ]; then
             echo "Scripts missing executable bit:"
-            echo "$bad"
+            printf '%b\n' "$bad"
             exit 1
           fi
