@@ -1,91 +1,95 @@
-# OrgGraph Phase 11 Task List (Ask Anything Orchestration)
+# OrgGraph Phase 11 Task List (Blue Ocean: Deterministic Semantic Runtime)
 
-Goal: make `/ask` reliably handle broad, natural-language org questions by automatically deciding what to query, what entities to extract, and when to ask for clarification.
+Goal: build a true differentiator by making context a deterministic, composable semantic system, not a retrieval stack.
+
+## Non-Negotiables
+- [ ] Deterministic first: same input state + same query => same plan + same core result
+- [ ] Provenance first: every answer claim maps to typed evidence/derivation
+- [ ] Composability first: context units can be combined without semantic ambiguity
+- [ ] No fluff: every new concept must produce measurable user value
 
 ## Entry Criteria
-- [ ] Phase 10 LLM-assisted mode stable with citation guardrails
-- [ ] `/ask` deterministic + llm-assisted paths tested in Docker runtime
-- [ ] Core endpoints (`/perms`, `/perms/system`, `/automation`, `/impact`) reliable on real org data
+- [ ] Phase 10 mission-critical LLM guardrails complete
+- [ ] `/ask` llm-assist working with deterministic fallback
+- [ ] Sandbox-backed graph refresh stable
 
 ## Exit Criteria
-- [ ] `/ask` handles ambiguous and mixed questions with correct intent routing
-- [ ] Entity extraction covers user/object/field/system-permission names with high precision
-- [ ] Multi-step orchestration runs the right endpoint sequence automatically
-- [ ] Clarification prompts trigger only when required inputs are missing
-- [ ] Final responses remain grounded with citations and consistency checks
+- [ ] OrgGraph supports semantic composition units (not just endpoint queries)
+- [ ] `/ask` returns explicit derivation traces for core claim sets
+- [ ] Meaning quality is scored with deterministic metrics
+- [ ] At least one workflow demonstrates materially better decision support vs current approach
 
 ## Scope
-- Intent expansion beyond single-intent queries
-- Entity extraction upgrades (including fuzzy matching + aliases)
-- Query orchestration layer for multi-call plans
-- Clarification/slot-filling flow for incomplete questions
-- Stronger answer composition and traceability
+- Semantic Context Units (SCUs) and composition contracts
+- Deterministic derivation trace graph (meta-context layer)
+- Meaning metrics and acceptance thresholds
+- Versioned semantic deltas across refreshes
 
 ## Not In Phase 11
-- Write-back actions to Salesforce
-- Autonomous background agents
-- Replacing deterministic graph truth with freeform LLM reasoning
+- New custom storage engine rewrite
+- Generic RAG/vector search expansion
+- Autonomous write-back actions
 
-## 1. Intent & Query Understanding
+## 1. Define the Semantic Core (No Implementation Drift)
 
-- [ ] Expand planner to support mixed intents (`perms + automation`, `impact + perms/system`, etc.)
-- [ ] Add confidence scoring per detected intent
-- [ ] Add fallback strategy when intent confidence is low
-- [ ] Add intent debug fields to aid tuning
+- [ ] Define `SCU` (Semantic Context Unit) schema:
+- Identity, type, invariants, dependencies, provenance, confidence policy
+- [ ] Define composition operators:
+- `overlay`, `intersect`, `constrain`, `specialize`, `supersede`
+- [ ] Define conflict semantics:
+- what happens when two SCUs disagree
+- [ ] Define a strict “deterministic result contract” for every operator
 
-## 2. Entity Extraction & Resolution
+## 2. Build Derivation as First-Class Data
 
-- [ ] Improve extraction for users, objects, fields, and system permission names
-- [ ] Add alias/synonym dictionary (common abbreviations, org-specific naming)
-- [ ] Add fuzzy resolver for near matches (with confidence + selected match trace)
-- [ ] Detect unresolved entities and mark them for clarification
+- [ ] Add typed derivation edges:
+- `DERIVED_FROM`, `SUPPORTS`, `CONTRADICTS`, `REQUIRES`, `INVALIDATED_BY`, `SUPERSEDES`
+- [ ] Add `/ask` trace mode returning:
+- selected plan, executed operators, evidence IDs, rejected branches
+- [ ] Ensure trace can be replayed deterministically from persisted state
 
-## 3. Orchestration Engine
+## 3. Quantify Meaning (Deterministically)
 
-- [ ] Build orchestration layer that maps intent/entity set -> ordered endpoint calls
-- [ ] Support multi-step plans and merge results into one answer payload
-- [ ] Deduplicate overlapping evidence/citations from multiple calls
-- [ ] Enforce deterministic-first execution before llm-assisted synthesis
+- [ ] Implement baseline metrics:
+- `grounding_score`, `constraint_satisfaction`, `ambiguity_score`, `stability_score`, `delta_novelty`
+- [ ] Add per-answer quality envelope:
+- hard fail if grounding/constraints below threshold
+- [ ] Track these metrics over time per org snapshot
 
-## 4. Clarification Flow
+## 4. Semantic Versioning Across Refreshes
 
-- [ ] Add structured clarification response when required inputs are missing
-- [ ] Support targeted follow-up prompts (ex: missing user, object, or field)
-- [ ] Return actionable options/examples to unblock user quickly
-- [ ] Preserve session context for follow-up ask turn (minimal state)
+- [ ] Add semantic diff output per refresh:
+- added/removed/changed SCUs and relation-level impact
+- [ ] Add “meaning change” summary in refresh artifacts
+- [ ] Add regression checks for unintended semantic drift
 
-## 5. Answer Quality Controls
+## 5. Blue-Ocean Proof Workflow (Must Be Real)
 
-- [ ] Add answer schema for multi-intent outputs (sections per intent/result type)
-- [ ] Ensure every nontrivial claim references deterministic evidence
-- [ ] Keep consistency checks against deterministic endpoints for each intent section
-- [ ] Add conservative response mode for low-confidence extraction/routing
+- [ ] Choose one high-value scenario (example: release-risk + permission impact)
+- [ ] Implement end-to-end using SCU composition + derivation traces
+- [ ] Compare against current endpoint-only flow:
+- accuracy, time-to-answer, auditability, reproducibility
+- [ ] Publish result with evidence (not claims)
 
-## 6. Testing
+## 6. Testing (Hard Gates)
 
-- [ ] Add planner tests for mixed-intent and ambiguous questions
-- [ ] Add entity extraction tests (exact, alias, fuzzy, unresolved)
-- [ ] Add orchestration integration tests on fixture + sandbox-backed data
-- [ ] Add clarification-flow tests for missing slots
-- [ ] Add regression tests to prevent routing drift over time
+- [ ] Operator property tests:
+- associativity/commutativity rules where applicable, deterministic replay
+- [ ] Trace integrity tests:
+- every claim has valid derivation chain
+- [ ] Semantic metric tests:
+- threshold enforcement behavior
+- [ ] Sandbox validation tests on real metadata
 
-## 7. Observability & Ops
+## 7. Kill Criteria (Avoid Wasting Time)
 
-- [ ] Emit metrics: intent distribution, unresolved-entity rate, clarification rate
-- [ ] Track orchestration latency breakdown per step
-- [ ] Add logs for resolved entities and selected execution plan
-- [ ] Add runbook guidance for tuning extraction/routing behavior
-
-## 8. UX/Developer Experience
-
-- [ ] Update web query UI hints/examples for “ask anything” usage
-- [ ] Add API response fields that expose route decisions for debugging
-- [ ] Update docs with sample advanced questions and expected behavior
-- [ ] Add cheat-sheet section: how to ask questions for best precision
+- [ ] If SCU composition cannot outperform current flow on the proof workflow, stop and reassess
+- [ ] If derivation traces are too costly/complex to maintain, reduce scope before expanding
+- [ ] If deterministic replay fails for same snapshot/input, block rollout
 
 ## Definition of Done (Phase 11)
 
-- [ ] `/ask` can intelligently route broad org questions without manual endpoint selection
-- [ ] Mixed-intent queries produce coherent, grounded, citation-backed answers
-- [ ] Clarification happens only when needed and is actionable
-- [ ] Test suite and runbooks cover the new orchestration behavior
+- [ ] OrgGraph can compose semantic units deterministically
+- [ ] `/ask` can show auditable derivation traces
+- [ ] Meaning quality is measured and enforced
+- [ ] Blue-ocean proof workflow shows measurable gain over current architecture
