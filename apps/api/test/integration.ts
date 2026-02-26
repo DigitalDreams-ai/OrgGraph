@@ -282,6 +282,19 @@ async function run(): Promise<void> {
     };
     assert.equal(orgRetrieveDisabledBody.error.code, 'BAD_REQUEST');
 
+    const orgStatusRes = await fetch(`${base}/org/status`);
+    assert.equal(orgStatusRes.status, 200, 'org status should return 200');
+    const orgStatusBody = (await orgStatusRes.json()) as {
+      integrationEnabled: boolean;
+      authMode: string;
+      cci: { requiredVersion: string };
+      sf: { installed: boolean };
+    };
+    assert.equal(orgStatusBody.integrationEnabled, false);
+    assert.equal(orgStatusBody.authMode, 'cci');
+    assert.equal(orgStatusBody.cci.requiredVersion, '3.78.0');
+    assert.equal(typeof orgStatusBody.sf.installed, 'boolean');
+
     const orgRetrieveBadBodyRes = await fetch(`${base}/org/retrieve`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

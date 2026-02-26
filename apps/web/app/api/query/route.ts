@@ -3,7 +3,15 @@ import { NextResponse } from 'next/server';
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
 const WEB_LOG_ENABLED = (process.env.ORGUMENTED_WEB_LOG_ENABLED || 'false').trim().toLowerCase() === 'true';
 
-type QueryKind = 'refresh' | 'perms' | 'permsSystem' | 'automation' | 'impact' | 'ask';
+type QueryKind =
+  | 'refresh'
+  | 'perms'
+  | 'permsSystem'
+  | 'automation'
+  | 'impact'
+  | 'ask'
+  | 'orgStatus'
+  | 'orgRetrieve';
 
 interface QueryRequest {
   kind?: QueryKind;
@@ -60,6 +68,20 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
   if (request.kind === 'refresh') {
     return {
       url: `${API_BASE}/refresh`,
+      init: {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body)
+      }
+    };
+  }
+  if (request.kind === 'orgStatus') {
+    return { url: `${API_BASE}/org/status`, init: { method: 'GET' } };
+  }
+
+  if (request.kind === 'orgRetrieve') {
+    return {
+      url: `${API_BASE}/org/retrieve`,
       init: {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -134,7 +156,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     const kind = kindRaw as QueryKind;
-    if (!['refresh', 'perms', 'permsSystem', 'automation', 'impact', 'ask'].includes(kind)) {
+    if (!['refresh', 'perms', 'permsSystem', 'automation', 'impact', 'ask', 'orgStatus', 'orgRetrieve'].includes(kind)) {
       return NextResponse.json(
         { error: { code: 'BAD_REQUEST', message: 'invalid query kind' } },
         { status: 400 }
