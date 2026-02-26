@@ -176,6 +176,15 @@ Response includes deterministic engines:
 - `engines.releaseRisk`
 - `composite.trustLevel`, `composite.topRiskDrivers`, `composite.replayToken`
 
+### 8.6 Meta-Context Adaptation (Phase 16)
+```bash
+curl http://localhost:3100/meta/context
+curl -X POST http://localhost:3100/meta/adapt -H 'content-type: application/json' -d '{"dryRun":true}'
+curl -X POST http://localhost:3100/meta/adapt -H 'content-type: application/json' -d '{"dryRun":false}'
+```
+
+`/meta/adapt` writes deterministic audit artifacts and updates relation multipliers used by analysis ranking.
+
 ## 9. Web Query Proxy
 Web route supports either `kind` or `endpoint`, and either `payload` or `params`.
 
