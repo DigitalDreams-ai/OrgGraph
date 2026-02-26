@@ -136,7 +136,13 @@ Ask responses now include deterministic proof fields:
 - `metrics`: deterministic meaning metrics
 - `proof`: `proofId`, `replayToken`, `snapshotId`, operators, rejected branches
 - `proof.traceLevel`: `compact`, `standard`, `full`
+- `llm.tokenUsage`, `llm.estimatedCostUsd`: returned when `llm_assist` executes successfully
 - metrics are also persisted over time at `ASK_METRICS_PATH` (default: `data/ask/metrics.jsonl`)
+
+LLM guardrails are enforced with deterministic fallback reasons:
+- `ASK_LLM_MAX_LATENCY_MS` (default `12000`)
+- `LLM_MAX_OUTPUT_TOKENS` (default `400`, hard cap for output)
+- `ASK_LLM_COST_BUDGET_USD` (default `0.02`)
 
 Lookup a stored proof artifact:
 ```bash
@@ -166,6 +172,9 @@ Dashboard-ready metrics export:
 ```bash
 curl http://localhost:3100/ask/metrics/export
 ```
+Export now includes:
+- `bySnapshot`: trust and meaning metrics rollups
+- `byProvider`: provider/model success, error rate, latency, token, and estimated cost rollups
 
 Phase 12 replay validation scripts:
 ```bash

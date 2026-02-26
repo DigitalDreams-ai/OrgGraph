@@ -4,6 +4,7 @@ import path from 'node:path';
 import { resolveAskMetricsPath } from '../../common/path';
 import { AppConfigService } from '../../config/app-config.service';
 import type { AskMeaningMetrics, AskMetricsExportResponse, AskTrustLevel } from './ask.types';
+import type { LlmProviderName } from '../llm/llm.types';
 
 interface AskMetricRecord {
   recordedAt: string;
@@ -13,6 +14,19 @@ interface AskMetricRecord {
   intent: string;
   trustLevel: AskTrustLevel;
   metrics: AskMeaningMetrics;
+  llm?: {
+    provider: LlmProviderName;
+    model?: string;
+    used: boolean;
+    latencyMs?: number;
+    tokenUsage?: {
+      input: number;
+      output: number;
+      total: number;
+    };
+    estimatedCostUsd?: number;
+    fallbackReason?: string;
+  };
 }
 
 @Injectable()
@@ -89,10 +103,91 @@ export class AskMetricsStoreService {
       }))
       .sort((a, b) => a.snapshotId.localeCompare(b.snapshotId));
 
+    const byProviderMap = new Map<
+      string,
+      {
+        provider: LlmProviderName;
+        model?: string;
+        count: number;
+        successCount: number;
+        errorCount: number;
+        sumLatencyMs: number;
+        latencyCount: number;
+        sumInputTokens: number;
+        sumOutputTokens: number;
+        sumTotalTokens: number;
+        tokenCount: number;
+        sumEstimatedCostUsd: number;
+        costCount: number;
+      }
+    >();
+
+    for (const record of records) {
+      const provider = record.llm?.provider ?? 'none';
+      const model = record.llm?.model;
+      const key = `${provider}|${model ?? ''}`;
+      const existing = byProviderMap.get(key) ?? {
+        provider,
+        model,
+        count: 0,
+        successCount: 0,
+        errorCount: 0,
+        sumLatencyMs: 0,
+        latencyCount: 0,
+        sumInputTokens: 0,
+        sumOutputTokens: 0,
+        sumTotalTokens: 0,
+        tokenCount: 0,
+        sumEstimatedCostUsd: 0,
+        costCount: 0
+      };
+
+      existing.count += 1;
+      if (record.llm?.used) {
+        existing.successCount += 1;
+      } else if (record.llm?.fallbackReason) {
+        existing.errorCount += 1;
+      }
+
+      if (typeof record.llm?.latencyMs === 'number') {
+        existing.sumLatencyMs += record.llm.latencyMs;
+        existing.latencyCount += 1;
+      }
+      if (record.llm?.tokenUsage) {
+        existing.sumInputTokens += record.llm.tokenUsage.input;
+        existing.sumOutputTokens += record.llm.tokenUsage.output;
+        existing.sumTotalTokens += record.llm.tokenUsage.total;
+        existing.tokenCount += 1;
+      }
+      if (typeof record.llm?.estimatedCostUsd === 'number') {
+        existing.sumEstimatedCostUsd += record.llm.estimatedCostUsd;
+        existing.costCount += 1;
+      }
+      byProviderMap.set(key, existing);
+    }
+
+    const byProvider = [...byProviderMap.values()]
+      .map((item) => ({
+        provider: item.provider,
+        model: item.model,
+        count: item.count,
+        successCount: item.successCount,
+        errorCount: item.errorCount,
+        errorRate: item.count > 0 ? round(item.errorCount / item.count) : 0,
+        avgLatencyMs: item.latencyCount > 0 ? round(item.sumLatencyMs / item.latencyCount) : undefined,
+        avgInputTokens: item.tokenCount > 0 ? round(item.sumInputTokens / item.tokenCount) : undefined,
+        avgOutputTokens: item.tokenCount > 0 ? round(item.sumOutputTokens / item.tokenCount) : undefined,
+        avgTotalTokens: item.tokenCount > 0 ? round(item.sumTotalTokens / item.tokenCount) : undefined,
+        avgEstimatedCostUsd:
+          item.costCount > 0 ? round(item.sumEstimatedCostUsd / item.costCount) : undefined
+      }))
+      .sort((a, b) => a.provider.localeCompare(b.provider) || (a.model ?? '').localeCompare(b.model ?? ''));
+
     return {
       status: 'implemented',
       totalRecords: records.length,
-      bySnapshot
+      bySnapshot,
+      byProvider
     };
   }
 

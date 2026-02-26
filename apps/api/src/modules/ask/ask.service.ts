@@ -55,7 +55,16 @@ export class AskService {
       query: input.query,
       intent: proof.plan.intent,
       trustLevel: proof.trustLevel,
-      metrics: proof.metrics
+      metrics: proof.metrics,
+      llm: {
+        provider: response.llm.provider,
+        model: response.llm.model,
+        used: response.llm.used,
+        latencyMs: response.llm.latencyMs,
+        tokenUsage: response.llm.tokenUsage,
+        estimatedCostUsd: response.llm.estimatedCostUsd,
+        fallbackReason: response.llm.fallbackReason
+      }
     });
     return response;
   }
@@ -555,11 +564,34 @@ export class AskService {
             citations.map((citation) => citation.id),
             llmResult.rawText
           );
+          const llmLatencyMs = Date.now() - llmStartedAt;
+
           if (citations.length > 0 && citedIds.length === 0) {
             const observed =
               llmResult.citationsUsed.length > 0 ? llmResult.citationsUsed.join(',') : '(none)';
             throw new Error(
               `LLM response did not reference provided citations (observed: ${observed})`
+            );
+          }
+          if (llmLatencyMs > this.configService.askLlmMaxLatencyMs()) {
+            throw new Error(
+              `LLM latency ${llmLatencyMs}ms exceeded budget ${this.configService.askLlmMaxLatencyMs()}ms`
+            );
+          }
+          if (
+            typeof llmResult.tokenUsage?.output === 'number' &&
+            llmResult.tokenUsage.output > this.configService.llmMaxOutputTokens()
+          ) {
+            throw new Error(
+              `LLM output tokens ${llmResult.tokenUsage.output} exceeded budget ${this.configService.llmMaxOutputTokens()}`
+            );
+          }
+          if (
+            typeof llmResult.estimatedCostUsd === 'number' &&
+            llmResult.estimatedCostUsd > this.configService.askLlmCostBudgetUsd()
+          ) {
+            throw new Error(
+              `LLM estimated cost $${llmResult.estimatedCostUsd.toFixed(6)} exceeded budget $${this.configService.askLlmCostBudgetUsd().toFixed(6)}`
             );
           }
 
@@ -570,7 +602,9 @@ export class AskService {
             used: true,
             provider: llmResult.provider,
             model: llmResult.model,
-            latencyMs: Date.now() - llmStartedAt
+            latencyMs: llmLatencyMs,
+            tokenUsage: llmResult.tokenUsage,
+            estimatedCostUsd: llmResult.estimatedCostUsd
           };
         } catch (error) {
           mode = 'deterministic';
