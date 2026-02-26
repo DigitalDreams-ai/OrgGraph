@@ -1,0 +1,107 @@
+# AGENTS.md
+
+This file defines how coding agents should operate in this repository.
+
+## 1) Mission
+
+OrgGraph is a deterministic semantic runtime for Salesforce architecture decisions.
+
+Priority order:
+1. Determinism
+2. Provenance
+3. Constraint safety
+4. Reproducibility
+5. Performance
+
+Do not optimize for novelty without measurable lift.
+
+## 2) Source of Truth
+
+Use these docs as primary direction:
+- `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
+- `docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md`
+- `docs/planning/ORGGRAPH_LEXICON.md`
+- Active phase tasklist (`docs/planning/PHASE*_TASKLIST.md`)
+
+If docs conflict, prefer the latest active phase and blue-ocean execution plan.
+
+## 3) Engineering Rules
+
+- Keep behavior deterministic for same snapshot + query + policy.
+- Every claim from `/ask` must be evidence-backed and derivation-traceable.
+- Fail closed when constraints/grounding are insufficient.
+- No hidden fallback from constrained mode to unconstrained mode.
+- Do not introduce ambiguous naming; use canonical lexicon terms.
+
+## 4) Implementation Workflow
+
+For each task:
+1. Read active phase requirements and acceptance criteria.
+2. Implement smallest coherent slice.
+3. Add/update tests first-class (unit + integration + smoke where relevant).
+4. Run validation commands locally.
+5. Update docs/tasklists to reflect progress.
+6. Commit in logical groups with clear messages.
+
+## 5) Commit Discipline
+
+- Group commits by concern (e.g., parser, API, docs, tests, infra).
+- Avoid mixed-purpose commits.
+- Commit message style:
+  - `feat(scope): ...`
+  - `fix(scope): ...`
+  - `refactor(scope): ...`
+  - `test(scope): ...`
+  - `docs(scope): ...`
+  - `chore(scope): ...`
+
+## 6) Testing Expectations
+
+At minimum before finalizing work:
+- Relevant package tests
+- Build checks for touched apps
+- API and web smoke flows if runtime behavior changed
+
+For semantic runtime changes, also validate:
+- deterministic replay behavior
+- derivation integrity
+- metric/constraint gate behavior
+
+## 7) Operational Constraints
+
+- Keep Docker/runtime config explicit and auditable.
+- Prefer config-driven behavior over hardcoded values.
+- Keep `.env`, `.env.sample`, `.env.example`, and config samples aligned.
+- Avoid secret leakage in logs, docs, commits, and test artifacts.
+
+## 8) Salesforce-Specific Rules
+
+- Treat metadata retrieval, parse output, and graph rebuild as separate verified stages.
+- Preserve compatibility with sandbox-driven workflows.
+- Do not assume fixture behavior represents real org behavior; test both.
+
+## 9) Documentation Requirements
+
+When behavior changes, update:
+- `docs/USAGE_GUIDE.md` (user-facing behavior)
+- `docs/CHEATSHEET.md` (operator quick commands)
+- relevant runbooks in `docs/runbooks/`
+- active phase tasklist status
+
+If terminology changes, update `docs/planning/ORGGRAPH_LEXICON.md`.
+
+## 10) Anti-Patterns to Avoid
+
+- "Yes-man" implementation without critical validation.
+- Non-deterministic heuristics in core decision paths.
+- Shipping features without proof artifacts or test coverage.
+- Large refactors without phase alignment and measurable acceptance gates.
+
+## 11) Definition of Good Output
+
+A completed change should be:
+- deterministic,
+- test-verified,
+- traceable,
+- documented,
+- logically committed.
