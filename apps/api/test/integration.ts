@@ -574,6 +574,51 @@ async function run(): Promise<void> {
     assert.match(askMixed.answer, /Release-risk \+ permission-impact:/);
     assert.ok(['trusted', 'conditional'].includes(askMixed.trustLevel));
 
+    const architectureDecisionRes = await fetch(`${base}/ask/architecture`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        user: 'jane@example.com',
+        object: 'Opportunity',
+        field: 'Opportunity.StageName'
+      })
+    });
+    assert.equal(architectureDecisionRes.status, 201, 'ask architecture decision should return 201');
+    const architectureDecision = (await architectureDecisionRes.json()) as {
+      status: string;
+      engines: {
+        permissionBlastRadius: { blastRadiusScore: number; proofPaths: unknown[] };
+        automationCollision: { collisionScore: number; topCollisions: unknown[] };
+        releaseRisk: { level: string; riskScore: number; semanticDiff: { addedNodeCount: number } };
+      };
+      composite: { trustLevel: string; replayToken: string; topRiskDrivers: string[]; snapshotId: string };
+    };
+    assert.equal(architectureDecision.status, 'implemented');
+    assert.equal(typeof architectureDecision.engines.permissionBlastRadius.blastRadiusScore, 'number');
+    assert.ok(Array.isArray(architectureDecision.engines.permissionBlastRadius.proofPaths));
+    assert.equal(typeof architectureDecision.engines.automationCollision.collisionScore, 'number');
+    assert.ok(Array.isArray(architectureDecision.engines.automationCollision.topCollisions));
+    assert.ok(
+      ['low', 'medium', 'high'].includes(architectureDecision.engines.releaseRisk.level),
+      'release risk level should be low/medium/high'
+    );
+    assert.equal(typeof architectureDecision.engines.releaseRisk.riskScore, 'number');
+    assert.equal(
+      typeof architectureDecision.engines.releaseRisk.semanticDiff.addedNodeCount,
+      'number'
+    );
+    assert.ok(['trusted', 'conditional', 'refused'].includes(architectureDecision.composite.trustLevel));
+    assert.equal(typeof architectureDecision.composite.replayToken, 'string');
+    assert.ok(architectureDecision.composite.topRiskDrivers.length >= 1);
+    assert.equal(typeof architectureDecision.composite.snapshotId, 'string');
+
+    const architectureDecisionBadRes = await fetch(`${base}/ask/architecture`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ user: 'bad-email', object: 'Opportunity', field: 'Opportunity.StageName' })
+    });
+    assert.equal(architectureDecisionBadRes.status, 400, 'ask architecture should validate user');
+
     const askUnknownRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

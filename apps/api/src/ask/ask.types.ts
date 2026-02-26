@@ -164,6 +164,64 @@ export interface AskReplayResponse {
   status: 'implemented';
 }
 
+export interface AskArchitectureDecisionRequest {
+  user: string;
+  object: string;
+  field: string;
+  maxPaths?: number;
+}
+
+export interface AskArchitectureDecisionResponse {
+  user: string;
+  object: string;
+  field: string;
+  engines: {
+    permissionBlastRadius: {
+      granted: boolean;
+      principalCount: number;
+      pathCount: number;
+      blastRadiusScore: number;
+      explanation: string;
+      proofPaths: Array<{
+        principal: string;
+        object: string;
+        path: Array<{ from: string; rel: string; to: string }>;
+      }>;
+    };
+    automationCollision: {
+      automationCount: number;
+      impactPathCount: number;
+      collisionCount: number;
+      collisionScore: number;
+      explanation: string;
+      topCollisions: Array<{
+        source: string;
+        relations: string[];
+      }>;
+    };
+    releaseRisk: {
+      level: 'low' | 'medium' | 'high';
+      riskScore: number;
+      explanation: string;
+      semanticDiff: {
+        addedNodeCount: number;
+        removedNodeCount: number;
+        addedEdgeCount: number;
+        removedEdgeCount: number;
+      };
+      meaningChangeSummary: string;
+    };
+  };
+  composite: {
+    trustLevel: AskTrustLevel;
+    summary: string;
+    topRiskDrivers: string[];
+    replayToken: string;
+    snapshotId: string;
+  };
+  status: 'implemented';
+}
+
 export interface AskPolicyValidateRequest {
   groundingThreshold?: number;
   constraintThreshold?: number;
