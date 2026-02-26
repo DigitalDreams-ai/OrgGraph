@@ -612,7 +612,9 @@ export default function Page(): JSX.Element {
   }
 
   return (
-    <main className="page-shell">
+    <main className="console-root">
+      <div className="bg-orb bg-orb-a" />
+      <div className="bg-orb bg-orb-b" />
       <section className="hero">
         <p className="hero-kicker">Operator Console</p>
         <h1>Orgumented Operator Workbench</h1>
@@ -623,7 +625,8 @@ export default function Page(): JSX.Element {
         <p className="endpoint-hint">UI Build: {BUILD_VERSION}</p>
       </section>
 
-      <section className="panel">
+      <section className="status-grid">
+      <section className="panel status-card">
         <h2>Environment Status</h2>
         <p className="endpoint-hint">API Base: {API_BASE}</p>
         <p className="endpoint-hint">Web Health: {healthStatus}</p>
@@ -639,7 +642,7 @@ export default function Page(): JSX.Element {
         ) : null}
       </section>
 
-      <section className="panel">
+      <section className="panel status-card">
         <h2>Run-State Timeline</h2>
         <p className="endpoint-hint">
           Session: {latestSession?.status ?? 'unknown'} | Active Alias:{' '}
@@ -662,7 +665,7 @@ export default function Page(): JSX.Element {
         )}
       </section>
 
-      <section className="panel">
+      <section className="panel status-card">
         <h2>Operator Diagnostics</h2>
         <p className="endpoint-hint">
           readiness={readyStatus} | integration={String(latestOrgStatus?.integrationEnabled ?? false)} | authMode=
@@ -685,8 +688,10 @@ export default function Page(): JSX.Element {
           </ul>
         )}
       </section>
+      </section>
 
-      <section className="panel">
+      <section className="workspace-grid">
+      <section className="panel control-panel">
         <div className="tab-row">
           {(
             [
@@ -1190,6 +1195,7 @@ export default function Page(): JSX.Element {
           <summary>JSON Output</summary>
           <pre>{responseText || '{\n  "hint": "Run a query to view JSON response"\n}'}</pre>
         </details>
+      </section>
       </section>
     </main>
   );
