@@ -10,6 +10,7 @@
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "test:web-smoke": "./scripts/web-smoke.sh",
+    "test:ui-smoke": "./scripts/ui-smoke-playwright.sh",
     "sf:auth": "./scripts/sf-auth.sh",
     "sf:oauth:url": "./scripts/sf-oauth-authorize-url.sh",
     "sf:oauth:exchange": "./scripts/sf-oauth-token-exchange.sh",

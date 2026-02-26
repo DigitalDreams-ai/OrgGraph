@@ -134,6 +134,12 @@ body {
   margin-bottom: 1rem;
 }
 
+.top-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .tab-row > div {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -175,6 +181,17 @@ body {
   display: grid;
   gap: 0.32rem;
   margin-bottom: 0.72rem;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.6rem 0 0.9rem;
+}
+
+.action-row.compact {
+  margin: 0.3rem 0 0.4rem;
 }
 
 label {
@@ -287,6 +304,31 @@ pre {
   line-height: 1.36;
 }
 
+.org-browser-frame {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 0.8rem;
+  margin-top: 0.7rem;
+}
+
+.org-browser-col {
+  border: 1px solid #c9d8de;
+  border-radius: 12px;
+  padding: 0.7rem;
+  background: #ffffffbf;
+}
+
+.org-browser-col h3 {
+  margin: 0 0 0.45rem;
+  font-size: 0.95rem;
+}
+
+.scroll-pane {
+  max-height: 420px;
+  overflow: auto;
+  padding-right: 0.35rem;
+}
+
 @keyframes rise-in {
   from {
     opacity: 0;
@@ -323,6 +365,10 @@ pre {
   }
 
   .ask-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .org-browser-frame {
     grid-template-columns: 1fr;
   }
 }

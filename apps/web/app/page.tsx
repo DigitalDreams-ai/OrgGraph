@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type QueryKind =
   | 'refresh'
@@ -95,6 +95,17 @@ function sleep(ms: number): Promise<void> {
 }
 
 export default function Page(): JSX.Element {
+  type UiTab = 'connect' | 'browser' | 'refresh' | 'analyze' | 'ask' | 'proofs' | 'system';
+  type AnalyzeTab = 'perms' | 'automation' | 'impact';
+  type AuthPath = 'cci' | 'sf' | 'magic';
+
+  const [uiTab, setUiTab] = useState<UiTab>('connect');
+  const [analyzeTab, setAnalyzeTab] = useState<AnalyzeTab>('perms');
+  const [authPath, setAuthPath] = useState<AuthPath>('cci');
+  const [magicLink, setMagicLink] = useState('');
+  const [actionCounts, setActionCounts] = useState<Record<string, number>>({});
+  const [firstRunDismissed, setFirstRunDismissed] = useState(false);
+
   const [kind, setKind] = useState<QueryKind>('ask');
   const [loading, setLoading] = useState(false);
   const [responseText, setResponseText] = useState('');
@@ -159,6 +170,77 @@ export default function Page(): JSX.Element {
     }
     return responseObject.payload as AskPayload;
   }, [kind, responseObject]);
+
+  useEffect(() => {
+    try {
+      const savedTab = localStorage.getItem('orgumented.ui.tab') as UiTab | null;
+      if (savedTab) {
+        setUiTab(savedTab);
+      }
+      const savedAnalyzeTab = localStorage.getItem('orgumented.ui.analyzeTab') as AnalyzeTab | null;
+      if (savedAnalyzeTab) {
+        setAnalyzeTab(savedAnalyzeTab);
+      }
+      const savedAuthPath = localStorage.getItem('orgumented.ui.authPath') as AuthPath | null;
+      if (savedAuthPath) {
+        setAuthPath(savedAuthPath);
+      }
+      const savedAlias = localStorage.getItem('orgumented.ui.alias');
+      if (savedAlias) {
+        setOrgSessionAlias(savedAlias);
+      }
+      const savedUser = localStorage.getItem('orgumented.ui.user');
+      if (savedUser) {
+        setUser(savedUser);
+      }
+      const savedObject = localStorage.getItem('orgumented.ui.object');
+      if (savedObject) {
+        setObjectName(savedObject);
+      }
+      const savedField = localStorage.getItem('orgumented.ui.field');
+      if (savedField) {
+        setFieldName(savedField);
+      }
+      const savedAsk = localStorage.getItem('orgumented.ui.askQuery');
+      if (savedAsk) {
+        setAskQuery(savedAsk);
+      }
+      const savedCounts = localStorage.getItem('orgumented.ui.actionCounts');
+      if (savedCounts) {
+        setActionCounts(JSON.parse(savedCounts) as Record<string, number>);
+      }
+      const dismissed = localStorage.getItem('orgumented.ui.firstRunDismissed');
+      if (dismissed === '1') {
+        setFirstRunDismissed(true);
+      }
+      const savedMagicLink = localStorage.getItem('orgumented.ui.magicLink');
+      if (savedMagicLink) {
+        setMagicLink(savedMagicLink);
+      }
+    } catch {
+      // ignore localStorage failures
+    }
+    void refreshStatuses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('orgumented.ui.tab', uiTab);
+      localStorage.setItem('orgumented.ui.analyzeTab', analyzeTab);
+      localStorage.setItem('orgumented.ui.authPath', authPath);
+      localStorage.setItem('orgumented.ui.alias', orgSessionAlias);
+      localStorage.setItem('orgumented.ui.user', user);
+      localStorage.setItem('orgumented.ui.object', objectName);
+      localStorage.setItem('orgumented.ui.field', fieldName);
+      localStorage.setItem('orgumented.ui.askQuery', askQuery);
+      localStorage.setItem('orgumented.ui.magicLink', magicLink);
+      localStorage.setItem('orgumented.ui.actionCounts', JSON.stringify(actionCounts));
+      localStorage.setItem('orgumented.ui.firstRunDismissed', firstRunDismissed ? '1' : '0');
+    } catch {
+      // ignore localStorage failures
+    }
+  }, [uiTab, analyzeTab, authPath, orgSessionAlias, user, objectName, fieldName, askQuery, magicLink, actionCounts, firstRunDismissed]);
 
   const endpointHint = useMemo(() => {
     if (kind === 'refresh') {
@@ -381,13 +463,24 @@ export default function Page(): JSX.Element {
     setOperatorErrors((current) => [item, ...current].slice(0, 12));
   }
 
-  async function runQuery(): Promise<void> {
+  function trackAction(action: string): void {
+    setActionCounts((current) => ({
+      ...current,
+      [action]: (current[action] || 0) + 1
+    }));
+  }
+
+  async function runQuery(nextKind: QueryKind = kind): Promise<void> {
+    const activeKind = nextKind;
+    if (kind !== activeKind) {
+      setKind(activeKind);
+    }
     setLoading(true);
     setResponseText('');
     setResponseObject(null);
     setErrorText('');
     setCopied(false);
-    if (kind === 'ask') {
+    if (activeKind === 'ask') {
       setAskElaboration('');
     }
 
@@ -398,7 +491,7 @@ export default function Page(): JSX.Element {
       const askContext = parseContext(askContextRaw);
       const archMaxPaths = parseOptionalInt(archMaxPathsRaw);
       let metadataSelections: Array<{ type: string; members?: string[] }> = [];
-      if (kind === 'metadataRetrieve') {
+      if (activeKind === 'metadataRetrieve') {
         const parsed = JSON.parse(metadataSelectionsRaw) as unknown;
         if (Array.isArray(parsed)) {
           metadataSelections = parsed as Array<{ type: string; members?: string[] }>;
@@ -406,45 +499,45 @@ export default function Page(): JSX.Element {
       }
 
       const payload =
-        kind === 'refresh'
+        activeKind === 'refresh'
           ? { mode: refreshMode }
-          : kind === 'orgConnect'
+          : activeKind === 'orgConnect'
             ? {}
-          : kind === 'orgSession'
+          : activeKind === 'orgSession'
             ? {}
-            : kind === 'orgSessionSwitch'
+            : activeKind === 'orgSessionSwitch'
               ? { alias: orgSessionAlias }
-              : kind === 'orgSessionDisconnect'
+              : activeKind === 'orgSessionDisconnect'
                 ? {}
-          : kind === 'orgStatus'
+          : activeKind === 'orgStatus'
             ? {}
-            : kind === 'orgRetrieve'
+            : activeKind === 'orgRetrieve'
               ? { runAuth: orgRunAuth, runRetrieve: orgRunRetrieve, autoRefresh: orgAutoRefresh }
-              : kind === 'metadataCatalog'
+              : activeKind === 'metadataCatalog'
                 ? { q: metadataSearch, limit: metadataLimit, refresh: metadataForceRefresh }
-                : kind === 'metadataRetrieve'
+                : activeKind === 'metadataRetrieve'
                   ? { selections: metadataSelections, autoRefresh: metadataAutoRefresh }
-                  : kind === 'refreshDiff'
+                  : activeKind === 'refreshDiff'
                     ? { fromSnapshot, toSnapshot }
-                    : kind === 'askArchitecture'
+                    : activeKind === 'askArchitecture'
                       ? { user: archUser, object: archObject, field: archField, maxPaths: archMaxPaths }
-                      : kind === 'askProof'
+                      : activeKind === 'askProof'
                         ? { proofId }
-                        : kind === 'askReplay'
+                        : activeKind === 'askReplay'
                           ? { replayToken, proofId }
-                          : kind === 'askMetrics'
+                          : activeKind === 'askMetrics'
                             ? {}
-                            : kind === 'metaContext'
+                            : activeKind === 'metaContext'
                               ? {}
-                              : kind === 'metaAdapt'
+                              : activeKind === 'metaAdapt'
                                 ? { dryRun: metaDryRun }
-          : kind === 'perms'
+          : activeKind === 'perms'
             ? { user, object: objectName, field: fieldName, limit }
-            : kind === 'permsSystem'
+            : activeKind === 'permsSystem'
               ? { user, permission: systemPermission, limit }
-              : kind === 'automation'
+            : activeKind === 'automation'
                 ? { object: objectName, limit, strict: strictMode, explain: explainMode, includeLowConfidence }
-                : kind === 'impact'
+                : activeKind === 'impact'
                   ? {
                       field: fieldName,
                       limit,
@@ -464,7 +557,7 @@ export default function Page(): JSX.Element {
       const response = await fetchWithRetry('/api/query', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ kind, payload })
+        body: JSON.stringify({ kind: activeKind, payload })
       });
 
       const wrapped = await response.json();
@@ -472,7 +565,7 @@ export default function Page(): JSX.Element {
       if (wrapped && typeof wrapped === 'object') {
         setResponseObject(wrapped as Record<string, unknown>);
       }
-      if (kind === 'metadataCatalog' && wrapped?.payload && typeof wrapped.payload === 'object') {
+      if (activeKind === 'metadataCatalog' && wrapped?.payload && typeof wrapped.payload === 'object') {
         const payload = wrapped.payload as Partial<MetadataCatalogPayload>;
         if (typeof payload.source === 'string' && Array.isArray(payload.types)) {
           setMetadataCatalog({
@@ -487,20 +580,20 @@ export default function Page(): JSX.Element {
         }
       }
 
-      if (kind === 'orgSession' && wrapped?.payload && typeof wrapped.payload === 'object') {
+      if (activeKind === 'orgSession' && wrapped?.payload && typeof wrapped.payload === 'object') {
         setLatestSession(wrapped.payload as OrgSessionPayload);
       }
-      if (kind === 'orgStatus' && wrapped?.payload && typeof wrapped.payload === 'object') {
+      if (activeKind === 'orgStatus' && wrapped?.payload && typeof wrapped.payload === 'object') {
         const statusPayload = wrapped.payload as OrgStatusPayload;
         setLatestOrgStatus(statusPayload);
         if (statusPayload.session) {
           setLatestSession(statusPayload.session);
         }
       }
-      if (kind === 'refresh' && wrapped?.payload && typeof wrapped.payload === 'object') {
+      if (activeKind === 'refresh' && wrapped?.payload && typeof wrapped.payload === 'object') {
         setLatestRefresh(wrapped.payload as RefreshPayload);
       }
-      if (kind === 'ask' && wrapped?.payload && typeof wrapped.payload === 'object') {
+      if (activeKind === 'ask' && wrapped?.payload && typeof wrapped.payload === 'object') {
         setLatestAsk(wrapped.payload as AskPayload);
       }
 
@@ -515,19 +608,20 @@ export default function Page(): JSX.Element {
         const message =
           wrappedPayload?.error?.message ??
           wrappedPayload?.details?.reason ??
-          `query ${kind} failed with status ${response.status}`;
+          `query ${activeKind} failed with status ${response.status}`;
         appendOperatorError(category, message);
-        appendTimeline(kind, `failed (${category})`);
+        appendTimeline(activeKind, `failed (${category})`);
         setErrorText(
           'Request failed. Check API readiness, query format, and container health. Use /api/ready and /metrics for diagnosis.'
         );
       } else {
-        appendTimeline(kind, 'completed');
+        appendTimeline(activeKind, 'completed');
+        trackAction(activeKind);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown request error';
       appendOperatorError('NETWORK_ERROR', message);
-      appendTimeline(kind, 'network_failure');
+      appendTimeline(activeKind, 'network_failure');
       setResponseText(JSON.stringify({ ok: false, error: message }, null, 2));
       setErrorText('Network request failed after retries. Check container health and retry in a few seconds.');
     } finally {
@@ -615,587 +709,398 @@ export default function Page(): JSX.Element {
     <main className="console-root">
       <div className="bg-orb bg-orb-a" />
       <div className="bg-orb bg-orb-b" />
+
       <section className="hero">
-        <p className="hero-kicker">Operator Console</p>
-        <h1>Orgumented Operator Workbench</h1>
-        <p>
-          Run deterministic graph and evidence queries directly against the API. This UI is a thin operator surface,
-          not a new source of truth.
-        </p>
+        <p className="hero-kicker">Workflow UI</p>
+        <h1>Orgumented Mission Control</h1>
+        <p>Connect, retrieve, build, analyze, and explain from one guided flow.</p>
         <p className="endpoint-hint">UI Build: {BUILD_VERSION}</p>
       </section>
 
+      {!firstRunDismissed ? (
+        <section className="panel status-card">
+          <h2>First-Run Checklist</h2>
+          <ol>
+            <li>Connect to org using CCI/SF/magic-link path.</li>
+            <li>Browse metadata and add items to retrieval cart.</li>
+            <li>Retrieve selected metadata and rebuild graph.</li>
+            <li>Run Analyze and Ask workflows.</li>
+          </ol>
+          <button type="button" onClick={() => setFirstRunDismissed(true)}>Dismiss Checklist</button>
+        </section>
+      ) : null}
+
       <section className="status-grid">
-      <section className="panel status-card">
-        <h2>Environment Status</h2>
-        <p className="endpoint-hint">API Base: {API_BASE}</p>
-        <p className="endpoint-hint">Web Health: {healthStatus}</p>
-        <p className="endpoint-hint">Web Readiness (with API): {readyStatus}</p>
-        <button type="button" onClick={refreshStatuses}>
-          Refresh Status
-        </button>
-        {readyDetails ? (
-          <details>
-            <summary>Ready Details</summary>
-            <pre>{readyDetails}</pre>
-          </details>
-        ) : null}
+        <section className="panel status-card">
+          <h2>Current State</h2>
+          <p className="endpoint-hint">API Base: {API_BASE}</p>
+          <p className="endpoint-hint">Ready: {readyStatus}</p>
+          <p className="endpoint-hint">Session: {latestSession?.status ?? 'unknown'}</p>
+          <p className="endpoint-hint">Active Alias: {latestSession?.activeAlias ?? latestOrgStatus?.alias ?? 'n/a'}</p>
+          <button type="button" onClick={refreshStatuses}>Refresh Status</button>
+        </section>
+        <section className="panel status-card">
+          <h2>Toolchain</h2>
+          <p className="endpoint-hint">cci installed: {String(latestOrgStatus?.cci?.installed ?? false)}</p>
+          <p className="endpoint-hint">cci version: {latestOrgStatus?.cci?.version ?? 'n/a'}</p>
+          <p className="endpoint-hint">sf installed: {String(latestOrgStatus?.sf?.installed ?? false)}</p>
+          <p className="endpoint-hint">auth mode: {latestOrgStatus?.authMode ?? latestSession?.authMode ?? 'n/a'}</p>
+          <p className="endpoint-hint">Next: go to Connect tab if session is not ready.</p>
+        </section>
+        <section className="panel status-card">
+          <h2>Recent Activity</h2>
+          {timeline.length === 0 ? (
+            <p className="endpoint-hint">No actions yet.</p>
+          ) : (
+            <ul>
+              {timeline.slice(0, 6).map((item) => (
+                <li key={`${item.at}-${item.step}`}>{item.step}: {item.detail}</li>
+              ))}
+            </ul>
+          )}
+        </section>
       </section>
 
-      <section className="panel status-card">
-        <h2>Run-State Timeline</h2>
-        <p className="endpoint-hint">
-          Session: {latestSession?.status ?? 'unknown'} | Active Alias:{' '}
-          {latestSession?.activeAlias ?? latestOrgStatus?.alias ?? 'n/a'}
-        </p>
-        <p className="endpoint-hint">
-          Latest Snapshot: {latestRefresh?.snapshotId ?? 'n/a'} | Trust:{' '}
-          {latestAsk?.trustLevel ?? 'n/a'}
-        </p>
-        {timeline.length === 0 ? (
-          <p className="endpoint-hint">No workflow events yet. Run Connect/Retrieve/Refresh/Analyze actions.</p>
-        ) : (
-          <ul>
-            {timeline.map((item) => (
-              <li key={`${item.at}-${item.step}`}>
-                [{item.at}] {item.step}: {item.detail}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="panel status-card">
-        <h2>Operator Diagnostics</h2>
-        <p className="endpoint-hint">
-          readiness={readyStatus} | integration={String(latestOrgStatus?.integrationEnabled ?? false)} | authMode=
-          {latestOrgStatus?.authMode ?? latestSession?.authMode ?? 'n/a'}
-        </p>
-        <p className="endpoint-hint">
-          cciInstalled={String(latestOrgStatus?.cci?.installed ?? false)} | cciVersion=
-          {latestOrgStatus?.cci?.version ?? 'n/a'} | cciPinned=
-          {String(latestOrgStatus?.cci?.versionPinned ?? false)}
-        </p>
-        {operatorErrors.length === 0 ? (
-          <p className="endpoint-hint">No recent operator errors.</p>
-        ) : (
-          <ul>
-            {operatorErrors.map((item) => (
-              <li key={`${item.at}-${item.category}`}>
-                [{item.at}] {item.category}: {item.message}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <section className="panel control-panel">
+        <div className="top-tabs" role="tablist" aria-label="workflow sections">
+          {([
+            ['connect', 'Connect'],
+            ['browser', 'Org Browser'],
+            ['refresh', 'Refresh & Build'],
+            ['analyze', 'Analyze'],
+            ['ask', 'Ask'],
+            ['proofs', 'Proofs & Metrics'],
+            ['system', 'System']
+          ] as Array<[UiTab, string]>).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              className={uiTab === key ? 'tab active' : 'tab'}
+              role="tab"
+              aria-selected={uiTab === key}
+              onClick={() => setUiTab(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </section>
 
       <section className="workspace-grid">
-      <section className="panel control-panel">
-        <div className="tab-row">
-          {(
-            [
-              {
-                label: 'Connect',
-                values: ['orgSession', 'orgSessionSwitch', 'orgConnect', 'orgSessionDisconnect', 'orgStatus'] as const
-              },
-              { label: 'Retrieve', values: ['orgRetrieve', 'metadataCatalog', 'metadataRetrieve'] as const },
-              { label: 'Refresh', values: ['refresh', 'refreshDiff'] as const },
-              { label: 'Analyze', values: ['perms', 'permsSystem', 'automation', 'impact', 'ask', 'askArchitecture'] as const },
-              { label: 'Proofs', values: ['askProof', 'askReplay', 'askMetrics'] as const },
-              { label: 'Meta', values: ['metaContext', 'metaAdapt'] as const }
-            ] as const
-          ).map((group) => (
-            <div key={group.label}>
-              <p className="endpoint-hint">{group.label}</p>
-              {group.values.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={value === kind ? 'tab active' : 'tab'}
-                  onClick={() => setKind(value)}
-                >
-                  {value}
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
+        <section className="panel control-panel">
+          {uiTab === 'connect' ? (
+            <>
+              <h2>Connect Org</h2>
+              <p className="endpoint-hint">Choose a path, set alias, then run connect/session actions.</p>
+              <div className="tab-row">
+                {([
+                  ['cci', 'CumulusCI'],
+                  ['sf', 'SF CLI'],
+                  ['magic', 'Magic Link']
+                ] as Array<[AuthPath, string]>).map(([path, label]) => (
+                  <button key={path} type="button" className={authPath === path ? 'tab active' : 'tab'} onClick={() => setAuthPath(path)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="row">
+                <label htmlFor="orgSessionAlias">Org Alias</label>
+                <input id="orgSessionAlias" value={orgSessionAlias} onChange={(e) => setOrgSessionAlias(e.target.value)} />
+              </div>
+              {authPath === 'magic' ? (
+                <div className="row">
+                  <label htmlFor="magicLink">Magic Link / SFDX URL</label>
+                  <textarea id="magicLink" value={magicLink} onChange={(e) => setMagicLink(e.target.value)} rows={3} />
+                  <p className="endpoint-hint">Paste-only helper for operator workflow tracking. Auth execution still uses runtime config.</p>
+                </div>
+              ) : null}
+              <div className="action-row">
+                <button type="button" onClick={() => void runQuery('orgSession')} disabled={loading}>Check Session</button>
+                <button type="button" onClick={() => void runQuery('orgStatus')} disabled={loading}>Check Tool Status</button>
+                <button type="button" onClick={() => void runQuery('orgSessionSwitch')} disabled={loading}>Switch Alias</button>
+                <button type="button" onClick={() => void runQuery('orgConnect')} disabled={loading}>Connect Org</button>
+                <button type="button" onClick={() => void runQuery('orgSessionDisconnect')} disabled={loading}>Disconnect</button>
+              </div>
+              <p className="endpoint-hint">Next step: open Org Browser tab to select metadata for retrieval.</p>
+            </>
+          ) : null}
 
-        <p className="endpoint-hint">Endpoint: {endpointHint}</p>
-
-        {kind === 'orgConnect' ? (
-          <p className="endpoint-hint">
-            CCI Connect Workflow: ensure `cci` is authenticated in this runtime, then run this action to validate
-            org auth/session through the API path.
-          </p>
-        ) : null}
-
-        {(kind === 'orgSessionSwitch' || kind === 'orgConnect') ? (
-          <div className="row">
-            <label htmlFor="orgSessionAlias">Session Alias</label>
-            <input
-              id="orgSessionAlias"
-              value={orgSessionAlias}
-              onChange={(e) => setOrgSessionAlias(e.target.value)}
-            />
-          </div>
-        ) : null}
-
-        {kind === 'refresh' ? (
-          <div className="row">
-            <label htmlFor="refreshMode">Refresh Mode</label>
-            <select
-              id="refreshMode"
-              value={refreshMode}
-              onChange={(e) => setRefreshMode(e.target.value as 'full' | 'incremental')}
-            >
-              <option value="incremental">incremental</option>
-              <option value="full">full</option>
-            </select>
-          </div>
-        ) : null}
-
-        {kind === 'refreshDiff' ? (
-          <>
-            <div className="row">
-              <label htmlFor="fromSnapshot">From Snapshot ID</label>
-              <input id="fromSnapshot" value={fromSnapshot} onChange={(e) => setFromSnapshot(e.target.value)} />
-            </div>
-            <div className="row">
-              <label htmlFor="toSnapshot">To Snapshot ID</label>
-              <input id="toSnapshot" value={toSnapshot} onChange={(e) => setToSnapshot(e.target.value)} />
-            </div>
-          </>
-        ) : null}
-
-        {kind === 'askArchitecture' ? (
-          <>
-            <div className="row">
-              <label htmlFor="archUser">User</label>
-              <input id="archUser" value={archUser} onChange={(e) => setArchUser(e.target.value)} />
-            </div>
-            <div className="row">
-              <label htmlFor="archObject">Object</label>
-              <input id="archObject" value={archObject} onChange={(e) => setArchObject(e.target.value)} />
-            </div>
-            <div className="row">
-              <label htmlFor="archField">Field</label>
-              <input id="archField" value={archField} onChange={(e) => setArchField(e.target.value)} />
-            </div>
-            <div className="row">
-              <label htmlFor="archMaxPaths">Max Paths</label>
-              <input
-                id="archMaxPaths"
-                value={archMaxPathsRaw}
-                onChange={(e) => setArchMaxPathsRaw(e.target.value)}
-              />
-            </div>
-          </>
-        ) : null}
-
-        {kind === 'askProof' ? (
-          <div className="row">
-            <label htmlFor="proofId">Proof ID</label>
-            <input id="proofId" value={proofId} onChange={(e) => setProofId(e.target.value)} />
-          </div>
-        ) : null}
-
-        {kind === 'askReplay' ? (
-          <>
-            <div className="row">
-              <label htmlFor="replayProofId">Proof ID (optional)</label>
-              <input id="replayProofId" value={proofId} onChange={(e) => setProofId(e.target.value)} />
-            </div>
-            <div className="row">
-              <label htmlFor="replayToken">Replay Token (optional)</label>
-              <input id="replayToken" value={replayToken} onChange={(e) => setReplayToken(e.target.value)} />
-            </div>
-          </>
-        ) : null}
-
-        {kind === 'metaAdapt' ? (
-          <div className="row checkbox-row">
-            <label htmlFor="metaDryRun">Dry Run</label>
-            <input id="metaDryRun" type="checkbox" checked={metaDryRun} onChange={(e) => setMetaDryRun(e.target.checked)} />
-          </div>
-        ) : null}
-
-        {kind === 'orgRetrieve' ? (
-          <>
-            <div className="row checkbox-row">
-              <label htmlFor="orgRunAuth">Run Auth Validation</label>
-              <input
-                id="orgRunAuth"
-                type="checkbox"
-                checked={orgRunAuth}
-                onChange={(e) => setOrgRunAuth(e.target.checked)}
-              />
-            </div>
-            <div className="row checkbox-row">
-              <label htmlFor="orgRunRetrieve">Run Metadata Retrieve</label>
-              <input
-                id="orgRunRetrieve"
-                type="checkbox"
-                checked={orgRunRetrieve}
-                onChange={(e) => setOrgRunRetrieve(e.target.checked)}
-              />
-            </div>
-            <div className="row checkbox-row">
-              <label htmlFor="orgAutoRefresh">Auto Refresh Graph</label>
-              <input
-                id="orgAutoRefresh"
-                type="checkbox"
-                checked={orgAutoRefresh}
-                onChange={(e) => setOrgAutoRefresh(e.target.checked)}
-              />
-            </div>
-          </>
-        ) : null}
-
-        {kind === 'orgSession' ? (
-          <p className="endpoint-hint">Shows current active org alias session for this runtime.</p>
-        ) : null}
-
-        {kind === 'metadataCatalog' ? (
-          <>
-            <div className="row">
-              <label htmlFor="metadataSearch">Keyword Search (optional)</label>
-              <input
-                id="metadataSearch"
-                value={metadataSearch}
-                onChange={(e) => setMetadataSearch(e.target.value)}
-              />
-            </div>
-            <div className="row">
-              <label htmlFor="metadataLimit">Catalog Limit</label>
-              <input
-                id="metadataLimit"
-                value={metadataLimitRaw}
-                onChange={(e) => setMetadataLimitRaw(e.target.value)}
-              />
-            </div>
-            <div className="row checkbox-row">
-              <label htmlFor="metadataForceRefresh">Force Refresh (bypass cache)</label>
-              <input
-                id="metadataForceRefresh"
-                type="checkbox"
-                checked={metadataForceRefresh}
-                onChange={(e) => setMetadataForceRefresh(e.target.checked)}
-              />
-            </div>
-            <div className="row">
-              <label htmlFor="metadataMemberSearch">Member Filter (applies on expand)</label>
-              <input
-                id="metadataMemberSearch"
-                value={metadataMemberSearch}
-                onChange={(e) => setMetadataMemberSearch(e.target.value)}
-              />
-            </div>
-            <div className="row">
-              <button type="button" onClick={runQuery} disabled={loading}>
-                {loading ? 'Refreshing...' : 'Refresh Types'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMetadataSearch('');
-                  setMetadataMemberSearch('');
-                }}
-              >
-                Clear Filters
-              </button>
-            </div>
-            {metadataCatalog ? (
-              <details open>
-                <summary>
-                  Catalog ({metadataCatalog.totalTypes} type{metadataCatalog.totalTypes === 1 ? '' : 's'}) | source:{' '}
-                  {metadataCatalog.source} | refreshed {metadataAgeLabel(metadataCatalog.refreshedAt)}
-                </summary>
-                {metadataCatalog.warnings && metadataCatalog.warnings.length > 0 ? (
-                  <ul>
-                    {metadataCatalog.warnings.map((warning) => (
-                      <li key={warning}>{warning}</li>
-                    ))}
-                  </ul>
-                ) : null}
-                {metadataCatalog.totalTypes === 0 ? (
-                  <p className="endpoint-hint">
-                    No metadata discovered in parse path. Fallback: run `orgRetrieve` first, then refresh this catalog.
-                  </p>
-                ) : (
-                  metadataCatalog.types.map((item) => (
-                    <details
-                      key={item.type}
-                      onToggle={(event) => {
-                        const node = event.currentTarget as HTMLDetailsElement;
-                        if (node.open) {
-                          void loadMetadataMembers(item.type);
-                        }
-                      }}
-                    >
-                      <summary>
-                        {item.type} ({item.memberCount})
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            addTypeSelection(item.type);
+          {uiTab === 'browser' ? (
+            <>
+              <h2>Org Browser</h2>
+              <p className="endpoint-hint">Search metadata, expand types, and add members to retrieval cart.</p>
+              <div className="row">
+                <label htmlFor="metadataSearch">Type Search</label>
+                <input id="metadataSearch" value={metadataSearch} onChange={(e) => setMetadataSearch(e.target.value)} />
+              </div>
+              <div className="row">
+                <label htmlFor="metadataMemberSearch">Member Search</label>
+                <input id="metadataMemberSearch" value={metadataMemberSearch} onChange={(e) => setMetadataMemberSearch(e.target.value)} />
+              </div>
+              <div className="row">
+                <label htmlFor="metadataLimit">Catalog Limit</label>
+                <input id="metadataLimit" value={metadataLimitRaw} onChange={(e) => setMetadataLimitRaw(e.target.value)} />
+              </div>
+              <div className="row">
+                <label htmlFor="metadataForceRefresh">Force Refresh</label>
+                <input id="metadataForceRefresh" type="checkbox" checked={metadataForceRefresh} onChange={(e) => setMetadataForceRefresh(e.target.checked)} />
+              </div>
+              <div className="action-row">
+                <button type="button" onClick={() => void runQuery('metadataCatalog')} disabled={loading}>Refresh Types</button>
+                <button type="button" onClick={() => { setMetadataSearch(''); setMetadataMemberSearch(''); }}>Clear Filters</button>
+              </div>
+              <div className="org-browser-frame">
+                <div className="org-browser-col">
+                  <h3>Metadata Types</h3>
+                  {metadataCatalog?.types?.length ? (
+                    <div className="scroll-pane">
+                      {metadataCatalog.types.map((item) => (
+                        <details
+                          key={item.type}
+                          onToggle={(event) => {
+                            const node = event.currentTarget as HTMLDetailsElement;
+                            if (node.open) {
+                              void loadMetadataMembers(item.type);
+                            }
                           }}
                         >
-                          Add Type
-                        </button>
-                        {isTypeSelected(item.type) ? (
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              removeTypeSelection(item.type);
-                            }}
-                          >
-                            Remove
-                          </button>
-                        ) : null}
-                      </summary>
-                      {metadataLoadingType === item.type ? (
-                        <p className="endpoint-hint">Loading members...</p>
-                      ) : null}
+                          <summary>{item.type} ({item.memberCount})</summary>
+                          <div className="action-row compact">
+                            <button type="button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); addTypeSelection(item.type); }}>Add Type</button>
+                            {isTypeSelected(item.type) ? (
+                              <button type="button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); removeTypeSelection(item.type); }}>Remove Type</button>
+                            ) : null}
+                          </div>
+                          <ul>
+                            {(metadataMembersByType[item.type]?.members ?? []).map((member) => (
+                              <li key={`${item.type}.${member.name}`}>
+                                {member.name}
+                                <button type="button" onClick={() => toggleMemberSelection(item.type, member.name)}>
+                                  {isMemberSelected(item.type, member.name) ? 'Remove' : 'Add'}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="endpoint-hint">No catalog loaded yet. Click Refresh Types.</p>
+                  )}
+                </div>
+                <div className="org-browser-col">
+                  <h3>Retrieval Cart</h3>
+                  <div className="scroll-pane">
+                    {metadataSelected.length === 0 ? (
+                      <p className="endpoint-hint">No selected metadata.</p>
+                    ) : (
                       <ul>
-                        {(metadataMembersByType[item.type]?.members ?? []).map((member) => (
-                          <li key={`${item.type}.${member.name}`}>
-                            {member.name}
-                            <button type="button" onClick={() => toggleMemberSelection(item.type, member.name)}>
-                              {isMemberSelected(item.type, member.name) ? 'Remove Member' : 'Add Member'}
-                            </button>
+                        {metadataSelected.map((entry) => (
+                          <li key={entry.type}>
+                            <strong>{entry.type}</strong>
+                            {entry.members && entry.members.length > 0 ? ` (${entry.members.length} members)` : ' (entire type)'}
                           </li>
                         ))}
                       </ul>
-                      {metadataMembersByType[item.type] &&
-                      metadataMembersByType[item.type].warnings &&
-                      (metadataMembersByType[item.type].warnings?.length ?? 0) > 0 ? (
-                        <ul>
-                          {metadataMembersByType[item.type].warnings?.map((warning) => (
-                            <li key={`${item.type}-${warning}`}>{warning}</li>
-                          ))}
-                        </ul>
-                      ) : null}
-                    </details>
-                  ))
-                )}
-              </details>
-            ) : null}
-          </>
-        ) : null}
-
-        {kind === 'metadataRetrieve' ? (
-          <>
-            <div className="row checkbox-row">
-              <label htmlFor="metadataAutoRefresh">Auto Refresh Graph</label>
-              <input
-                id="metadataAutoRefresh"
-                type="checkbox"
-                checked={metadataAutoRefresh}
-                onChange={(e) => setMetadataAutoRefresh(e.target.checked)}
-              />
-            </div>
-            <div className="row">
-              <label htmlFor="metadataSelections">Selections JSON</label>
-              <textarea
-                id="metadataSelections"
-                value={metadataSelectionsRaw}
-                onChange={(e) => setMetadataSelectionsRaw(e.target.value)}
-                rows={6}
-              />
-            </div>
-          </>
-        ) : null}
-
-        {kind === 'ask' ? (
-          <>
-            <div className="row">
-              <label htmlFor="askQuery">Ask Query</label>
-              <textarea id="askQuery" value={askQuery} onChange={(e) => setAskQuery(e.target.value)} rows={4} />
-            </div>
-            <div className="row">
-              <label htmlFor="maxCitations">Max Citations</label>
-              <input id="maxCitations" value={maxCitationsRaw} onChange={(e) => setMaxCitationsRaw(e.target.value)} />
-            </div>
-            <div className="row">
-              <label htmlFor="consistencyCheck">Consistency Check</label>
-              <input
-                id="consistencyCheck"
-                type="checkbox"
-                checked={consistencyCheck}
-                onChange={(e) => setConsistencyCheck(e.target.checked)}
-              />
-            </div>
-            <div className="row">
-              <label htmlFor="askContext">Context JSON (optional)</label>
-              <textarea id="askContext" value={askContextRaw} onChange={(e) => setAskContextRaw(e.target.value)} rows={3} />
-            </div>
-          </>
-        ) : null}
-
-        {kind === 'perms' ? (
-          <>
-            <div className="row">
-              <label htmlFor="user">User</label>
-              <input id="user" value={user} onChange={(e) => setUser(e.target.value)} />
-            </div>
-            <div className="row">
-              <label htmlFor="object">Object</label>
-              <input id="object" value={objectName} onChange={(e) => setObjectName(e.target.value)} />
-            </div>
-            <div className="row">
-              <label htmlFor="field">Field (optional)</label>
-              <input id="field" value={fieldName} onChange={(e) => setFieldName(e.target.value)} />
-            </div>
-            <div className="row">
-              <label htmlFor="limitPerms">Limit (optional)</label>
-              <input id="limitPerms" value={limitRaw} onChange={(e) => setLimitRaw(e.target.value)} />
-            </div>
-          </>
-        ) : null}
-
-        {kind === 'permsSystem' ? (
-          <>
-            <div className="row">
-              <label htmlFor="systemUser">User</label>
-              <input id="systemUser" value={user} onChange={(e) => setUser(e.target.value)} />
-            </div>
-            <div className="row">
-              <label htmlFor="systemPermission">System Permission</label>
-              <input
-                id="systemPermission"
-                value={systemPermission}
-                onChange={(e) => setSystemPermission(e.target.value)}
-              />
-            </div>
-            <div className="row">
-              <label htmlFor="limitSystem">Limit (optional)</label>
-              <input id="limitSystem" value={limitRaw} onChange={(e) => setLimitRaw(e.target.value)} />
-            </div>
-          </>
-        ) : null}
-
-        {kind === 'automation' ? (
-          <div className="row">
-            <label htmlFor="objectAutomation">Object</label>
-            <input id="objectAutomation" value={objectName} onChange={(e) => setObjectName(e.target.value)} />
-          </div>
-        ) : null}
-
-        {kind === 'impact' ? (
-          <div className="row">
-            <label htmlFor="impactField">Field</label>
-            <input id="impactField" value={fieldName} onChange={(e) => setFieldName(e.target.value)} />
-          </div>
-        ) : null}
-
-        {(kind === 'automation' || kind === 'impact') ? (
-          <>
-            <div className="row">
-              <label htmlFor="limitAnalysis">Limit (optional)</label>
-              <input id="limitAnalysis" value={limitRaw} onChange={(e) => setLimitRaw(e.target.value)} />
-            </div>
-            <div className="row">
-              <label htmlFor="strictMode">Strict Mode</label>
-              <input id="strictMode" type="checkbox" checked={strictMode} onChange={(e) => setStrictMode(e.target.checked)} />
-            </div>
-            <div className="row">
-              <label htmlFor="explainMode">Explain Mode</label>
-              <input id="explainMode" type="checkbox" checked={explainMode} onChange={(e) => setExplainMode(e.target.checked)} />
-            </div>
-            <div className="row">
-              <label htmlFor="includeLowConfidence">Include Low Confidence</label>
-              <input
-                id="includeLowConfidence"
-                type="checkbox"
-                checked={includeLowConfidence}
-                onChange={(e) => setIncludeLowConfidence(e.target.checked)}
-              />
-            </div>
-            {kind === 'impact' ? (
-              <div className="row">
-                <label htmlFor="debugMode">Debug Mode</label>
-                <input id="debugMode" type="checkbox" checked={debugMode} onChange={(e) => setDebugMode(e.target.checked)} />
+                    )}
+                  </div>
+                  <div className="row">
+                    <label htmlFor="metadataAutoRefresh">Auto Refresh Graph</label>
+                    <input id="metadataAutoRefresh" type="checkbox" checked={metadataAutoRefresh} onChange={(e) => setMetadataAutoRefresh(e.target.checked)} />
+                  </div>
+                  <button type="button" onClick={() => { syncSelectionsRaw(metadataSelected); void runQuery('metadataRetrieve'); }} disabled={loading || metadataSelected.length === 0}>
+                    Retrieve Selected
+                  </button>
+                </div>
               </div>
-            ) : null}
-          </>
-        ) : null}
+            </>
+          ) : null}
 
-        {kind === 'ask' ? (
-          <div className="row">
-            <label htmlFor="askIncludeLowConfidence">Include Low Confidence</label>
-            <input
-              id="askIncludeLowConfidence"
-              type="checkbox"
-              checked={includeLowConfidence}
-              onChange={(e) => setIncludeLowConfidence(e.target.checked)}
-            />
-          </div>
-        ) : null}
+          {uiTab === 'refresh' ? (
+            <>
+              <h2>Refresh & Build</h2>
+              <div className="row">
+                <label htmlFor="refreshMode">Refresh Mode</label>
+                <select id="refreshMode" value={refreshMode} onChange={(e) => setRefreshMode(e.target.value as 'full' | 'incremental')}>
+                  <option value="incremental">incremental</option>
+                  <option value="full">full</option>
+                </select>
+              </div>
+              <div className="action-row">
+                <button type="button" onClick={() => void runQuery('refresh')} disabled={loading}>Run Refresh</button>
+              </div>
+              <h3>Compare Snapshots</h3>
+              <div className="row">
+                <label htmlFor="fromSnapshot">From Snapshot ID</label>
+                <input id="fromSnapshot" value={fromSnapshot} onChange={(e) => setFromSnapshot(e.target.value)} />
+              </div>
+              <div className="row">
+                <label htmlFor="toSnapshot">To Snapshot ID</label>
+                <input id="toSnapshot" value={toSnapshot} onChange={(e) => setToSnapshot(e.target.value)} />
+              </div>
+              <button type="button" onClick={() => void runQuery('refreshDiff')} disabled={loading}>Run Diff</button>
+              <p className="endpoint-hint">Next step: Analyze tab for permissions/automation/impact review.</p>
+            </>
+          ) : null}
 
-        {kind !== 'metadataCatalog' ? (
-          <button type="button" onClick={runQuery} disabled={loading}>
-            {loading ? 'Running...' : 'Run Query'}
-          </button>
-        ) : null}
-      </section>
+          {uiTab === 'analyze' ? (
+            <>
+              <h2>Analyze</h2>
+              <div className="tab-row">
+                {([
+                  ['perms', 'Permissions'],
+                  ['automation', 'Automation'],
+                  ['impact', 'Impact']
+                ] as Array<[AnalyzeTab, string]>).map(([key, label]) => (
+                  <button key={key} type="button" className={analyzeTab === key ? 'tab active' : 'tab'} onClick={() => setAnalyzeTab(key)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="row">
+                <label htmlFor="user">User</label>
+                <input id="user" value={user} onChange={(e) => setUser(e.target.value)} />
+              </div>
+              <div className="row">
+                <label htmlFor="object">Object</label>
+                <input id="object" value={objectName} onChange={(e) => setObjectName(e.target.value)} />
+              </div>
+              <div className="row">
+                <label htmlFor="field">Field</label>
+                <input id="field" value={fieldName} onChange={(e) => setFieldName(e.target.value)} />
+              </div>
+              <div className="row">
+                <label htmlFor="limitRaw">Limit</label>
+                <input id="limitRaw" value={limitRaw} onChange={(e) => setLimitRaw(e.target.value)} />
+              </div>
+              <div className="row">
+                <label htmlFor="strictMode">Strict Mode</label>
+                <input id="strictMode" type="checkbox" checked={strictMode} onChange={(e) => setStrictMode(e.target.checked)} />
+              </div>
+              <div className="row">
+                <label htmlFor="explainMode">Explain Mode</label>
+                <input id="explainMode" type="checkbox" checked={explainMode} onChange={(e) => setExplainMode(e.target.checked)} />
+              </div>
+              <button type="button" onClick={() => void runQuery(analyzeTab === 'perms' ? 'perms' : analyzeTab === 'automation' ? 'automation' : 'impact')} disabled={loading}>
+                Run {analyzeTab === 'perms' ? 'Permissions' : analyzeTab === 'automation' ? 'Automation' : 'Impact'} Analysis
+              </button>
+            </>
+          ) : null}
 
-      <section className="panel response-panel">
-        <div className="response-header">
-          <h2>Response</h2>
-          <button type="button" onClick={copyResponse} disabled={!responseText}>
-            {copied ? 'Copied' : 'Copy JSON'}
-          </button>
-        </div>
-        {errorText ? <p className="error-text">{errorText}</p> : null}
-        {kind === 'ask' && askPayload ? (
-          <div className="ask-grid">
-            <details open>
-              <summary>Ask Layer 1: Deterministic Evidence Summary</summary>
-              <p>{askPayload.answer || 'No deterministic summary returned.'}</p>
-              <p className="endpoint-hint">
-                confidence: {typeof askPayload.confidence === 'number' ? askPayload.confidence : 'n/a'} | citations:{' '}
-                {Array.isArray(askPayload.citations) ? askPayload.citations.length : 0}
-              </p>
-              {Array.isArray(askPayload.citations) && askPayload.citations.length > 0 ? (
+          {uiTab === 'ask' ? (
+            <>
+              <h2>Ask</h2>
+              <p className="endpoint-hint">Deterministic summary first, proof envelope second.</p>
+              <div className="row">
+                <label htmlFor="askQuery">Question</label>
+                <textarea id="askQuery" value={askQuery} onChange={(e) => setAskQuery(e.target.value)} rows={4} />
+              </div>
+              <div className="row">
+                <label htmlFor="maxCitations">Max Citations</label>
+                <input id="maxCitations" value={maxCitationsRaw} onChange={(e) => setMaxCitationsRaw(e.target.value)} />
+              </div>
+              <div className="row">
+                <label htmlFor="consistencyCheck">Consistency Check</label>
+                <input id="consistencyCheck" type="checkbox" checked={consistencyCheck} onChange={(e) => setConsistencyCheck(e.target.checked)} />
+              </div>
+              <button type="button" onClick={() => void runQuery('ask')} disabled={loading}>Run Ask</button>
+            </>
+          ) : null}
+
+          {uiTab === 'proofs' ? (
+            <>
+              <h2>Proofs & Metrics</h2>
+              <div className="row">
+                <label htmlFor="proofId">Proof ID</label>
+                <input id="proofId" value={proofId} onChange={(e) => setProofId(e.target.value)} />
+              </div>
+              <div className="row">
+                <label htmlFor="replayToken">Replay Token</label>
+                <input id="replayToken" value={replayToken} onChange={(e) => setReplayToken(e.target.value)} />
+              </div>
+              <div className="action-row">
+                <button type="button" onClick={() => void runQuery('askProof')} disabled={loading}>Get Proof</button>
+                <button type="button" onClick={() => void runQuery('askReplay')} disabled={loading}>Replay Proof</button>
+                <button type="button" onClick={() => void runQuery('askMetrics')} disabled={loading}>Export Metrics</button>
+              </div>
+            </>
+          ) : null}
+
+          {uiTab === 'system' ? (
+            <>
+              <h2>System</h2>
+              <p className="endpoint-hint">Endpoint hint: {endpointHint}</p>
+              <div className="action-row">
+                <button type="button" onClick={() => void runQuery('metaContext')} disabled={loading}>Meta Context</button>
+                <button type="button" onClick={() => void runQuery('metaAdapt')} disabled={loading}>Meta Adapt (Dry Run)</button>
+                <button type="button" onClick={() => void runQuery('orgStatus')} disabled={loading}>Org Status</button>
+              </div>
+              <h3>Action Telemetry</h3>
+              {Object.keys(actionCounts).length === 0 ? (
+                <p className="endpoint-hint">No actions tracked yet.</p>
+              ) : (
                 <ul>
-                  {askPayload.citations.slice(0, 5).map((citation, idx) => (
-                    <li key={`${citation.sourcePath ?? 'citation'}-${idx}`}>
-                      {citation.sourcePath || 'unknown source'} (score {citation.score ?? 'n/a'})
-                    </li>
+                  {Object.entries(actionCounts).sort((a, b) => b[1] - a[1]).map(([action, count]) => (
+                    <li key={action}>{action}: {count}</li>
                   ))}
                 </ul>
+              )}
+              {operatorErrors.length > 0 ? (
+                <>
+                  <h3>Recent Errors</h3>
+                  <ul>
+                    {operatorErrors.slice(0, 10).map((item) => (
+                      <li key={`${item.at}-${item.category}`}>{item.category}: {item.message}</li>
+                    ))}
+                  </ul>
+                </>
               ) : null}
-            </details>
-            <details open>
-              <summary>Ask Proof + Trust Envelope</summary>
-              <p className="endpoint-hint">trustLevel: {askPayload.trustLevel ?? 'n/a'}</p>
-              <p className="endpoint-hint">policyId: {askPayload.policy?.policyId ?? 'n/a'}</p>
-              <p className="endpoint-hint">proofId: {askPayload.proof?.proofId ?? 'n/a'}</p>
-              <p className="endpoint-hint">replayToken: {askPayload.proof?.replayToken ?? 'n/a'}</p>
-              <p className="endpoint-hint">snapshotId: {askPayload.proof?.snapshotId ?? 'n/a'}</p>
-            </details>
+            </>
+          ) : null}
+        </section>
+
+        <section className="panel response-panel">
+          <div className="response-header">
+            <h2>Result</h2>
+            <button type="button" onClick={copyResponse} disabled={!responseText}>{copied ? 'Copied' : 'Copy JSON'}</button>
           </div>
-        ) : null}
-        {kind === 'ask' && askPayload ? (
-          <details>
-            <summary>Ask Layer 2: Optional Conversational Elaboration</summary>
-            <button type="button" onClick={runAskElaboration} disabled={askElaborationLoading}>
-              {askElaborationLoading ? 'Generating...' : 'Generate Elaboration'}
-            </button>
-            {askElaboration ? <pre>{askElaboration}</pre> : null}
+          {errorText ? <p className="error-text">{errorText}</p> : null}
+          {askPayload ? (
+            <div className="ask-grid">
+              <details open>
+                <summary>Deterministic Summary</summary>
+                <p>{askPayload.answer || 'No deterministic summary returned.'}</p>
+                <p className="endpoint-hint">confidence: {typeof askPayload.confidence === 'number' ? askPayload.confidence : 'n/a'}</p>
+              </details>
+              <details open>
+                <summary>Proof + Trust</summary>
+                <p className="endpoint-hint">trustLevel: {askPayload.trustLevel ?? 'n/a'}</p>
+                <p className="endpoint-hint">policyId: {askPayload.policy?.policyId ?? 'n/a'}</p>
+                <p className="endpoint-hint">proofId: {askPayload.proof?.proofId ?? 'n/a'}</p>
+                <p className="endpoint-hint">snapshotId: {askPayload.proof?.snapshotId ?? 'n/a'}</p>
+              </details>
+            </div>
+          ) : null}
+          {askPayload ? (
+            <details>
+              <summary>Optional Elaboration</summary>
+              <button type="button" onClick={runAskElaboration} disabled={askElaborationLoading}>
+                {askElaborationLoading ? 'Generating...' : 'Generate Elaboration'}
+              </button>
+              {askElaboration ? <pre>{askElaboration}</pre> : null}
+            </details>
+          ) : null}
+          <details open>
+            <summary>Raw JSON</summary>
+            <pre>{responseText || '{\n  "hint": "Run an action to view response"\n}'}</pre>
           </details>
-        ) : null}
-        <details open>
-          <summary>JSON Output</summary>
-          <pre>{responseText || '{\n  "hint": "Run a query to view JSON response"\n}'}</pre>
-        </details>
-      </section>
+          {readyDetails ? (
+            <details>
+              <summary>Ready Details</summary>
+              <pre>{readyDetails}</pre>
+            </details>
+          ) : null}
+        </section>
       </section>
     </main>
   );
