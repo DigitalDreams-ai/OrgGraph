@@ -1,4 +1,4 @@
-# OrgGraph Phase 3 Task List (Evidence + Ask)
+# Orgumented Phase 3 Task List (Evidence + Ask)
 
 Goal: introduce evidence retrieval and `/ask` orchestration while keeping deterministic graph queries as the system of record.
 
@@ -72,7 +72,7 @@ Goal: introduce evidence retrieval and `/ask` orchestration while keeping determ
 - [x] `/ask` returns deterministic plan + answer + citations
 - [x] Evidence indexing runs with refresh and is queryable
 - [x] `pnpm --filter api test` passes with Phase 3 coverage
-- [x] Dockerized API serves `/ask` in NAS `orggraph` project
+- [x] Dockerized API serves `/ask` in NAS `orgumented` project
 
 ## Immediate Next Action
 

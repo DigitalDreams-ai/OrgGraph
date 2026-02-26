@@ -1,4 +1,4 @@
-# OrgGraph Phase 10 Task List (LLM Support: OpenAI + Anthropic)
+# Orgumented Phase 10 Task List (LLM Support: OpenAI + Anthropic)
 
 Goal: add production-safe LLM capabilities for explanation and synthesis while preserving deterministic graph truth, citation fidelity, and provider portability.
 
@@ -91,7 +91,7 @@ Goal: add production-safe LLM capabilities for explanation and synthesis while p
 
 ## Definition of Done (Phase 10)
 
-- [ ] OrgGraph supports OpenAI and Anthropic through one provider abstraction
+- [ ] Orgumented supports OpenAI and Anthropic through one provider abstraction
 - [ ] `/ask` llm-assisted mode preserves deterministic grounding and citations
 - [ ] Quality/cost/latency are measurable with enforceable budgets and kill switches
 - [ ] Rollout, fallback, and security procedures are documented and tested

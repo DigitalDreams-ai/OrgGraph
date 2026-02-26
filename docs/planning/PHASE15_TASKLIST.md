@@ -1,4 +1,4 @@
-# OrgGraph Phase 15 Task List (Salesforce Decision Engines)
+# Orgumented Phase 15 Task List (Salesforce Decision Engines)
 
 Goal: deliver flagship Salesforce architecture decisions using semantic runtime primitives.
 
@@ -37,7 +37,7 @@ Goal: deliver flagship Salesforce architecture decisions using semantic runtime 
   - [x] Add deterministic fallback for unsupported relation patterns
 
 ## Definition of Done
-- [ ] OrgGraph provides materially better architecture decisions with proof, not just query responses
+- [ ] Orgumented provides materially better architecture decisions with proof, not just query responses
 
 ## Phase 15 Implementation Notes
 - Added deterministic endpoint: `POST /ask/architecture`

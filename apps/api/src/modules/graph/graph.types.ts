@@ -1,4 +1,4 @@
-import type { NodeType, RelType } from '@orggraph/ontology';
+import type { NodeType, RelType } from '@orgumented/ontology';
 
 export interface GraphNode {
   id: string;

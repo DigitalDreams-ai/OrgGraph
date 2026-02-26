@@ -1,4 +1,4 @@
-# OrgGraph Phase 18 Task List (WebUI-First Auth + Runtime Alignment)
+# Orgumented Phase 18 Task List (WebUI-First Auth + Runtime Alignment)
 
 Goal: make WebUI the primary operational surface by migrating org authentication flows to `cci` and aligning runtime controls to UI-first usage.
 

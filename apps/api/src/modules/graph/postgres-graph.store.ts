@@ -1,4 +1,4 @@
-import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
+import { NODE_TYPES, REL_TYPES } from '@orgumented/ontology';
 import { Pool, type QueryResult } from 'pg';
 import { AppConfigService } from '../../config/app-config.service';
 import type { AutomationHit, GraphPayload, ImpactHit, PermPath } from './graph.types';

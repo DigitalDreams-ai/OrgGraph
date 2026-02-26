@@ -1,4 +1,4 @@
-# OrgGraph Phase 11 Task List (Blue Ocean: Deterministic Semantic Runtime)
+# Orgumented Phase 11 Task List (Blue Ocean: Deterministic Semantic Runtime)
 
 Goal: build a true differentiator by making context a deterministic, composable semantic system, not a retrieval stack.
 
@@ -14,7 +14,7 @@ Goal: build a true differentiator by making context a deterministic, composable 
 - [x] Sandbox-backed graph refresh stable
 
 ## Exit Criteria
-- [x] OrgGraph supports semantic composition units (not just endpoint queries)
+- [x] Orgumented supports semantic composition units (not just endpoint queries)
 - [x] `/ask` returns explicit derivation traces for core claim sets
 - [x] Meaning quality is scored with deterministic metrics
 - [x] At least one workflow demonstrates materially better decision support vs current approach
@@ -24,7 +24,7 @@ Goal: build a true differentiator by making context a deterministic, composable 
 - Deterministic derivation trace graph (meta-context layer)
 - Meaning metrics and acceptance thresholds
 - Versioned semantic deltas across refreshes
-- Canonical runtime language adoption (`docs/planning/ORGGRAPH_LEXICON.md`)
+- Canonical runtime language adoption (`docs/planning/ORGUMENTED_LEXICON.md`)
 
 ## Not In Phase 11
 - New custom storage engine rewrite
@@ -33,7 +33,7 @@ Goal: build a true differentiator by making context a deterministic, composable 
 
 ## 1. Define the Semantic Core (No Implementation Drift)
 
-- [x] Adopt and enforce canonical terminology from `ORGGRAPH_LEXICON.md` in API/docs
+- [x] Adopt and enforce canonical terminology from `ORGUMENTED_LEXICON.md` in API/docs
 - [x] Define `SCU` (Semantic Context Unit) schema:
 - Identity, type, invariants, dependencies, provenance, confidence policy
 - [x] Define composition operators:
@@ -91,7 +91,7 @@ Goal: build a true differentiator by making context a deterministic, composable 
 
 ## Definition of Done (Phase 11)
 
-- [x] OrgGraph can compose semantic units deterministically
+- [x] Orgumented can compose semantic units deterministically
 - [x] `/ask` can show auditable derivation traces
 - [x] Meaning quality is measured and enforced
 - [x] Blue-ocean proof workflow shows measurable gain over current architecture
@@ -120,7 +120,7 @@ Goal: build a true differentiator by making context a deterministic, composable 
 
 ## Verification Snapshot (2026-02-26)
 
-- API suite in container: `docker exec orggraph-api sh -lc 'cd /app && pnpm --filter api test'` passed
+- API suite in container: `docker exec orgumented-api sh -lc 'cd /app && pnpm --filter api test'` passed
 - Phase 11 focused tests in container passed:
   - `pnpm exec ts-node --transpile-only test/semantic-runtime.ts`
   - `pnpm exec ts-node --transpile-only test/phase11-proof-workflow.ts`

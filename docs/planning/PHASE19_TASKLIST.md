@@ -1,4 +1,4 @@
-# OrgGraph Phase 19 Task List (Org-Wide Metadata Browser + Selective Retrieval)
+# Orgumented Phase 19 Task List (Org-Wide Metadata Browser + Selective Retrieval)
 
 Goal: implement org-wide metadata retrieval UX in WebUI with VS Code Org Browser-style expand/select/search behavior and selective fetch.
 

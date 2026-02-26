@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { REL_TYPES } from '@orggraph/ontology';
-import { FlowParseError, FlowParserService } from '../src/ingestion/flow-parser.service';
+import { REL_TYPES } from '@orgumented/ontology';
+import { FlowParseError, FlowParserService } from '../src/modules/ingestion/flow-parser.service';
 
 function run(): void {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orggraph-flow-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orgumented-flow-'));
   const flowsPath = path.join(root, 'flows');
   fs.mkdirSync(flowsPath, { recursive: true });
 

@@ -1,6 +1,6 @@
-# OrgGraph Phase 20 Task List (WebUI Overhaul for Full Capability Surface)
+# Orgumented Phase 20 Task List (WebUI Overhaul for Full Capability Surface)
 
-Goal: overhaul WebUI to expose current OrgGraph runtime capabilities end-to-end and make WebUI the primary daily interface.
+Goal: overhaul WebUI to expose current Orgumented runtime capabilities end-to-end and make WebUI the primary daily interface.
 
 ## Entry Criteria
 - [ ] Phase 19 complete
@@ -47,4 +47,4 @@ Goal: overhaul WebUI to expose current OrgGraph runtime capabilities end-to-end 
   - [ ] use strict API contracts and show raw payload drilldown
 
 ## Definition of Done
-- [ ] WebUI is the primary, reliable, and complete operator surface for OrgGraph
+- [ ] WebUI is the primary, reliable, and complete operator surface for Orgumented

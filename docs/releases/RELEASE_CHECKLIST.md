@@ -1,7 +1,7 @@
 # Release Checklist
 
 ## Purpose
-Operational checklist for routine OrgGraph upgrades and safe promotion.
+Operational checklist for routine Orgumented upgrades and safe promotion.
 
 ## 1. Dependencies
 - [ ] `pnpm install` completed without unresolved lockfile drift
@@ -18,7 +18,7 @@ Operational checklist for routine OrgGraph upgrades and safe promotion.
 ## 3. Promotion Safety
 - [ ] Dry-run promotion: `npm run phase8:promotion-dry-run`
 - [ ] Create restore point: `npm run phase8:restore-point:create`
-- [ ] Log operator sign-off: `ORGGRAPH_OPERATOR=<name> npm run phase8:promotion-log -- promoted`
+- [ ] Log operator sign-off: `ORGUMENTED_OPERATOR=<name> npm run phase8:promotion-log -- promoted`
 - [ ] Rollback command verified: `npm run phase8:restore-point:apply -- <stamp>`
 
 ## 4. Security/Config

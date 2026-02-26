@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { NODE_TYPES, REL_CONSTRAINTS, REL_TYPES } from '@orggraph/ontology';
+import { NODE_TYPES, REL_CONSTRAINTS, REL_TYPES } from '@orgumented/ontology';
 
 function run(): void {
   const grantsCustom = REL_CONSTRAINTS.find((item) => item.rel === REL_TYPES.GRANTS_CUSTOM_PERMISSION);

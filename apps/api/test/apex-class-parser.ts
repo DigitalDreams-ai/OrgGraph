@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { REL_TYPES } from '@orggraph/ontology';
-import { ApexClassParseError, ApexClassParserService } from '../src/ingestion/apex-class-parser.service';
+import { REL_TYPES } from '@orgumented/ontology';
+import { ApexClassParseError, ApexClassParserService } from '../src/modules/ingestion/apex-class-parser.service';
 
 function run(): void {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orggraph-apex-class-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orgumented-apex-class-'));
   const classesPath = path.join(root, 'apex-classes');
   fs.mkdirSync(classesPath, { recursive: true });
 

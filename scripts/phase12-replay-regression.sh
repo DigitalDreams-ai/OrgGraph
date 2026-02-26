@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-API_BASE="${ORGGRAPH_API_BASE:-http://127.0.0.1:3100}"
+API_BASE="${ORGUMENTED_API_BASE:-http://127.0.0.1:3100}"
 FIXTURES_PATH="${PHASE12_FIXTURES_PATH:-fixtures/permissions}"
 
 curl -sS -X POST "$API_BASE/refresh" \

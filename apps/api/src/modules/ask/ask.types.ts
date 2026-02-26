@@ -1,6 +1,6 @@
 import type { AskPlan } from '../planner/planner.types';
 import type { LlmProviderName } from '../llm/llm.types';
-import type { CompositionOperator, DerivationRelation } from '@orggraph/ontology';
+import type { CompositionOperator, DerivationRelation } from '@orgumented/ontology';
 
 export type AskTraceLevel = 'compact' | 'standard' | 'full';
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-const WEB_LOG_ENABLED = (process.env.ORGGRAPH_WEB_LOG_ENABLED || 'false').trim().toLowerCase() === 'true';
+const WEB_LOG_ENABLED = (process.env.ORGUMENTED_WEB_LOG_ENABLED || 'false').trim().toLowerCase() === 'true';
 
 export async function GET(): Promise<NextResponse> {
   if (WEB_LOG_ENABLED) {

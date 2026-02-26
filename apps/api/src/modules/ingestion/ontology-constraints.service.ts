@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { REL_CONSTRAINTS, REL_TYPES } from '@orggraph/ontology';
+import { REL_CONSTRAINTS, REL_TYPES } from '@orgumented/ontology';
 import type { GraphPayload } from '../graph/graph.types';
 
 export interface ConstraintViolation {

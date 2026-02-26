@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { NODE_TYPES } from '@orggraph/ontology';
-import { StagedUiMetadataParserService } from '../src/ingestion/staged-ui-metadata-parser.service';
+import { NODE_TYPES } from '@orgumented/ontology';
+import { StagedUiMetadataParserService } from '../src/modules/ingestion/staged-ui-metadata-parser.service';
 
 function run(): void {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orggraph-ui-metadata-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orgumented-ui-metadata-'));
   fs.mkdirSync(path.join(root, 'pages'), { recursive: true });
   fs.mkdirSync(path.join(root, 'lwc', 'recordSummary'), { recursive: true });
   fs.mkdirSync(path.join(root, 'aura', 'CaseWidget'), { recursive: true });

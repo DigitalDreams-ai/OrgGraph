@@ -1,7 +1,7 @@
 # Production Promotion Gate
 
 ## Purpose
-Define the go/no-go process for promoting OrgGraph from sandbox metadata to production org metadata.
+Define the go/no-go process for promoting Orgumented from sandbox metadata to production org metadata.
 
 ## Go / No-Go Criteria
 - `GET /ready` is `status=ready` and source path points to retrieved org metadata.
@@ -23,7 +23,7 @@ Define the go/no-go process for promoting OrgGraph from sandbox metadata to prod
 `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_TOKEN_STORE_PATH`
 6. Confirm rollback artifacts exist in `data/refresh/restore-points/<stamp>`
 7. Confirm operator sign-off on validation outputs and append promotion log:
-`ORGGRAPH_OPERATOR=<name> npm run phase8:promotion-log -- promoted`
+`ORGUMENTED_OPERATOR=<name> npm run phase8:promotion-log -- promoted`
 
 ## Rollback Procedure
 1. Stop stack:
@@ -52,9 +52,9 @@ Define the go/no-go process for promoting OrgGraph from sandbox metadata to prod
 
 ## Retention + Alerts
 - Prune restore-point and promotion-log artifacts:
-`ORGGRAPH_RETENTION_DAYS=30 npm run phase8:retention-prune`
+`ORGUMENTED_RETENTION_DAYS=30 npm run phase8:retention-prune`
 - Optional alert hook for smoke/regression scripts:
-`ORGGRAPH_ALERT_WEBHOOK_URL=https://...`
+`ORGUMENTED_ALERT_WEBHOOK_URL=https://...`
 
 ## Monthly Accuracy Review
 1. Select 10-20 representative business questions.

@@ -1,4 +1,4 @@
-# OrgGraph Phase 4 Task List (Polish + UX)
+# Orgumented Phase 4 Task List (Polish + UX)
 
 Goal: complete Phase 4 polish with incremental refresh, a usable web UI, and operational hardening on NAS.
 

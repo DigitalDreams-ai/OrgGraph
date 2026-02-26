@@ -1,4 +1,4 @@
-# OrgGraph Phase 16 Task List (Meta-Context Adaptation Under Deterministic Bounds)
+# Orgumented Phase 16 Task List (Meta-Context Adaptation Under Deterministic Bounds)
 
 Goal: add bounded adaptation ("learning") without sacrificing replayability or trust guarantees.
 
@@ -36,7 +36,7 @@ Goal: add bounded adaptation ("learning") without sacrificing replayability or t
   - [ ] Cross-snapshot and cross-scenario validation set required
 
 ## Definition of Done
-- [ ] OrgGraph adapts ranking quality while preserving deterministic guarantees
+- [ ] Orgumented adapts ranking quality while preserving deterministic guarantees
 
 ## Phase 16 Implementation Notes
 - Added `MetaContextService` with bounded deterministic formulas (`phase16-v1`)

@@ -1,9 +1,9 @@
 #!/bin/sh
 set -eu
 
-API_BASE="${ORGGRAPH_API_BASE:-http://127.0.0.1:3100}"
-SNAPSHOT_DIR="${ORGGRAPH_SNAPSHOT_DIR:-data/validation/snapshots}"
-MAX_DROP_PCT="${ORGGRAPH_MAX_DROP_PCT:-30}"
+API_BASE="${ORGUMENTED_API_BASE:-http://127.0.0.1:3100}"
+SNAPSHOT_DIR="${ORGUMENTED_SNAPSHOT_DIR:-data/validation/snapshots}"
+MAX_DROP_PCT="${ORGUMENTED_MAX_DROP_PCT:-30}"
 
 notify() {
   status="$1"

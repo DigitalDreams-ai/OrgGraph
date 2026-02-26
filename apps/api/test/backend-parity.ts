@@ -20,7 +20,7 @@ async function runScenario(backend: 'sqlite' | 'postgres'): Promise<{
   systemPermissionGranted: boolean;
 }> {
   const root = workspaceRoot();
-  const dbPath = path.join(root, `data/orggraph.parity.${backend}.db`);
+  const dbPath = path.join(root, `data/orgumented.parity.${backend}.db`);
   const evidencePath = path.join(root, `data/evidence.parity.${backend}.json`);
   const mapPath = path.join(root, `data/user-profile-map.parity.${backend}.json`);
 

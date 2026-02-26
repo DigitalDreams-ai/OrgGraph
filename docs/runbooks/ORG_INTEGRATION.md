@@ -1,7 +1,7 @@
 # Org Integration Runbook (Sandbox First)
 
 ## Purpose
-This runbook connects OrgGraph to a Salesforce sandbox, retrieves metadata, and refreshes graph/evidence from retrieved source.
+This runbook connects Orgumented to a Salesforce sandbox, retrieves metadata, and refreshes graph/evidence from retrieved source.
 
 ## Current vs Planned Auth Path
 - Current implemented: External Client App OAuth refresh-token flow.
@@ -15,7 +15,7 @@ This runbook connects OrgGraph to a Salesforce sandbox, retrieves metadata, and 
 ## Required Environment Variables
 - `SF_INTEGRATION_ENABLED=true`
 - `SF_AUTH_MODE=oauth_refresh_token` (recommended)
-- `SF_ALIAS=orggraph-sandbox`
+- `SF_ALIAS=orgumented-sandbox`
 - `SF_PROJECT_PATH=data/sf-project`
 - `SF_MANIFEST_PATH=manifest/package.xml`
 - `SF_PARSE_PATH=data/sf-project/force-app/main/default`
@@ -102,5 +102,5 @@ Run quick provider checks without rebuilding images:
 ## Rollback
 If retrieve/refresh fails:
 1. Keep previous deployed image and config.
-2. Restore known-good `data/orggraph.db` and evidence index backup if needed.
+2. Restore known-good `data/orgumented.db` and evidence index backup if needed.
 3. Re-run with narrower manifest scope.

@@ -104,7 +104,7 @@ export class LlmService {
       .join('\n\n');
 
     return [
-      'You are assisting OrgGraph. Deterministic graph output is the source of truth.',
+      'You are assisting Orgumented. Deterministic graph output is the source of truth.',
       'Only produce claims that are supported by provided citations.',
       'If citations are insufficient, keep answer conservative and state uncertainty.',
       'Use citation ids in citations_used, or citation indexes like [1], [2], [3].',

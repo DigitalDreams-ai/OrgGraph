@@ -6,7 +6,7 @@ ROOT_DIR="$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)"
 SF_VERBOSE="${SF_VERBOSE:-false}"
 
 SF_AUTH_MODE="${SF_AUTH_MODE:-oauth_refresh_token}"
-SF_ALIAS="${SF_ALIAS:-orggraph-sandbox}"
+SF_ALIAS="${SF_ALIAS:-orgumented-sandbox}"
 SF_PROJECT_PATH="${SF_PROJECT_PATH:-$ROOT_DIR/data/sf-project}"
 
 if [ "$SF_VERBOSE" = "true" ]; then

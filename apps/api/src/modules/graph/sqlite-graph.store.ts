@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
-import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
+import { NODE_TYPES, REL_TYPES } from '@orgumented/ontology';
 import { resolveDbPath } from '../../common/path';
 import { AppConfigService } from '../../config/app-config.service';
 import type { AutomationHit, GraphPayload, ImpactHit, PermPath } from './graph.types';

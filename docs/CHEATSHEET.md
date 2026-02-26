@@ -1,8 +1,8 @@
-# OrgGraph Cheat Sheet
+# Orgumented Cheat Sheet
 
 ## Start / Stop
 ```bash
-cd /volume1/data/projects/OrgGraph
+cd /volume1/data/projects/Orgumented
 docker compose -f docker/docker-compose.yml up -d --build
 docker compose -f docker/docker-compose.yml down
 ```

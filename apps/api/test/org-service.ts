@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { OrgService } from '../src/org/org.service';
+import { OrgService } from '../src/modules/org/org.service';
 
 class StubRunner {
   calls: Array<{ command: string; args: string[]; cwd?: string }> = [];
@@ -18,7 +18,7 @@ class StubRunner {
 }
 
 async function run(): Promise<void> {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orggraph-org-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orgumented-org-'));
   const manifestDir = path.join(root, 'manifest');
   const secretsDir = path.join(root, '.secrets');
   const sfProjectDir = path.join(root, 'data', 'sf-project');
@@ -47,7 +47,7 @@ async function run(): Promise<void> {
     sfIntegrationEnabled: () => true,
     sfAuthMode: () => 'sfdx_url' as const,
     sfAuthUrlPath: () => authFile,
-    sfAlias: () => 'orggraph-sandbox',
+    sfAlias: () => 'orgumented-sandbox',
     sfProjectPath: () => sfProjectDir,
     sfManifestPath: () => manifestPath,
     sfParsePath: () => parsePath,
@@ -71,7 +71,7 @@ async function run(): Promise<void> {
       evidenceCount: 1,
       elapsedMs: 1,
       sourcePath: parsePath,
-      databasePath: path.join(root, 'data', 'orggraph.db'),
+      databasePath: path.join(root, 'data', 'orgumented.db'),
       evidenceIndexPath: path.join(root, 'data', 'evidence', 'index.json')
     })
   };

@@ -4,7 +4,7 @@ set -eu
 ROOT_DIR="$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)"
 . "$ROOT_DIR/scripts/load-dotenv.sh"
 
-SF_ALIAS="${SF_ALIAS:-orggraph-sandbox}"
+SF_ALIAS="${SF_ALIAS:-orgumented-sandbox}"
 USER_PROFILE_MAP_PATH="${USER_PROFILE_MAP_PATH:-data/sf-user-principals.json}"
 
 case "$USER_PROFILE_MAP_PATH" in

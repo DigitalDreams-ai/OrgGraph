@@ -45,7 +45,7 @@ Planned primary flow (Phase 18+) is WebUI-first authentication via CumulusCI `3.
 - [x] Run `npm run sf:retrieve-refresh`.
 - [x] Capture baseline node/edge/evidence counts.
 
-## 7) Verify OrgGraph Endpoints
+## 7) Verify Orgumented Endpoints
 - [x] `GET /ready` returns `status=ready`.
 - [ ] Run `npm run sf:export-user-map` (writes `USER_PROFILE_MAP_PATH`) before `/perms` validation.
 - [ ] `GET /perms` returns expected path for known test user/object.

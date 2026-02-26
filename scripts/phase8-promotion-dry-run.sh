@@ -1,9 +1,9 @@
 #!/bin/sh
 set -eu
 
-API_BASE="${ORGGRAPH_API_BASE:-http://127.0.0.1:3100}"
-FIXTURES_PATH="${ORGGRAPH_PROMOTION_FIXTURES:-data/sf-project/force-app/main/default}"
-ARTIFACT_DIR="${ORGGRAPH_PROMOTION_ARTIFACT_DIR:-artifacts/phase8-promotion}"
+API_BASE="${ORGUMENTED_API_BASE:-http://127.0.0.1:3100}"
+FIXTURES_PATH="${ORGUMENTED_PROMOTION_FIXTURES:-data/sf-project/force-app/main/default}"
+ARTIFACT_DIR="${ORGUMENTED_PROMOTION_ARTIFACT_DIR:-artifacts/phase8-promotion}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 OUT_DIR="$ARTIFACT_DIR/$STAMP-dry-run"
 

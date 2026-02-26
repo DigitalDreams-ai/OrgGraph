@@ -1,4 +1,4 @@
-# OrgGraph Phase 9 Task List (Postgres Migration + Reliability + Metadata Expansion)
+# Orgumented Phase 9 Task List (Postgres Migration + Reliability + Metadata Expansion)
 
 Goal: migrate the graph backend from SQLite to Postgres with zero functional regressions, measurable performance gains, safe rollback, and expanded ontology/parser support for additional Salesforce metadata.
 

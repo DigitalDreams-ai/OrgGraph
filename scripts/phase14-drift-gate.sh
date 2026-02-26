@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-API_BASE="${ORGGRAPH_API_BASE:-http://127.0.0.1:3100}"
+API_BASE="${ORGUMENTED_API_BASE:-http://127.0.0.1:3100}"
 ARTIFACT_PATH="${1:-artifacts/phase14-drift-gate.json}"
 
 mkdir -p "$(dirname "$ARTIFACT_PATH")"

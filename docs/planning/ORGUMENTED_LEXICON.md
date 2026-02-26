@@ -1,4 +1,4 @@
-# OrgGraph Lexicon (Canonical Language)
+# Orgumented Lexicon (Canonical Language)
 
 Purpose: enforce precise shared language for architecture, implementation, and user-facing outputs.
 

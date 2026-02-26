@@ -1,6 +1,6 @@
-# OrgGraph Phase 6 Task List (Salesforce Org Integration)
+# Orgumented Phase 6 Task List (Salesforce Org Integration)
 
-Goal: connect OrgGraph to a real Salesforce org and run first live metadata retrieval + graph/evidence ingest safely using a sandbox-first rollout.
+Goal: connect Orgumented to a real Salesforce org and run first live metadata retrieval + graph/evidence ingest safely using a sandbox-first rollout.
 
 ## Scope
 - Add secure org auth strategy for NAS (non-interactive)

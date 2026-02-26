@@ -1,7 +1,7 @@
-# OrgGraph Blue Ocean Execution Plan
+# Orgumented Blue Ocean Execution Plan
 
 ## Objective
-Build OrgGraph into a deterministic semantic runtime for Salesforce architecture decisions, where every answer is replayable, auditable, and composition-first.
+Build Orgumented into a deterministic semantic runtime for Salesforce architecture decisions, where every answer is replayable, auditable, and composition-first.
 
 ## What Makes This Different
 - Context is a typed runtime system, not a token retrieval bundle.
@@ -9,7 +9,7 @@ Build OrgGraph into a deterministic semantic runtime for Salesforce architecture
 - Meaning is modeled as constrained composition over semantic units.
 - Semantic drift is measured and blocked before trust is lost.
 
-Language standard: use canonical terms defined in `docs/planning/ORGGRAPH_LEXICON.md`.
+Language standard: use canonical terms defined in `docs/planning/ORGUMENTED_LEXICON.md`.
 
 ## Non-Negotiable Product Laws
 - Deterministic by default: same snapshot + same query + same policy = same result.
@@ -148,7 +148,7 @@ flowchart LR
     G --> H[Deterministic Recommendation + Proof]
 ```
 
-This makes OrgGraph a decision runtime for:
+This makes Orgumented a decision runtime for:
 - permission blast radius,
 - automation side effects,
 - release-time semantic regressions,
@@ -196,7 +196,7 @@ Execution control reference:
 - No rollout when drift metrics regress beyond thresholds.
 
 ## Definition of Success
-OrgGraph becomes the system where Salesforce architects do not ask:
+Orgumented becomes the system where Salesforce architects do not ask:
 "What document should I read?"
 They ask:
 "What is the replayable semantic proof for this architectural decision, under this snapshot and policy?"

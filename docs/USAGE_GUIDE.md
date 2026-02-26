@@ -1,7 +1,7 @@
-# OrgGraph Usage Guide
+# Orgumented Usage Guide
 
-## 1. What OrgGraph Does
-OrgGraph builds a deterministic graph from Salesforce metadata and answers:
+## 1. What Orgumented Does
+Orgumented builds a deterministic graph from Salesforce metadata and answers:
 - Who can edit what (`/perms`)
 - What automation runs on an object (`/automation`)
 - What might be impacted by a field change (`/impact`)
@@ -13,7 +13,7 @@ OrgGraph builds a deterministic graph from Salesforce metadata and answers:
 
 ## 3. Start the Stack
 ```bash
-cd /volume1/data/projects/OrgGraph
+cd /volume1/data/projects/Orgumented
 docker compose -f docker/docker-compose.yml up -d --build
 ```
 
@@ -100,7 +100,7 @@ Expanded metadata coverage in current build includes:
 - `ConnectedApp`
 - staged UI metadata (`ApexPage`, `LightningComponentBundle`, `AuraDefinitionBundle`, `QuickAction`, `Layout`) when enabled
 
-## 8. Query OrgGraph
+## 8. Query Orgumented
 
 ### 8.1 Permissions
 ```bash

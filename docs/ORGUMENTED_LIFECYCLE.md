@@ -1,6 +1,6 @@
-# OrgGraph Lifecycle
+# Orgumented Lifecycle
 
-This document describes how OrgGraph works end-to-end, from startup through retrieval, ingestion, graph rebuild, query serving, and operations.
+This document describes how Orgumented works end-to-end, from startup through retrieval, ingestion, graph rebuild, query serving, and operations.
 
 ## 1. Startup and Configuration
 - API loads environment configuration (`GRAPH_BACKEND`, data paths, Salesforce auth settings, logging flags).
@@ -9,7 +9,7 @@ This document describes how OrgGraph works end-to-end, from startup through retr
 - Health and readiness endpoints come online.
 
 ## 2. Metadata Source Setup
-- OrgGraph reads metadata from either:
+- Orgumented reads metadata from either:
   - fixture path (`fixtures/permissions`) for controlled testing, or
   - retrieved Salesforce source (`data/sf-project/force-app/main/default`) for sandbox/live usage.
 - `manifest/package.xml` can define retrieved metadata scope, but package.xml-all retrieval is not the preferred default operator path.

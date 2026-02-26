@@ -1,9 +1,9 @@
-# OrgGraph Blue Ocean Phase Roadmap
+# Orgumented Blue Ocean Phase Roadmap
 
 This roadmap expands the deterministic semantic runtime vision into an execution sequence with hard gates.
 
 ## Program Goal
-Turn OrgGraph into a replayable semantic decision runtime for Salesforce architecture work, where every answer is provable under a snapshot + policy envelope.
+Turn Orgumented into a replayable semantic decision runtime for Salesforce architecture work, where every answer is provable under a snapshot + policy envelope.
 
 ## Phase Chain
 1. `Phase 11` - Semantic runtime core contract
@@ -38,6 +38,6 @@ Turn OrgGraph into a replayable semantic decision runtime for Salesforce archite
 
 ## Primary References
 - `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
-- `docs/planning/ORGGRAPH_LEXICON.md`
+- `docs/planning/ORGUMENTED_LEXICON.md`
 - `docs/planning/PHASE11_TASKLIST.md` through `PHASE20_TASKLIST.md`
 - `docs/planning/SUCCESS_GATES_CHECKLIST.md`

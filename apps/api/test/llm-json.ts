@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { extractJsonObject, parseLlmJsonResponse } from '../src/llm/llm-json';
+import { extractJsonObject, parseLlmJsonResponse } from '../src/modules/llm/llm-json';
 
 function run(): void {
   const fenced = '```json\n{"answer":"A","reasoning_summary":"B","citations_used":["ev_1"]}\n```';

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import fs from 'node:fs';
-import { COMPOSITION_OPERATORS, DERIVATION_RELATIONS } from '@orggraph/ontology';
-import type { CompositionOperator } from '@orggraph/ontology';
+import { COMPOSITION_OPERATORS, DERIVATION_RELATIONS } from '@orgumented/ontology';
+import type { CompositionOperator } from '@orgumented/ontology';
 import { AnalysisService } from '../analysis/analysis.service';
 import { stableId } from '../../common/ids';
 import { resolveRefreshStatePath } from '../../common/path';

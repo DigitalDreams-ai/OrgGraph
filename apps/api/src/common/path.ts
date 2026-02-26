@@ -19,7 +19,7 @@ function findWorkspaceRoot(startDir: string): string {
 
 export function resolveDbPath(databaseUrl?: string): string {
   const workspaceRoot = findWorkspaceRoot(process.cwd());
-  const raw = databaseUrl?.trim() || 'file:data/orggraph.db';
+  const raw = databaseUrl?.trim() || 'file:data/orgumented.db';
   const withoutPrefix = raw.startsWith('file:') ? raw.slice(5) : raw;
   return path.resolve(workspaceRoot, withoutPrefix);
 }

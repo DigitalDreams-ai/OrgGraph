@@ -8,9 +8,9 @@ if [ "$STATUS" = "" ]; then
 fi
 
 NOTE="${2:-}"
-ROOT="${ORGGRAPH_ROOT:-$(pwd)}"
-LOG_PATH="${ORGGRAPH_PROMOTION_LOG_PATH:-$ROOT/data/refresh/promotion-log.jsonl}"
-OPERATOR="${ORGGRAPH_OPERATOR:-unknown-operator}"
+ROOT="${ORGUMENTED_ROOT:-$(pwd)}"
+LOG_PATH="${ORGUMENTED_PROMOTION_LOG_PATH:-$ROOT/data/refresh/promotion-log.jsonl}"
+OPERATOR="${ORGUMENTED_OPERATOR:-unknown-operator}"
 BRANCH="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
 COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 

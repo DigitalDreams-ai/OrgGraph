@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { XMLParser } from 'fast-xml-parser';
 import fs from 'node:fs';
 import path from 'node:path';
-import { NODE_TYPES, REL_TYPES } from '@orggraph/ontology';
+import { NODE_TYPES, REL_TYPES } from '@orgumented/ontology';
 import { stableId } from '../../common/ids';
 import type { GraphEdge, GraphNode, GraphPayload } from '../graph/graph.types';
 import { createParserStats, type ParserStats } from './parser-stats';

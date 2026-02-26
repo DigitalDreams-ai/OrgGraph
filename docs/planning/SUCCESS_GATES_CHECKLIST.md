@@ -1,4 +1,4 @@
-# OrgGraph Success Gates Checklist
+# Orgumented Success Gates Checklist
 
 Purpose: define objective gates for delivery success from Phase 18 onward.
 

@@ -1,4 +1,4 @@
-# OrgGraph Phase 12 Task List (Proof Artifacts + Replay Runtime)
+# Orgumented Phase 12 Task List (Proof Artifacts + Replay Runtime)
 
 Goal: make every `/ask` answer replayable and auditable as a first-class proof artifact.
 
@@ -42,7 +42,7 @@ Goal: make every `/ask` answer replayable and auditable as a first-class proof a
 ## Verification Snapshot (2026-02-26)
 
 - API suite in container passed:
-  - `docker exec orggraph-api sh -lc 'cd /app && pnpm --filter api test'`
+  - `docker exec orgumented-api sh -lc 'cd /app && pnpm --filter api test'`
 - Replay regression script passed:
   - `./scripts/phase12-replay-regression.sh`
 - Replay load/concurrency check passed:

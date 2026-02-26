@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { NODE_TYPES } from '@orggraph/ontology';
+import { NODE_TYPES } from '@orgumented/ontology';
 import { AppConfigService } from '../../config/app-config.service';
 
 export interface SemanticSnapshotRecord {
