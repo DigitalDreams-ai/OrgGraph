@@ -20,7 +20,12 @@ curl http://localhost:3101/api/ready
 ```bash
 curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{}'
 ```
-Response includes `semanticDiff` and `meaningChangeSummary`.
+Response includes `snapshotId`, `semanticDiff`, `meaningChangeSummary`, `driftPolicy`, `driftEvaluation`.
+
+## Snapshot Drift Diff
+```bash
+curl "http://localhost:3100/refresh/diff/<snapshotA>/<snapshotB>"
+```
 
 ## Sandbox Retrieve + Refresh
 ```bash
@@ -69,6 +74,8 @@ npm exec --yes pnpm@9.12.3 -- --filter api test:phase11-sandbox
 npm run phase12:replay-regression
 npm run phase12:replay-load
 npm run phase13:metrics-export
+npm run phase14:drift-report -- latest latest artifacts/phase14-drift-report.json
+npm run phase14:drift-gate
 ```
 
 ## Fast Fixes

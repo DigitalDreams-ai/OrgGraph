@@ -78,6 +78,14 @@ export function resolveSemanticSnapshotPath(snapshotPath?: string): string {
   return path.resolve(workspaceRoot, raw);
 }
 
+export function resolveSemanticSnapshotHistoryDir(snapshotPath?: string): string {
+  return path.join(path.dirname(resolveSemanticSnapshotPath(snapshotPath)), 'semantic-snapshots');
+}
+
+export function resolveSemanticDiffArtifactsDir(snapshotPath?: string): string {
+  return path.join(path.dirname(resolveSemanticSnapshotPath(snapshotPath)), 'semantic-diffs');
+}
+
 export function resolveSfProjectPath(projectPath?: string): string {
   const workspaceRoot = findWorkspaceRoot(process.cwd());
   const raw = projectPath?.trim() || 'data/sf-project';

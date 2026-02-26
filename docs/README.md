@@ -34,6 +34,7 @@
 - [Sandbox Connect Checklist](./runbooks/SANDBOX_CONNECT_CHECKLIST.md)
 - [Postgres Migration](./runbooks/POSTGRES_MIGRATION.md)
 - [Production Promotion](./runbooks/PRODUCTION_PROMOTION.md)
+- [Semantic Drift Triage](./runbooks/SEMANTIC_DRIFT_TRIAGE.md)
 
 ## Releases
 - [Release Checklist](./releases/RELEASE_CHECKLIST.md)

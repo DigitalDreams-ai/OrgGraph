@@ -29,6 +29,8 @@
     "phase9:benchmark": "./scripts/phase9-benchmark.sh",
     "phase12:replay-regression": "./scripts/phase12-replay-regression.sh",
     "phase12:replay-load": "./scripts/phase12-replay-load.sh",
-    "phase13:metrics-export": "./scripts/phase13-metrics-export.sh"
+    "phase13:metrics-export": "./scripts/phase13-metrics-export.sh",
+    "phase14:drift-report": "./scripts/phase14-drift-report.sh",
+    "phase14:drift-gate": "./scripts/phase14-drift-gate.sh"
   }
 }
