@@ -213,6 +213,7 @@ They ask:
 - `Phase 22`: WebUI Org Browser retrieval core (selective org-wide browse/search/select/retrieve)
 - `Phase 23`: WebUI auth/session lifecycle (connect, switch org, reconnect, disconnect)
 - `Phase 24`: Full WebUI workflow overhaul for daily operator usage
-- `Phase 25`: LLM rollout governance after WebUI/runtime stability is proven
+- `Phase 25`: WebUI product overhaul and workflow-first operator UX
+- `Phase 26`: LLM rollout governance after WebUI/runtime stability is proven
 
 This ordering intentionally defers broader LLM rollout governance until the WebUI-first operating model is complete and stable.
