@@ -95,3 +95,13 @@ Goal: build a true differentiator by making context a deterministic, composable 
 - [ ] `/ask` can show auditable derivation traces
 - [ ] Meaning quality is measured and enforced
 - [ ] Blue-ocean proof workflow shows measurable gain over current architecture
+
+## Continuation Roadmap
+
+- Phase 12: `docs/planning/PHASE12_TASKLIST.md`
+- Phase 13: `docs/planning/PHASE13_TASKLIST.md`
+- Phase 14: `docs/planning/PHASE14_TASKLIST.md`
+- Phase 15: `docs/planning/PHASE15_TASKLIST.md`
+- Phase 16: `docs/planning/PHASE16_TASKLIST.md`
+- Phase 17: `docs/planning/PHASE17_TASKLIST.md`
+- Program overview: `docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md`

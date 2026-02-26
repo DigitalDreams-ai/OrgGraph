@@ -1,5 +1,11 @@
 # OrgGraph — Plan v3 (Monorepo, Validate First)
 
+> Note: This file documents the original monorepo execution model.  
+> For current strategic execution (Phase 11+), use:
+> - `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
+> - `docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md`
+> - `docs/planning/PHASE11_TASKLIST.md` through `docs/planning/PHASE17_TASKLIST.md`
+
 ## Current Status (2026-02-25)
 
 - Phase 1 through Phase 7 are complete and merged.
