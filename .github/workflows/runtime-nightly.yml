@@ -1,0 +1,71 @@
+name: Runtime Nightly
+
+on:
+  schedule:
+    - cron: '30 6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: runtime-nightly
+  cancel-in-progress: true
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure env file for compose
+        run: |
+          if [ ! -f .env ]; then
+            cp .env.sample .env
+          fi
+
+      - name: Build and start stack
+        run: docker compose -f docker/docker-compose.yml up -d --build
+
+      - name: Wait for API
+        run: |
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:3100/ready >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "api did not become ready in time"
+          exit 1
+
+      - name: Run web smoke
+        run: ./scripts/web-smoke.sh
+
+      - name: Run drift gate
+        run: ./scripts/phase14-drift-gate.sh artifacts/phase14-drift-gate-nightly.json
+
+      - name: Ask + replay determinism check
+        run: |
+          mkdir -p artifacts
+          curl -sS -X POST http://127.0.0.1:3100/ask \
+            -H 'content-type: application/json' \
+            -d '{"query":"What touches Opportunity.StageName?"}' > artifacts/nightly-ask.json
+          token="$(node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('artifacts/nightly-ask.json','utf8'));process.stdout.write(String(d?.proof?.replayToken||''));")"
+          if [ -z "$token" ]; then
+            echo "replay token missing from /ask response"
+            exit 1
+          fi
+          curl -sS -X POST http://127.0.0.1:3100/ask/replay \
+            -H 'content-type: application/json' \
+            -d "{\"replayToken\":\"$token\"}" > artifacts/nightly-replay.json
+          node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('artifacts/nightly-replay.json','utf8'));if(!d.matched){console.error('replay mismatch');process.exit(1)}"
+
+      - name: Upload nightly artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-nightly-artifacts
+          path: artifacts/
+          if-no-files-found: ignore
+
+      - name: Stop stack
+        if: always()
+        run: docker compose -f docker/docker-compose.yml down -v

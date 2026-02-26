@@ -5,17 +5,41 @@ on:
   push:
     branches:
       - main
-      - phase2
-      - phase4
-      - phase5
+      - 'phase*'
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      runtime: ${{ steps.filter.outputs.runtime }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            runtime:
+              - 'apps/**'
+              - 'packages/**'
+              - 'docker/**'
+              - 'scripts/**'
+              - 'config/**'
+              - '.github/workflows/ci.yml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - '.env.sample'
+              - '.env.example'
+
   validate:
     runs-on: ubuntu-latest
+    needs: changes
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,7 +72,8 @@ jobs:
 
   web-smoke:
     runs-on: ubuntu-latest
-    needs: validate
+    needs: [changes, validate]
+    if: needs.changes.outputs.runtime == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,9 +101,6 @@ jobs:
       - name: Run web smoke checks
         run: ./scripts/web-smoke.sh
 
-      - name: Run semantic drift gate
-        run: ./scripts/phase14-drift-gate.sh artifacts/phase14-drift-gate.json
-
       - name: Capture compose logs
         if: failure()
         run: |
@@ -91,6 +113,63 @@ jobs:
         with:
           name: web-smoke-artifacts
           path: artifacts/
+
+      - name: Stop stack
+        if: always()
+        run: docker compose -f docker/docker-compose.yml down -v
+
+  drift-gate:
+    runs-on: ubuntu-latest
+    needs: [changes, validate]
+    if: needs.changes.outputs.runtime == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure env file for compose
+        run: |
+          if [ ! -f .env ]; then
+            cp .env.sample .env
+          fi
+
+      - name: Build and start stack
+        run: docker compose -f docker/docker-compose.yml up -d --build
+
+      - name: Wait for API
+        run: |
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:3100/ready >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "api did not become ready in time"
+          exit 1
+
+      - name: Run semantic drift gate
+        run: ./scripts/phase14-drift-gate.sh artifacts/phase14-drift-gate.json
+
+      - name: Upload drift artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-gate-artifacts
+          path: artifacts/phase14-drift-gate.json
+          if-no-files-found: ignore
+
+      - name: Capture compose logs
+        if: failure()
+        run: |
+          mkdir -p artifacts
+          docker compose -f docker/docker-compose.yml logs > artifacts/compose-logs-drift.txt
+
+      - name: Upload drift failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-gate-failure-logs
+          path: artifacts/compose-logs-drift.txt
+          if-no-files-found: ignore
 
       - name: Stop stack
         if: always()
