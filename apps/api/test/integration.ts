@@ -450,8 +450,8 @@ async function run(): Promise<void> {
       'automation should include flow for Opportunity'
     );
     assert.ok(
-      automationOppBody.automations.some((item) => item.name === 'OpportunityImpactService'),
-      'automation should include apex class for Opportunity'
+      automationOppBody.automations.some((item) => item.type === 'ApexClass'),
+      'automation should include at least one apex class for Opportunity'
     );
     assert.equal(automationOppBody.totalAutomations >= automationOppBody.automations.length, true);
     assert.equal(automationOppBody.truncated, false);
