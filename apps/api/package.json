@@ -8,13 +8,14 @@
     "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "lint": "echo 'lint not configured yet'",
     "test": "pnpm test:validation && pnpm test:parser && pnpm test:integration",
-    "test:integration": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/integration.ts && ts-node --transpile-only test/backend-parity.ts && ts-node --transpile-only test/phase12-replay-runtime.ts && ts-node --transpile-only test/postgres-failure.ts",
+    "test:integration": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/integration.ts && ts-node --transpile-only test/backend-parity.ts && ts-node --transpile-only test/phase12-replay-runtime.ts && ts-node --transpile-only test/phase13-meaning-gates.ts && ts-node --transpile-only test/postgres-failure.ts",
     "test:phase11-proof": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/phase11-proof-workflow.ts",
     "test:phase11-sandbox": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/phase11-sandbox-validation.ts",
     "test:parser": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/parser-errors.ts && ts-node --transpile-only test/apex-class-parser.ts && ts-node --transpile-only test/flow-parser.ts && ts-node --transpile-only test/custom-object-parser.ts && ts-node --transpile-only test/permission-set-group-parser.ts && ts-node --transpile-only test/custom-permission-parser.ts && ts-node --transpile-only test/connected-app-parser.ts && ts-node --transpile-only test/staged-ui-metadata-parser.ts && ts-node --transpile-only test/ontology-expanded-constraints.ts && ts-node --transpile-only test/llm-json.ts && ts-node --transpile-only test/parser-precision-regression.ts && ts-node --transpile-only test/planner.ts && ts-node --transpile-only test/semantic-runtime.ts && ts-node --transpile-only test/evidence-store.ts && ts-node --transpile-only test/org-service.ts",
     "test:validation": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/validation.ts",
     "typecheck": "pnpm --filter @orggraph/ontology build && tsc -p tsconfig.json --noEmit",
-    "test:phase12-replay": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/phase12-replay-runtime.ts"
+    "test:phase12-replay": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/phase12-replay-runtime.ts",
+    "test:phase13-meaning": "pnpm --filter @orggraph/ontology build && ts-node --transpile-only test/phase13-meaning-gates.ts"
   },
   "dependencies": {
     "@orggraph/ontology": "workspace:*",

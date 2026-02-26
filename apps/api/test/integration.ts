@@ -602,6 +602,8 @@ async function run(): Promise<void> {
     const askReplayBody = (await askReplayRes.json()) as {
       status: string;
       matched: boolean;
+      corePayloadMatched: boolean;
+      metricsMatched: boolean;
       replayToken: string;
       proofId: string;
       original: { deterministicAnswer: string };
@@ -609,6 +611,8 @@ async function run(): Promise<void> {
     };
     assert.equal(askReplayBody.status, 'implemented');
     assert.equal(askReplayBody.matched, true);
+    assert.equal(askReplayBody.corePayloadMatched, true);
+    assert.equal(askReplayBody.metricsMatched, true);
     assert.equal(askReplayBody.replayToken, askPerms.proof.replayToken);
     assert.equal(askReplayBody.proofId, askPerms.proof.proofId);
     assert.equal(
@@ -638,6 +642,37 @@ async function run(): Promise<void> {
       body: JSON.stringify({ query: 'hello', mode: 'chatty' })
     });
     assert.equal(askInvalidMode.status, 400, 'ask should reject invalid mode');
+
+    const askPolicyValidateRes = await fetch(`${base}/ask/policy/validate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        groundingThreshold: 0.7,
+        constraintThreshold: 0.9,
+        ambiguityMaxThreshold: 0.45,
+        dryRun: true
+      })
+    });
+    assert.equal(askPolicyValidateRes.status, 201);
+    const askPolicyValidateBody = (await askPolicyValidateRes.json()) as {
+      valid: boolean;
+      dryRun: boolean;
+      policyId: string;
+    };
+    assert.equal(askPolicyValidateBody.valid, true);
+    assert.equal(askPolicyValidateBody.dryRun, true);
+    assert.equal(typeof askPolicyValidateBody.policyId, 'string');
+
+    const askMetricsExportRes = await fetch(`${base}/ask/metrics/export`);
+    assert.equal(askMetricsExportRes.status, 200);
+    const askMetricsExportBody = (await askMetricsExportRes.json()) as {
+      status: string;
+      totalRecords: number;
+      bySnapshot: Array<{ snapshotId: string; count: number }>;
+    };
+    assert.equal(askMetricsExportBody.status, 'implemented');
+    assert.ok(askMetricsExportBody.totalRecords > 0);
+    assert.ok(askMetricsExportBody.bySnapshot.length > 0);
 
     const metricsRes = await fetch(`${base}/metrics`);
     assert.equal(metricsRes.status, 200, 'metrics should return 200');
