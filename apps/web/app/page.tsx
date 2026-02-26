@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 
 type QueryKind =
   | 'refresh'
+  | 'orgConnect'
   | 'perms'
   | 'permsSystem'
   | 'automation'
@@ -73,6 +74,9 @@ export default function Page(): JSX.Element {
   const endpointHint = useMemo(() => {
     if (kind === 'refresh') {
       return 'POST /refresh';
+    }
+    if (kind === 'orgConnect') {
+      return 'POST /org/retrieve (runAuth=true, runRetrieve=false, autoRefresh=false)';
     }
     if (kind === 'perms') {
       return 'GET /perms?user=...&object=...&field=...&limit=...';
@@ -213,6 +217,8 @@ export default function Page(): JSX.Element {
       const payload =
         kind === 'refresh'
           ? { mode: refreshMode }
+          : kind === 'orgConnect'
+            ? {}
           : kind === 'orgStatus'
             ? {}
             : kind === 'orgRetrieve'
@@ -324,6 +330,7 @@ export default function Page(): JSX.Element {
             [
               'ask',
               'refresh',
+              'orgConnect',
               'orgStatus',
               'orgRetrieve',
               'metadataCatalog',
@@ -353,6 +360,13 @@ export default function Page(): JSX.Element {
         </div>
 
         <p className="endpoint-hint">Endpoint: {endpointHint}</p>
+
+        {kind === 'orgConnect' ? (
+          <p className="endpoint-hint">
+            CCI Connect Workflow: ensure `cci` is authenticated in this runtime, then run this action to validate
+            org auth/session through the API path.
+          </p>
+        ) : null}
 
         {kind === 'refresh' ? (
           <div className="row">
