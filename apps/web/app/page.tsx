@@ -51,10 +51,43 @@ type MetadataMembersPayload = {
 
 type AskPayload = {
   answer?: string;
+  deterministicAnswer?: string;
   plan?: unknown;
   citations?: Array<{ sourcePath?: string; score?: number }>;
   confidence?: number;
+  trustLevel?: string;
+  policy?: { policyId?: string; groundingThreshold?: number; constraintThreshold?: number; ambiguityMaxThreshold?: number };
+  proof?: { proofId?: string; replayToken?: string; snapshotId?: string };
   status?: string;
+};
+
+type OrgSessionPayload = {
+  status?: string;
+  activeAlias?: string;
+  authMode?: string;
+  connectedAt?: string;
+  disconnectedAt?: string;
+  lastError?: string;
+};
+
+type OrgStatusPayload = {
+  integrationEnabled?: boolean;
+  authMode?: string;
+  alias?: string;
+  cci?: { installed?: boolean; version?: string; requiredVersion?: string; versionPinned?: boolean };
+  sf?: { installed?: boolean };
+  session?: OrgSessionPayload;
+};
+
+type RefreshPayload = {
+  snapshotId?: string;
+  semanticDiff?: {
+    addedNodeCount?: number;
+    removedNodeCount?: number;
+    addedEdgeCount?: number;
+    removedEdgeCount?: number;
+  };
+  meaningChangeSummary?: string;
 };
 
 function sleep(ms: number): Promise<void> {
@@ -113,6 +146,12 @@ export default function Page(): JSX.Element {
   const [metaDryRun, setMetaDryRun] = useState(true);
   const [askElaboration, setAskElaboration] = useState('');
   const [askElaborationLoading, setAskElaborationLoading] = useState(false);
+  const [timeline, setTimeline] = useState<Array<{ at: string; step: string; detail: string }>>([]);
+  const [operatorErrors, setOperatorErrors] = useState<Array<{ at: string; category: string; message: string }>>([]);
+  const [latestSession, setLatestSession] = useState<OrgSessionPayload | null>(null);
+  const [latestOrgStatus, setLatestOrgStatus] = useState<OrgStatusPayload | null>(null);
+  const [latestRefresh, setLatestRefresh] = useState<RefreshPayload | null>(null);
+  const [latestAsk, setLatestAsk] = useState<AskPayload | null>(null);
 
   const askPayload = useMemo(() => {
     if (kind !== 'ask' || !responseObject || typeof responseObject.payload !== 'object' || responseObject.payload === null) {
@@ -332,6 +371,16 @@ export default function Page(): JSX.Element {
     return `${ageHours}h ago`;
   }
 
+  function appendTimeline(step: string, detail: string): void {
+    const event = { at: new Date().toISOString(), step, detail };
+    setTimeline((current) => [event, ...current].slice(0, 20));
+  }
+
+  function appendOperatorError(category: string, message: string): void {
+    const item = { at: new Date().toISOString(), category, message };
+    setOperatorErrors((current) => [item, ...current].slice(0, 12));
+  }
+
   async function runQuery(): Promise<void> {
     setLoading(true);
     setResponseText('');
@@ -438,13 +487,47 @@ export default function Page(): JSX.Element {
         }
       }
 
+      if (kind === 'orgSession' && wrapped?.payload && typeof wrapped.payload === 'object') {
+        setLatestSession(wrapped.payload as OrgSessionPayload);
+      }
+      if (kind === 'orgStatus' && wrapped?.payload && typeof wrapped.payload === 'object') {
+        const statusPayload = wrapped.payload as OrgStatusPayload;
+        setLatestOrgStatus(statusPayload);
+        if (statusPayload.session) {
+          setLatestSession(statusPayload.session);
+        }
+      }
+      if (kind === 'refresh' && wrapped?.payload && typeof wrapped.payload === 'object') {
+        setLatestRefresh(wrapped.payload as RefreshPayload);
+      }
+      if (kind === 'ask' && wrapped?.payload && typeof wrapped.payload === 'object') {
+        setLatestAsk(wrapped.payload as AskPayload);
+      }
+
       if (!response.ok) {
+        const wrappedPayload = wrapped?.payload as
+          | { error?: { code?: string; message?: string }; details?: { code?: string; reason?: string } }
+          | undefined;
+        const category =
+          wrappedPayload?.error?.code ??
+          wrappedPayload?.details?.code ??
+          'REQUEST_FAILED';
+        const message =
+          wrappedPayload?.error?.message ??
+          wrappedPayload?.details?.reason ??
+          `query ${kind} failed with status ${response.status}`;
+        appendOperatorError(category, message);
+        appendTimeline(kind, `failed (${category})`);
         setErrorText(
           'Request failed. Check API readiness, query format, and container health. Use /api/ready and /metrics for diagnosis.'
         );
+      } else {
+        appendTimeline(kind, 'completed');
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown request error';
+      appendOperatorError('NETWORK_ERROR', message);
+      appendTimeline(kind, 'network_failure');
       setResponseText(JSON.stringify({ ok: false, error: message }, null, 2));
       setErrorText('Network request failed after retries. Check container health and retry in a few seconds.');
     } finally {
@@ -554,6 +637,53 @@ export default function Page(): JSX.Element {
             <pre>{readyDetails}</pre>
           </details>
         ) : null}
+      </section>
+
+      <section className="panel">
+        <h2>Run-State Timeline</h2>
+        <p className="endpoint-hint">
+          Session: {latestSession?.status ?? 'unknown'} | Active Alias:{' '}
+          {latestSession?.activeAlias ?? latestOrgStatus?.alias ?? 'n/a'}
+        </p>
+        <p className="endpoint-hint">
+          Latest Snapshot: {latestRefresh?.snapshotId ?? 'n/a'} | Trust:{' '}
+          {latestAsk?.trustLevel ?? 'n/a'}
+        </p>
+        {timeline.length === 0 ? (
+          <p className="endpoint-hint">No workflow events yet. Run Connect/Retrieve/Refresh/Analyze actions.</p>
+        ) : (
+          <ul>
+            {timeline.map((item) => (
+              <li key={`${item.at}-${item.step}`}>
+                [{item.at}] {item.step}: {item.detail}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="panel">
+        <h2>Operator Diagnostics</h2>
+        <p className="endpoint-hint">
+          readiness={readyStatus} | integration={String(latestOrgStatus?.integrationEnabled ?? false)} | authMode=
+          {latestOrgStatus?.authMode ?? latestSession?.authMode ?? 'n/a'}
+        </p>
+        <p className="endpoint-hint">
+          cciInstalled={String(latestOrgStatus?.cci?.installed ?? false)} | cciVersion=
+          {latestOrgStatus?.cci?.version ?? 'n/a'} | cciPinned=
+          {String(latestOrgStatus?.cci?.versionPinned ?? false)}
+        </p>
+        {operatorErrors.length === 0 ? (
+          <p className="endpoint-hint">No recent operator errors.</p>
+        ) : (
+          <ul>
+            {operatorErrors.map((item) => (
+              <li key={`${item.at}-${item.category}`}>
+                [{item.at}] {item.category}: {item.message}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="panel">
@@ -1019,23 +1149,33 @@ export default function Page(): JSX.Element {
         </div>
         {errorText ? <p className="error-text">{errorText}</p> : null}
         {kind === 'ask' && askPayload ? (
-          <details open>
-            <summary>Ask Layer 1: Deterministic Evidence Summary</summary>
-            <p>{askPayload.answer || 'No deterministic summary returned.'}</p>
-            <p className="endpoint-hint">
-              confidence: {typeof askPayload.confidence === 'number' ? askPayload.confidence : 'n/a'} | citations:{' '}
-              {Array.isArray(askPayload.citations) ? askPayload.citations.length : 0}
-            </p>
-            {Array.isArray(askPayload.citations) && askPayload.citations.length > 0 ? (
-              <ul>
-                {askPayload.citations.slice(0, 5).map((citation, idx) => (
-                  <li key={`${citation.sourcePath ?? 'citation'}-${idx}`}>
-                    {citation.sourcePath || 'unknown source'} (score {citation.score ?? 'n/a'})
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </details>
+          <div className="ask-grid">
+            <details open>
+              <summary>Ask Layer 1: Deterministic Evidence Summary</summary>
+              <p>{askPayload.answer || 'No deterministic summary returned.'}</p>
+              <p className="endpoint-hint">
+                confidence: {typeof askPayload.confidence === 'number' ? askPayload.confidence : 'n/a'} | citations:{' '}
+                {Array.isArray(askPayload.citations) ? askPayload.citations.length : 0}
+              </p>
+              {Array.isArray(askPayload.citations) && askPayload.citations.length > 0 ? (
+                <ul>
+                  {askPayload.citations.slice(0, 5).map((citation, idx) => (
+                    <li key={`${citation.sourcePath ?? 'citation'}-${idx}`}>
+                      {citation.sourcePath || 'unknown source'} (score {citation.score ?? 'n/a'})
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </details>
+            <details open>
+              <summary>Ask Proof + Trust Envelope</summary>
+              <p className="endpoint-hint">trustLevel: {askPayload.trustLevel ?? 'n/a'}</p>
+              <p className="endpoint-hint">policyId: {askPayload.policy?.policyId ?? 'n/a'}</p>
+              <p className="endpoint-hint">proofId: {askPayload.proof?.proofId ?? 'n/a'}</p>
+              <p className="endpoint-hint">replayToken: {askPayload.proof?.replayToken ?? 'n/a'}</p>
+              <p className="endpoint-hint">snapshotId: {askPayload.proof?.snapshotId ?? 'n/a'}</p>
+            </details>
+          </div>
         ) : null}
         {kind === 'ask' && askPayload ? (
           <details>
