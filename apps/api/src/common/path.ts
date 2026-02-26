@@ -60,6 +60,12 @@ export function resolveOntologyReportPath(reportPath?: string): string {
   return path.resolve(workspaceRoot, raw);
 }
 
+export function resolveAskProofStorePath(storePath?: string): string {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const raw = storePath?.trim() || 'data/ask/proofs.jsonl';
+  return path.resolve(workspaceRoot, raw);
+}
+
 export function resolveSfProjectPath(projectPath?: string): string {
   const workspaceRoot = findWorkspaceRoot(process.cwd());
   const raw = projectPath?.trim() || 'data/sf-project';

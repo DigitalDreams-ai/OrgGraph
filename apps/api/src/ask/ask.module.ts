@@ -4,12 +4,13 @@ import { EvidenceModule } from '../evidence/evidence.module';
 import { LlmModule } from '../llm/llm.module';
 import { PlannerModule } from '../planner/planner.module';
 import { QueriesModule } from '../queries/queries.module';
+import { AskProofStoreService } from './ask-proof-store.service';
 import { AskController } from './ask.controller';
 import { AskService } from './ask.service';
 
 @Module({
   imports: [PlannerModule, EvidenceModule, QueriesModule, AnalysisModule, LlmModule],
-  providers: [AskService],
+  providers: [AskService, AskProofStoreService],
   controllers: [AskController]
 })
 export class AskModule {}

@@ -417,6 +417,10 @@ async function run(): Promise<void> {
       plan: { intent: string };
       citations: unknown[];
       mode: string;
+      trustLevel: string;
+      policy: { policyId: string };
+      metrics: { groundingScore: number; constraintSatisfaction: number };
+      proof: { proofId: string; replayToken: string; snapshotId: string };
       llm: { enabled: boolean; used: boolean; provider: string; fallbackReason?: string };
       deterministicAnswer: string;
       consistency: { checked: boolean; aligned: boolean };
@@ -429,6 +433,13 @@ async function run(): Promise<void> {
     assert.equal(typeof askPerms.deterministicAnswer, 'string');
     assert.equal(askPerms.consistency.checked, false);
     assert.equal(askPerms.consistency.aligned, true);
+    assert.equal(askPerms.trustLevel, 'trusted');
+    assert.equal(typeof askPerms.policy.policyId, 'string');
+    assert.equal(typeof askPerms.metrics.groundingScore, 'number');
+    assert.equal(typeof askPerms.metrics.constraintSatisfaction, 'number');
+    assert.equal(typeof askPerms.proof.proofId, 'string');
+    assert.equal(typeof askPerms.proof.replayToken, 'string');
+    assert.equal(typeof askPerms.proof.snapshotId, 'string');
 
     const askAutomationRes = await fetch(`${base}/ask`, {
       method: 'POST',
@@ -459,9 +470,15 @@ async function run(): Promise<void> {
       body: JSON.stringify({ query: 'hello world' })
     });
     assert.equal(askUnknownRes.status, 201, 'ask unknown should return 201');
-    const askUnknown = (await askUnknownRes.json()) as { plan: { intent: string }; answer: string };
+    const askUnknown = (await askUnknownRes.json()) as {
+      plan: { intent: string };
+      answer: string;
+      trustLevel: string;
+      proof: { proofId: string; replayToken: string };
+    };
     assert.equal(askUnknown.plan.intent, 'unknown');
-    assert.match(askUnknown.answer, /No deterministic plan/i);
+    assert.equal(askUnknown.trustLevel, 'refused');
+    assert.match(askUnknown.answer, /Refused:/i);
 
     const askLlmAssistRes = await fetch(`${base}/ask`, {
       method: 'POST',
@@ -522,6 +539,40 @@ async function run(): Promise<void> {
     assert.equal(askLlmAnthropic.llm.used, true);
     assert.equal(askLlmAnthropic.llm.provider, 'anthropic');
     assert.match(askLlmAnthropic.answer, /Mocked Anthropic answer/);
+
+    const askProofRes = await fetch(`${base}/ask/proof/${askPerms.proof.proofId}`);
+    assert.equal(askProofRes.status, 200, 'ask proof lookup should return 200');
+    const askProofBody = (await askProofRes.json()) as {
+      status: string;
+      proof: { proofId: string; replayToken: string; policyId: string };
+    };
+    assert.equal(askProofBody.status, 'implemented');
+    assert.equal(askProofBody.proof.proofId, askPerms.proof.proofId);
+    assert.equal(askProofBody.proof.replayToken, askPerms.proof.replayToken);
+    assert.equal(typeof askProofBody.proof.policyId, 'string');
+
+    const askReplayRes = await fetch(`${base}/ask/replay`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ replayToken: askPerms.proof.replayToken })
+    });
+    assert.equal(askReplayRes.status, 201, 'ask replay should return 201');
+    const askReplayBody = (await askReplayRes.json()) as {
+      status: string;
+      matched: boolean;
+      replayToken: string;
+      proofId: string;
+      original: { deterministicAnswer: string };
+      replayed: { deterministicAnswer: string };
+    };
+    assert.equal(askReplayBody.status, 'implemented');
+    assert.equal(askReplayBody.matched, true);
+    assert.equal(askReplayBody.replayToken, askPerms.proof.replayToken);
+    assert.equal(askReplayBody.proofId, askPerms.proof.proofId);
+    assert.equal(
+      askReplayBody.original.deterministicAnswer,
+      askReplayBody.replayed.deterministicAnswer
+    );
 
     const askBadRequest = await fetch(`${base}/ask`, {
       method: 'POST',

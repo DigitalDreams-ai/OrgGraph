@@ -16,6 +16,10 @@ export class AppConfigService {
     this.validateOptionalString('REFRESH_STATE_PATH');
     this.validateOptionalString('REFRESH_AUDIT_PATH');
     this.validateOptionalString('ONTOLOGY_REPORT_PATH');
+    this.validateOptionalString('ASK_PROOF_STORE_PATH');
+    this.validateOptionalString('ASK_GROUNDING_SCORE_THRESHOLD');
+    this.validateOptionalString('ASK_CONSTRAINT_SATISFACTION_THRESHOLD');
+    this.validateOptionalString('ASK_AMBIGUITY_MAX_THRESHOLD');
     this.validateOptionalString('SF_INTEGRATION_ENABLED');
     this.validateOptionalString('SF_AUTH_MODE');
     this.validateOptionalString('SF_AUTH_URL_PATH');
@@ -104,6 +108,22 @@ export class AppConfigService {
 
   ontologyReportPath(): string | undefined {
     return process.env.ONTOLOGY_REPORT_PATH;
+  }
+
+  askProofStorePath(): string | undefined {
+    return process.env.ASK_PROOF_STORE_PATH;
+  }
+
+  askGroundingScoreThreshold(): number {
+    return this.readFloatInRange('ASK_GROUNDING_SCORE_THRESHOLD', 0.65, 0, 1);
+  }
+
+  askConstraintSatisfactionThreshold(): number {
+    return this.readFloatInRange('ASK_CONSTRAINT_SATISFACTION_THRESHOLD', 0.9, 0, 1);
+  }
+
+  askAmbiguityMaxThreshold(): number {
+    return this.readFloatInRange('ASK_AMBIGUITY_MAX_THRESHOLD', 0.45, 0, 1);
   }
 
   sfIntegrationEnabled(): boolean {
@@ -292,6 +312,24 @@ export class AppConfigService {
 
     const value = Number(raw);
     if (!Number.isInteger(value) || value < min || value > max) {
+      throw new Error(`Invalid ${name}: ${raw}`);
+    }
+    return value;
+  }
+
+  private readFloatInRange(
+    name: string,
+    fallback: number,
+    min: number,
+    max: number
+  ): number {
+    const raw = process.env[name];
+    if (!raw) {
+      return fallback;
+    }
+
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < min || value > max) {
       throw new Error(`Invalid ${name}: ${raw}`);
     }
     return value;
