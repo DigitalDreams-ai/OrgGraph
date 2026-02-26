@@ -123,6 +123,24 @@ curl "http://localhost:3100/automation?object=Opportunity"
 curl "http://localhost:3100/impact?field=Opportunity.StageName"
 ```
 
+### 8.3a Metadata Browser APIs (Phase 22)
+Refresh/load metadata type summaries (cache-aware):
+```bash
+curl "http://localhost:3100/org/metadata/catalog?limit=200&refresh=true"
+```
+
+Load members for one metadata type (lazy-load path):
+```bash
+curl "http://localhost:3100/org/metadata/members?type=CustomObject&q=Account&limit=1000"
+```
+
+Selective retrieve without package.xml-first flow:
+```bash
+curl -X POST http://localhost:3100/org/metadata/retrieve \
+  -H 'content-type: application/json' \
+  -d '{"selections":[{"type":"CustomObject","members":["Account"]}],"autoRefresh":true}'
+```
+
 ### 8.4 Ask (NL)
 ```bash
 curl -X POST http://localhost:3100/ask \

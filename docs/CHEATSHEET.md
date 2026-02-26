@@ -50,7 +50,8 @@ curl "http://localhost:3100/impact?field=Opportunity.StageName"
 curl -X POST http://localhost:3100/ask -H 'content-type: application/json' -d '{"query":"What touches Opportunity.StageName?"}'
 curl -X POST http://localhost:3100/ask/architecture -H 'content-type: application/json' -d '{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName"}'
 curl -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgConnect","payload":{}}'
-curl "http://localhost:3100/org/metadata/catalog?q=opportunity&limit=50"
+curl "http://localhost:3100/org/metadata/catalog?q=opportunity&limit=50&refresh=true"
+curl "http://localhost:3100/org/metadata/members?type=CustomObject&q=Account&limit=1000"
 curl -X POST http://localhost:3100/org/metadata/retrieve -H 'content-type: application/json' -d '{"selections":[{"type":"CustomObject","members":["Account"]}],"autoRefresh":true}'
 curl http://localhost:3100/meta/context
 curl -X POST http://localhost:3100/meta/adapt -H 'content-type: application/json' -d '{"dryRun":true}'

@@ -2,6 +2,7 @@ import { BadRequestException, Body, Controller, Get, Post, Query } from '@nestjs
 import { OrgService } from './org.service';
 import type {
   OrgMetadataCatalogResponse,
+  OrgMetadataMembersResponse,
   OrgMetadataRetrieveRequest,
   OrgMetadataRetrieveResponse,
   OrgRetrieveRequest,
@@ -46,15 +47,57 @@ export class OrgController {
   @Get('/org/metadata/catalog')
   async metadataCatalog(
     @Query('q') q?: string,
-    @Query('limit') limitRaw?: string
+    @Query('limit') limitRaw?: string,
+    @Query('refresh') refreshRaw?: string
   ): Promise<OrgMetadataCatalogResponse> {
     const limit = limitRaw ? Number(limitRaw) : undefined;
     if (limitRaw && (!Number.isInteger(limit) || (limit as number) < 1 || (limit as number) > 5000)) {
       throw new BadRequestException('limit must be an integer between 1 and 5000');
     }
+    if (
+      refreshRaw !== undefined &&
+      refreshRaw !== 'true' &&
+      refreshRaw !== 'false' &&
+      refreshRaw !== '1' &&
+      refreshRaw !== '0'
+    ) {
+      throw new BadRequestException("refresh must be one of: true, false, 1, 0");
+    }
     return this.orgService.metadataCatalog({
       search: q?.trim() || undefined,
-      limit
+      limit,
+      refresh: refreshRaw === 'true' || refreshRaw === '1'
+    });
+  }
+
+  @Get('/org/metadata/members')
+  async metadataMembers(
+    @Query('type') type?: string,
+    @Query('q') q?: string,
+    @Query('limit') limitRaw?: string,
+    @Query('refresh') refreshRaw?: string
+  ): Promise<OrgMetadataMembersResponse> {
+    if (!type || type.trim().length === 0) {
+      throw new BadRequestException('type is required');
+    }
+    const limit = limitRaw ? Number(limitRaw) : undefined;
+    if (limitRaw && (!Number.isInteger(limit) || (limit as number) < 1 || (limit as number) > 5000)) {
+      throw new BadRequestException('limit must be an integer between 1 and 5000');
+    }
+    if (
+      refreshRaw !== undefined &&
+      refreshRaw !== 'true' &&
+      refreshRaw !== 'false' &&
+      refreshRaw !== '1' &&
+      refreshRaw !== '0'
+    ) {
+      throw new BadRequestException("refresh must be one of: true, false, 1, 0");
+    }
+    return this.orgService.metadataMembers({
+      type: type.trim(),
+      search: q?.trim() || undefined,
+      limit,
+      refresh: refreshRaw === 'true' || refreshRaw === '1'
     });
   }
 

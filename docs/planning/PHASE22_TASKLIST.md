@@ -3,15 +3,15 @@
 Goal: make WebUI the primary operational surface for org connection and selective metadata retrieval, using CCI/sf flows and avoiding package.xml as the primary path.
 
 ## Entry Criteria
-- [ ] Phase 21 complete
-- [ ] CCI auth baseline stable (`SF_AUTH_MODE=cci`)
-- [ ] Existing org status and retrieve endpoints available
+- [x] Phase 21 complete
+- [x] CCI auth baseline stable (`SF_AUTH_MODE=cci`)
+- [x] Existing org status and retrieve endpoints available
 
 ## Exit Criteria
-- [ ] WebUI supports org-wide metadata type/member browse tree (Org Browser style)
-- [ ] WebUI supports keyword filtering across metadata types/members
-- [ ] WebUI can retrieve selected metadata members without requiring package.xml-driven workflows
-- [ ] Retrieval results are persisted to canonical runtime paths and immediately usable by refresh/query flows
+- [x] WebUI supports org-wide metadata type/member browse tree (Org Browser style)
+- [x] WebUI supports keyword filtering across metadata types/members
+- [x] WebUI can retrieve selected metadata members without requiring package.xml-driven workflows
+- [x] Retrieval results are persisted to canonical runtime paths and immediately usable by refresh/query flows
 
 ## Scope
 - WebUI-first metadata navigation and selective retrieval UX
@@ -20,38 +20,38 @@ Goal: make WebUI the primary operational surface for org connection and selectiv
 - Operator-facing status/error surfaces
 
 ## Deliverables
-- [ ] Build/finish metadata browser panel:
-  - [ ] lazy-load metadata types and members
-  - [ ] expandable tree by type -> member
-  - [ ] multi-select retrieval basket
-- [ ] Add org-wide search/filter:
-  - [ ] by metadata type
-  - [ ] by member name
-  - [ ] clear/reset filters
-- [ ] Add selective retrieve execution from WebUI:
-  - [ ] execute via sf/cci commands
-  - [ ] do not require package.xml for standard UI flows
-  - [ ] show retrieve job progress + result summary
-- [ ] Persist retrieval outputs to runtime paths:
-  - [ ] `SF_PROJECT_PATH`/`SF_PARSE_PATH` alignment
-  - [ ] refresh trigger option after successful retrieve
-- [ ] Add structured failure categories:
+- [x] Build/finish metadata browser panel:
+  - [x] lazy-load metadata types and members
+  - [x] expandable tree by type -> member
+  - [x] multi-select retrieval basket
+- [x] Add org-wide search/filter:
+  - [x] by metadata type
+  - [x] by member name
+  - [x] clear/reset filters
+- [x] Add selective retrieve execution from WebUI:
+  - [x] execute via sf/cci commands
+  - [x] do not require package.xml for standard UI flows
+  - [x] show retrieve job progress + result summary
+- [x] Persist retrieval outputs to runtime paths:
+  - [x] `SF_PROJECT_PATH`/`SF_PARSE_PATH` alignment
+  - [x] refresh trigger option after successful retrieve
+- [x] Add structured failure categories:
   - auth/session errors
   - source API/metadata type resolution errors
   - retrieve command failures
 
 ## Test Gates
-- [ ] `pnpm --filter web build`
-- [ ] `pnpm --filter api test`
-- [ ] web smoke includes metadata catalog/search/select/retrieve happy path
+- [x] `pnpm --filter web build`
+- [x] `pnpm --filter api test`
+- [x] web smoke includes metadata catalog/search/select/retrieve happy path
 - [ ] one sandbox-backed selective retrieve validation recorded
-- [ ] no secret leakage in logs/UI artifacts
+- [x] no secret leakage in logs/UI artifacts
 
 ## Risks and Controls
 - Risk: UI retrieval diverges from runtime parse path
-  - [ ] enforce canonical output path checks before refresh
+  - [x] enforce canonical output path checks before refresh
 - Risk: broad metadata scans become slow
-  - [ ] cache metadata catalog with explicit freshness/refresh controls
+  - [x] cache metadata catalog with explicit freshness/refresh controls
 
 ## Definition of Done
-- [ ] Operators can connect, browse org metadata, select members, retrieve, and immediately analyze in WebUI without package.xml-first friction
+- [x] Operators can connect, browse org metadata, select members, retrieve, and immediately analyze in WebUI without package.xml-first friction

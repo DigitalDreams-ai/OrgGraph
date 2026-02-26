@@ -46,18 +46,31 @@ export interface OrgMetadataMember {
   name: string;
 }
 
-export interface OrgMetadataType {
+export interface OrgMetadataTypeSummary {
   type: string;
   memberCount: number;
+}
+
+export interface OrgMetadataType extends OrgMetadataTypeSummary {
   members: OrgMetadataMember[];
 }
 
 export interface OrgMetadataCatalogResponse {
-  source: 'local' | 'mixed';
+  source: 'local' | 'cache' | 'mixed';
   refreshedAt: string;
   search?: string;
   totalTypes: number;
-  types: OrgMetadataType[];
+  types: OrgMetadataTypeSummary[];
+  warnings: string[];
+}
+
+export interface OrgMetadataMembersResponse {
+  source: 'local' | 'cache' | 'mixed';
+  refreshedAt: string;
+  type: string;
+  search?: string;
+  totalMembers: number;
+  members: OrgMetadataMember[];
   warnings: string[];
 }
 

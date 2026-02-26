@@ -338,7 +338,7 @@ async function run(): Promise<void> {
     });
     assert.equal(orgRetrieveBadBodyRes.status, 400, 'org retrieve should validate boolean body flags');
 
-    const metadataCatalogRes = await fetch(`${base}/org/metadata/catalog?limit=50`);
+    const metadataCatalogRes = await fetch(`${base}/org/metadata/catalog?limit=50&refresh=true`);
     assert.equal(metadataCatalogRes.status, 200, 'metadata catalog should return 200');
     const metadataCatalogBody = (await metadataCatalogRes.json()) as {
       source: string;
@@ -346,7 +346,7 @@ async function run(): Promise<void> {
       types: Array<{ type: string }>;
       warnings?: string[];
     };
-    assert.equal(metadataCatalogBody.source, 'local');
+    assert.ok(['local', 'cache'].includes(metadataCatalogBody.source));
     if (metadataCatalogBody.totalTypes === 0) {
       assert.ok(
         Array.isArray(metadataCatalogBody.warnings) &&
@@ -360,6 +360,18 @@ async function run(): Promise<void> {
 
     const metadataSearchRes = await fetch(`${base}/org/metadata/catalog?q=case&limit=50`);
     assert.equal(metadataSearchRes.status, 200, 'metadata catalog search should return 200');
+
+    const metadataMembersRes = await fetch(
+      `${base}/org/metadata/members?type=CustomObject&q=Account&limit=50`
+    );
+    assert.equal(metadataMembersRes.status, 200, 'metadata members should return 200');
+    const metadataMembersBody = (await metadataMembersRes.json()) as {
+      type: string;
+      totalMembers: number;
+      members: Array<{ name: string }>;
+    };
+    assert.equal(metadataMembersBody.type, 'CustomObject');
+    assert.ok(Array.isArray(metadataMembersBody.members));
 
     const metadataRetrieveRes = await fetch(`${base}/org/metadata/retrieve`, {
       method: 'POST',

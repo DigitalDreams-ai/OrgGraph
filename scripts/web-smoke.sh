@@ -50,6 +50,7 @@ run_query() {
 
 run_query refresh "{\"mode\":\"$WEB_SMOKE_REFRESH_MODE\",\"fixturesPath\":\"$WEB_SMOKE_FIXTURES_PATH\"}"
 run_query orgStatus '{}'
+run_query metadataCatalog '{"q":"case","limit":200,"refresh":true}'
 run_query perms '{"user":"jane@example.com","object":"Case","field":"Case.Status"}'
 run_query automation '{"object":"Opportunity"}'
 run_query impact '{"field":"Opportunity.StageName"}'
@@ -57,6 +58,8 @@ run_query ask '{"query":"What touches Opportunity.StageName?","maxCitations":5}'
 
 if [ "${WEB_SMOKE_REQUIRE_ORG_AUTH:-0}" = "1" ]; then
   run_query orgConnect '{}'
+  run_query metadataMembers '{"type":"CustomObject","q":"Account","limit":1000,"refresh":true}'
+  run_query metadataRetrieve '{"selections":[{"type":"CustomObject","members":["Account"]}],"autoRefresh":false}'
 fi
 
 echo '{"status":"passed"}' > "$ARTIFACT_DIR/web-smoke-result.json"
