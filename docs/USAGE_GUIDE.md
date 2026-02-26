@@ -127,6 +127,19 @@ curl -X POST http://localhost:3100/org/session/disconnect
 
 ## 8. Query Orgumented
 
+### 8.0 WebUI Workflow-First Operation (Phase 24)
+WebUI now mirrors operator workflow stages directly:
+- Connect
+- Retrieve
+- Refresh
+- Analyze
+- Ask/Proof
+
+WebUI runtime surfaces include:
+- run-state timeline (session, latest snapshot, trust indicator)
+- operator diagnostics (recent categorized errors, readiness, non-secret config mode summary)
+- Ask proof/trust side panel (policy + proof token context beside deterministic summary)
+
 ### 8.1 Permissions
 ```bash
 curl "http://localhost:3100/perms?user=sbingham@shulman-hill.com.uat&object=litify_pm__Intake__c"
