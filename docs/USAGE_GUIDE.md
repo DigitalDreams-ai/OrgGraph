@@ -109,7 +109,7 @@ curl "http://localhost:3100/impact?field=Opportunity.StageName"
 ```bash
 curl -X POST http://localhost:3100/ask \
   -H 'content-type: application/json' \
-  -d '{"query":"What touches Opportunity.StageName?"}'
+  -d '{"query":"What touches Opportunity.StageName?","traceLevel":"standard"}'
 ```
 
 Ask responses now include deterministic proof fields:
@@ -117,6 +117,7 @@ Ask responses now include deterministic proof fields:
 - `policy`: applied thresholds for grounding/constraints/ambiguity
 - `metrics`: deterministic meaning metrics
 - `proof`: `proofId`, `replayToken`, `snapshotId`, operators, rejected branches
+- `proof.traceLevel`: `compact`, `standard`, `full`
 - metrics are also persisted over time at `ASK_METRICS_PATH` (default: `data/ask/metrics.jsonl`)
 
 Lookup a stored proof artifact:
@@ -129,6 +130,16 @@ Replay a proof deterministically:
 curl -X POST http://localhost:3100/ask/replay \
   -H 'content-type: application/json' \
   -d '{"replayToken":"<replayToken>"}'
+```
+
+Replay response includes:
+- `matched`: overall deterministic replay match
+- `corePayloadMatched`: byte-equivalent core deterministic payload match
+
+Phase 12 replay validation scripts:
+```bash
+npm run phase12:replay-regression
+npm run phase12:replay-load
 ```
 
 ## 9. Web Query Proxy
