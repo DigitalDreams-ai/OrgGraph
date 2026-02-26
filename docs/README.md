@@ -37,6 +37,8 @@
 - [Semantic Drift Triage](./runbooks/SEMANTIC_DRIFT_TRIAGE.md)
 - [Architect Review Workflow](./runbooks/ARCHITECT_REVIEW_WORKFLOW.md)
 - [Meta-Context Adaptation](./runbooks/META_CONTEXT_ADAPTATION.md)
+- [Storage Runtime Decision](./runbooks/STORAGE_RUNTIME_DECISION.md)
+- [Storage Rollback & DR](./runbooks/STORAGE_ROLLBACK_DR.md)
 
 ## Releases
 - [Release Checklist](./releases/RELEASE_CHECKLIST.md)

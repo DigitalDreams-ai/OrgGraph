@@ -80,6 +80,7 @@ npm run phase12:replay-load
 npm run phase13:metrics-export
 npm run phase14:drift-report -- latest latest artifacts/phase14-drift-report.json
 npm run phase14:drift-gate
+./scripts/phase17-benchmark.sh
 ```
 
 ## Fast Fixes
