@@ -1,7 +1,12 @@
-import { BadRequestException, Body, Controller, Get, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { IngestionService, type RefreshMode } from './ingestion.service';
 import type { OntologyConstraintReport } from './ontology-constraints.service';
 import type { ParserStats } from './parser-stats';
+import type {
+  DriftBudgetEvaluation,
+  DriftBudgetPolicy,
+  SemanticDriftReportTemplate
+} from './semantic-drift-policy.service';
 
 interface RefreshBody {
   fixturesPath?: unknown;
@@ -14,6 +19,7 @@ export class IngestionController {
 
   @Post('/refresh')
   async refresh(@Body() body: RefreshBody = {}): Promise<{
+    snapshotId: string;
     mode: RefreshMode;
     skipped: boolean;
     skipReason?: 'no_changes_detected';
@@ -35,6 +41,9 @@ export class IngestionController {
       changedRelationCounts: Record<string, number>;
     };
     meaningChangeSummary: string;
+    driftPolicy: DriftBudgetPolicy;
+    driftEvaluation: DriftBudgetEvaluation;
+    driftReportPath: string;
   }> {
     if (body.fixturesPath !== undefined && typeof body.fixturesPath !== 'string') {
       throw new BadRequestException('fixturesPath must be a string');
@@ -50,6 +59,38 @@ export class IngestionController {
       fixturesPath: body.fixturesPath as string | undefined,
       mode: body.mode as RefreshMode | undefined
     });
+  }
+
+  @Get('/refresh/diff/:snapshotA/:snapshotB')
+  refreshDiff(
+    @Param('snapshotA') snapshotA: string,
+    @Param('snapshotB') snapshotB: string
+  ): {
+    snapshots: {
+      from: {
+        snapshotId: string;
+        generatedAt: string;
+      };
+      to: {
+        snapshotId: string;
+        generatedAt: string;
+      };
+    };
+    semanticDiff: {
+      addedNodeCount: number;
+      removedNodeCount: number;
+      addedEdgeCount: number;
+      removedEdgeCount: number;
+      changedNodeTypeCounts: Record<string, number>;
+      changedRelationCounts: Record<string, number>;
+      structureDigestChanged: boolean;
+    };
+    meaningChangeSummary: string;
+    driftPolicy: DriftBudgetPolicy;
+    driftEvaluation: DriftBudgetEvaluation;
+    reportTemplate: SemanticDriftReportTemplate;
+  } {
+    return this.ingestionService.getRefreshDiffBySnapshots(snapshotA, snapshotB);
   }
 
   @Get('/ingest/latest')

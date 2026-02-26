@@ -22,6 +22,17 @@ export class AppConfigService {
     this.validateOptionalString('ASK_CONSTRAINT_SATISFACTION_THRESHOLD');
     this.validateOptionalString('ASK_AMBIGUITY_MAX_THRESHOLD');
     this.validateOptionalString('SEMANTIC_SNAPSHOT_PATH');
+    this.validateOptionalString('DRIFT_BUDGET_ENFORCE_ON_REFRESH');
+    this.validateOptionalString('DRIFT_BUDGET_OBJECT_NODE_DELTA_MAX');
+    this.validateOptionalString('DRIFT_BUDGET_FIELD_NODE_DELTA_MAX');
+    this.validateOptionalString('DRIFT_BUDGET_RELATION_DELTA_MAX');
+    this.validateOptionalString('DRIFT_BUDGET_POLICY_NODE_DELTA_MAX');
+    this.validateOptionalString('DRIFT_BUDGET_AUTOMATION_NODE_DELTA_MAX');
+    this.validateOptionalString('DRIFT_BUDGET_UI_NODE_DELTA_MAX');
+    this.validateOptionalString('DRIFT_BUDGET_TOTAL_NODE_DELTA_MAX');
+    this.validateOptionalString('DRIFT_BUDGET_TOTAL_EDGE_DELTA_MAX');
+    this.validateOptionalString('DRIFT_ALLOWLIST_NODE_TYPES');
+    this.validateOptionalString('DRIFT_ALLOWLIST_RELATIONS');
     this.validateOptionalString('SF_INTEGRATION_ENABLED');
     this.validateOptionalString('SF_AUTH_MODE');
     this.validateOptionalString('SF_AUTH_URL_PATH');
@@ -134,6 +145,58 @@ export class AppConfigService {
 
   semanticSnapshotPath(): string | undefined {
     return process.env.SEMANTIC_SNAPSHOT_PATH;
+  }
+
+  driftBudgetEnforceOnRefresh(): boolean {
+    return (process.env.DRIFT_BUDGET_ENFORCE_ON_REFRESH || 'true').trim().toLowerCase() === 'true';
+  }
+
+  driftBudgetObjectNodeDeltaMax(): number {
+    return this.readPositiveInt('DRIFT_BUDGET_OBJECT_NODE_DELTA_MAX', 25, 0, 1000000);
+  }
+
+  driftBudgetFieldNodeDeltaMax(): number {
+    return this.readPositiveInt('DRIFT_BUDGET_FIELD_NODE_DELTA_MAX', 400, 0, 1000000);
+  }
+
+  driftBudgetRelationDeltaMax(): number {
+    return this.readPositiveInt('DRIFT_BUDGET_RELATION_DELTA_MAX', 1200, 0, 1000000);
+  }
+
+  driftBudgetPolicyNodeDeltaMax(): number {
+    return this.readPositiveInt('DRIFT_BUDGET_POLICY_NODE_DELTA_MAX', 300, 0, 1000000);
+  }
+
+  driftBudgetAutomationNodeDeltaMax(): number {
+    return this.readPositiveInt('DRIFT_BUDGET_AUTOMATION_NODE_DELTA_MAX', 300, 0, 1000000);
+  }
+
+  driftBudgetUiNodeDeltaMax(): number {
+    return this.readPositiveInt('DRIFT_BUDGET_UI_NODE_DELTA_MAX', 300, 0, 1000000);
+  }
+
+  driftBudgetTotalNodeDeltaMax(): number {
+    return this.readPositiveInt('DRIFT_BUDGET_TOTAL_NODE_DELTA_MAX', 1600, 0, 1000000);
+  }
+
+  driftBudgetTotalEdgeDeltaMax(): number {
+    return this.readPositiveInt('DRIFT_BUDGET_TOTAL_EDGE_DELTA_MAX', 6000, 0, 1000000);
+  }
+
+  driftAllowlistNodeTypes(): string[] {
+    return (process.env.DRIFT_ALLOWLIST_NODE_TYPES || '')
+      .split(',')
+      .map((token) => token.trim())
+      .filter((token) => token.length > 0)
+      .sort((a, b) => a.localeCompare(b));
+  }
+
+  driftAllowlistRelations(): string[] {
+    return (process.env.DRIFT_ALLOWLIST_RELATIONS || '')
+      .split(',')
+      .map((token) => token.trim())
+      .filter((token) => token.length > 0)
+      .sort((a, b) => a.localeCompare(b));
   }
 
   sfIntegrationEnabled(): boolean {

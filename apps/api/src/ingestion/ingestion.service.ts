@@ -7,6 +7,8 @@ import { EvidenceStoreService } from '../evidence/evidence-store.service';
 import { GraphService } from '../graph/graph.service';
 import {
   resolveFixturesPath,
+  resolveSemanticDiffArtifactsDir,
+  resolveSemanticSnapshotHistoryDir,
   resolveSemanticSnapshotPath,
   resolveOntologyReportPath,
   resolveRefreshAuditPath,
@@ -24,11 +26,20 @@ import { OntologyConstraintsService } from './ontology-constraints.service';
 import type { ParserStats } from './parser-stats';
 import { PermissionSetGroupParserService } from './permission-set-group-parser.service';
 import { PermissionsParseError, PermissionsParserService } from './permissions-parser.service';
+import {
+  SemanticDriftPolicyService,
+  type DriftBudgetEvaluation,
+  type DriftBudgetPolicy,
+  type SemanticDiffSummary,
+  type SemanticDriftReportTemplate,
+  type SemanticSnapshotRecord
+} from './semantic-drift-policy.service';
 import { StagedUiMetadataParserService } from './staged-ui-metadata-parser.service';
 
 export type RefreshMode = 'full' | 'incremental';
 
 interface RefreshState {
+  snapshotId: string;
   sourcePath: string;
   fingerprint: string;
   refreshedAt: string;
@@ -40,26 +51,6 @@ interface RefreshState {
   ontology: OntologyConstraintReport;
   semanticDiff: SemanticDiffSummary;
   meaningChangeSummary: string;
-}
-
-interface SemanticSnapshot {
-  fingerprint: string;
-  nodeCount: number;
-  edgeCount: number;
-  nodeDigest: string;
-  edgeDigest: string;
-  nodeTypeCounts: Record<string, number>;
-  relationCounts: Record<string, number>;
-}
-
-interface SemanticDiffSummary {
-  addedNodeCount: number;
-  removedNodeCount: number;
-  addedEdgeCount: number;
-  removedEdgeCount: number;
-  structureDigestChanged: boolean;
-  changedNodeTypeCounts: Record<string, number>;
-  changedRelationCounts: Record<string, number>;
 }
 
 interface RefreshOptions {
@@ -84,10 +75,12 @@ export class IngestionService {
     private readonly customPermissionParserService: CustomPermissionParserService,
     private readonly connectedAppParserService: ConnectedAppParserService,
     private readonly stagedUiMetadataParserService: StagedUiMetadataParserService,
-    private readonly constraintsService: OntologyConstraintsService
+    private readonly constraintsService: OntologyConstraintsService,
+    private readonly driftPolicyService: SemanticDriftPolicyService
   ) {}
 
   async refresh(options: RefreshOptions = {}): Promise<{
+    snapshotId: string;
     mode: RefreshMode;
     skipped: boolean;
     skipReason?: 'no_changes_detected';
@@ -102,6 +95,9 @@ export class IngestionService {
     ontology: OntologyConstraintReport;
     semanticDiff: SemanticDiffSummary;
     meaningChangeSummary: string;
+    driftPolicy: DriftBudgetPolicy;
+    driftEvaluation: DriftBudgetEvaluation;
+    driftReportPath: string;
   }> {
     if (this.refreshInProgress) {
       throw new ConflictException('refresh already in progress');
@@ -119,12 +115,20 @@ export class IngestionService {
       const semanticSnapshotPath = resolveSemanticSnapshotPath(
         this.configService.semanticSnapshotPath()
       );
+      const semanticSnapshotHistoryDir = resolveSemanticSnapshotHistoryDir(
+        this.configService.semanticSnapshotPath()
+      );
+      const semanticDiffArtifactsDir = resolveSemanticDiffArtifactsDir(
+        this.configService.semanticSnapshotPath()
+      );
+      const driftPolicy = this.driftPolicyService.buildPolicy();
       const start = Date.now();
       const fingerprint = this.buildFixtureFingerprint(sourcePath);
 
       if (mode === 'incremental' && (await this.canSkipRefresh(sourcePath, statePath, fingerprint))) {
         const counts = await this.graphService.getCounts();
-        const parserStats = this.readState(statePath)?.parserStats ?? [];
+        const previousState = this.readState(statePath);
+        const parserStats = previousState?.parserStats ?? [];
         const ontology = this.readOntologyReport(ontologyReportPath);
         const semanticDiff: SemanticDiffSummary = {
           addedNodeCount: 0,
@@ -137,7 +141,30 @@ export class IngestionService {
         };
         const meaningChangeSummary =
           'no semantic changes detected (incremental skip, unchanged fingerprint)';
+        const driftEvaluation = this.driftPolicyService.evaluate(
+          driftPolicy,
+          semanticDiff,
+          previousState ? this.readSnapshotById(previousState.snapshotId, semanticSnapshotHistoryDir) : undefined
+        );
+        const driftReport = this.driftPolicyService.buildDriftReportTemplate({
+          fromSnapshotId: previousState?.snapshotId,
+          toSnapshotId: previousState?.snapshotId ?? 'unknown',
+          meaningChangeSummary,
+          diff: semanticDiff
+        });
+        const driftReportPath = this.writeSemanticDiffArtifact(semanticDiffArtifactsDir, {
+          sourcePath,
+          fromSnapshotId: previousState?.snapshotId,
+          toSnapshotId: previousState?.snapshotId ?? 'unknown',
+          fingerprint,
+          semanticDiff,
+          meaningChangeSummary,
+          driftPolicy,
+          driftEvaluation,
+          reportTemplate: driftReport
+        });
         this.appendAuditEntry(auditPath, {
+          snapshotId: previousState?.snapshotId ?? 'unknown',
           sourcePath,
           fingerprint,
           refreshedAt: new Date().toISOString(),
@@ -151,6 +178,7 @@ export class IngestionService {
           meaningChangeSummary
         });
         return {
+          snapshotId: previousState?.snapshotId ?? 'unknown',
           mode,
           skipped: true,
           skipReason: 'no_changes_detected',
@@ -163,7 +191,10 @@ export class IngestionService {
           parserStats,
           ontology,
           semanticDiff,
-          meaningChangeSummary
+          meaningChangeSummary,
+          driftPolicy,
+          driftEvaluation,
+          driftReportPath
         };
       }
 
@@ -208,6 +239,11 @@ export class IngestionService {
       const currentSemantic = this.buildSemanticSnapshot(fingerprint, payload);
       const semanticDiff = this.computeSemanticDiff(previousSemantic, currentSemantic);
       const meaningChangeSummary = this.describeMeaningChange(semanticDiff);
+      const driftEvaluation = this.driftPolicyService.evaluate(
+        driftPolicy,
+        semanticDiff,
+        previousSemantic
+      );
       if (
         previousSemantic &&
         previousSemantic.fingerprint === fingerprint &&
@@ -216,6 +252,13 @@ export class IngestionService {
         throw new BadRequestException(
           'Semantic drift regression detected: unchanged fingerprint produced semantic diff'
         );
+      }
+      if (
+        driftPolicy.enforceOnRefresh &&
+        !driftEvaluation.isBootstrap &&
+        !driftEvaluation.withinBudget
+      ) {
+        throw new BadRequestException(`Semantic drift budget exceeded: ${driftEvaluation.summary}`);
       }
       const ontology = this.constraintsService.validate(payload);
       if (ontology.violationCount > 0) {
@@ -241,6 +284,7 @@ export class IngestionService {
           : [])
       ];
       const state: RefreshState = {
+        snapshotId: currentSemantic.snapshotId,
         sourcePath,
         fingerprint,
         refreshedAt: new Date().toISOString(),
@@ -256,8 +300,27 @@ export class IngestionService {
       this.writeState(statePath, state);
       this.appendAuditEntry(auditPath, state);
       this.writeSemanticSnapshot(semanticSnapshotPath, currentSemantic);
+      this.writeSemanticSnapshotHistory(semanticSnapshotHistoryDir, currentSemantic);
+      const driftReport = this.driftPolicyService.buildDriftReportTemplate({
+        fromSnapshotId: previousSemantic?.snapshotId,
+        toSnapshotId: currentSemantic.snapshotId,
+        meaningChangeSummary,
+        diff: semanticDiff
+      });
+      const driftReportPath = this.writeSemanticDiffArtifact(semanticDiffArtifactsDir, {
+        sourcePath,
+        fromSnapshotId: previousSemantic?.snapshotId,
+        toSnapshotId: currentSemantic.snapshotId,
+        fingerprint,
+        semanticDiff,
+        meaningChangeSummary,
+        driftPolicy,
+        driftEvaluation,
+        reportTemplate: driftReport
+      });
 
       return {
+        snapshotId: currentSemantic.snapshotId,
         mode,
         skipped: false,
         ...counts,
@@ -269,7 +332,10 @@ export class IngestionService {
         parserStats,
         ontology,
         semanticDiff,
-        meaningChangeSummary
+        meaningChangeSummary,
+        driftPolicy,
+        driftEvaluation,
+        driftReportPath
       };
     } finally {
       this.refreshInProgress = false;
@@ -292,6 +358,65 @@ export class IngestionService {
       auditPath,
       ontologyReportPath,
       ontology: this.readOntologyReport(ontologyReportPath)
+    };
+  }
+
+  getRefreshDiffBySnapshots(
+    snapshotARef: string,
+    snapshotBRef: string
+  ): {
+    snapshots: {
+      from: SemanticSnapshotRecord;
+      to: SemanticSnapshotRecord;
+    };
+    semanticDiff: SemanticDiffSummary;
+    meaningChangeSummary: string;
+    driftPolicy: DriftBudgetPolicy;
+    driftEvaluation: DriftBudgetEvaluation;
+    reportTemplate: SemanticDriftReportTemplate;
+  } {
+    const semanticSnapshotPath = resolveSemanticSnapshotPath(this.configService.semanticSnapshotPath());
+    const semanticSnapshotHistoryDir = resolveSemanticSnapshotHistoryDir(
+      this.configService.semanticSnapshotPath()
+    );
+    const fromSnapshot = this.resolveSnapshotRef(
+      snapshotARef,
+      semanticSnapshotPath,
+      semanticSnapshotHistoryDir
+    );
+    const toSnapshot = this.resolveSnapshotRef(
+      snapshotBRef,
+      semanticSnapshotPath,
+      semanticSnapshotHistoryDir
+    );
+    if (!fromSnapshot) {
+      throw new BadRequestException(`Unknown snapshot reference: ${snapshotARef}`);
+    }
+    if (!toSnapshot) {
+      throw new BadRequestException(`Unknown snapshot reference: ${snapshotBRef}`);
+    }
+
+    const semanticDiff = this.computeSemanticDiff(fromSnapshot, toSnapshot);
+    const meaningChangeSummary = this.describeMeaningChange(semanticDiff);
+    const driftPolicy = this.driftPolicyService.buildPolicy();
+    const driftEvaluation = this.driftPolicyService.evaluate(driftPolicy, semanticDiff, fromSnapshot);
+    const reportTemplate = this.driftPolicyService.buildDriftReportTemplate({
+      fromSnapshotId: fromSnapshot.snapshotId,
+      toSnapshotId: toSnapshot.snapshotId,
+      meaningChangeSummary,
+      diff: semanticDiff
+    });
+
+    return {
+      snapshots: {
+        from: fromSnapshot,
+        to: toSnapshot
+      },
+      semanticDiff,
+      meaningChangeSummary,
+      driftPolicy,
+      driftEvaluation,
+      reportTemplate
     };
   }
 
@@ -324,10 +449,18 @@ export class IngestionService {
     try {
       const raw = fs.readFileSync(statePath, 'utf8');
       const parsed = JSON.parse(raw) as Partial<RefreshState>;
-      if (typeof parsed.sourcePath !== 'string' || typeof parsed.fingerprint !== 'string' || typeof parsed.refreshedAt !== 'string') {
+      if (
+        typeof parsed.sourcePath !== 'string' ||
+        typeof parsed.fingerprint !== 'string' ||
+        typeof parsed.refreshedAt !== 'string'
+      ) {
         return undefined;
       }
       return {
+        snapshotId:
+          typeof parsed.snapshotId === 'string' && parsed.snapshotId.length > 0
+            ? parsed.snapshotId
+            : 'unknown',
         sourcePath: parsed.sourcePath,
         fingerprint: parsed.fingerprint,
         refreshedAt: parsed.refreshedAt,
@@ -461,23 +594,92 @@ export class IngestionService {
     return hash.digest('hex');
   }
 
-  private readSemanticSnapshot(snapshotPath: string): SemanticSnapshot | undefined {
+  private readSemanticSnapshot(snapshotPath: string): SemanticSnapshotRecord | undefined {
     if (!fs.existsSync(snapshotPath)) {
       return undefined;
     }
     try {
-      return JSON.parse(fs.readFileSync(snapshotPath, 'utf8')) as SemanticSnapshot;
+      return JSON.parse(fs.readFileSync(snapshotPath, 'utf8')) as SemanticSnapshotRecord;
     } catch {
       return undefined;
     }
   }
 
-  private writeSemanticSnapshot(snapshotPath: string, snapshot: SemanticSnapshot): void {
+  private writeSemanticSnapshot(snapshotPath: string, snapshot: SemanticSnapshotRecord): void {
     fs.mkdirSync(path.dirname(snapshotPath), { recursive: true });
     fs.writeFileSync(snapshotPath, JSON.stringify(snapshot, null, 2), 'utf8');
   }
 
-  private buildSemanticSnapshot(fingerprint: string, payload: GraphPayload): SemanticSnapshot {
+  private writeSemanticSnapshotHistory(
+    historyDir: string,
+    snapshot: SemanticSnapshotRecord
+  ): void {
+    fs.mkdirSync(historyDir, { recursive: true });
+    const targetPath = path.join(historyDir, `${snapshot.snapshotId}.json`);
+    fs.writeFileSync(targetPath, JSON.stringify(snapshot, null, 2), 'utf8');
+  }
+
+  private readSnapshotById(
+    snapshotId: string,
+    historyDir: string
+  ): SemanticSnapshotRecord | undefined {
+    const targetPath = path.join(historyDir, `${snapshotId}.json`);
+    if (!fs.existsSync(targetPath)) {
+      return undefined;
+    }
+    try {
+      return JSON.parse(fs.readFileSync(targetPath, 'utf8')) as SemanticSnapshotRecord;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private resolveSnapshotRef(
+    snapshotRef: string,
+    latestSnapshotPath: string,
+    historyDir: string
+  ): SemanticSnapshotRecord | undefined {
+    if (snapshotRef.trim().toLowerCase() === 'latest') {
+      return this.readSemanticSnapshot(latestSnapshotPath);
+    }
+    return this.readSnapshotById(snapshotRef.trim(), historyDir);
+  }
+
+  private writeSemanticDiffArtifact(
+    artifactsDir: string,
+    artifact: {
+      sourcePath: string;
+      fromSnapshotId?: string;
+      toSnapshotId: string;
+      fingerprint: string;
+      semanticDiff: SemanticDiffSummary;
+      meaningChangeSummary: string;
+      driftPolicy: DriftBudgetPolicy;
+      driftEvaluation: DriftBudgetEvaluation;
+      reportTemplate: SemanticDriftReportTemplate;
+    }
+  ): string {
+    fs.mkdirSync(artifactsDir, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const fromPart = artifact.fromSnapshotId ?? 'bootstrap';
+    const fileName = `${stamp}--${fromPart}--${artifact.toSnapshotId}.json`;
+    const artifactPath = path.join(artifactsDir, fileName);
+    fs.writeFileSync(
+      artifactPath,
+      JSON.stringify(
+        {
+          generatedAt: new Date().toISOString(),
+          ...artifact
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+    return artifactPath;
+  }
+
+  private buildSemanticSnapshot(fingerprint: string, payload: GraphPayload): SemanticSnapshotRecord {
     const nodeTypeCounts: Record<string, number> = {};
     for (const node of payload.nodes) {
       nodeTypeCounts[node.type] = (nodeTypeCounts[node.type] ?? 0) + 1;
@@ -498,20 +700,33 @@ export class IngestionService {
       edgeDigest.update(id).update('\n');
     }
 
+    const nodeDigestValue = nodeDigest.digest('hex');
+    const edgeDigestValue = edgeDigest.digest('hex');
+    const snapshotId = createHash('sha256')
+      .update(fingerprint)
+      .update('|')
+      .update(nodeDigestValue)
+      .update('|')
+      .update(edgeDigestValue)
+      .digest('hex')
+      .slice(0, 24);
+
     return {
+      snapshotId,
       fingerprint,
+      generatedAt: new Date().toISOString(),
       nodeCount: sortedNodeIds.length,
       edgeCount: sortedEdgeIds.length,
-      nodeDigest: nodeDigest.digest('hex'),
-      edgeDigest: edgeDigest.digest('hex'),
+      nodeDigest: nodeDigestValue,
+      edgeDigest: edgeDigestValue,
       nodeTypeCounts,
       relationCounts
     };
   }
 
   private computeSemanticDiff(
-    previous: SemanticSnapshot | undefined,
-    current: SemanticSnapshot
+    previous: SemanticSnapshotRecord | undefined,
+    current: SemanticSnapshotRecord
   ): SemanticDiffSummary {
     if (!previous) {
       return {

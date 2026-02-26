@@ -76,6 +76,9 @@ jobs:
       - name: Run web smoke checks
         run: ./scripts/web-smoke.sh
 
+      - name: Run semantic drift gate
+        run: ./scripts/phase14-drift-gate.sh artifacts/phase14-drift-gate.json
+
       - name: Capture compose logs
         if: failure()
         run: |

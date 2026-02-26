@@ -12,6 +12,7 @@ import { IngestionService } from './ingestion.service';
 import { OntologyConstraintsService } from './ontology-constraints.service';
 import { PermissionSetGroupParserService } from './permission-set-group-parser.service';
 import { PermissionsParserService } from './permissions-parser.service';
+import { SemanticDriftPolicyService } from './semantic-drift-policy.service';
 import { StagedUiMetadataParserService } from './staged-ui-metadata-parser.service';
 
 @Module({
@@ -27,7 +28,8 @@ import { StagedUiMetadataParserService } from './staged-ui-metadata-parser.servi
     CustomPermissionParserService,
     ConnectedAppParserService,
     StagedUiMetadataParserService,
-    OntologyConstraintsService
+    OntologyConstraintsService,
+    SemanticDriftPolicyService
   ],
   controllers: [IngestionController],
   exports: [
@@ -41,7 +43,8 @@ import { StagedUiMetadataParserService } from './staged-ui-metadata-parser.servi
     CustomPermissionParserService,
     ConnectedAppParserService,
     StagedUiMetadataParserService,
-    OntologyConstraintsService
+    OntologyConstraintsService,
+    SemanticDriftPolicyService
   ]
 })
 export class IngestionModule {}
