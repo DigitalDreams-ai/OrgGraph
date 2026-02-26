@@ -19,6 +19,7 @@ async function run(): Promise<void> {
     'refresh',
     'semantic-snapshot.integration.json'
   );
+  const metaContextPath = path.join(workspaceRoot, 'data', 'meta', 'context.integration.json');
 
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   if (fs.existsSync(dbPath)) {
@@ -45,6 +46,7 @@ async function run(): Promise<void> {
   process.env.USER_PROFILE_MAP_PATH = userMapPath;
   process.env.EVIDENCE_INDEX_PATH = evidencePath;
   process.env.SEMANTIC_SNAPSHOT_PATH = semanticSnapshotPath;
+  process.env.META_CONTEXT_PATH = metaContextPath;
   process.env.SF_INTEGRATION_ENABLED = 'false';
   process.env.ASK_DEFAULT_MODE = 'deterministic';
   process.env.LLM_ENABLED = 'true';
@@ -787,6 +789,53 @@ async function run(): Promise<void> {
     assert.ok(askMetricsExportBody.totalRecords > 0);
     assert.ok(askMetricsExportBody.bySnapshot.length > 0);
 
+    const metaContextRes = await fetch(`${base}/meta/context`);
+    assert.equal(metaContextRes.status, 200, 'meta context should return 200');
+    const metaContextBody = (await metaContextRes.json()) as {
+      status: string;
+      context: { relationMultipliers: Record<string, number> };
+    };
+    assert.equal(metaContextBody.status, 'implemented');
+    assert.equal(typeof metaContextBody.context.relationMultipliers.QUERIES, 'number');
+
+    const metaAdaptDryRunRes = await fetch(`${base}/meta/adapt`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ dryRun: true })
+    });
+    assert.equal(metaAdaptDryRunRes.status, 201, 'meta adapt dry run should return 201');
+    const metaAdaptDryRunBody = (await metaAdaptDryRunRes.json()) as {
+      status: string;
+      dryRun: boolean;
+      contextPath: string;
+      auditArtifactPath: string;
+      before: { relationMultipliers: Record<string, number> };
+      after: { relationMultipliers: Record<string, number> };
+    };
+    assert.equal(metaAdaptDryRunBody.status, 'implemented');
+    assert.equal(metaAdaptDryRunBody.dryRun, true);
+    assert.equal(typeof metaAdaptDryRunBody.contextPath, 'string');
+    assert.equal(typeof metaAdaptDryRunBody.auditArtifactPath, 'string');
+    assert.equal(typeof metaAdaptDryRunBody.after.relationMultipliers.WRITES, 'number');
+
+    const metaAdaptRes = await fetch(`${base}/meta/adapt`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ dryRun: false })
+    });
+    assert.equal(metaAdaptRes.status, 201, 'meta adapt should return 201');
+    const metaAdaptBody = (await metaAdaptRes.json()) as {
+      status: string;
+      dryRun: boolean;
+      changed: boolean;
+      contextPath: string;
+      auditArtifactPath: string;
+    };
+    assert.equal(metaAdaptBody.status, 'implemented');
+    assert.equal(metaAdaptBody.dryRun, false);
+    assert.equal(typeof metaAdaptBody.changed, 'boolean');
+    assert.ok(fs.existsSync(metaAdaptBody.contextPath), 'meta context file should exist after adapt');
+
     const metricsRes = await fetch(`${base}/metrics`);
     assert.equal(metricsRes.status, 200, 'metrics should return 200');
     const metricsBody = (await metricsRes.json()) as {
@@ -818,6 +867,9 @@ async function run(): Promise<void> {
     }
     if (fs.existsSync(semanticSnapshotPath)) {
       fs.rmSync(semanticSnapshotPath, { force: true });
+    }
+    if (fs.existsSync(metaContextPath)) {
+      fs.rmSync(metaContextPath, { force: true });
     }
   }
 }

@@ -36,6 +36,7 @@
 - [Production Promotion](./runbooks/PRODUCTION_PROMOTION.md)
 - [Semantic Drift Triage](./runbooks/SEMANTIC_DRIFT_TRIAGE.md)
 - [Architect Review Workflow](./runbooks/ARCHITECT_REVIEW_WORKFLOW.md)
+- [Meta-Context Adaptation](./runbooks/META_CONTEXT_ADAPTATION.md)
 
 ## Releases
 - [Release Checklist](./releases/RELEASE_CHECKLIST.md)
