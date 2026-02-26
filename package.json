@@ -31,6 +31,7 @@
     "phase12:replay-load": "./scripts/phase12-replay-load.sh",
     "phase13:metrics-export": "./scripts/phase13-metrics-export.sh",
     "phase14:drift-report": "./scripts/phase14-drift-report.sh",
-    "phase14:drift-gate": "./scripts/phase14-drift-gate.sh"
+    "phase14:drift-gate": "./scripts/phase14-drift-gate.sh",
+    "phase17:benchmark": "./scripts/phase17-benchmark.sh"
   }
 }
