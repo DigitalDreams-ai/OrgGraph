@@ -13,6 +13,9 @@ Turn OrgGraph into a replayable semantic decision runtime for Salesforce archite
 5. `Phase 15` - Salesforce decision engines (permission/automation/release risk)
 6. `Phase 16` - Meta-context adaptation under deterministic bounds
 7. `Phase 17` - Specialized storage/runtime go-no-go and implementation
+8. `Phase 18` - WebUI-first auth/runtime alignment using CumulusCI `3.78.0`
+9. `Phase 19` - Org-wide metadata retrieval UX (VS Code Org Browser style)
+10. `Phase 20` - WebUI capability overhaul and operator experience hardening
 
 ## Gate Policy
 - No phase starts without entry criteria met.
@@ -36,4 +39,5 @@ Turn OrgGraph into a replayable semantic decision runtime for Salesforce archite
 ## Primary References
 - `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
 - `docs/planning/ORGGRAPH_LEXICON.md`
-- `docs/planning/PHASE11_TASKLIST.md` through `PHASE17_TASKLIST.md`
+- `docs/planning/PHASE11_TASKLIST.md` through `PHASE20_TASKLIST.md`
+- `docs/planning/SUCCESS_GATES_CHECKLIST.md`

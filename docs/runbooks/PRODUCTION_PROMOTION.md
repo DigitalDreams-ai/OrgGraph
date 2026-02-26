@@ -37,8 +37,8 @@ Define the go/no-go process for promoting OrgGraph from sandbox metadata to prod
 - `GET /perms` known-positive check
 
 ## Secrets Rotation Procedure
-1. Rotate External Client App secret in Salesforce.
-2. Update `.env` values for `SF_CLIENT_ID` / `SF_CLIENT_SECRET`.
+1. Rotate credentials for the active auth mode (legacy External Client App today; CCI-based auth after Phase 18 migration).
+2. Update `.env` values for required auth keys (`SF_CLIENT_ID` / `SF_CLIENT_SECRET` for legacy OAuth path).
 3. Re-auth and refresh token store:
 - `npm run sf:oauth:url`
 - `npm run sf:oauth:exchange`

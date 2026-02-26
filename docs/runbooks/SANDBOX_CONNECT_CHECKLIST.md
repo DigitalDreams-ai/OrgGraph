@@ -1,4 +1,7 @@
-# Sandbox Connection Checklist (External Client App OAuth)
+# Sandbox Connection Checklist (Legacy External Client App OAuth)
+
+This runbook documents the current legacy OAuth flow.
+Planned primary flow (Phase 18+) is WebUI-first authentication via CumulusCI `3.78.0`.
 
 ## 1) Create External Client App in Salesforce Sandbox
 - [x] In Sandbox org: Setup -> App Manager -> New External Client App.

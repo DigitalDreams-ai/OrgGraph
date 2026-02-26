@@ -104,6 +104,9 @@ Goal: build a true differentiator by making context a deterministic, composable 
 - Phase 15: `docs/planning/PHASE15_TASKLIST.md`
 - Phase 16: `docs/planning/PHASE16_TASKLIST.md`
 - Phase 17: `docs/planning/PHASE17_TASKLIST.md`
+- Phase 18: `docs/planning/PHASE18_TASKLIST.md`
+- Phase 19: `docs/planning/PHASE19_TASKLIST.md`
+- Phase 20: `docs/planning/PHASE20_TASKLIST.md`
 - Program overview: `docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md`
 
 ## Phase 11 Artifacts

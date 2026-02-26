@@ -48,7 +48,11 @@ Compare two snapshots deterministically:
 curl "http://localhost:3100/refresh/diff/<snapshotA>/<snapshotB>"
 ```
 
-## 6. Connect Sandbox Org (External Client App OAuth)
+## 6. Connect Sandbox Org (Current Legacy Flow)
+Current implemented flow in this build uses External Client App OAuth.
+Planned direction (Phase 18+) is WebUI-first CCI auth with CumulusCI `3.78.0`.
+
+### 6.1 Legacy External Client App OAuth
 1. Configure `.env` with Salesforce values (`SF_BASE_URL`, `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REDIRECT_URI`, etc.).
 2. Generate OAuth URL:
 ```bash
@@ -64,7 +68,13 @@ npm run sf:oauth:exchange
 npm run sf:auth
 ```
 
+### 6.2 Planned Primary Flow (Phase 18+)
+- WebUI-auth via `cci` will become primary operator path.
+- External Client App OAuth will remain legacy/fallback until migration completes.
+
 ## 7. Retrieve and Ingest Sandbox Metadata
+Avoid package.xml-all retrieval as default operator behavior.
+Use selective retrieval scope where possible.
 ```bash
 npm run sf:retrieve
 npm run sf:export-user-map

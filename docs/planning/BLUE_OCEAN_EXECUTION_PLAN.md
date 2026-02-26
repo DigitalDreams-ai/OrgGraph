@@ -179,6 +179,9 @@ Delay these until lift is proven:
 - lower mean time to trusted decision for architects.
 - lower false positive risk alerts under real sandbox metadata.
 
+Execution control reference:
+- `docs/planning/SUCCESS_GATES_CHECKLIST.md`
+
 ## Minimal Build Order
 1. Lock SCU schema and operator contracts.
 2. Add derivation relation persistence and proof artifacts.
@@ -197,3 +200,11 @@ OrgGraph becomes the system where Salesforce architects do not ask:
 "What document should I read?"
 They ask:
 "What is the replayable semantic proof for this architectural decision, under this snapshot and policy?"
+
+## WebUI-First Operating Constraints
+- WebUI is the primary operator surface for auth, retrieval, refresh, analysis, and proof inspection.
+- Authentication path should be CCI-driven in primary UX (pin CumulusCI to `3.78.0`).
+- Metadata retrieval UX should be org-wide and selective (VS Code Org Browser style), not package.xml-all by default.
+- Ask UX should layer outputs:
+  - deterministic evidence summary first
+  - optional conversational elaboration second

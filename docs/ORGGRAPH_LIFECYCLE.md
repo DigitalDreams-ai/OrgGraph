@@ -12,10 +12,12 @@ This document describes how OrgGraph works end-to-end, from startup through retr
 - OrgGraph reads metadata from either:
   - fixture path (`fixtures/permissions`) for controlled testing, or
   - retrieved Salesforce source (`data/sf-project/force-app/main/default`) for sandbox/live usage.
-- `manifest/package.xml` defines metadata types retrieved from Salesforce.
+- `manifest/package.xml` can define retrieved metadata scope, but package.xml-all retrieval is not the preferred default operator path.
+- Planned Phase 19 UX adds org-wide selective retrieval via metadata browser (expand/select/search across metadata types).
 
 ## 3. Salesforce Retrieval (Optional but Typical)
-- Auth flow is established (SFDX URL, OAuth refresh token, or JWT mode).
+- Current auth flow supports SFDX URL, OAuth refresh token, or JWT mode.
+- Planned Phase 18 primary path is WebUI-first auth via `cci` (CumulusCI `3.78.0`), with legacy OAuth retained during migration.
 - Retrieve command pulls metadata into `SF_PROJECT_PATH`.
 - Retrieve-refresh pipeline can then trigger API refresh to rebuild graph from latest source.
 

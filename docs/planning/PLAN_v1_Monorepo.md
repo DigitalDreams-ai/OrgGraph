@@ -4,7 +4,8 @@
 > For current strategic execution (Phase 11+), use:
 > - `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
 > - `docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md`
-> - `docs/planning/PHASE11_TASKLIST.md` through `docs/planning/PHASE17_TASKLIST.md`
+> - `docs/planning/PHASE11_TASKLIST.md` through `docs/planning/PHASE20_TASKLIST.md`
+> - `docs/planning/SUCCESS_GATES_CHECKLIST.md`
 
 ## Current Status (2026-02-25)
 

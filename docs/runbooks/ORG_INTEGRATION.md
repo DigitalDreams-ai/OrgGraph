@@ -3,6 +3,10 @@
 ## Purpose
 This runbook connects OrgGraph to a Salesforce sandbox, retrieves metadata, and refreshes graph/evidence from retrieved source.
 
+## Current vs Planned Auth Path
+- Current implemented: External Client App OAuth refresh-token flow.
+- Planned primary (Phase 18+): WebUI-first auth via CumulusCI `3.78.0` (`cci`), with legacy OAuth retained as fallback during migration.
+
 ## Safety Rules
 - Use sandbox first. Do not start with production.
 - Keep secrets only in `.secrets/` and never commit them.
@@ -16,7 +20,7 @@ This runbook connects OrgGraph to a Salesforce sandbox, retrieves metadata, and 
 - `SF_MANIFEST_PATH=manifest/package.xml`
 - `SF_PARSE_PATH=data/sf-project/force-app/main/default`
 
-External Client App OAuth mode:
+Legacy External Client App OAuth mode:
 - `SF_BASE_URL=https://test.salesforce.com` (single switch value for org host)
 - `SF_CLIENT_ID=<external-client-app-consumer-key>`
 - `SF_CLIENT_SECRET=<external-client-app-consumer-secret>`
@@ -33,7 +37,7 @@ JWT mode:
 1. Ensure `sf` CLI is installed and in `PATH`.
 2. Create secrets path:
 `mkdir -p .secrets`
-3. Create an External Client App in the sandbox org:
+3. Create an External Client App in the sandbox org (legacy flow):
 - Setup -> App Manager -> New External Client App
 - Enable OAuth
 - Set callback URL to your `SF_REDIRECT_URI`
@@ -46,6 +50,7 @@ JWT mode:
 `npm run sf:oauth:exchange`
 7. Confirm retrieve manifest:
 `manifest/package.xml`
+   - Do not treat package.xml-all retrieval as default operator behavior.
 
 ## Execution Flow
 1. Authenticate:
