@@ -234,4 +234,8 @@ npm run phase7:regression
 npm run ingest:report
 npm run phase14:drift-report -- latest latest artifacts/phase14-drift-report.json
 npm run phase14:drift-gate
+./scripts/phase17-benchmark.sh
 ```
+
+Benchmark output artifact:
+- `artifacts/phase17-benchmark.json`
