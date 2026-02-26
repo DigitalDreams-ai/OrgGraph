@@ -49,6 +49,7 @@ curl "http://localhost:3100/automation?object=Opportunity"
 curl "http://localhost:3100/impact?field=Opportunity.StageName"
 curl -X POST http://localhost:3100/ask -H 'content-type: application/json' -d '{"query":"What touches Opportunity.StageName?"}'
 curl -X POST http://localhost:3100/ask/architecture -H 'content-type: application/json' -d '{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName"}'
+curl -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgConnect","payload":{}}'
 curl "http://localhost:3100/org/metadata/catalog?q=opportunity&limit=50"
 curl -X POST http://localhost:3100/org/metadata/retrieve -H 'content-type: application/json' -d '{"selections":[{"type":"CustomObject","members":["Account"]}],"autoRefresh":true}'
 curl http://localhost:3100/meta/context
@@ -74,6 +75,8 @@ npm exec --yes pnpm@9.12.3 -- --filter api build
 npm run test:web-smoke
 # Optional: run smoke against retrieved org metadata instead of fixtures
 WEB_SMOKE_USE_SF_PROJECT=1 npm run test:web-smoke
+# Optional: require CCI org auth validation in smoke (sandbox/local operator check)
+WEB_SMOKE_REQUIRE_ORG_AUTH=1 npm run test:web-smoke
 npm run phase7:smoke-live
 npm run phase7:snapshot
 npm run phase7:regression

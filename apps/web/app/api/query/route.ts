@@ -5,6 +5,7 @@ const WEB_LOG_ENABLED = (process.env.ORGUMENTED_WEB_LOG_ENABLED || 'false').trim
 
 type QueryKind =
   | 'refresh'
+  | 'orgConnect'
   | 'perms'
   | 'permsSystem'
   | 'automation'
@@ -81,6 +82,20 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body)
+      }
+    };
+  }
+  if (request.kind === 'orgConnect') {
+    return {
+      url: `${API_BASE}/org/retrieve`,
+      init: {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          runAuth: true,
+          runRetrieve: false,
+          autoRefresh: false
+        })
       }
     };
   }
@@ -249,6 +264,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     if (
       ![
         'refresh',
+        'orgConnect',
         'perms',
         'permsSystem',
         'automation',

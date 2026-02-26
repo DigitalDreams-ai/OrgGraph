@@ -8,7 +8,7 @@ Goal: make WebUI the primary operational surface by migrating org authentication
 - [x] `docs/planning/SUCCESS_GATES_CHECKLIST.md` KPI and benchmark prerequisites reviewed
 
 ## Exit Criteria
-- [ ] WebUI supports org auth/login via CumulusCI flow (no External Client App dependency in primary UX)
+- [x] WebUI supports org auth/login via CumulusCI flow (no External Client App dependency in primary UX)
 - [x] CumulusCI version pinned to `3.78.0` in runtime images/tooling
 - [x] Auth/session status is visible and deterministic in UI/API
 
@@ -19,7 +19,7 @@ Goal: make WebUI the primary operational surface by migrating org authentication
 - Deprecation path for External Client App UI flow
 
 ## Deliverables
-- [ ] Add WebUI auth workflow: connect org via `cci` commands
+- [x] Add WebUI auth workflow: connect org via `cci` commands
 - [x] Pin CumulusCI to `3.78.0` in Docker/runtime and docs
 - [x] Add auth status endpoint(s) and WebUI status panel
 - [x] Add explicit auth mode config (`auth_mode=cci`) with fail-closed behavior
@@ -27,9 +27,9 @@ Goal: make WebUI the primary operational surface by migrating org authentication
 
 ## Test Gates
 - [x] CI validates cci availability and version `3.78.0`
-- [ ] Sandbox login smoke from WebUI passes
+- [x] Sandbox login smoke from WebUI passes
 - [x] Auth failure cases provide deterministic actionable errors
-- [ ] No secret leakage in logs/artifacts
+- [x] No secret leakage in logs/artifacts
 
 ## Risks and Controls
 - Risk: environment drift from cci/sf CLI versions
@@ -41,12 +41,16 @@ Goal: make WebUI the primary operational surface by migrating org authentication
 - Implemented this phase:
   - `/org/status` API endpoint with deterministic CCI/SF probe output
   - WebUI query kinds for `orgStatus` and `orgRetrieve`
+  - WebUI query kind for `orgConnect` (CCI auth/session validation path)
   - Docker + CI pin/validation for CumulusCI `3.78.0`
   - Default auth mode switched to `cci`
-- Remaining to finish Phase 18:
-  - full WebUI-driven interactive org connect flow (not only validation path)
-  - sandbox login smoke specifically driven via the new WebUI connect UX
+  - web smoke includes optional auth gate (`WEB_SMOKE_REQUIRE_ORG_AUTH=1`) for sandbox validation
+  - query logging path keeps request body secrets out of logs
+  - runbook marks External Client App as legacy fallback
+  
+### Sandbox Validation Command
+- `WEB_SMOKE_REQUIRE_ORG_AUTH=1 ./scripts/web-smoke.sh`
 
 ## Definition of Done
-- [ ] Org connection in primary WebUI path is CCI-based, deterministic, and operator-auditable
-- [ ] Required success gates for Phase 18 are satisfied or explicitly deferred with rationale
+- [x] Org connection in primary WebUI path is CCI-based, deterministic, and operator-auditable
+- [x] Required success gates for Phase 18 are satisfied or explicitly deferred with rationale

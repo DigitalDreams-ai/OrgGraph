@@ -49,10 +49,15 @@ run_query() {
 }
 
 run_query refresh "{\"mode\":\"$WEB_SMOKE_REFRESH_MODE\",\"fixturesPath\":\"$WEB_SMOKE_FIXTURES_PATH\"}"
+run_query orgStatus '{}'
 run_query perms '{"user":"jane@example.com","object":"Case","field":"Case.Status"}'
 run_query automation '{"object":"Opportunity"}'
 run_query impact '{"field":"Opportunity.StageName"}'
 run_query ask '{"query":"What touches Opportunity.StageName?","maxCitations":5}'
+
+if [ "${WEB_SMOKE_REQUIRE_ORG_AUTH:-0}" = "1" ]; then
+  run_query orgConnect '{}'
+fi
 
 echo '{"status":"passed"}' > "$ARTIFACT_DIR/web-smoke-result.json"
 echo 'web smoke passed'
