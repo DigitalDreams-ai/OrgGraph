@@ -105,3 +105,37 @@ A completed change should be:
 - traceable,
 - documented,
 - logically committed.
+
+## 12) Task Routing and Agent Modes
+
+Use different execution styles by task type:
+
+- `Architect mode` (planning/ontology/runtime contracts)
+  - Use for: phase planning, schema changes, operator semantics, policy thresholds.
+  - Output: explicit constraints, tradeoffs, acceptance gates.
+
+- `Builder mode` (implementation)
+  - Use for: API, parser, graph, storage, config, and migration changes.
+  - Output: small coherent slices with tests in same cycle.
+
+- `Verifier mode` (testing and regression checks)
+  - Use for: typecheck, integration, parity, replay/determinism, smoke.
+  - Output: concise pass/fail summary and concrete failure cause.
+
+- `Docs mode` (runbooks, usage, phase tracking)
+  - Use for: user docs, lifecycle docs, release notes, tasklist updates.
+  - Output: behavior-focused updates with exact commands/paths.
+
+Routing rules:
+1. Start in `Architect mode` for non-trivial feature changes.
+2. Move to `Builder mode` for code edits.
+3. Move to `Verifier mode` before each commit.
+4. End in `Docs mode` if behavior changed.
+5. Commit by logical group per mode transition when practical.
+
+Environment limitation fallback:
+- If runtime/model agent switching is not available, emulate mode switching via workflow discipline:
+  - limit output verbosity during verification,
+  - run targeted tests first,
+  - avoid broad test sweeps unless needed,
+  - summarize only actionable findings.
