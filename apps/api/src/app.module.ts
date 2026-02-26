@@ -5,6 +5,7 @@ import { ConfigModule } from './config/config.module';
 import { GraphModule } from './graph/graph.module';
 import { HealthModule } from './health/health.module';
 import { IngestionModule } from './ingestion/ingestion.module';
+import { MetaModule } from './meta/meta.module';
 import { MetricsModule } from './observability/metrics.module';
 import { OrgModule } from './org/org.module';
 import { QueriesModule } from './queries/queries.module';
@@ -16,6 +17,7 @@ import { APP_FILTER } from '@nestjs/core';
     ConfigModule,
     GraphModule,
     IngestionModule,
+    MetaModule,
     QueriesModule,
     AnalysisModule,
     AskModule,

@@ -18,6 +18,7 @@ export class AppConfigService {
     this.validateOptionalString('ONTOLOGY_REPORT_PATH');
     this.validateOptionalString('ASK_PROOF_STORE_PATH');
     this.validateOptionalString('ASK_METRICS_PATH');
+    this.validateOptionalString('META_CONTEXT_PATH');
     this.validateOptionalString('ASK_GROUNDING_SCORE_THRESHOLD');
     this.validateOptionalString('ASK_CONSTRAINT_SATISFACTION_THRESHOLD');
     this.validateOptionalString('ASK_AMBIGUITY_MAX_THRESHOLD');
@@ -129,6 +130,10 @@ export class AppConfigService {
 
   askMetricsPath(): string | undefined {
     return process.env.ASK_METRICS_PATH;
+  }
+
+  metaContextPath(): string | undefined {
+    return process.env.META_CONTEXT_PATH;
   }
 
   askGroundingScoreThreshold(): number {

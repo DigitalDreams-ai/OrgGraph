@@ -14,6 +14,7 @@
   "ASK_DEFAULT_MODE": "llm_assist",
   "ASK_PROOF_STORE_PATH": "/app/data/ask/proofs.jsonl",
   "ASK_METRICS_PATH": "/app/data/ask/metrics.jsonl",
+  "META_CONTEXT_PATH": "/app/data/meta/context.json",
   "ASK_GROUNDING_SCORE_THRESHOLD": 0.65,
   "ASK_CONSTRAINT_SATISFACTION_THRESHOLD": 0.9,
   "ASK_AMBIGUITY_MAX_THRESHOLD": 0.45,

@@ -86,6 +86,16 @@ export function resolveSemanticDiffArtifactsDir(snapshotPath?: string): string {
   return path.join(path.dirname(resolveSemanticSnapshotPath(snapshotPath)), 'semantic-diffs');
 }
 
+export function resolveMetaContextPath(metaContextPath?: string): string {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const raw = metaContextPath?.trim() || 'data/meta/context.json';
+  return path.resolve(workspaceRoot, raw);
+}
+
+export function resolveMetaAuditDir(metaContextPath?: string): string {
+  return path.join(path.dirname(resolveMetaContextPath(metaContextPath)), 'audit');
+}
+
 export function resolveSfProjectPath(projectPath?: string): string {
   const workspaceRoot = findWorkspaceRoot(process.cwd());
   const raw = projectPath?.trim() || 'data/sf-project';

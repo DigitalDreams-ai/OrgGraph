@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppConfigService } from '../config/app-config.service';
 import { GraphService } from '../graph/graph.service';
+import { MetaContextService } from '../meta/meta-context.service';
 
 @Injectable()
 export class AnalysisService {
@@ -14,7 +15,8 @@ export class AnalysisService {
 
   constructor(
     private readonly graphService: GraphService,
-    private readonly configService: AppConfigService
+    private readonly configService: AppConfigService,
+    private readonly metaContextService: MetaContextService
   ) {}
 
   async impact(
@@ -182,7 +184,8 @@ export class AnalysisService {
   private scoreForHit(rel: string, confidence: 'high' | 'medium' | 'low'): number {
     const base = AnalysisService.REL_BASE_SCORE[rel] ?? 0.5;
     const conf = confidence === 'high' ? 1 : confidence === 'medium' ? 0.75 : 0.4;
-    return base * conf;
+    const relationMultiplier = this.metaContextService.relationMultiplier(rel);
+    return base * conf * relationMultiplier;
   }
 
   private resolveMinConfidence(strict: boolean): 'low' | 'medium' | 'high' {
