@@ -13,7 +13,14 @@ type QueryKind =
   | 'orgStatus'
   | 'orgRetrieve'
   | 'metadataCatalog'
-  | 'metadataRetrieve';
+  | 'metadataRetrieve'
+  | 'refreshDiff'
+  | 'askArchitecture'
+  | 'askProof'
+  | 'askReplay'
+  | 'askMetrics'
+  | 'metaContext'
+  | 'metaAdapt';
 
 interface QueryRequest {
   kind?: QueryKind;
@@ -111,6 +118,67 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
       }
     };
   }
+  if (request.kind === 'refreshDiff') {
+    const from = typeof body.fromSnapshot === 'string' ? body.fromSnapshot : '';
+    const to = typeof body.toSnapshot === 'string' ? body.toSnapshot : '';
+    return { url: `${API_BASE}/refresh/diff/${encodeURIComponent(from)}/${encodeURIComponent(to)}`, init: { method: 'GET' } };
+  }
+
+  if (request.kind === 'askArchitecture') {
+    return {
+      url: `${API_BASE}/ask/architecture`,
+      init: {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          user: body.user,
+          object: body.object,
+          field: body.field,
+          maxPaths: body.maxPaths
+        })
+      }
+    };
+  }
+
+  if (request.kind === 'askProof') {
+    const proofId = typeof body.proofId === 'string' ? body.proofId : '';
+    return { url: `${API_BASE}/ask/proof/${encodeURIComponent(proofId)}`, init: { method: 'GET' } };
+  }
+
+  if (request.kind === 'askReplay') {
+    return {
+      url: `${API_BASE}/ask/replay`,
+      init: {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          replayToken: body.replayToken,
+          proofId: body.proofId
+        })
+      }
+    };
+  }
+
+  if (request.kind === 'askMetrics') {
+    return { url: `${API_BASE}/ask/metrics/export`, init: { method: 'GET' } };
+  }
+
+  if (request.kind === 'metaContext') {
+    return { url: `${API_BASE}/meta/context`, init: { method: 'GET' } };
+  }
+
+  if (request.kind === 'metaAdapt') {
+    return {
+      url: `${API_BASE}/meta/adapt`,
+      init: {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          dryRun: typeof body.dryRun === 'boolean' ? body.dryRun : undefined
+        })
+      }
+    };
+  }
 
   if (request.kind === 'perms') {
     const params = new URLSearchParams();
@@ -189,7 +257,14 @@ export async function POST(req: Request): Promise<NextResponse> {
         'orgStatus',
         'orgRetrieve',
         'metadataCatalog',
-        'metadataRetrieve'
+        'metadataRetrieve',
+        'refreshDiff',
+        'askArchitecture',
+        'askProof',
+        'askReplay',
+        'askMetrics',
+        'metaContext',
+        'metaAdapt'
       ].includes(kind)
     ) {
       return NextResponse.json(
