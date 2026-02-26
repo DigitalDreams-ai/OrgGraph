@@ -13,10 +13,19 @@ async function run(): Promise<void> {
   const dbPath = path.join(workspaceRoot, 'data', 'orggraph.integration.db');
   const evidencePath = path.join(workspaceRoot, 'data', 'evidence.integration.json');
   const userMapPath = path.join(workspaceRoot, 'data', 'user-profile-map.integration.json');
+  const semanticSnapshotPath = path.join(
+    workspaceRoot,
+    'data',
+    'refresh',
+    'semantic-snapshot.integration.json'
+  );
 
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   if (fs.existsSync(dbPath)) {
     fs.rmSync(dbPath, { force: true });
+  }
+  if (fs.existsSync(semanticSnapshotPath)) {
+    fs.rmSync(semanticSnapshotPath, { force: true });
   }
   fs.writeFileSync(
     userMapPath,
@@ -31,10 +40,13 @@ async function run(): Promise<void> {
   );
 
   process.env.DATABASE_URL = `file:${dbPath}`;
+  process.env.GRAPH_BACKEND = 'sqlite';
   process.env.PERMISSIONS_FIXTURES_PATH = path.join(workspaceRoot, 'fixtures', 'permissions');
   process.env.USER_PROFILE_MAP_PATH = userMapPath;
   process.env.EVIDENCE_INDEX_PATH = evidencePath;
+  process.env.SEMANTIC_SNAPSHOT_PATH = semanticSnapshotPath;
   process.env.SF_INTEGRATION_ENABLED = 'false';
+  process.env.ASK_DEFAULT_MODE = 'deterministic';
   process.env.LLM_ENABLED = 'true';
   process.env.LLM_PROVIDER = 'anthropic';
   process.env.ANTHROPIC_API_KEY = 'test-anthropic-key';
@@ -100,12 +112,17 @@ async function run(): Promise<void> {
       nodeCount: number;
       edgeCount: number;
       ontology: { violationCount: number; warningCount: number };
+      semanticDiff: { addedNodeCount: number; addedEdgeCount: number };
+      meaningChangeSummary: string;
     };
     assert.equal(refreshBody.mode, 'full', 'default refresh mode should be full');
     assert.equal(refreshBody.skipped, false, 'default refresh should not skip');
     assert.ok(refreshBody.nodeCount > 0, 'refresh should create nodes');
     assert.ok(refreshBody.edgeCount > 0, 'refresh should create edges');
     assert.equal(refreshBody.ontology.violationCount, 0, 'refresh should not emit ontology violations');
+    assert.ok(refreshBody.semanticDiff.addedNodeCount > 0);
+    assert.ok(refreshBody.semanticDiff.addedEdgeCount > 0);
+    assert.equal(typeof refreshBody.meaningChangeSummary, 'string');
 
     const readyRes = await fetch(`${base}/ready`);
     assert.equal(readyRes.status, 200, 'ready should return 200');
@@ -145,12 +162,17 @@ async function run(): Promise<void> {
       skipReason?: string;
       nodeCount: number;
       edgeCount: number;
+      semanticDiff: { addedNodeCount: number; removedNodeCount: number };
+      meaningChangeSummary: string;
     };
     assert.equal(refreshIncrementalBody.mode, 'incremental');
     assert.equal(refreshIncrementalBody.skipped, true, 'incremental refresh should skip unchanged fixtures');
     assert.equal(refreshIncrementalBody.skipReason, 'no_changes_detected');
     assert.ok(refreshIncrementalBody.nodeCount > 0);
     assert.ok(refreshIncrementalBody.edgeCount > 0);
+    assert.equal(refreshIncrementalBody.semanticDiff.addedNodeCount, 0);
+    assert.equal(refreshIncrementalBody.semanticDiff.removedNodeCount, 0);
+    assert.match(refreshIncrementalBody.meaningChangeSummary, /no semantic changes/i);
 
     const malformedRefreshRes = await fetch(`${base}/refresh`, {
       method: 'POST',
@@ -194,7 +216,9 @@ async function run(): Promise<void> {
     });
     assert.equal(orgRetrieveBadBodyRes.status, 400, 'org retrieve should validate boolean body flags');
 
-    const brokenRoot = fs.mkdtempSync(path.join(workspaceRoot, 'fixtures', 'tmp-broken-'));
+    const brokenTempBase = path.join(workspaceRoot, 'data');
+    fs.mkdirSync(brokenTempBase, { recursive: true });
+    const brokenRoot = fs.mkdtempSync(path.join(brokenTempBase, 'tmp-broken-'));
     const brokenProfilesPath = path.join(brokenRoot, 'profiles');
     fs.mkdirSync(brokenProfilesPath, { recursive: true });
     fs.writeFileSync(
@@ -417,6 +441,10 @@ async function run(): Promise<void> {
       plan: { intent: string };
       citations: unknown[];
       mode: string;
+      trustLevel: string;
+      policy: { policyId: string };
+      metrics: { groundingScore: number; constraintSatisfaction: number };
+      proof: { proofId: string; replayToken: string; snapshotId: string };
       llm: { enabled: boolean; used: boolean; provider: string; fallbackReason?: string };
       deterministicAnswer: string;
       consistency: { checked: boolean; aligned: boolean };
@@ -429,6 +457,13 @@ async function run(): Promise<void> {
     assert.equal(typeof askPerms.deterministicAnswer, 'string');
     assert.equal(askPerms.consistency.checked, false);
     assert.equal(askPerms.consistency.aligned, true);
+    assert.equal(askPerms.trustLevel, 'trusted');
+    assert.equal(typeof askPerms.policy.policyId, 'string');
+    assert.equal(typeof askPerms.metrics.groundingScore, 'number');
+    assert.equal(typeof askPerms.metrics.constraintSatisfaction, 'number');
+    assert.equal(typeof askPerms.proof.proofId, 'string');
+    assert.equal(typeof askPerms.proof.replayToken, 'string');
+    assert.equal(typeof askPerms.proof.snapshotId, 'string');
 
     const askAutomationRes = await fetch(`${base}/ask`, {
       method: 'POST',
@@ -453,15 +488,39 @@ async function run(): Promise<void> {
     assert.equal(askImpact.consistency.checked, true);
     assert.equal(askImpact.consistency.aligned, true);
 
+    const askMixedRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query:
+          'What is the release risk impact on Opportunity.StageName and can jane@example.com edit object Case?'
+      })
+    });
+    assert.equal(askMixedRes.status, 201, 'ask mixed should return 201');
+    const askMixed = (await askMixedRes.json()) as {
+      plan: { intent: string };
+      answer: string;
+      trustLevel: string;
+    };
+    assert.equal(askMixed.plan.intent, 'mixed');
+    assert.match(askMixed.answer, /Release-risk \+ permission-impact:/);
+    assert.ok(['trusted', 'conditional'].includes(askMixed.trustLevel));
+
     const askUnknownRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ query: 'hello world' })
     });
     assert.equal(askUnknownRes.status, 201, 'ask unknown should return 201');
-    const askUnknown = (await askUnknownRes.json()) as { plan: { intent: string }; answer: string };
+    const askUnknown = (await askUnknownRes.json()) as {
+      plan: { intent: string };
+      answer: string;
+      trustLevel: string;
+      proof: { proofId: string; replayToken: string };
+    };
     assert.equal(askUnknown.plan.intent, 'unknown');
-    assert.match(askUnknown.answer, /No deterministic plan/i);
+    assert.equal(askUnknown.trustLevel, 'refused');
+    assert.match(askUnknown.answer, /Refused:/i);
 
     const askLlmAssistRes = await fetch(`${base}/ask`, {
       method: 'POST',
@@ -523,6 +582,40 @@ async function run(): Promise<void> {
     assert.equal(askLlmAnthropic.llm.provider, 'anthropic');
     assert.match(askLlmAnthropic.answer, /Mocked Anthropic answer/);
 
+    const askProofRes = await fetch(`${base}/ask/proof/${askPerms.proof.proofId}`);
+    assert.equal(askProofRes.status, 200, 'ask proof lookup should return 200');
+    const askProofBody = (await askProofRes.json()) as {
+      status: string;
+      proof: { proofId: string; replayToken: string; policyId: string };
+    };
+    assert.equal(askProofBody.status, 'implemented');
+    assert.equal(askProofBody.proof.proofId, askPerms.proof.proofId);
+    assert.equal(askProofBody.proof.replayToken, askPerms.proof.replayToken);
+    assert.equal(typeof askProofBody.proof.policyId, 'string');
+
+    const askReplayRes = await fetch(`${base}/ask/replay`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ replayToken: askPerms.proof.replayToken })
+    });
+    assert.equal(askReplayRes.status, 201, 'ask replay should return 201');
+    const askReplayBody = (await askReplayRes.json()) as {
+      status: string;
+      matched: boolean;
+      replayToken: string;
+      proofId: string;
+      original: { deterministicAnswer: string };
+      replayed: { deterministicAnswer: string };
+    };
+    assert.equal(askReplayBody.status, 'implemented');
+    assert.equal(askReplayBody.matched, true);
+    assert.equal(askReplayBody.replayToken, askPerms.proof.replayToken);
+    assert.equal(askReplayBody.proofId, askPerms.proof.proofId);
+    assert.equal(
+      askReplayBody.original.deterministicAnswer,
+      askReplayBody.replayed.deterministicAnswer
+    );
+
     const askBadRequest = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -574,6 +667,9 @@ async function run(): Promise<void> {
     }
     if (fs.existsSync(evidencePath)) {
       fs.rmSync(evidencePath, { force: true });
+    }
+    if (fs.existsSync(semanticSnapshotPath)) {
+      fs.rmSync(semanticSnapshotPath, { force: true });
     }
   }
 }

@@ -1,5 +1,6 @@
 import type { AskPlan } from '../planner/planner.types';
 import type { LlmProviderName } from '../llm/llm.types';
+import type { CompositionOperator, DerivationRelation } from '@orggraph/ontology';
 
 export interface AskRequest {
   query: string;
@@ -24,6 +25,53 @@ export interface AskCitation {
   score: number;
 }
 
+export type AskTrustLevel = 'trusted' | 'conditional' | 'refused';
+
+export interface AskPolicyEnvelope {
+  policyId: string;
+  groundingThreshold: number;
+  constraintThreshold: number;
+  ambiguityMaxThreshold: number;
+}
+
+export interface AskMeaningMetrics {
+  groundingScore: number;
+  constraintSatisfaction: number;
+  ambiguityScore: number;
+  stabilityScore: number;
+  deltaNovelty: number;
+  riskSurfaceScore: number;
+}
+
+export interface AskDerivationEdge {
+  id: string;
+  rel: DerivationRelation;
+  from: string;
+  to: string;
+}
+
+export interface AskProofArtifact {
+  proofId: string;
+  replayToken: string;
+  generatedAt: string;
+  snapshotId: string;
+  policyId: string;
+  request: AskRequest;
+  plan: AskPlan;
+  operatorsExecuted: CompositionOperator[];
+  rejectedBranches: Array<{ branch: string; reason: string }>;
+  derivationEdges: AskDerivationEdge[];
+  citationIds: string[];
+  trustLevel: AskTrustLevel;
+  metrics: AskMeaningMetrics;
+  responseSummary: {
+    answer: string;
+    deterministicAnswer: string;
+    confidence: number;
+    mode: 'deterministic' | 'llm_assist';
+  };
+}
+
 export interface AskResponse {
   answer: string;
   deterministicAnswer: string;
@@ -43,6 +91,49 @@ export interface AskResponse {
     checked: boolean;
     aligned: boolean;
     reason: string;
+  };
+  policy: AskPolicyEnvelope;
+  metrics: AskMeaningMetrics;
+  trustLevel: AskTrustLevel;
+  proof: {
+    proofId: string;
+    replayToken: string;
+    snapshotId: string;
+    operatorsExecuted: CompositionOperator[];
+    rejectedBranches: Array<{ branch: string; reason: string }>;
+  };
+  status: 'implemented';
+}
+
+export interface AskProofLookupResponse {
+  proof: AskProofArtifact;
+  status: 'implemented';
+}
+
+export interface AskReplayRequest {
+  replayToken?: string;
+  proofId?: string;
+}
+
+export interface AskReplayResponse {
+  replayToken: string;
+  proofId: string;
+  matched: boolean;
+  snapshotId: string;
+  policyId: string;
+  original: {
+    answer: string;
+    deterministicAnswer: string;
+    confidence: number;
+    mode: 'deterministic' | 'llm_assist';
+    trustLevel: AskTrustLevel;
+  };
+  replayed: {
+    answer: string;
+    deterministicAnswer: string;
+    confidence: number;
+    mode: 'deterministic' | 'llm_assist';
+    trustLevel: AskTrustLevel;
   };
   status: 'implemented';
 }

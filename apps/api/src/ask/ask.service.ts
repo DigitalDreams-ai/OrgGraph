@@ -1,15 +1,30 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import fs from 'node:fs';
+import { COMPOSITION_OPERATORS, DERIVATION_RELATIONS } from '@orggraph/ontology';
+import type { CompositionOperator } from '@orggraph/ontology';
 import { AnalysisService } from '../analysis/analysis.service';
+import { stableId } from '../common/ids';
+import { resolveRefreshStatePath } from '../common/path';
 import { AppConfigService } from '../config/app-config.service';
 import { EvidenceStoreService } from '../evidence/evidence-store.service';
 import { LlmService } from '../llm/llm.service';
-import { QueriesService } from '../queries/queries.service';
 import { PlannerService } from '../planner/planner.service';
-import type { AskRequest, AskResponse } from './ask.types';
+import { QueriesService } from '../queries/queries.service';
+import { AskMetricsStoreService } from './ask-metrics-store.service';
+import { AskProofStoreService } from './ask-proof-store.service';
+import type {
+  AskMeaningMetrics,
+  AskProofArtifact,
+  AskProofLookupResponse,
+  AskReplayRequest,
+  AskReplayResponse,
+  AskRequest,
+  AskResponse,
+  AskTrustLevel
+} from './ask.types';
 
 @Injectable()
 export class AskService {
-  private readonly logger = new Logger(AskService.name);
   private static readonly LLM_MIN_CONFIDENCE = 0.6;
 
   constructor(
@@ -18,18 +33,97 @@ export class AskService {
     private readonly queries: QueriesService,
     private readonly analysis: AnalysisService,
     private readonly evidence: EvidenceStoreService,
-    private readonly llmService: LlmService
+    private readonly llmService: LlmService,
+    private readonly proofStore: AskProofStoreService,
+    private readonly metricsStore: AskMetricsStoreService
   ) {}
 
   async ask(input: AskRequest): Promise<AskResponse> {
-    const startedAt = Date.now();
+    const { response, proof } = await this.execute(input, true);
+    this.proofStore.append(proof);
+    this.metricsStore.append({
+      recordedAt: new Date().toISOString(),
+      snapshotId: proof.snapshotId,
+      policyId: proof.policyId,
+      query: input.query,
+      intent: proof.plan.intent,
+      trustLevel: proof.trustLevel,
+      metrics: proof.metrics
+    });
+    return response;
+  }
+
+  getProof(proofId: string): AskProofLookupResponse {
+    const proof = this.proofStore.findByProofId(proofId);
+    if (!proof) {
+      throw new NotFoundException(`proof not found: ${proofId}`);
+    }
+    return { proof, status: 'implemented' };
+  }
+
+  async replay(request: AskReplayRequest): Promise<AskReplayResponse> {
+    const lookupValue = request.replayToken ?? request.proofId;
+    if (!lookupValue) {
+      throw new NotFoundException('replayToken or proofId is required');
+    }
+
+    const proof = request.replayToken
+      ? this.proofStore.findByReplayToken(request.replayToken)
+      : this.proofStore.findByProofId(request.proofId as string);
+    if (!proof) {
+      throw new NotFoundException(`proof not found: ${lookupValue}`);
+    }
+
+    const replayRun = await this.execute(proof.request, false);
+    const replayed = replayRun.response;
+    const matched =
+      replayed.deterministicAnswer === proof.responseSummary.deterministicAnswer &&
+      replayed.plan.intent === proof.plan.intent &&
+      replayed.policy.policyId === proof.policyId &&
+      replayed.proof.snapshotId === proof.snapshotId;
+
+    return {
+      replayToken: proof.replayToken,
+      proofId: proof.proofId,
+      matched,
+      snapshotId: proof.snapshotId,
+      policyId: proof.policyId,
+      original: {
+        answer: proof.responseSummary.answer,
+        deterministicAnswer: proof.responseSummary.deterministicAnswer,
+        confidence: proof.responseSummary.confidence,
+        mode: proof.responseSummary.mode,
+        trustLevel: proof.trustLevel
+      },
+      replayed: {
+        answer: replayed.answer,
+        deterministicAnswer: replayed.deterministicAnswer,
+        confidence: replayed.confidence,
+        mode: replayed.mode,
+        trustLevel: replayed.trustLevel
+      },
+      status: 'implemented'
+    };
+  }
+
+  private async execute(input: AskRequest, includeCreatedAtInProof: boolean): Promise<{
+    response: AskResponse;
+    proof: AskProofArtifact;
+  }> {
     const plan = this.planner.plan(input.query);
     const includeLowConfidence = input.includeLowConfidence === true;
     const consistencyCheck =
       input.consistencyCheck ?? this.configService.askConsistencyCheckEnabled();
     const maxCitations = Math.max(1, Math.min(20, input.maxCitations ?? 5));
-    let citationHits = this.evidence.search(input.query, maxCitations);
+    const snapshotId = this.readSnapshotId();
+    const policy = {
+      policyId: this.buildPolicyId(),
+      groundingThreshold: this.configService.askGroundingScoreThreshold(),
+      constraintThreshold: this.configService.askConstraintSatisfactionThreshold(),
+      ambiguityMaxThreshold: this.configService.askAmbiguityMaxThreshold()
+    };
 
+    let citationHits = this.evidence.search(input.query, maxCitations);
     if (citationHits.length === 0) {
       const fallbackTerms = [plan.entities.field, plan.entities.object, plan.entities.user]
         .filter((x): x is string => Boolean(x))
@@ -56,8 +150,45 @@ export class AskService {
       aligned: true,
       reason: 'consistency check not applicable'
     };
+    const operatorsExecuted: CompositionOperator[] = [COMPOSITION_OPERATORS.SPECIALIZE];
+    const rejectedBranches: Array<{ branch: string; reason: string }> = [];
 
-    if (plan.intent === 'perms' || plan.intent === 'mixed') {
+    if (plan.intent === 'mixed') {
+      operatorsExecuted.push(
+        COMPOSITION_OPERATORS.OVERLAY,
+        COMPOSITION_OPERATORS.CONSTRAIN,
+        COMPOSITION_OPERATORS.INTERSECT
+      );
+      const user = plan.entities.user ?? 'jane@example.com';
+      const object = plan.entities.object ?? 'Opportunity';
+      const field = plan.entities.field ?? `${object}.StageName`;
+      const perms = await this.queries.perms(user, object, field);
+      const impact = await this.analysis.impact(field, undefined, false, false, false, includeLowConfidence);
+      const releaseRisk = impact.totalPaths > 0 ? 'elevated' : 'low';
+      answer =
+        `Release-risk + permission-impact: ${releaseRisk} risk for changing ${field}. ` +
+        `${perms.explanation}. ${impact.explanation}.`;
+      deterministicAnswer = answer;
+      confidence = perms.granted && impact.totalPaths > 0 ? 0.9 : 0.72;
+      consistency = {
+        checked: consistencyCheck,
+        aligned: true,
+        reason: 'mixed intent composed deterministically from perms + impact'
+      };
+      if (!perms.granted) {
+        rejectedBranches.push({
+          branch: 'queries.perms',
+          reason: 'user lacks object/field grant for release scenario'
+        });
+      }
+      if (impact.totalPaths === 0) {
+        rejectedBranches.push({
+          branch: 'analysis.impact',
+          reason: 'no impact paths found for release scenario'
+        });
+      }
+    } else if (plan.intent === 'perms') {
+      operatorsExecuted.push(COMPOSITION_OPERATORS.CONSTRAIN, COMPOSITION_OPERATORS.INTERSECT);
       const user = plan.entities.user ?? 'jane@example.com';
       const object = plan.entities.object ?? 'Case';
       const result = await this.queries.perms(user, object, plan.entities.field);
@@ -69,7 +200,14 @@ export class AskService {
         aligned: true,
         reason: 'perms intent uses deterministic query directly'
       };
+      if (!result.granted) {
+        rejectedBranches.push({
+          branch: 'queries.perms',
+          reason: 'no granting path found for requested principal/object'
+        });
+      }
     } else if (plan.intent === 'automation') {
+      operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.INTERSECT);
       const object = plan.entities.object ?? 'Case';
       const result = await this.analysis.automation(
         object,
@@ -88,7 +226,14 @@ export class AskService {
           ? 'ask automation answer is sourced from /automation deterministic output'
           : 'consistency check disabled'
       };
+      if (result.automations.length === 0) {
+        rejectedBranches.push({
+          branch: 'analysis.automation',
+          reason: 'no automation relation matched for requested object'
+        });
+      }
     } else if (plan.intent === 'impact') {
+      operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.CONSTRAIN);
       const field = plan.entities.field ?? 'Opportunity.StageName';
       const result = await this.analysis.impact(
         field,
@@ -127,6 +272,17 @@ export class AskService {
           reason: 'consistency check disabled'
         };
       }
+      if (result.paths.length === 0) {
+        rejectedBranches.push({
+          branch: 'analysis.impact',
+          reason: 'no impact paths found for requested field'
+        });
+      }
+    } else {
+      rejectedBranches.push({
+        branch: 'planner.default',
+        reason: 'no deterministic graph intent matched query'
+      });
     }
     deterministicAnswer = answer;
 
@@ -179,8 +335,11 @@ export class AskService {
             llmResult.rawText
           );
           if (citations.length > 0 && citedIds.length === 0) {
-            const observed = llmResult.citationsUsed.length > 0 ? llmResult.citationsUsed.join(',') : '(none)';
-            throw new Error(`LLM response did not reference provided citations (observed: ${observed})`);
+            const observed =
+              llmResult.citationsUsed.length > 0 ? llmResult.citationsUsed.join(',') : '(none)';
+            throw new Error(
+              `LLM response did not reference provided citations (observed: ${observed})`
+            );
           }
 
           answer = llmResult.answer;
@@ -211,6 +370,71 @@ export class AskService {
       };
     }
 
+    const metrics = this.buildMetrics({
+      citationCount: citations.length,
+      confidence,
+      consistencyChecked: consistency.checked,
+      consistencyAligned: consistency.aligned,
+      intent: plan.intent,
+      rejectedBranchCount: rejectedBranches.length
+    });
+    const trustLevel = this.resolveTrustLevel(metrics, policy);
+
+    if (trustLevel === 'refused') {
+      mode = 'deterministic';
+      answer =
+        'Refused: insufficient deterministic support under the active policy envelope. Refine query or refresh metadata.';
+      llm = {
+        ...llm,
+        used: false,
+        fallbackReason: llm.fallbackReason ?? 'policy envelope rejected response'
+      };
+      rejectedBranches.push({
+        branch: 'policy.envelope',
+        reason: 'grounding/constraint thresholds not met'
+      });
+    }
+
+    const derivationEdges = [
+      {
+        id: stableId('der', plan.intent, 'plan', input.query),
+        rel: DERIVATION_RELATIONS.DERIVED_FROM,
+        from: 'plan',
+        to: plan.intent
+      },
+      ...citations.map((citation) => ({
+        id: stableId('der', citation.id, 'evidence', plan.intent),
+        rel: DERIVATION_RELATIONS.SUPPORTS,
+        from: citation.id,
+        to: 'claim_1'
+      }))
+    ];
+
+    const proofSeed = `${snapshotId}|${policy.policyId}|${input.query}|${deterministicAnswer}|${mode}`;
+    const proofId = stableId('proof', proofSeed, includeCreatedAtInProof ? new Date().toISOString() : '');
+    const replayToken = stableId('trace', proofId, snapshotId, policy.policyId);
+    const proof: AskProofArtifact = {
+      proofId,
+      replayToken,
+      generatedAt: new Date().toISOString(),
+      snapshotId,
+      policyId: policy.policyId,
+      request: input,
+      plan,
+      operatorsExecuted,
+      rejectedBranches,
+      derivationEdges,
+      citationIds: citations.map((citation) => citation.id),
+      trustLevel,
+      metrics,
+      responseSummary: {
+        answer,
+        deterministicAnswer,
+        confidence,
+        mode
+      }
+    };
+
     const response: AskResponse = {
       answer,
       deterministicAnswer,
@@ -220,14 +444,107 @@ export class AskService {
       mode,
       llm,
       consistency,
+      policy,
+      metrics,
+      trustLevel,
+      proof: {
+        proofId,
+        replayToken,
+        snapshotId,
+        operatorsExecuted,
+        rejectedBranches
+      },
       status: 'implemented'
     };
 
-    this.logger.log(
-      `ask intent=${plan.intent} elapsedMs=${Date.now() - startedAt} citations=${citations.length}`
+    return { response, proof };
+  }
+
+  private buildMetrics(input: {
+    citationCount: number;
+    confidence: number;
+    consistencyChecked: boolean;
+    consistencyAligned: boolean;
+    intent: string;
+    rejectedBranchCount: number;
+  }): AskMeaningMetrics {
+    const groundingScore = Math.max(
+      0,
+      Math.min(1, input.citationCount > 0 ? Math.min(1, 0.55 + input.confidence * 0.45) : 0.25)
+    );
+    const constraintSatisfaction = input.consistencyChecked
+      ? input.consistencyAligned
+        ? 1
+        : 0.55
+      : input.intent === 'unknown'
+        ? 0.7
+        : 0.92;
+    const ambiguityScore = Math.max(
+      0,
+      Math.min(1, input.intent === 'mixed' ? 0.5 : input.intent === 'unknown' ? 0.8 : 0.25)
+    );
+    const stabilityScore = input.consistencyChecked ? (input.consistencyAligned ? 1 : 0.6) : 0.9;
+    const deltaNovelty = input.intent === 'unknown' ? 0.1 : 0.28;
+    const riskSurfaceScore = Math.max(
+      0.1,
+      Math.min(1, 0.35 + input.rejectedBranchCount * 0.1 + (input.intent === 'impact' ? 0.15 : 0))
     );
 
-    return response;
+    return {
+      groundingScore,
+      constraintSatisfaction,
+      ambiguityScore,
+      stabilityScore,
+      deltaNovelty,
+      riskSurfaceScore
+    };
+  }
+
+  private resolveTrustLevel(
+    metrics: AskMeaningMetrics,
+    policy: {
+      groundingThreshold: number;
+      constraintThreshold: number;
+      ambiguityMaxThreshold: number;
+    }
+  ): AskTrustLevel {
+    if (
+      metrics.groundingScore < policy.groundingThreshold ||
+      metrics.constraintSatisfaction < policy.constraintThreshold
+    ) {
+      return 'refused';
+    }
+    if (metrics.ambiguityScore > policy.ambiguityMaxThreshold) {
+      return 'conditional';
+    }
+    return 'trusted';
+  }
+
+  private buildPolicyId(): string {
+    return stableId(
+      'policy',
+      this.configService.askGroundingScoreThreshold().toFixed(3),
+      this.configService.askConstraintSatisfactionThreshold().toFixed(3),
+      this.configService.askAmbiguityMaxThreshold().toFixed(3)
+    );
+  }
+
+  private readSnapshotId(): string {
+    const refreshStatePath = resolveRefreshStatePath(this.configService.refreshStatePath());
+    try {
+      if (!fs.existsSync(refreshStatePath)) {
+        return 'snap_unavailable';
+      }
+      const raw = fs.readFileSync(refreshStatePath, 'utf8');
+      const parsed = JSON.parse(raw) as { fingerprint?: string };
+      const fingerprint = parsed.fingerprint?.trim();
+      if (!fingerprint) {
+        return 'snap_unavailable';
+      }
+      return `snap_${fingerprint.slice(0, 24)}`;
+    } catch {
+      return 'snap_unavailable';
+    }
   }
 
   private dedupeCitations<T extends { sourcePath: string; chunkText: string; score: number }>(

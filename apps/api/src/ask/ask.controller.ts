@@ -2,12 +2,21 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   HttpException,
   InternalServerErrorException,
+  Param,
   Post
 } from '@nestjs/common';
 import { AskService } from './ask.service';
-import type { AskInternalErrorEnvelope, AskRequest, AskResponse } from './ask.types';
+import type {
+  AskInternalErrorEnvelope,
+  AskProofLookupResponse,
+  AskReplayRequest,
+  AskReplayResponse,
+  AskRequest,
+  AskResponse
+} from './ask.types';
 
 @Controller()
 export class AskController {
@@ -111,5 +120,26 @@ export class AskController {
         details: envelope.error
       });
     }
+  }
+
+  @Get('/ask/proof/:proofId')
+  getProof(@Param('proofId') proofId: string): AskProofLookupResponse {
+    if (typeof proofId !== 'string' || proofId.trim().length === 0) {
+      throw new BadRequestException('proofId is required');
+    }
+    return this.askService.getProof(proofId.trim());
+  }
+
+  @Post('/ask/replay')
+  async replay(@Body() body: AskReplayRequest): Promise<AskReplayResponse> {
+    if (!body || (typeof body !== 'object' && !Array.isArray(body))) {
+      throw new BadRequestException('body is required');
+    }
+    const replayToken = body.replayToken?.trim();
+    const proofId = body.proofId?.trim();
+    if (!replayToken && !proofId) {
+      throw new BadRequestException('replayToken or proofId is required');
+    }
+    return this.askService.replay({ replayToken, proofId });
   }
 }

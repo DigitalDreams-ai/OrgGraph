@@ -7,6 +7,7 @@ import { EvidenceStoreService } from '../evidence/evidence-store.service';
 import { GraphService } from '../graph/graph.service';
 import {
   resolveFixturesPath,
+  resolveSemanticSnapshotPath,
   resolveOntologyReportPath,
   resolveRefreshAuditPath,
   resolveRefreshStatePath
@@ -37,6 +38,28 @@ interface RefreshState {
   evidenceCount: number;
   mode: RefreshMode;
   ontology: OntologyConstraintReport;
+  semanticDiff: SemanticDiffSummary;
+  meaningChangeSummary: string;
+}
+
+interface SemanticSnapshot {
+  fingerprint: string;
+  nodeCount: number;
+  edgeCount: number;
+  nodeDigest: string;
+  edgeDigest: string;
+  nodeTypeCounts: Record<string, number>;
+  relationCounts: Record<string, number>;
+}
+
+interface SemanticDiffSummary {
+  addedNodeCount: number;
+  removedNodeCount: number;
+  addedEdgeCount: number;
+  removedEdgeCount: number;
+  structureDigestChanged: boolean;
+  changedNodeTypeCounts: Record<string, number>;
+  changedRelationCounts: Record<string, number>;
 }
 
 interface RefreshOptions {
@@ -77,6 +100,8 @@ export class IngestionService {
     evidenceIndexPath: string;
     parserStats: ParserStats[];
     ontology: OntologyConstraintReport;
+    semanticDiff: SemanticDiffSummary;
+    meaningChangeSummary: string;
   }> {
     if (this.refreshInProgress) {
       throw new ConflictException('refresh already in progress');
@@ -91,6 +116,9 @@ export class IngestionService {
       const statePath = resolveRefreshStatePath(this.configService.refreshStatePath());
       const auditPath = resolveRefreshAuditPath(this.configService.refreshAuditPath());
       const ontologyReportPath = resolveOntologyReportPath(this.configService.ontologyReportPath());
+      const semanticSnapshotPath = resolveSemanticSnapshotPath(
+        this.configService.semanticSnapshotPath()
+      );
       const start = Date.now();
       const fingerprint = this.buildFixtureFingerprint(sourcePath);
 
@@ -98,6 +126,17 @@ export class IngestionService {
         const counts = await this.graphService.getCounts();
         const parserStats = this.readState(statePath)?.parserStats ?? [];
         const ontology = this.readOntologyReport(ontologyReportPath);
+        const semanticDiff: SemanticDiffSummary = {
+          addedNodeCount: 0,
+          removedNodeCount: 0,
+          addedEdgeCount: 0,
+          removedEdgeCount: 0,
+          structureDigestChanged: false,
+          changedNodeTypeCounts: {},
+          changedRelationCounts: {}
+        };
+        const meaningChangeSummary =
+          'no semantic changes detected (incremental skip, unchanged fingerprint)';
         this.appendAuditEntry(auditPath, {
           sourcePath,
           fingerprint,
@@ -107,7 +146,9 @@ export class IngestionService {
           edgeCount: counts.edgeCount,
           evidenceCount: this.evidenceStore.getDocumentCount(),
           mode,
-          ontology
+          ontology,
+          semanticDiff,
+          meaningChangeSummary
         });
         return {
           mode,
@@ -120,7 +161,9 @@ export class IngestionService {
           databasePath: this.graphService.getDatabasePath(),
           evidenceIndexPath: this.evidenceStore.getIndexPath(),
           parserStats,
-          ontology
+          ontology,
+          semanticDiff,
+          meaningChangeSummary
         };
       }
 
@@ -160,6 +203,20 @@ export class IngestionService {
         }
         throw error;
       }
+
+      const previousSemantic = this.readSemanticSnapshot(semanticSnapshotPath);
+      const currentSemantic = this.buildSemanticSnapshot(fingerprint, payload);
+      const semanticDiff = this.computeSemanticDiff(previousSemantic, currentSemantic);
+      const meaningChangeSummary = this.describeMeaningChange(semanticDiff);
+      if (
+        previousSemantic &&
+        previousSemantic.fingerprint === fingerprint &&
+        this.hasSemanticChanges(semanticDiff)
+      ) {
+        throw new BadRequestException(
+          'Semantic drift regression detected: unchanged fingerprint produced semantic diff'
+        );
+      }
       const ontology = this.constraintsService.validate(payload);
       if (ontology.violationCount > 0) {
         const first = ontology.violations[0];
@@ -192,10 +249,13 @@ export class IngestionService {
         edgeCount: counts.edgeCount,
         evidenceCount: evidence.documentCount,
         mode,
-        ontology
+        ontology,
+        semanticDiff,
+        meaningChangeSummary
       };
       this.writeState(statePath, state);
       this.appendAuditEntry(auditPath, state);
+      this.writeSemanticSnapshot(semanticSnapshotPath, currentSemantic);
 
       return {
         mode,
@@ -207,7 +267,9 @@ export class IngestionService {
         databasePath: this.graphService.getDatabasePath(),
         evidenceIndexPath: evidence.sourcePath,
         parserStats,
-        ontology
+        ontology,
+        semanticDiff,
+        meaningChangeSummary
       };
     } finally {
       this.refreshInProgress = false;
@@ -274,6 +336,22 @@ export class IngestionService {
         edgeCount: typeof parsed.edgeCount === 'number' ? parsed.edgeCount : 0,
         evidenceCount: typeof parsed.evidenceCount === 'number' ? parsed.evidenceCount : 0,
         mode: parsed.mode === 'incremental' ? 'incremental' : 'full',
+        semanticDiff:
+          typeof parsed.semanticDiff === 'object' && parsed.semanticDiff !== null
+            ? (parsed.semanticDiff as SemanticDiffSummary)
+            : {
+                addedNodeCount: 0,
+                removedNodeCount: 0,
+                addedEdgeCount: 0,
+                removedEdgeCount: 0,
+                structureDigestChanged: false,
+                changedNodeTypeCounts: {},
+                changedRelationCounts: {}
+              },
+        meaningChangeSummary:
+          typeof parsed.meaningChangeSummary === 'string'
+            ? parsed.meaningChangeSummary
+            : 'meaning change summary unavailable',
         ontology:
           typeof parsed.ontology === 'object' && parsed.ontology !== null
             ? (parsed.ontology as OntologyConstraintReport)
@@ -376,7 +454,139 @@ export class IngestionService {
     }
 
     fingerprintRows.sort((a, b) => a.localeCompare(b));
-    return createHash('sha256').update(fingerprintRows.join('\n')).digest('hex');
+    const hash = createHash('sha256');
+    for (const row of fingerprintRows) {
+      hash.update(row).update('\n');
+    }
+    return hash.digest('hex');
+  }
+
+  private readSemanticSnapshot(snapshotPath: string): SemanticSnapshot | undefined {
+    if (!fs.existsSync(snapshotPath)) {
+      return undefined;
+    }
+    try {
+      return JSON.parse(fs.readFileSync(snapshotPath, 'utf8')) as SemanticSnapshot;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private writeSemanticSnapshot(snapshotPath: string, snapshot: SemanticSnapshot): void {
+    fs.mkdirSync(path.dirname(snapshotPath), { recursive: true });
+    fs.writeFileSync(snapshotPath, JSON.stringify(snapshot, null, 2), 'utf8');
+  }
+
+  private buildSemanticSnapshot(fingerprint: string, payload: GraphPayload): SemanticSnapshot {
+    const nodeTypeCounts: Record<string, number> = {};
+    for (const node of payload.nodes) {
+      nodeTypeCounts[node.type] = (nodeTypeCounts[node.type] ?? 0) + 1;
+    }
+    const relationCounts: Record<string, number> = {};
+    for (const edge of payload.edges) {
+      relationCounts[edge.rel] = (relationCounts[edge.rel] ?? 0) + 1;
+    }
+
+    const sortedNodeIds = payload.nodes.map((node) => node.id).sort();
+    const sortedEdgeIds = payload.edges.map((edge) => edge.id).sort();
+    const nodeDigest = createHash('sha256');
+    const edgeDigest = createHash('sha256');
+    for (const id of sortedNodeIds) {
+      nodeDigest.update(id).update('\n');
+    }
+    for (const id of sortedEdgeIds) {
+      edgeDigest.update(id).update('\n');
+    }
+
+    return {
+      fingerprint,
+      nodeCount: sortedNodeIds.length,
+      edgeCount: sortedEdgeIds.length,
+      nodeDigest: nodeDigest.digest('hex'),
+      edgeDigest: edgeDigest.digest('hex'),
+      nodeTypeCounts,
+      relationCounts
+    };
+  }
+
+  private computeSemanticDiff(
+    previous: SemanticSnapshot | undefined,
+    current: SemanticSnapshot
+  ): SemanticDiffSummary {
+    if (!previous) {
+      return {
+        addedNodeCount: current.nodeCount,
+        removedNodeCount: 0,
+        addedEdgeCount: current.edgeCount,
+        removedEdgeCount: 0,
+        structureDigestChanged: true,
+        changedNodeTypeCounts: { ...current.nodeTypeCounts },
+        changedRelationCounts: { ...current.relationCounts }
+      };
+    }
+
+    const nodeDelta = current.nodeCount - previous.nodeCount;
+    const edgeDelta = current.edgeCount - previous.edgeCount;
+    const addedNodeCount = Math.max(0, nodeDelta);
+    const removedNodeCount = Math.max(0, -nodeDelta);
+    const addedEdgeCount = Math.max(0, edgeDelta);
+    const removedEdgeCount = Math.max(0, -edgeDelta);
+
+    const changedNodeTypeCounts = this.diffCounts(previous.nodeTypeCounts, current.nodeTypeCounts);
+    const changedRelationCounts = this.diffCounts(previous.relationCounts, current.relationCounts);
+
+    return {
+      addedNodeCount,
+      removedNodeCount,
+      addedEdgeCount,
+      removedEdgeCount,
+      structureDigestChanged:
+        previous.nodeDigest !== current.nodeDigest || previous.edgeDigest !== current.edgeDigest,
+      changedNodeTypeCounts,
+      changedRelationCounts
+    };
+  }
+
+  private diffCounts(
+    before: Record<string, number>,
+    after: Record<string, number>
+  ): Record<string, number> {
+    const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+    const changed: Record<string, number> = {};
+    for (const key of keys) {
+      const delta = (after[key] ?? 0) - (before[key] ?? 0);
+      if (delta !== 0) {
+        changed[key] = delta;
+      }
+    }
+    return changed;
+  }
+
+  private hasSemanticChanges(diff: SemanticDiffSummary): boolean {
+    return (
+      diff.addedNodeCount !== 0 ||
+      diff.removedNodeCount !== 0 ||
+      diff.addedEdgeCount !== 0 ||
+      diff.removedEdgeCount !== 0 ||
+      diff.structureDigestChanged ||
+      Object.keys(diff.changedNodeTypeCounts).length > 0 ||
+      Object.keys(diff.changedRelationCounts).length > 0
+    );
+  }
+
+  private describeMeaningChange(diff: SemanticDiffSummary): string {
+    if (!this.hasSemanticChanges(diff)) {
+      return 'no semantic changes detected';
+    }
+    const nodePart = `nodes +${diff.addedNodeCount}/-${diff.removedNodeCount}`;
+    const edgePart = `edges +${diff.addedEdgeCount}/-${diff.removedEdgeCount}`;
+    const relPart =
+      Object.keys(diff.changedRelationCounts).length > 0
+        ? `relation deltas: ${Object.entries(diff.changedRelationCounts)
+            .map(([rel, delta]) => `${rel}:${delta > 0 ? '+' : ''}${delta}`)
+            .join(', ')}`
+        : 'no relation count deltas';
+    return `${nodePart}; ${edgePart}; ${relPart}`;
   }
 
   private mergePayloads(...payloads: GraphPayload[]): GraphPayload {

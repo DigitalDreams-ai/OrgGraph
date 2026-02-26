@@ -36,6 +36,10 @@ curl -X POST http://localhost:3100/refresh \
   -d '{}'
 ```
 
+`/refresh` now includes:
+- `semanticDiff` (added/removed nodes/edges, type/relation deltas, digest-change flag)
+- `meaningChangeSummary` (human-readable semantic-change summary)
+
 ## 6. Connect Sandbox Org (External Client App OAuth)
 1. Configure `.env` with Salesforce values (`SF_BASE_URL`, `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REDIRECT_URI`, etc.).
 2. Generate OAuth URL:
@@ -106,6 +110,25 @@ curl "http://localhost:3100/impact?field=Opportunity.StageName"
 curl -X POST http://localhost:3100/ask \
   -H 'content-type: application/json' \
   -d '{"query":"What touches Opportunity.StageName?"}'
+```
+
+Ask responses now include deterministic proof fields:
+- `trustLevel`: `trusted`, `conditional`, or `refused`
+- `policy`: applied thresholds for grounding/constraints/ambiguity
+- `metrics`: deterministic meaning metrics
+- `proof`: `proofId`, `replayToken`, `snapshotId`, operators, rejected branches
+- metrics are also persisted over time at `ASK_METRICS_PATH` (default: `data/ask/metrics.jsonl`)
+
+Lookup a stored proof artifact:
+```bash
+curl "http://localhost:3100/ask/proof/<proofId>"
+```
+
+Replay a proof deterministically:
+```bash
+curl -X POST http://localhost:3100/ask/replay \
+  -H 'content-type: application/json' \
+  -d '{"replayToken":"<replayToken>"}'
 ```
 
 ## 9. Web Query Proxy

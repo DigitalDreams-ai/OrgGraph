@@ -7,6 +7,9 @@
 
 ## Planning
 - [Master Plan](./planning/PLAN_v1_Monorepo.md)
+- [Blue Ocean Execution Plan](./planning/BLUE_OCEAN_EXECUTION_PLAN.md)
+- [Blue Ocean Phase Roadmap](./planning/BLUE_OCEAN_PHASE_ROADMAP.md)
+- [OrgGraph Lexicon](./planning/ORGGRAPH_LEXICON.md)
 - [Phase 1](./planning/PHASE1_TASKLIST.md)
 - [Phase 2](./planning/PHASE2_TASKLIST.md)
 - [Phase 3](./planning/PHASE3_TASKLIST.md)
@@ -17,6 +20,13 @@
 - [Phase 8](./planning/PHASE8_TASKLIST.md)
 - [Phase 9](./planning/PHASE9_TASKLIST.md)
 - [Phase 10](./planning/PHASE10_TASKLIST.md)
+- [Phase 11](./planning/PHASE11_TASKLIST.md)
+- [Phase 12](./planning/PHASE12_TASKLIST.md)
+- [Phase 13](./planning/PHASE13_TASKLIST.md)
+- [Phase 14](./planning/PHASE14_TASKLIST.md)
+- [Phase 15](./planning/PHASE15_TASKLIST.md)
+- [Phase 16](./planning/PHASE16_TASKLIST.md)
+- [Phase 17](./planning/PHASE17_TASKLIST.md)
 - [Planning Archive](./planning/archive/)
 
 ## Runbooks
@@ -28,3 +38,4 @@
 ## Releases
 - [Release Checklist](./releases/RELEASE_CHECKLIST.md)
 - [Release Notes](./releases/RELEASE.md)
+- [Phase 11 Proof Workflow Report](./releases/PHASE11_PROOF_WORKFLOW_REPORT.md)

@@ -20,6 +20,7 @@ curl http://localhost:3101/api/ready
 ```bash
 curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{}'
 ```
+Response includes `semanticDiff` and `meaningChangeSummary`.
 
 ## Sandbox Retrieve + Refresh
 ```bash
@@ -41,6 +42,8 @@ curl "http://localhost:3100/perms/system?user=sbingham@shulman-hill.com.uat&perm
 curl "http://localhost:3100/automation?object=Opportunity"
 curl "http://localhost:3100/impact?field=Opportunity.StageName"
 curl -X POST http://localhost:3100/ask -H 'content-type: application/json' -d '{"query":"What touches Opportunity.StageName?"}'
+curl "http://localhost:3100/ask/proof/<proofId>"
+curl -X POST http://localhost:3100/ask/replay -H 'content-type: application/json' -d '{"replayToken":"<replayToken>"}'
 ```
 
 ## Web Proxy (`/api/query`)
@@ -58,6 +61,8 @@ npm run phase7:smoke-live
 npm run phase7:snapshot
 npm run phase7:regression
 npm run ingest:report
+npm exec --yes pnpm@9.12.3 -- --filter api test:phase11-proof
+npm exec --yes pnpm@9.12.3 -- --filter api test:phase11-sandbox
 ```
 
 ## Fast Fixes
