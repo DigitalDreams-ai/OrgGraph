@@ -114,3 +114,17 @@ Goal: build a true differentiator by making context a deterministic, composable 
   - `apps/api/test/semantic-runtime.ts`
   - `apps/api/test/phase11-proof-workflow.ts`
   - `apps/api/test/phase11-sandbox-validation.ts`
+
+## Verification Snapshot (2026-02-26)
+
+- API suite in container: `docker exec orggraph-api sh -lc 'cd /app && pnpm --filter api test'` passed
+- Phase 11 focused tests in container passed:
+  - `pnpm exec ts-node --transpile-only test/semantic-runtime.ts`
+  - `pnpm exec ts-node --transpile-only test/phase11-proof-workflow.ts`
+  - `pnpm exec ts-node --transpile-only test/phase11-sandbox-validation.ts`
+- Runtime readiness checks passed:
+  - `GET /health`
+  - `GET /ready`
+  - `GET /api/ready` (web)
+- Web smoke passed with deterministic fixture scope:
+  - `WEB_SMOKE_FIXTURES_PATH=fixtures/permissions WEB_SMOKE_REFRESH_MODE=full ./scripts/web-smoke.sh`
