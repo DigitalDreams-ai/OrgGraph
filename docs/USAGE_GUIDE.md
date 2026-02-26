@@ -234,6 +234,8 @@ docker compose -f docker/docker-compose.yml up -d --build web
 ### 10.4 Validate full web flow quickly
 ```bash
 npm run test:web-smoke
+# Optional: opt-in to smoke against retrieved org metadata
+WEB_SMOKE_USE_SF_PROJECT=1 npm run test:web-smoke
 ```
 
 ## 11. Extended Validation Harness

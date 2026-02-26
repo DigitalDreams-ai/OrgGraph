@@ -69,6 +69,8 @@ curl -X POST http://localhost:3101/api/query -H 'content-type: application/json'
 npm exec --yes pnpm@9.12.3 -- --filter api test
 npm exec --yes pnpm@9.12.3 -- --filter api build
 npm run test:web-smoke
+# Optional: run smoke against retrieved org metadata instead of fixtures
+WEB_SMOKE_USE_SF_PROJECT=1 npm run test:web-smoke
 npm run phase7:smoke-live
 npm run phase7:snapshot
 npm run phase7:regression

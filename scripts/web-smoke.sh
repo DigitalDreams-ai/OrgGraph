@@ -4,7 +4,7 @@ set -eu
 BASE_URL="${WEB_SMOKE_BASE:-http://127.0.0.1:3101}"
 ARTIFACT_DIR="${WEB_SMOKE_ARTIFACT_DIR:-artifacts}"
 DEFAULT_FIXTURES_PATH="fixtures/permissions"
-if [ -d "data/sf-project/force-app/main/default" ]; then
+if [ "${WEB_SMOKE_USE_SF_PROJECT:-0}" = "1" ] && [ -d "data/sf-project/force-app/main/default" ]; then
   DEFAULT_FIXTURES_PATH="data/sf-project/force-app/main/default"
 fi
 WEB_SMOKE_FIXTURES_PATH="${WEB_SMOKE_FIXTURES_PATH:-$DEFAULT_FIXTURES_PATH}"
