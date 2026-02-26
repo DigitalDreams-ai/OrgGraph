@@ -135,6 +135,19 @@ curl -X POST http://localhost:3100/ask/replay \
 Replay response includes:
 - `matched`: overall deterministic replay match
 - `corePayloadMatched`: byte-equivalent core deterministic payload match
+- `metricsMatched`: replay metric envelope matches proof metrics exactly
+
+Policy validation (dry-run):
+```bash
+curl -X POST http://localhost:3100/ask/policy/validate \
+  -H 'content-type: application/json' \
+  -d '{"groundingThreshold":0.7,"constraintThreshold":0.9,"ambiguityMaxThreshold":0.45,"dryRun":true}'
+```
+
+Dashboard-ready metrics export:
+```bash
+curl http://localhost:3100/ask/metrics/export
+```
 
 Phase 12 replay validation scripts:
 ```bash

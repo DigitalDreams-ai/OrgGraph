@@ -45,6 +45,8 @@ curl -X POST http://localhost:3100/ask -H 'content-type: application/json' -d '{
 curl "http://localhost:3100/ask/proof/<proofId>"
 curl -X POST http://localhost:3100/ask/replay -H 'content-type: application/json' -d '{"replayToken":"<replayToken>"}'
 curl -X POST http://localhost:3100/ask -H 'content-type: application/json' -d '{"query":"What touches Opportunity.StageName?","traceLevel":"full","mode":"deterministic"}'
+curl -X POST http://localhost:3100/ask/policy/validate -H 'content-type: application/json' -d '{"groundingThreshold":0.7,"constraintThreshold":0.9,"ambiguityMaxThreshold":0.45,"dryRun":true}'
+curl http://localhost:3100/ask/metrics/export
 ```
 
 ## Web Proxy (`/api/query`)
@@ -66,6 +68,7 @@ npm exec --yes pnpm@9.12.3 -- --filter api test:phase11-proof
 npm exec --yes pnpm@9.12.3 -- --filter api test:phase11-sandbox
 npm run phase12:replay-regression
 npm run phase12:replay-load
+npm run phase13:metrics-export
 ```
 
 ## Fast Fixes
