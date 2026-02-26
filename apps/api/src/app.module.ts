@@ -1,14 +1,14 @@
-import { AnalysisModule } from './analysis/analysis.module';
-import { AskModule } from './ask/ask.module';
+import { AnalysisModule } from './modules/analysis/analysis.module';
+import { AskModule } from './modules/ask/ask.module';
 import { ApiErrorFilter } from './common/api-error.filter';
 import { ConfigModule } from './config/config.module';
-import { GraphModule } from './graph/graph.module';
-import { HealthModule } from './health/health.module';
-import { IngestionModule } from './ingestion/ingestion.module';
-import { MetaModule } from './meta/meta.module';
-import { MetricsModule } from './observability/metrics.module';
-import { OrgModule } from './org/org.module';
-import { QueriesModule } from './queries/queries.module';
+import { GraphModule } from './modules/graph/graph.module';
+import { HealthModule } from './modules/health/health.module';
+import { IngestionModule } from './modules/ingestion/ingestion.module';
+import { MetaModule } from './modules/meta/meta.module';
+import { MetricsModule } from './modules/observability/metrics.module';
+import { OrgModule } from './modules/org/org.module';
+import { QueriesModule } from './modules/queries/queries.module';
 import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 
