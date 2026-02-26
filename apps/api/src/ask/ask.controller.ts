@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { AskService } from './ask.service';
 import type {
+  AskArchitectureDecisionRequest,
+  AskArchitectureDecisionResponse,
   AskInternalErrorEnvelope,
   AskMetricsExportResponse,
   AskPolicyValidateRequest,
@@ -181,5 +183,38 @@ export class AskController {
       throw new BadRequestException('replayToken or proofId is required');
     }
     return this.askService.replay({ replayToken, proofId });
+  }
+
+  @Post('/ask/architecture')
+  async architectureDecision(
+    @Body() body: AskArchitectureDecisionRequest
+  ): Promise<AskArchitectureDecisionResponse> {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw new BadRequestException('body is required');
+    }
+    if (!body.user || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.user.trim())) {
+      throw new BadRequestException('user must be a valid email address');
+    }
+    if (!body.object || !/^[A-Za-z][A-Za-z0-9_]*$/.test(body.object.trim())) {
+      throw new BadRequestException('object must be a valid Salesforce object name');
+    }
+    if (
+      !body.field ||
+      !/^[A-Za-z][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(body.field.trim())
+    ) {
+      throw new BadRequestException('field must match Object.Field format');
+    }
+    if (
+      body.maxPaths !== undefined &&
+      (!Number.isInteger(body.maxPaths) || body.maxPaths < 1 || body.maxPaths > 50)
+    ) {
+      throw new BadRequestException('maxPaths must be an integer between 1 and 50');
+    }
+    return this.askService.architectureDecision({
+      user: body.user.trim().toLowerCase(),
+      object: body.object.trim(),
+      field: body.field.trim(),
+      maxPaths: body.maxPaths
+    });
   }
 }

@@ -13,6 +13,8 @@ import { QueriesService } from '../queries/queries.service';
 import { AskMetricsStoreService } from './ask-metrics-store.service';
 import { AskProofStoreService } from './ask-proof-store.service';
 import type {
+  AskArchitectureDecisionRequest,
+  AskArchitectureDecisionResponse,
   AskMeaningMetrics,
   AskMetricsExportResponse,
   AskPolicyValidateRequest,
@@ -167,6 +169,152 @@ export class AskService {
         mode: replayed.mode,
         trustLevel: replayed.trustLevel,
         metrics: replayed.metrics
+      },
+      status: 'implemented'
+    };
+  }
+
+  async architectureDecision(
+    input: AskArchitectureDecisionRequest
+  ): Promise<AskArchitectureDecisionResponse> {
+    const maxPaths = Math.max(1, Math.min(50, input.maxPaths ?? 10));
+    const perms = await this.queries.perms(input.user, input.object, input.field, maxPaths);
+    const automations = await this.analysis.automation(input.object, maxPaths, false, false, false);
+    const impact = await this.analysis.impact(input.field, maxPaths, false, false, false, false);
+
+    const permissionBlastRadius = {
+      granted: perms.granted,
+      principalCount: perms.principalsChecked.length,
+      pathCount: perms.paths.length,
+      blastRadiusScore: Number(
+        Math.min(
+          1,
+          (perms.granted ? 0.35 : 0.1) +
+            Math.min(0.45, perms.principalsChecked.length / 100) +
+            Math.min(0.2, perms.paths.length / 20)
+        ).toFixed(3)
+      ),
+      explanation: perms.explanation,
+      proofPaths: perms.paths
+    };
+
+    const relationBySource = new Map<string, Set<string>>();
+    for (const item of automations.automations) {
+      if (!relationBySource.has(item.name)) {
+        relationBySource.set(item.name, new Set());
+      }
+      relationBySource.get(item.name)?.add(item.rel);
+    }
+    for (const path of impact.paths) {
+      if (!relationBySource.has(path.from)) {
+        relationBySource.set(path.from, new Set());
+      }
+      relationBySource.get(path.from)?.add(path.rel);
+    }
+    const topCollisions = [...relationBySource.entries()]
+      .filter(([, relations]) => relations.size > 1)
+      .map(([source, relations]) => ({ source, relations: [...relations].sort() }))
+      .sort((a, b) => b.relations.length - a.relations.length || a.source.localeCompare(b.source))
+      .slice(0, 10);
+    const automationCollision = {
+      automationCount: automations.totalAutomations,
+      impactPathCount: impact.totalPaths,
+      collisionCount: topCollisions.length,
+      collisionScore: Number(
+        Math.min(
+          1,
+          Math.max(
+            automations.totalAutomations,
+            impact.totalPaths
+          ) === 0
+            ? 0
+            : topCollisions.length / Math.max(automations.totalAutomations, impact.totalPaths)
+        ).toFixed(3)
+      ),
+      explanation:
+        topCollisions.length > 0
+          ? `found ${topCollisions.length} source(s) with multi-relation automation/impact overlap`
+          : 'no multi-relation automation/impact overlap found',
+      topCollisions
+    };
+
+    const latestState = this.readRefreshState();
+    const diff = latestState?.semanticDiff ?? {
+      addedNodeCount: 0,
+      removedNodeCount: 0,
+      addedEdgeCount: 0,
+      removedEdgeCount: 0
+    };
+    const driftMagnitude =
+      Math.abs(diff.addedNodeCount) +
+      Math.abs(diff.removedNodeCount) +
+      Math.abs(diff.addedEdgeCount) +
+      Math.abs(diff.removedEdgeCount);
+    const releaseRiskScore = Number(
+      Math.min(
+        1,
+        permissionBlastRadius.blastRadiusScore * 0.35 +
+          automationCollision.collisionScore * 0.4 +
+          Math.min(1, driftMagnitude / 3000) * 0.25
+      ).toFixed(3)
+    );
+    const releaseRiskLevel: 'low' | 'medium' | 'high' =
+      releaseRiskScore >= 0.7 ? 'high' : releaseRiskScore >= 0.4 ? 'medium' : 'low';
+    const releaseRisk = {
+      level: releaseRiskLevel,
+      riskScore: releaseRiskScore,
+      explanation: `release risk is ${releaseRiskLevel} (score=${releaseRiskScore.toFixed(3)}) from permission blast radius, automation collisions, and semantic delta`,
+      semanticDiff: diff,
+      meaningChangeSummary: latestState?.meaningChangeSummary ?? 'meaning change summary unavailable'
+    };
+
+    const metrics = this.buildMetrics({
+      citationCount: 1,
+      confidence: Math.max(0.4, 1 - releaseRiskScore * 0.5),
+      consistencyChecked: true,
+      consistencyAligned: true,
+      intent: 'mixed',
+      rejectedBranchCount: perms.granted ? 0 : 1
+    });
+    metrics.ambiguityScore = Number(Math.min(1, releaseRiskScore * 0.9).toFixed(3));
+    metrics.riskSurfaceScore = Number(Math.min(1, releaseRiskScore).toFixed(3));
+    const policy = {
+      groundingThreshold: this.configService.askGroundingScoreThreshold(),
+      constraintThreshold: this.configService.askConstraintSatisfactionThreshold(),
+      ambiguityMaxThreshold: this.configService.askAmbiguityMaxThreshold()
+    };
+    const trustLevel = this.resolveTrustLevel(metrics, policy);
+    const topRiskDrivers = [
+      `permission blast radius score ${permissionBlastRadius.blastRadiusScore.toFixed(3)}`,
+      `automation collision score ${automationCollision.collisionScore.toFixed(3)}`,
+      `release semantic drift score ${Math.min(1, driftMagnitude / 3000).toFixed(3)}`
+    ];
+    const snapshotId = latestState?.snapshotId ?? this.readSnapshotId();
+    const replayToken = stableId(
+      'phase15-decision',
+      snapshotId,
+      input.user,
+      input.object,
+      input.field,
+      releaseRiskScore.toFixed(3)
+    );
+    const summary = `${releaseRisk.level} release risk for ${input.field}; trust=${trustLevel}`;
+
+    return {
+      user: input.user,
+      object: input.object,
+      field: input.field,
+      engines: {
+        permissionBlastRadius,
+        automationCollision,
+        releaseRisk
+      },
+      composite: {
+        trustLevel,
+        summary,
+        topRiskDrivers,
+        replayToken,
+        snapshotId
       },
       status: 'implemented'
     };
@@ -709,6 +857,55 @@ export class AskService {
       return `snap_${fingerprint.slice(0, 24)}`;
     } catch {
       return 'snap_unavailable';
+    }
+  }
+
+  private readRefreshState():
+    | {
+        snapshotId: string;
+        semanticDiff: {
+          addedNodeCount: number;
+          removedNodeCount: number;
+          addedEdgeCount: number;
+          removedEdgeCount: number;
+        };
+        meaningChangeSummary: string;
+      }
+    | undefined {
+    const refreshStatePath = resolveRefreshStatePath(this.configService.refreshStatePath());
+    try {
+      if (!fs.existsSync(refreshStatePath)) {
+        return undefined;
+      }
+      const raw = fs.readFileSync(refreshStatePath, 'utf8');
+      const parsed = JSON.parse(raw) as {
+        snapshotId?: string;
+        semanticDiff?: {
+          addedNodeCount?: number;
+          removedNodeCount?: number;
+          addedEdgeCount?: number;
+          removedEdgeCount?: number;
+        };
+        meaningChangeSummary?: string;
+      };
+      if (!parsed.snapshotId || typeof parsed.snapshotId !== 'string') {
+        return undefined;
+      }
+      return {
+        snapshotId: parsed.snapshotId,
+        semanticDiff: {
+          addedNodeCount: parsed.semanticDiff?.addedNodeCount ?? 0,
+          removedNodeCount: parsed.semanticDiff?.removedNodeCount ?? 0,
+          addedEdgeCount: parsed.semanticDiff?.addedEdgeCount ?? 0,
+          removedEdgeCount: parsed.semanticDiff?.removedEdgeCount ?? 0
+        },
+        meaningChangeSummary:
+          typeof parsed.meaningChangeSummary === 'string'
+            ? parsed.meaningChangeSummary
+            : 'meaning change summary unavailable'
+      };
+    } catch {
+      return undefined;
     }
   }
 
