@@ -12,7 +12,14 @@ type QueryKind =
   | 'orgStatus'
   | 'orgRetrieve'
   | 'metadataCatalog'
-  | 'metadataRetrieve';
+  | 'metadataRetrieve'
+  | 'refreshDiff'
+  | 'askArchitecture'
+  | 'askProof'
+  | 'askReplay'
+  | 'askMetrics'
+  | 'metaContext'
+  | 'metaAdapt';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
 const BUILD_VERSION = process.env.NEXT_PUBLIC_BUILD_VERSION || 'dev-local';
@@ -53,6 +60,15 @@ export default function Page(): JSX.Element {
   const [metadataSelectionsRaw, setMetadataSelectionsRaw] = useState(
     JSON.stringify([{ type: 'CustomObject', members: ['Account'] }], null, 2)
   );
+  const [fromSnapshot, setFromSnapshot] = useState('');
+  const [toSnapshot, setToSnapshot] = useState('');
+  const [archUser, setArchUser] = useState('jane@example.com');
+  const [archObject, setArchObject] = useState('Opportunity');
+  const [archField, setArchField] = useState('Opportunity.StageName');
+  const [archMaxPathsRaw, setArchMaxPathsRaw] = useState('10');
+  const [proofId, setProofId] = useState('');
+  const [replayToken, setReplayToken] = useState('');
+  const [metaDryRun, setMetaDryRun] = useState(true);
 
   const endpointHint = useMemo(() => {
     if (kind === 'refresh') {
@@ -81,6 +97,27 @@ export default function Page(): JSX.Element {
     }
     if (kind === 'metadataRetrieve') {
       return 'POST /org/metadata/retrieve';
+    }
+    if (kind === 'refreshDiff') {
+      return 'GET /refresh/diff/:from/:to';
+    }
+    if (kind === 'askArchitecture') {
+      return 'POST /ask/architecture';
+    }
+    if (kind === 'askProof') {
+      return 'GET /ask/proof/:proofId';
+    }
+    if (kind === 'askReplay') {
+      return 'POST /ask/replay';
+    }
+    if (kind === 'askMetrics') {
+      return 'GET /ask/metrics/export';
+    }
+    if (kind === 'metaContext') {
+      return 'GET /meta/context';
+    }
+    if (kind === 'metaAdapt') {
+      return 'POST /meta/adapt';
     }
     return 'POST /ask';
   }, [kind]);
@@ -164,6 +201,7 @@ export default function Page(): JSX.Element {
       const limit = parseOptionalInt(limitRaw);
       const maxCitations = parseOptionalInt(maxCitationsRaw);
       const askContext = parseContext(askContextRaw);
+      const archMaxPaths = parseOptionalInt(archMaxPathsRaw);
       let metadataSelections: Array<{ type: string; members?: string[] }> = [];
       if (kind === 'metadataRetrieve') {
         const parsed = JSON.parse(metadataSelectionsRaw) as unknown;
@@ -183,6 +221,20 @@ export default function Page(): JSX.Element {
                 ? { q: metadataSearch, limit }
                 : kind === 'metadataRetrieve'
                   ? { selections: metadataSelections, autoRefresh: metadataAutoRefresh }
+                  : kind === 'refreshDiff'
+                    ? { fromSnapshot, toSnapshot }
+                    : kind === 'askArchitecture'
+                      ? { user: archUser, object: archObject, field: archField, maxPaths: archMaxPaths }
+                      : kind === 'askProof'
+                        ? { proofId }
+                        : kind === 'askReplay'
+                          ? { replayToken, proofId }
+                          : kind === 'askMetrics'
+                            ? {}
+                            : kind === 'metaContext'
+                              ? {}
+                              : kind === 'metaAdapt'
+                                ? { dryRun: metaDryRun }
           : kind === 'perms'
             ? { user, object: objectName, field: fieldName, limit }
             : kind === 'permsSystem'
@@ -276,6 +328,13 @@ export default function Page(): JSX.Element {
               'orgRetrieve',
               'metadataCatalog',
               'metadataRetrieve',
+              'refreshDiff',
+              'askArchitecture',
+              'askProof',
+              'askReplay',
+              'askMetrics',
+              'metaContext',
+              'metaAdapt',
               'perms',
               'permsSystem',
               'automation',
@@ -306,6 +365,71 @@ export default function Page(): JSX.Element {
               <option value="incremental">incremental</option>
               <option value="full">full</option>
             </select>
+          </div>
+        ) : null}
+
+        {kind === 'refreshDiff' ? (
+          <>
+            <div className="row">
+              <label htmlFor="fromSnapshot">From Snapshot ID</label>
+              <input id="fromSnapshot" value={fromSnapshot} onChange={(e) => setFromSnapshot(e.target.value)} />
+            </div>
+            <div className="row">
+              <label htmlFor="toSnapshot">To Snapshot ID</label>
+              <input id="toSnapshot" value={toSnapshot} onChange={(e) => setToSnapshot(e.target.value)} />
+            </div>
+          </>
+        ) : null}
+
+        {kind === 'askArchitecture' ? (
+          <>
+            <div className="row">
+              <label htmlFor="archUser">User</label>
+              <input id="archUser" value={archUser} onChange={(e) => setArchUser(e.target.value)} />
+            </div>
+            <div className="row">
+              <label htmlFor="archObject">Object</label>
+              <input id="archObject" value={archObject} onChange={(e) => setArchObject(e.target.value)} />
+            </div>
+            <div className="row">
+              <label htmlFor="archField">Field</label>
+              <input id="archField" value={archField} onChange={(e) => setArchField(e.target.value)} />
+            </div>
+            <div className="row">
+              <label htmlFor="archMaxPaths">Max Paths</label>
+              <input
+                id="archMaxPaths"
+                value={archMaxPathsRaw}
+                onChange={(e) => setArchMaxPathsRaw(e.target.value)}
+              />
+            </div>
+          </>
+        ) : null}
+
+        {kind === 'askProof' ? (
+          <div className="row">
+            <label htmlFor="proofId">Proof ID</label>
+            <input id="proofId" value={proofId} onChange={(e) => setProofId(e.target.value)} />
+          </div>
+        ) : null}
+
+        {kind === 'askReplay' ? (
+          <>
+            <div className="row">
+              <label htmlFor="replayProofId">Proof ID (optional)</label>
+              <input id="replayProofId" value={proofId} onChange={(e) => setProofId(e.target.value)} />
+            </div>
+            <div className="row">
+              <label htmlFor="replayToken">Replay Token (optional)</label>
+              <input id="replayToken" value={replayToken} onChange={(e) => setReplayToken(e.target.value)} />
+            </div>
+          </>
+        ) : null}
+
+        {kind === 'metaAdapt' ? (
+          <div className="row checkbox-row">
+            <label htmlFor="metaDryRun">Dry Run</label>
+            <input id="metaDryRun" type="checkbox" checked={metaDryRun} onChange={(e) => setMetaDryRun(e.target.checked)} />
           </div>
         ) : null}
 

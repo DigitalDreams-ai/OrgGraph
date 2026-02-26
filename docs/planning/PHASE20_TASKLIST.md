@@ -7,7 +7,7 @@ Goal: overhaul WebUI to expose current Orgumented runtime capabilities end-to-en
 - [ ] Metadata retrieval UX stable at org scale
 
 ## Exit Criteria
-- [ ] WebUI covers core API capability surface (refresh, diff, perms, automation, impact, ask, architecture decisions, meta/adapt)
+- [x] WebUI covers core API capability surface (refresh, diff, perms, automation, impact, ask, architecture decisions, meta/adapt)
 - [ ] Ask response layering shipped: deterministic summary first, optional conversational expansion second
 - [ ] Operator workflows are usable without CLI-first dependency
 
@@ -24,10 +24,10 @@ Goal: overhaul WebUI to expose current Orgumented runtime capabilities end-to-en
   - refresh/diff
   - analyze/ask/decide
   - proofs/metrics/meta
-- [ ] Unified query panel for:
+- [x] Unified query panel for:
   - `/perms`, `/perms/system`, `/automation`, `/impact`, `/ask`, `/ask/architecture`
-- [ ] Proof + replay inspector (`proofId`, `replayToken`, trust metrics, rejected branches)
-- [ ] Drift/meta dashboards:
+- [x] Proof + replay inspector (`proofId`, `replayToken`, trust metrics, rejected branches)
+- [x] Drift/meta dashboards:
   - semantic diff summaries
   - adaptation context + audit artifacts
 - [ ] Ask output layering UX:
@@ -48,3 +48,11 @@ Goal: overhaul WebUI to expose current Orgumented runtime capabilities end-to-en
 
 ## Definition of Done
 - [ ] WebUI is the primary, reliable, and complete operator surface for Orgumented
+
+## Current Status (2026-02-26)
+- Implemented in this slice:
+  - Web query proxy now supports: refresh diff, ask architecture, ask proof/replay/metrics, meta context/adapt
+  - Operator console tabs now expose those flows without manual curl-only usage
+- Remaining:
+  - add guided ask layering UI (deterministic summary first, conversational expansion second)
+  - tighten workflow-first navigation and presets for day-to-day operator use
