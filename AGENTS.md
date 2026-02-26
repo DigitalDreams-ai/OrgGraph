@@ -139,3 +139,48 @@ Environment limitation fallback:
   - run targeted tests first,
   - avoid broad test sweeps unless needed,
   - summarize only actionable findings.
+
+## 13) MCP-First Workflow
+
+Use available MCP servers as first-class workflow tools:
+
+- `filesystem` MCP
+  - Use first for file discovery, reads, and edits inside allowed paths.
+  - Prefer this over ad-hoc shell file ops when both are viable.
+
+- `docker` MCP
+  - Use for project/container health, logs, compose up/down/restart, and service stats.
+  - Prefer MCP docker actions before raw docker CLI commands for repeatability.
+
+- `postgres` MCP
+  - Use for read-only verification queries and schema/data checks tied to runtime behavior.
+  - Validate DB assumptions with MCP queries before implementing parser/query logic changes.
+
+- `github` MCP
+  - Use for PR/issue/review metadata, branch/PR checks, and repository inspection workflows.
+  - Prefer MCP when reporting PR status or preparing merge-readiness checks.
+
+Execution order guidance:
+1. `filesystem` for code/document context.
+2. `docker` for runtime state and service health.
+3. `postgres` for data-plane verification.
+4. `github` for collaboration/PR state.
+
+MCP fallback rule:
+- If an MCP is unavailable or unhealthy, state it clearly, use the next best local alternative, and continue.
+
+## 14) Session Guardrails
+
+- MCP health preflight
+  - At session start, run quick MCP checks for `filesystem`, `docker`, `postgres`, and `github`.
+  - Report pass/fail and known limitations before implementation work.
+
+- Secret hygiene hard-stop
+  - Never output full secrets (API keys, tokens, OAuth codes, connection credentials).
+  - Mask sensitive values in logs, docs, terminal snippets, and test artifacts.
+
+- Runtime change verification gate
+  - For any runtime/config change (`.env*`, compose, config JSON, MCP config), require:
+    1. proper service restart/recreate,
+    2. one targeted smoke test,
+    3. one concrete proof artifact (log line, endpoint result, or command output summary) showing new config is active.
