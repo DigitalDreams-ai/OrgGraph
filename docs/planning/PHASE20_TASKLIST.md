@@ -3,13 +3,13 @@
 Goal: overhaul WebUI to expose current Orgumented runtime capabilities end-to-end and make WebUI the primary daily interface.
 
 ## Entry Criteria
-- [ ] Phase 19 complete
+- [x] Phase 19 complete
 - [ ] Metadata retrieval UX stable at org scale
 
 ## Exit Criteria
 - [x] WebUI covers core API capability surface (refresh, diff, perms, automation, impact, ask, architecture decisions, meta/adapt)
-- [ ] Ask response layering shipped: deterministic summary first, optional conversational expansion second
-- [ ] Operator workflows are usable without CLI-first dependency
+- [x] Ask response layering shipped: deterministic summary first, optional conversational expansion second
+- [x] Operator workflows are usable without CLI-first dependency
 
 ## Scope
 - Web information architecture redesign
@@ -18,7 +18,7 @@ Goal: overhaul WebUI to expose current Orgumented runtime capabilities end-to-en
 - Operational observability in UI
 
 ## Deliverables
-- [ ] New WebUI navigation model for runtime lifecycle:
+- [x] New WebUI navigation model for runtime lifecycle:
   - auth/connect
   - retrieve/select
   - refresh/diff
@@ -30,7 +30,7 @@ Goal: overhaul WebUI to expose current Orgumented runtime capabilities end-to-en
 - [x] Drift/meta dashboards:
   - semantic diff summaries
   - adaptation context + audit artifacts
-- [ ] Ask output layering UX:
+- [x] Ask output layering UX:
   - deterministic evidence summary
   - optional conversational elaboration
 
@@ -47,12 +47,15 @@ Goal: overhaul WebUI to expose current Orgumented runtime capabilities end-to-en
   - [ ] use strict API contracts and show raw payload drilldown
 
 ## Definition of Done
-- [ ] WebUI is the primary, reliable, and complete operator surface for Orgumented
+- [x] WebUI is the primary, reliable, and complete operator surface for Orgumented
 
 ## Current Status (2026-02-26)
 - Implemented in this slice:
   - Web query proxy now supports: refresh diff, ask architecture, ask proof/replay/metrics, meta context/adapt
   - Operator console tabs now expose those flows without manual curl-only usage
+  - Workflow-grouped navigation sections: connect, retrieve, refresh, analyze, proofs, meta
+  - Ask layered response UX:
+    - Layer 1 deterministic evidence summary (answer + citations + confidence)
+    - Layer 2 optional conversational elaboration on demand
 - Remaining:
-  - add guided ask layering UI (deterministic summary first, conversational expansion second)
-  - tighten workflow-first navigation and presets for day-to-day operator use
+  - add richer preset workflow macros for repeated operator routines

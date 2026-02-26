@@ -36,6 +36,14 @@ type MetadataCatalogPayload = {
   warnings?: string[];
 };
 
+type AskPayload = {
+  answer?: string;
+  plan?: unknown;
+  citations?: Array<{ sourcePath?: string; score?: number }>;
+  confidence?: number;
+  status?: string;
+};
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -44,6 +52,7 @@ export default function Page(): JSX.Element {
   const [kind, setKind] = useState<QueryKind>('ask');
   const [loading, setLoading] = useState(false);
   const [responseText, setResponseText] = useState('');
+  const [responseObject, setResponseObject] = useState<Record<string, unknown> | null>(null);
   const [errorText, setErrorText] = useState('');
   const [copied, setCopied] = useState(false);
   const [healthStatus, setHealthStatus] = useState('unknown');
@@ -84,6 +93,15 @@ export default function Page(): JSX.Element {
   const [proofId, setProofId] = useState('');
   const [replayToken, setReplayToken] = useState('');
   const [metaDryRun, setMetaDryRun] = useState(true);
+  const [askElaboration, setAskElaboration] = useState('');
+  const [askElaborationLoading, setAskElaborationLoading] = useState(false);
+
+  const askPayload = useMemo(() => {
+    if (kind !== 'ask' || !responseObject || typeof responseObject.payload !== 'object' || responseObject.payload === null) {
+      return null;
+    }
+    return responseObject.payload as AskPayload;
+  }, [kind, responseObject]);
 
   const endpointHint = useMemo(() => {
     if (kind === 'refresh') {
@@ -287,8 +305,12 @@ export default function Page(): JSX.Element {
   async function runQuery(): Promise<void> {
     setLoading(true);
     setResponseText('');
+    setResponseObject(null);
     setErrorText('');
     setCopied(false);
+    if (kind === 'ask') {
+      setAskElaboration('');
+    }
 
     try {
       const limit = parseOptionalInt(limitRaw);
@@ -362,6 +384,9 @@ export default function Page(): JSX.Element {
 
       const wrapped = await response.json();
       setResponseText(JSON.stringify(wrapped, null, 2));
+      if (wrapped && typeof wrapped === 'object') {
+        setResponseObject(wrapped as Record<string, unknown>);
+      }
       if (kind === 'metadataCatalog' && wrapped?.payload && typeof wrapped.payload === 'object') {
         const payload = wrapped.payload as Partial<MetadataCatalogPayload>;
         if (typeof payload.source === 'string' && Array.isArray(payload.types)) {
@@ -387,6 +412,43 @@ export default function Page(): JSX.Element {
       setErrorText('Network request failed after retries. Check container health and retry in a few seconds.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function runAskElaboration(): Promise<void> {
+    if (!askPayload?.answer || askElaborationLoading) {
+      return;
+    }
+    setAskElaborationLoading(true);
+    setAskElaboration('');
+    try {
+      const response = await fetchWithRetry('/api/query', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'ask',
+          payload: {
+            query: `Explain this deterministically-derived answer in plain English for an admin: ${askPayload.answer}`,
+            maxCitations: 3,
+            includeLowConfidence: false,
+            consistencyCheck: true,
+            context: { source: 'ui-elaboration', originalQuery: askQuery }
+          }
+        })
+      });
+      const wrapped = (await response.json()) as { payload?: AskPayload };
+      if (!response.ok) {
+        setAskElaboration('Elaboration request failed. Check response JSON for details.');
+      } else {
+        setAskElaboration(
+          wrapped?.payload?.answer?.trim() || 'No elaboration text returned; inspect raw response JSON.'
+        );
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown elaboration error';
+      setAskElaboration(`Elaboration request failed: ${message}`);
+    } finally {
+      setAskElaborationLoading(false);
     }
   }
 
@@ -431,34 +493,27 @@ export default function Page(): JSX.Element {
         <div className="tab-row">
           {(
             [
-              'ask',
-              'refresh',
-              'orgConnect',
-              'orgStatus',
-              'orgRetrieve',
-              'metadataCatalog',
-              'metadataRetrieve',
-              'refreshDiff',
-              'askArchitecture',
-              'askProof',
-              'askReplay',
-              'askMetrics',
-              'metaContext',
-              'metaAdapt',
-              'perms',
-              'permsSystem',
-              'automation',
-              'impact'
+              { label: 'Connect', values: ['orgConnect', 'orgStatus'] as const },
+              { label: 'Retrieve', values: ['orgRetrieve', 'metadataCatalog', 'metadataRetrieve'] as const },
+              { label: 'Refresh', values: ['refresh', 'refreshDiff'] as const },
+              { label: 'Analyze', values: ['perms', 'permsSystem', 'automation', 'impact', 'ask', 'askArchitecture'] as const },
+              { label: 'Proofs', values: ['askProof', 'askReplay', 'askMetrics'] as const },
+              { label: 'Meta', values: ['metaContext', 'metaAdapt'] as const }
             ] as const
-          ).map((value) => (
-            <button
-              key={value}
-              type="button"
-              className={value === kind ? 'tab active' : 'tab'}
-              onClick={() => setKind(value)}
-            >
-              {value}
-            </button>
+          ).map((group) => (
+            <div key={group.label}>
+              <p className="endpoint-hint">{group.label}</p>
+              {group.values.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={value === kind ? 'tab active' : 'tab'}
+                  onClick={() => setKind(value)}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
           ))}
         </div>
 
@@ -832,6 +887,34 @@ export default function Page(): JSX.Element {
           </button>
         </div>
         {errorText ? <p className="error-text">{errorText}</p> : null}
+        {kind === 'ask' && askPayload ? (
+          <details open>
+            <summary>Ask Layer 1: Deterministic Evidence Summary</summary>
+            <p>{askPayload.answer || 'No deterministic summary returned.'}</p>
+            <p className="endpoint-hint">
+              confidence: {typeof askPayload.confidence === 'number' ? askPayload.confidence : 'n/a'} | citations:{' '}
+              {Array.isArray(askPayload.citations) ? askPayload.citations.length : 0}
+            </p>
+            {Array.isArray(askPayload.citations) && askPayload.citations.length > 0 ? (
+              <ul>
+                {askPayload.citations.slice(0, 5).map((citation, idx) => (
+                  <li key={`${citation.sourcePath ?? 'citation'}-${idx}`}>
+                    {citation.sourcePath || 'unknown source'} (score {citation.score ?? 'n/a'})
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </details>
+        ) : null}
+        {kind === 'ask' && askPayload ? (
+          <details>
+            <summary>Ask Layer 2: Optional Conversational Elaboration</summary>
+            <button type="button" onClick={runAskElaboration} disabled={askElaborationLoading}>
+              {askElaborationLoading ? 'Generating...' : 'Generate Elaboration'}
+            </button>
+            {askElaboration ? <pre>{askElaboration}</pre> : null}
+          </details>
+        ) : null}
         <details open>
           <summary>JSON Output</summary>
           <pre>{responseText || '{\n  "hint": "Run a query to view JSON response"\n}'}</pre>
