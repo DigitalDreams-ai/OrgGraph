@@ -37,8 +37,16 @@ curl -X POST http://localhost:3100/refresh \
 ```
 
 `/refresh` now includes:
+- `snapshotId` (versioned semantic snapshot identifier)
 - `semanticDiff` (added/removed nodes/edges, type/relation deltas, digest-change flag)
 - `meaningChangeSummary` (human-readable semantic-change summary)
+- `driftPolicy` and `driftEvaluation` (domain thresholds + pass/fail envelope)
+- `driftReportPath` (artifact written for this refresh)
+
+Compare two snapshots deterministically:
+```bash
+curl "http://localhost:3100/refresh/diff/<snapshotA>/<snapshotB>"
+```
 
 ## 6. Connect Sandbox Org (External Client App OAuth)
 1. Configure `.env` with Salesforce values (`SF_BASE_URL`, `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REDIRECT_URI`, etc.).
@@ -202,4 +210,6 @@ npm run phase7:smoke-live
 npm run phase7:snapshot
 npm run phase7:regression
 npm run ingest:report
+npm run phase14:drift-report -- latest latest artifacts/phase14-drift-report.json
+npm run phase14:drift-gate
 ```
