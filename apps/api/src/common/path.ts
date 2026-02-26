@@ -66,6 +66,18 @@ export function resolveAskProofStorePath(storePath?: string): string {
   return path.resolve(workspaceRoot, raw);
 }
 
+export function resolveAskMetricsPath(metricsPath?: string): string {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const raw = metricsPath?.trim() || 'data/ask/metrics.jsonl';
+  return path.resolve(workspaceRoot, raw);
+}
+
+export function resolveSemanticSnapshotPath(snapshotPath?: string): string {
+  const workspaceRoot = findWorkspaceRoot(process.cwd());
+  const raw = snapshotPath?.trim() || 'data/refresh/semantic-snapshot.json';
+  return path.resolve(workspaceRoot, raw);
+}
+
 export function resolveSfProjectPath(projectPath?: string): string {
   const workspaceRoot = findWorkspaceRoot(process.cwd());
   const raw = projectPath?.trim() || 'data/sf-project';

@@ -10,6 +10,7 @@ import { EvidenceStoreService } from '../evidence/evidence-store.service';
 import { LlmService } from '../llm/llm.service';
 import { PlannerService } from '../planner/planner.service';
 import { QueriesService } from '../queries/queries.service';
+import { AskMetricsStoreService } from './ask-metrics-store.service';
 import { AskProofStoreService } from './ask-proof-store.service';
 import type {
   AskMeaningMetrics,
@@ -33,12 +34,22 @@ export class AskService {
     private readonly analysis: AnalysisService,
     private readonly evidence: EvidenceStoreService,
     private readonly llmService: LlmService,
-    private readonly proofStore: AskProofStoreService
+    private readonly proofStore: AskProofStoreService,
+    private readonly metricsStore: AskMetricsStoreService
   ) {}
 
   async ask(input: AskRequest): Promise<AskResponse> {
     const { response, proof } = await this.execute(input, true);
     this.proofStore.append(proof);
+    this.metricsStore.append({
+      recordedAt: new Date().toISOString(),
+      snapshotId: proof.snapshotId,
+      policyId: proof.policyId,
+      query: input.query,
+      intent: proof.plan.intent,
+      trustLevel: proof.trustLevel,
+      metrics: proof.metrics
+    });
     return response;
   }
 
@@ -142,7 +153,41 @@ export class AskService {
     const operatorsExecuted: CompositionOperator[] = [COMPOSITION_OPERATORS.SPECIALIZE];
     const rejectedBranches: Array<{ branch: string; reason: string }> = [];
 
-    if (plan.intent === 'perms' || plan.intent === 'mixed') {
+    if (plan.intent === 'mixed') {
+      operatorsExecuted.push(
+        COMPOSITION_OPERATORS.OVERLAY,
+        COMPOSITION_OPERATORS.CONSTRAIN,
+        COMPOSITION_OPERATORS.INTERSECT
+      );
+      const user = plan.entities.user ?? 'jane@example.com';
+      const object = plan.entities.object ?? 'Opportunity';
+      const field = plan.entities.field ?? `${object}.StageName`;
+      const perms = await this.queries.perms(user, object, field);
+      const impact = await this.analysis.impact(field, undefined, false, false, false, includeLowConfidence);
+      const releaseRisk = impact.totalPaths > 0 ? 'elevated' : 'low';
+      answer =
+        `Release-risk + permission-impact: ${releaseRisk} risk for changing ${field}. ` +
+        `${perms.explanation}. ${impact.explanation}.`;
+      deterministicAnswer = answer;
+      confidence = perms.granted && impact.totalPaths > 0 ? 0.9 : 0.72;
+      consistency = {
+        checked: consistencyCheck,
+        aligned: true,
+        reason: 'mixed intent composed deterministically from perms + impact'
+      };
+      if (!perms.granted) {
+        rejectedBranches.push({
+          branch: 'queries.perms',
+          reason: 'user lacks object/field grant for release scenario'
+        });
+      }
+      if (impact.totalPaths === 0) {
+        rejectedBranches.push({
+          branch: 'analysis.impact',
+          reason: 'no impact paths found for release scenario'
+        });
+      }
+    } else if (plan.intent === 'perms') {
       operatorsExecuted.push(COMPOSITION_OPERATORS.CONSTRAIN, COMPOSITION_OPERATORS.INTERSECT);
       const user = plan.entities.user ?? 'jane@example.com';
       const object = plan.entities.object ?? 'Case';

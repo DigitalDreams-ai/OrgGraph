@@ -26,6 +26,15 @@ export class IngestionController {
     evidenceIndexPath: string;
     parserStats: ParserStats[];
     ontology: OntologyConstraintReport;
+    semanticDiff: {
+      addedNodeCount: number;
+      removedNodeCount: number;
+      addedEdgeCount: number;
+      removedEdgeCount: number;
+      changedNodeTypeCounts: Record<string, number>;
+      changedRelationCounts: Record<string, number>;
+    };
+    meaningChangeSummary: string;
   }> {
     if (body.fixturesPath !== undefined && typeof body.fixturesPath !== 'string') {
       throw new BadRequestException('fixturesPath must be a string');

@@ -13,10 +13,19 @@ async function run(): Promise<void> {
   const dbPath = path.join(workspaceRoot, 'data', 'orggraph.integration.db');
   const evidencePath = path.join(workspaceRoot, 'data', 'evidence.integration.json');
   const userMapPath = path.join(workspaceRoot, 'data', 'user-profile-map.integration.json');
+  const semanticSnapshotPath = path.join(
+    workspaceRoot,
+    'data',
+    'refresh',
+    'semantic-snapshot.integration.json'
+  );
 
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   if (fs.existsSync(dbPath)) {
     fs.rmSync(dbPath, { force: true });
+  }
+  if (fs.existsSync(semanticSnapshotPath)) {
+    fs.rmSync(semanticSnapshotPath, { force: true });
   }
   fs.writeFileSync(
     userMapPath,
@@ -34,6 +43,7 @@ async function run(): Promise<void> {
   process.env.PERMISSIONS_FIXTURES_PATH = path.join(workspaceRoot, 'fixtures', 'permissions');
   process.env.USER_PROFILE_MAP_PATH = userMapPath;
   process.env.EVIDENCE_INDEX_PATH = evidencePath;
+  process.env.SEMANTIC_SNAPSHOT_PATH = semanticSnapshotPath;
   process.env.SF_INTEGRATION_ENABLED = 'false';
   process.env.LLM_ENABLED = 'true';
   process.env.LLM_PROVIDER = 'anthropic';
@@ -100,12 +110,17 @@ async function run(): Promise<void> {
       nodeCount: number;
       edgeCount: number;
       ontology: { violationCount: number; warningCount: number };
+      semanticDiff: { addedNodeCount: number; addedEdgeCount: number };
+      meaningChangeSummary: string;
     };
     assert.equal(refreshBody.mode, 'full', 'default refresh mode should be full');
     assert.equal(refreshBody.skipped, false, 'default refresh should not skip');
     assert.ok(refreshBody.nodeCount > 0, 'refresh should create nodes');
     assert.ok(refreshBody.edgeCount > 0, 'refresh should create edges');
     assert.equal(refreshBody.ontology.violationCount, 0, 'refresh should not emit ontology violations');
+    assert.ok(refreshBody.semanticDiff.addedNodeCount > 0);
+    assert.ok(refreshBody.semanticDiff.addedEdgeCount > 0);
+    assert.equal(typeof refreshBody.meaningChangeSummary, 'string');
 
     const readyRes = await fetch(`${base}/ready`);
     assert.equal(readyRes.status, 200, 'ready should return 200');
@@ -145,12 +160,17 @@ async function run(): Promise<void> {
       skipReason?: string;
       nodeCount: number;
       edgeCount: number;
+      semanticDiff: { addedNodeCount: number; removedNodeCount: number };
+      meaningChangeSummary: string;
     };
     assert.equal(refreshIncrementalBody.mode, 'incremental');
     assert.equal(refreshIncrementalBody.skipped, true, 'incremental refresh should skip unchanged fixtures');
     assert.equal(refreshIncrementalBody.skipReason, 'no_changes_detected');
     assert.ok(refreshIncrementalBody.nodeCount > 0);
     assert.ok(refreshIncrementalBody.edgeCount > 0);
+    assert.equal(refreshIncrementalBody.semanticDiff.addedNodeCount, 0);
+    assert.equal(refreshIncrementalBody.semanticDiff.removedNodeCount, 0);
+    assert.match(refreshIncrementalBody.meaningChangeSummary, /no semantic changes/i);
 
     const malformedRefreshRes = await fetch(`${base}/refresh`, {
       method: 'POST',
@@ -464,6 +484,24 @@ async function run(): Promise<void> {
     assert.equal(askImpact.consistency.checked, true);
     assert.equal(askImpact.consistency.aligned, true);
 
+    const askMixedRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query:
+          'What is the release risk impact on Opportunity.StageName and can jane@example.com edit object Case?'
+      })
+    });
+    assert.equal(askMixedRes.status, 201, 'ask mixed should return 201');
+    const askMixed = (await askMixedRes.json()) as {
+      plan: { intent: string };
+      answer: string;
+      trustLevel: string;
+    };
+    assert.equal(askMixed.plan.intent, 'mixed');
+    assert.match(askMixed.answer, /Release-risk \+ permission-impact:/);
+    assert.ok(['trusted', 'conditional'].includes(askMixed.trustLevel));
+
     const askUnknownRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -625,6 +663,9 @@ async function run(): Promise<void> {
     }
     if (fs.existsSync(evidencePath)) {
       fs.rmSync(evidencePath, { force: true });
+    }
+    if (fs.existsSync(semanticSnapshotPath)) {
+      fs.rmSync(semanticSnapshotPath, { force: true });
     }
   }
 }

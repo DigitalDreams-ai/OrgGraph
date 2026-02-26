@@ -17,9 +17,11 @@ export class AppConfigService {
     this.validateOptionalString('REFRESH_AUDIT_PATH');
     this.validateOptionalString('ONTOLOGY_REPORT_PATH');
     this.validateOptionalString('ASK_PROOF_STORE_PATH');
+    this.validateOptionalString('ASK_METRICS_PATH');
     this.validateOptionalString('ASK_GROUNDING_SCORE_THRESHOLD');
     this.validateOptionalString('ASK_CONSTRAINT_SATISFACTION_THRESHOLD');
     this.validateOptionalString('ASK_AMBIGUITY_MAX_THRESHOLD');
+    this.validateOptionalString('SEMANTIC_SNAPSHOT_PATH');
     this.validateOptionalString('SF_INTEGRATION_ENABLED');
     this.validateOptionalString('SF_AUTH_MODE');
     this.validateOptionalString('SF_AUTH_URL_PATH');
@@ -114,6 +116,10 @@ export class AppConfigService {
     return process.env.ASK_PROOF_STORE_PATH;
   }
 
+  askMetricsPath(): string | undefined {
+    return process.env.ASK_METRICS_PATH;
+  }
+
   askGroundingScoreThreshold(): number {
     return this.readFloatInRange('ASK_GROUNDING_SCORE_THRESHOLD', 0.65, 0, 1);
   }
@@ -124,6 +130,10 @@ export class AppConfigService {
 
   askAmbiguityMaxThreshold(): number {
     return this.readFloatInRange('ASK_AMBIGUITY_MAX_THRESHOLD', 0.45, 0, 1);
+  }
+
+  semanticSnapshotPath(): string | undefined {
+    return process.env.SEMANTIC_SNAPSHOT_PATH;
   }
 
   sfIntegrationEnabled(): boolean {
