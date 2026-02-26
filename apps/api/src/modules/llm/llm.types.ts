@@ -23,6 +23,12 @@ export interface LlmGenerateResponse {
   citationsUsed: string[];
   provider: Exclude<LlmProviderName, 'none'>;
   model: string;
+  tokenUsage?: {
+    input: number;
+    output: number;
+    total: number;
+  };
+  estimatedCostUsd?: number;
   rawText?: string;
 }
 
