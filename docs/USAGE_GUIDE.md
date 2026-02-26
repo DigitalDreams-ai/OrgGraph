@@ -100,6 +100,31 @@ Expanded metadata coverage in current build includes:
 - `ConnectedApp`
 - staged UI metadata (`ApexPage`, `LightningComponentBundle`, `AuraDefinitionBundle`, `QuickAction`, `Layout`) when enabled
 
+### 7.1 Runtime Org Session Controls (Phase 23)
+Current runtime session status:
+```bash
+curl http://localhost:3100/org/session
+```
+
+Switch active runtime alias:
+```bash
+curl -X POST http://localhost:3100/org/session/switch \
+  -H 'content-type: application/json' \
+  -d '{"alias":"orgumented-sandbox"}'
+```
+
+Reconnect/validate auth using the active alias:
+```bash
+curl -X POST http://localhost:3100/org/retrieve \
+  -H 'content-type: application/json' \
+  -d '{"runAuth":true,"runRetrieve":false,"autoRefresh":false}'
+```
+
+Disconnect active runtime session:
+```bash
+curl -X POST http://localhost:3100/org/session/disconnect
+```
+
 ## 8. Query Orgumented
 
 ### 8.1 Permissions
