@@ -13,6 +13,7 @@ import { IngestionService } from '../ingestion/ingestion.service';
 import { CommandRunnerService } from './command-runner.service';
 import type {
   OrgMetadataCatalogResponse,
+  OrgMetadataMembersResponse,
   OrgMetadataRetrieveRequest,
   OrgMetadataRetrieveResponse,
   OrgRetrieveRequest,
@@ -609,71 +610,33 @@ export class OrgService {
     };
   }
 
-  async metadataCatalog(input: { search?: string; limit?: number }): Promise<OrgMetadataCatalogResponse> {
+  async metadataCatalog(input: {
+    search?: string;
+    limit?: number;
+    refresh?: boolean;
+  }): Promise<OrgMetadataCatalogResponse> {
     const parsePath = resolveSfParsePath(this.configService.sfParsePath());
+    const refresh = input.refresh === true;
     const search = input.search?.trim().toLowerCase();
     const limit = input.limit ?? 200;
     const warnings: string[] = [];
-    if (!fs.existsSync(parsePath)) {
-      warnings.push(`parse path not found: ${parsePath}`);
-      return {
-        source: 'local',
-        refreshedAt: new Date().toISOString(),
-        search: input.search,
-        totalTypes: 0,
-        types: [],
-        warnings
-      };
-    }
-
-    const typeMembers = new Map<string, Set<string>>();
-    const walk = (dir: string): void => {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.name === '@eaDir') {
-          continue;
-        }
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          walk(fullPath);
-          continue;
-        }
-        const rel = path.relative(parsePath, fullPath);
-        const parts = rel.split(path.sep);
-        if (parts.length < 2) {
-          continue;
-        }
-        const type = this.inferMetadataType(parts[0], entry.name);
-        const member = entry.name.replace(/\.[^.]+(?:\.[^.]+)?$/, '');
-        if (!typeMembers.has(type)) {
-          typeMembers.set(type, new Set());
-        }
-        typeMembers.get(type)?.add(member);
-      }
-    };
-    walk(parsePath);
-
-    let types = Array.from(typeMembers.entries())
+    const index = this.loadMetadataIndex(parsePath, refresh);
+    warnings.push(...index.warnings);
+    let types = Array.from(index.typeMembers.entries())
       .map(([type, members]) => ({
         type,
-        memberCount: members.size,
-        members: Array.from(members)
-          .sort((a, b) => a.localeCompare(b))
-          .map((name) => ({ name }))
+        memberCount: members.length
       }))
       .sort((a, b) => a.type.localeCompare(b.type));
 
     if (search) {
-      types = types
-        .map((item) => ({
-          ...item,
-          members: item.members.filter(
-            (member) =>
-              member.name.toLowerCase().includes(search) || item.type.toLowerCase().includes(search)
-          )
-        }))
-        .filter((item) => item.members.length > 0 || item.type.toLowerCase().includes(search))
-        .map((item) => ({ ...item, memberCount: item.members.length }));
+      types = types.filter((item) => {
+        if (item.type.toLowerCase().includes(search)) {
+          return true;
+        }
+        const members = index.typeMembers.get(item.type) ?? [];
+        return members.some((member) => member.toLowerCase().includes(search));
+      });
     }
 
     const limited = types.slice(0, limit);
@@ -682,11 +645,46 @@ export class OrgService {
     }
 
     return {
-      source: 'local',
-      refreshedAt: new Date().toISOString(),
+      source: index.source,
+      refreshedAt: index.refreshedAt,
       search: input.search,
       totalTypes: types.length,
       types: limited,
+      warnings
+    };
+  }
+
+  async metadataMembers(input: {
+    type: string;
+    search?: string;
+    limit?: number;
+    refresh?: boolean;
+  }): Promise<OrgMetadataMembersResponse> {
+    const parsePath = resolveSfParsePath(this.configService.sfParsePath());
+    const index = this.loadMetadataIndex(parsePath, input.refresh === true);
+    const warnings: string[] = [...index.warnings];
+    const search = input.search?.trim().toLowerCase();
+    const limit = input.limit ?? 1000;
+    const selectedType = input.type.trim();
+    const rawMembers = index.typeMembers.get(selectedType) ?? [];
+    if (rawMembers.length === 0 && !index.typeMembers.has(selectedType)) {
+      warnings.push(`type not found in catalog: ${selectedType}`);
+    }
+    let members = rawMembers;
+    if (search) {
+      members = members.filter((member) => member.toLowerCase().includes(search));
+    }
+    const limited = members.slice(0, limit).map((name) => ({ name }));
+    if (members.length > limit) {
+      warnings.push(`member result truncated to limit=${limit}`);
+    }
+    return {
+      source: index.source,
+      refreshedAt: index.refreshedAt,
+      type: selectedType,
+      search: input.search,
+      totalMembers: members.length,
+      members: limited,
       warnings
     };
   }
@@ -709,6 +707,7 @@ export class OrgService {
     const startedAt = new Date().toISOString();
 
     await this.ensureSfBinaryInstalled(projectPath);
+    this.ensureParsePathWithinProject(projectPath, parsePath);
     if (this.configService.sfAuthMode() === 'cci') {
       await this.ensureCciBinaryInstalled(projectPath);
     }
@@ -742,7 +741,20 @@ export class OrgService {
     for (const metadataArg of metadataArgs) {
       args.push('--metadata', metadataArg);
     }
-    await this.runSfCommandWithRetry(args, projectPath);
+    try {
+      await this.runSfCommandWithRetry(args, projectPath);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const category = this.classifyMetadataRetrieveFailure(message);
+      throw new InternalServerErrorException({
+        message: 'metadata retrieve failed',
+        details: {
+          code: 'SF_METADATA_RETRIEVE_FAILED',
+          category,
+          reason: message
+        }
+      });
+    }
 
     const response: OrgMetadataRetrieveResponse = {
       status: 'completed',
@@ -766,6 +778,145 @@ export class OrgService {
       };
     }
     return response;
+  }
+
+  private loadMetadataIndex(
+    parsePath: string,
+    refresh: boolean
+  ): {
+    source: 'local' | 'cache' | 'mixed';
+    refreshedAt: string;
+    typeMembers: Map<string, string[]>;
+    warnings: string[];
+  } {
+    const warnings: string[] = [];
+    const cachePath = path.join(path.dirname(parsePath), 'metadata-catalog-cache.json');
+    if (!refresh && fs.existsSync(cachePath)) {
+      try {
+        const raw = fs.readFileSync(cachePath, 'utf8');
+        const parsed = JSON.parse(raw) as {
+          refreshedAt?: string;
+          types?: Array<{ type: string; members: string[] }>;
+        };
+        if (Array.isArray(parsed.types)) {
+          const typeMembers = new Map<string, string[]>();
+          for (const item of parsed.types) {
+            if (!item || typeof item.type !== 'string' || !Array.isArray(item.members)) {
+              continue;
+            }
+            typeMembers.set(
+              item.type,
+              item.members
+                .map((member) => String(member).trim())
+                .filter((member) => member.length > 0)
+                .sort((a, b) => a.localeCompare(b))
+            );
+          }
+          return {
+            source: 'cache',
+            refreshedAt: parsed.refreshedAt ?? new Date().toISOString(),
+            typeMembers,
+            warnings
+          };
+        }
+      } catch {
+        warnings.push(`metadata cache unreadable: ${cachePath}`);
+      }
+    }
+
+    if (!fs.existsSync(parsePath)) {
+      warnings.push(`parse path not found: ${parsePath}`);
+      return {
+        source: 'local',
+        refreshedAt: new Date().toISOString(),
+        typeMembers: new Map(),
+        warnings
+      };
+    }
+
+    const typeMembers = new Map<string, Set<string>>();
+    const walk = (dir: string): void => {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.name === '@eaDir') {
+          continue;
+        }
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(fullPath);
+          continue;
+        }
+        const rel = path.relative(parsePath, fullPath);
+        const parts = rel.split(path.sep);
+        if (parts.length < 2) {
+          continue;
+        }
+        const type = this.inferMetadataType(parts[0], entry.name);
+        const member = entry.name.replace(/\.[^.]+(?:\.[^.]+)?$/, '');
+        if (!typeMembers.has(type)) {
+          typeMembers.set(type, new Set());
+        }
+        typeMembers.get(type)?.add(member);
+      }
+    };
+    walk(parsePath);
+
+    const normalized = Array.from(typeMembers.entries())
+      .map(([type, members]) => ({
+        type,
+        members: Array.from(members).sort((a, b) => a.localeCompare(b))
+      }))
+      .sort((a, b) => a.type.localeCompare(b.type));
+
+    const normalizedMap = new Map<string, string[]>();
+    for (const item of normalized) {
+      normalizedMap.set(item.type, item.members);
+    }
+    try {
+      fs.writeFileSync(
+        cachePath,
+        JSON.stringify(
+          {
+            refreshedAt: new Date().toISOString(),
+            types: normalized
+          },
+          null,
+          2
+        ),
+        'utf8'
+      );
+    } catch {
+      warnings.push(`metadata cache write failed: ${cachePath}`);
+    }
+    return {
+      source: 'local',
+      refreshedAt: new Date().toISOString(),
+      typeMembers: normalizedMap,
+      warnings
+    };
+  }
+
+  private ensureParsePathWithinProject(projectPath: string, parsePath: string): void {
+    const rel = path.relative(projectPath, parsePath);
+    if (rel.startsWith('..') || path.isAbsolute(rel)) {
+      throw new Error(
+        `SF_PARSE_PATH (${parsePath}) must be inside SF_PROJECT_PATH (${projectPath})`
+      );
+    }
+  }
+
+  private classifyMetadataRetrieveFailure(message: string): string {
+    const normalized = message.toLowerCase();
+    if (normalized.includes('not authenticated') || normalized.includes('target-org') || normalized.includes('auth')) {
+      return 'auth_or_session_error';
+    }
+    if (normalized.includes('metadata') && normalized.includes('not found')) {
+      return 'metadata_resolution_error';
+    }
+    if (normalized.includes('source') && normalized.includes('api')) {
+      return 'source_api_error';
+    }
+    return 'retrieve_command_error';
   }
 
   private inferMetadataType(folderName: string, fileName: string): string {

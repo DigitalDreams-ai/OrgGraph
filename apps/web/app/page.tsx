@@ -13,6 +13,7 @@ type QueryKind =
   | 'orgStatus'
   | 'orgRetrieve'
   | 'metadataCatalog'
+  | 'metadataMembers'
   | 'metadataRetrieve'
   | 'refreshDiff'
   | 'askArchitecture'
@@ -26,13 +27,22 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
 const BUILD_VERSION = process.env.NEXT_PUBLIC_BUILD_VERSION || 'dev-local';
 
 type MetadataCatalogMember = { name: string };
-type MetadataCatalogType = { type: string; memberCount: number; members: MetadataCatalogMember[] };
+type MetadataCatalogType = { type: string; memberCount: number };
 type MetadataCatalogPayload = {
-  source: 'local' | 'source_api' | 'metadata_api' | 'cache';
+  source: 'local' | 'source_api' | 'metadata_api' | 'cache' | 'mixed';
   refreshedAt: string;
   search?: string;
   totalTypes: number;
   types: MetadataCatalogType[];
+  warnings?: string[];
+};
+type MetadataMembersPayload = {
+  source: 'local' | 'source_api' | 'metadata_api' | 'cache' | 'mixed';
+  refreshedAt: string;
+  type: string;
+  search?: string;
+  totalMembers: number;
+  members: MetadataCatalogMember[];
   warnings?: string[];
 };
 
@@ -77,9 +87,13 @@ export default function Page(): JSX.Element {
   const [orgRunRetrieve, setOrgRunRetrieve] = useState(true);
   const [orgAutoRefresh, setOrgAutoRefresh] = useState(true);
   const [metadataSearch, setMetadataSearch] = useState('');
+  const [metadataMemberSearch, setMetadataMemberSearch] = useState('');
   const [metadataLimitRaw, setMetadataLimitRaw] = useState('200');
+  const [metadataForceRefresh, setMetadataForceRefresh] = useState(false);
   const [metadataAutoRefresh, setMetadataAutoRefresh] = useState(true);
   const [metadataCatalog, setMetadataCatalog] = useState<MetadataCatalogPayload | null>(null);
+  const [metadataMembersByType, setMetadataMembersByType] = useState<Record<string, MetadataMembersPayload>>({});
+  const [metadataLoadingType, setMetadataLoadingType] = useState<string>('');
   const [metadataSelected, setMetadataSelected] = useState<Array<{ type: string; members?: string[] }>>([]);
   const [metadataSelectionsRaw, setMetadataSelectionsRaw] = useState(
     JSON.stringify([{ type: 'CustomObject', members: ['Account'] }], null, 2)
@@ -129,7 +143,10 @@ export default function Page(): JSX.Element {
       return 'POST /org/retrieve';
     }
     if (kind === 'metadataCatalog') {
-      return 'GET /org/metadata/catalog?q=...&limit=...';
+      return 'GET /org/metadata/catalog?q=...&limit=...&refresh=...';
+    }
+    if (kind === 'metadataMembers') {
+      return 'GET /org/metadata/members?type=...&q=...&limit=...&refresh=...';
     }
     if (kind === 'metadataRetrieve') {
       return 'POST /org/metadata/retrieve';
@@ -336,7 +353,7 @@ export default function Page(): JSX.Element {
             : kind === 'orgRetrieve'
               ? { runAuth: orgRunAuth, runRetrieve: orgRunRetrieve, autoRefresh: orgAutoRefresh }
               : kind === 'metadataCatalog'
-                ? { q: metadataSearch, limit: metadataLimit }
+                ? { q: metadataSearch, limit: metadataLimit, refresh: metadataForceRefresh }
                 : kind === 'metadataRetrieve'
                   ? { selections: metadataSelections, autoRefresh: metadataAutoRefresh }
                   : kind === 'refreshDiff'
@@ -398,6 +415,7 @@ export default function Page(): JSX.Element {
             types: payload.types as MetadataCatalogType[],
             warnings: Array.isArray(payload.warnings) ? payload.warnings : []
           });
+          setMetadataMembersByType({});
         }
       }
 
@@ -412,6 +430,36 @@ export default function Page(): JSX.Element {
       setErrorText('Network request failed after retries. Check container health and retry in a few seconds.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadMetadataMembers(type: string): Promise<void> {
+    if (metadataLoadingType === type) {
+      return;
+    }
+    if (!metadataForceRefresh && metadataMembersByType[type]) {
+      return;
+    }
+    setMetadataLoadingType(type);
+    try {
+      const metadataLimit = parseOptionalInt(metadataLimitRaw);
+      const response = await fetchWithRetry('/api/query', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'metadataMembers',
+          payload: { type, q: metadataMemberSearch, limit: metadataLimit, refresh: metadataForceRefresh }
+        })
+      });
+      const wrapped = (await response.json()) as { payload?: MetadataMembersPayload };
+      if (response.ok && wrapped.payload && Array.isArray(wrapped.payload.members)) {
+        setMetadataMembersByType((current) => ({
+          ...current,
+          [type]: wrapped.payload as MetadataMembersPayload
+        }));
+      }
+    } finally {
+      setMetadataLoadingType('');
     }
   }
 
@@ -655,9 +703,35 @@ export default function Page(): JSX.Element {
                 onChange={(e) => setMetadataLimitRaw(e.target.value)}
               />
             </div>
+            <div className="row checkbox-row">
+              <label htmlFor="metadataForceRefresh">Force Refresh (bypass cache)</label>
+              <input
+                id="metadataForceRefresh"
+                type="checkbox"
+                checked={metadataForceRefresh}
+                onChange={(e) => setMetadataForceRefresh(e.target.checked)}
+              />
+            </div>
+            <div className="row">
+              <label htmlFor="metadataMemberSearch">Member Filter (applies on expand)</label>
+              <input
+                id="metadataMemberSearch"
+                value={metadataMemberSearch}
+                onChange={(e) => setMetadataMemberSearch(e.target.value)}
+              />
+            </div>
             <div className="row">
               <button type="button" onClick={runQuery} disabled={loading}>
                 {loading ? 'Refreshing...' : 'Refresh Types'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMetadataSearch('');
+                  setMetadataMemberSearch('');
+                }}
+              >
+                Clear Filters
               </button>
             </div>
             {metadataCatalog ? (
@@ -679,7 +753,15 @@ export default function Page(): JSX.Element {
                   </p>
                 ) : (
                   metadataCatalog.types.map((item) => (
-                    <details key={item.type}>
+                    <details
+                      key={item.type}
+                      onToggle={(event) => {
+                        const node = event.currentTarget as HTMLDetailsElement;
+                        if (node.open) {
+                          void loadMetadataMembers(item.type);
+                        }
+                      }}
+                    >
                       <summary>
                         {item.type} ({item.memberCount})
                         <button
@@ -705,8 +787,11 @@ export default function Page(): JSX.Element {
                           </button>
                         ) : null}
                       </summary>
+                      {metadataLoadingType === item.type ? (
+                        <p className="endpoint-hint">Loading members...</p>
+                      ) : null}
                       <ul>
-                        {item.members.map((member) => (
+                        {(metadataMembersByType[item.type]?.members ?? []).map((member) => (
                           <li key={`${item.type}.${member.name}`}>
                             {member.name}
                             <button type="button" onClick={() => toggleMemberSelection(item.type, member.name)}>
@@ -715,6 +800,15 @@ export default function Page(): JSX.Element {
                           </li>
                         ))}
                       </ul>
+                      {metadataMembersByType[item.type] &&
+                      metadataMembersByType[item.type].warnings &&
+                      (metadataMembersByType[item.type].warnings?.length ?? 0) > 0 ? (
+                        <ul>
+                          {metadataMembersByType[item.type].warnings?.map((warning) => (
+                            <li key={`${item.type}-${warning}`}>{warning}</li>
+                          ))}
+                        </ul>
+                      ) : null}
                     </details>
                   ))
                 )}

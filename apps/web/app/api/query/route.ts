@@ -14,6 +14,7 @@ type QueryKind =
   | 'orgStatus'
   | 'orgRetrieve'
   | 'metadataCatalog'
+  | 'metadataMembers'
   | 'metadataRetrieve'
   | 'refreshDiff'
   | 'askArchitecture'
@@ -117,7 +118,17 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
     const params = new URLSearchParams();
     appendParam(params, 'q', body.q);
     appendParam(params, 'limit', body.limit);
+    appendParam(params, 'refresh', body.refresh);
     return { url: `${API_BASE}/org/metadata/catalog?${params.toString()}`, init: { method: 'GET' } };
+  }
+
+  if (request.kind === 'metadataMembers') {
+    const params = new URLSearchParams();
+    appendParam(params, 'type', body.type);
+    appendParam(params, 'q', body.q);
+    appendParam(params, 'limit', body.limit);
+    appendParam(params, 'refresh', body.refresh);
+    return { url: `${API_BASE}/org/metadata/members?${params.toString()}`, init: { method: 'GET' } };
   }
 
   if (request.kind === 'metadataRetrieve') {
@@ -273,6 +284,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         'orgStatus',
         'orgRetrieve',
         'metadataCatalog',
+        'metadataMembers',
         'metadataRetrieve',
         'refreshDiff',
         'askArchitecture',
