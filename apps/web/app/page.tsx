@@ -25,6 +25,17 @@ type QueryKind =
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
 const BUILD_VERSION = process.env.NEXT_PUBLIC_BUILD_VERSION || 'dev-local';
 
+type MetadataCatalogMember = { name: string };
+type MetadataCatalogType = { type: string; memberCount: number; members: MetadataCatalogMember[] };
+type MetadataCatalogPayload = {
+  source: 'local' | 'source_api' | 'metadata_api' | 'cache';
+  refreshedAt: string;
+  search?: string;
+  totalTypes: number;
+  types: MetadataCatalogType[];
+  warnings?: string[];
+};
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -57,7 +68,10 @@ export default function Page(): JSX.Element {
   const [orgRunRetrieve, setOrgRunRetrieve] = useState(true);
   const [orgAutoRefresh, setOrgAutoRefresh] = useState(true);
   const [metadataSearch, setMetadataSearch] = useState('');
+  const [metadataLimitRaw, setMetadataLimitRaw] = useState('200');
   const [metadataAutoRefresh, setMetadataAutoRefresh] = useState(true);
+  const [metadataCatalog, setMetadataCatalog] = useState<MetadataCatalogPayload | null>(null);
+  const [metadataSelected, setMetadataSelected] = useState<Array<{ type: string; members?: string[] }>>([]);
   const [metadataSelectionsRaw, setMetadataSelectionsRaw] = useState(
     JSON.stringify([{ type: 'CustomObject', members: ['Account'] }], null, 2)
   );
@@ -195,6 +209,81 @@ export default function Page(): JSX.Element {
     return undefined;
   }
 
+  function syncSelectionsRaw(next: Array<{ type: string; members?: string[] }>): void {
+    setMetadataSelectionsRaw(JSON.stringify(next, null, 2));
+  }
+
+  function addTypeSelection(type: string): void {
+    setMetadataSelected((current) => {
+      if (current.some((entry) => entry.type === type)) {
+        return current;
+      }
+      const next = [...current, { type }];
+      syncSelectionsRaw(next);
+      return next;
+    });
+  }
+
+  function removeTypeSelection(type: string): void {
+    setMetadataSelected((current) => {
+      const next = current.filter((entry) => entry.type !== type);
+      syncSelectionsRaw(next);
+      return next;
+    });
+  }
+
+  function toggleMemberSelection(type: string, member: string): void {
+    setMetadataSelected((current) => {
+      const idx = current.findIndex((entry) => entry.type === type);
+      if (idx === -1) {
+        const next = [...current, { type, members: [member] }];
+        syncSelectionsRaw(next);
+        return next;
+      }
+
+      const existing = current[idx];
+      const existingMembers = Array.isArray(existing.members) ? existing.members : [];
+      const has = existingMembers.includes(member);
+      const members = has
+        ? existingMembers.filter((value) => value !== member)
+        : [...existingMembers, member].sort((a, b) => a.localeCompare(b));
+      const nextEntry = members.length > 0 ? { type, members } : { type };
+      const next = [...current];
+      next[idx] = nextEntry;
+      syncSelectionsRaw(next);
+      return next;
+    });
+  }
+
+  function isTypeSelected(type: string): boolean {
+    return metadataSelected.some((entry) => entry.type === type);
+  }
+
+  function isMemberSelected(type: string, member: string): boolean {
+    const entry = metadataSelected.find((candidate) => candidate.type === type);
+    if (!entry || !Array.isArray(entry.members)) {
+      return false;
+    }
+    return entry.members.includes(member);
+  }
+
+  function metadataAgeLabel(refreshedAt: string): string {
+    const refreshedMs = Date.parse(refreshedAt);
+    if (Number.isNaN(refreshedMs)) {
+      return 'unknown';
+    }
+    const ageSeconds = Math.max(0, Math.floor((Date.now() - refreshedMs) / 1000));
+    if (ageSeconds < 60) {
+      return `${ageSeconds}s ago`;
+    }
+    const ageMinutes = Math.floor(ageSeconds / 60);
+    if (ageMinutes < 60) {
+      return `${ageMinutes}m ago`;
+    }
+    const ageHours = Math.floor(ageMinutes / 60);
+    return `${ageHours}h ago`;
+  }
+
   async function runQuery(): Promise<void> {
     setLoading(true);
     setResponseText('');
@@ -203,6 +292,7 @@ export default function Page(): JSX.Element {
 
     try {
       const limit = parseOptionalInt(limitRaw);
+      const metadataLimit = parseOptionalInt(metadataLimitRaw);
       const maxCitations = parseOptionalInt(maxCitationsRaw);
       const askContext = parseContext(askContextRaw);
       const archMaxPaths = parseOptionalInt(archMaxPathsRaw);
@@ -224,7 +314,7 @@ export default function Page(): JSX.Element {
             : kind === 'orgRetrieve'
               ? { runAuth: orgRunAuth, runRetrieve: orgRunRetrieve, autoRefresh: orgAutoRefresh }
               : kind === 'metadataCatalog'
-                ? { q: metadataSearch, limit }
+                ? { q: metadataSearch, limit: metadataLimit }
                 : kind === 'metadataRetrieve'
                   ? { selections: metadataSelections, autoRefresh: metadataAutoRefresh }
                   : kind === 'refreshDiff'
@@ -272,6 +362,19 @@ export default function Page(): JSX.Element {
 
       const wrapped = await response.json();
       setResponseText(JSON.stringify(wrapped, null, 2));
+      if (kind === 'metadataCatalog' && wrapped?.payload && typeof wrapped.payload === 'object') {
+        const payload = wrapped.payload as Partial<MetadataCatalogPayload>;
+        if (typeof payload.source === 'string' && Array.isArray(payload.types)) {
+          setMetadataCatalog({
+            source: payload.source as MetadataCatalogPayload['source'],
+            refreshedAt: typeof payload.refreshedAt === 'string' ? payload.refreshedAt : new Date().toISOString(),
+            search: typeof payload.search === 'string' ? payload.search : undefined,
+            totalTypes: typeof payload.totalTypes === 'number' ? payload.totalTypes : payload.types.length,
+            types: payload.types as MetadataCatalogType[],
+            warnings: Array.isArray(payload.warnings) ? payload.warnings : []
+          });
+        }
+      }
 
       if (!response.ok) {
         setErrorText(
@@ -480,14 +583,89 @@ export default function Page(): JSX.Element {
         ) : null}
 
         {kind === 'metadataCatalog' ? (
-          <div className="row">
-            <label htmlFor="metadataSearch">Keyword Search (optional)</label>
-            <input
-              id="metadataSearch"
-              value={metadataSearch}
-              onChange={(e) => setMetadataSearch(e.target.value)}
-            />
-          </div>
+          <>
+            <div className="row">
+              <label htmlFor="metadataSearch">Keyword Search (optional)</label>
+              <input
+                id="metadataSearch"
+                value={metadataSearch}
+                onChange={(e) => setMetadataSearch(e.target.value)}
+              />
+            </div>
+            <div className="row">
+              <label htmlFor="metadataLimit">Catalog Limit</label>
+              <input
+                id="metadataLimit"
+                value={metadataLimitRaw}
+                onChange={(e) => setMetadataLimitRaw(e.target.value)}
+              />
+            </div>
+            <div className="row">
+              <button type="button" onClick={runQuery} disabled={loading}>
+                {loading ? 'Refreshing...' : 'Refresh Types'}
+              </button>
+            </div>
+            {metadataCatalog ? (
+              <details open>
+                <summary>
+                  Catalog ({metadataCatalog.totalTypes} type{metadataCatalog.totalTypes === 1 ? '' : 's'}) | source:{' '}
+                  {metadataCatalog.source} | refreshed {metadataAgeLabel(metadataCatalog.refreshedAt)}
+                </summary>
+                {metadataCatalog.warnings && metadataCatalog.warnings.length > 0 ? (
+                  <ul>
+                    {metadataCatalog.warnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {metadataCatalog.totalTypes === 0 ? (
+                  <p className="endpoint-hint">
+                    No metadata discovered in parse path. Fallback: run `orgRetrieve` first, then refresh this catalog.
+                  </p>
+                ) : (
+                  metadataCatalog.types.map((item) => (
+                    <details key={item.type}>
+                      <summary>
+                        {item.type} ({item.memberCount})
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            addTypeSelection(item.type);
+                          }}
+                        >
+                          Add Type
+                        </button>
+                        {isTypeSelected(item.type) ? (
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              removeTypeSelection(item.type);
+                            }}
+                          >
+                            Remove
+                          </button>
+                        ) : null}
+                      </summary>
+                      <ul>
+                        {item.members.map((member) => (
+                          <li key={`${item.type}.${member.name}`}>
+                            {member.name}
+                            <button type="button" onClick={() => toggleMemberSelection(item.type, member.name)}>
+                              {isMemberSelected(item.type, member.name) ? 'Remove Member' : 'Add Member'}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  ))
+                )}
+              </details>
+            ) : null}
+          </>
         ) : null}
 
         {kind === 'metadataRetrieve' ? (
@@ -639,9 +817,11 @@ export default function Page(): JSX.Element {
           </div>
         ) : null}
 
-        <button type="button" onClick={runQuery} disabled={loading}>
-          {loading ? 'Running...' : 'Run Query'}
-        </button>
+        {kind !== 'metadataCatalog' ? (
+          <button type="button" onClick={runQuery} disabled={loading}>
+            {loading ? 'Running...' : 'Run Query'}
+          </button>
+        ) : null}
       </section>
 
       <section className="panel response-panel">
