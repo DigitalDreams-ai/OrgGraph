@@ -24,6 +24,7 @@ Goal: build a true differentiator by making context a deterministic, composable 
 - Deterministic derivation trace graph (meta-context layer)
 - Meaning metrics and acceptance thresholds
 - Versioned semantic deltas across refreshes
+- Canonical runtime language adoption (`docs/planning/ORGGRAPH_LEXICON.md`)
 
 ## Not In Phase 11
 - New custom storage engine rewrite
@@ -32,6 +33,7 @@ Goal: build a true differentiator by making context a deterministic, composable 
 
 ## 1. Define the Semantic Core (No Implementation Drift)
 
+- [ ] Adopt and enforce canonical terminology from `ORGGRAPH_LEXICON.md` in API/docs
 - [ ] Define `SCU` (Semantic Context Unit) schema:
 - Identity, type, invariants, dependencies, provenance, confidence policy
 - [ ] Define composition operators:

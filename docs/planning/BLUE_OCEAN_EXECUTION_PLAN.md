@@ -9,6 +9,8 @@ Build OrgGraph into a deterministic semantic runtime for Salesforce architecture
 - Meaning is modeled as constrained composition over semantic units.
 - Semantic drift is measured and blocked before trust is lost.
 
+Language standard: use canonical terms defined in `docs/planning/ORGGRAPH_LEXICON.md`.
+
 ## Non-Negotiable Product Laws
 - Deterministic by default: same snapshot + same query + same policy = same result.
 - Provenance-complete: each claim must map to derivation edges and evidence IDs.
