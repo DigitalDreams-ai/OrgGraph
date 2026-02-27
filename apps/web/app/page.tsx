@@ -28,6 +28,7 @@ type QueryKind =
   | 'askProof'
   | 'askReplay'
   | 'askMetrics'
+  | 'askTrustDashboard'
   | 'metaContext'
   | 'metaAdapt';
 
@@ -113,10 +114,12 @@ export default function Page(): JSX.Element {
   type UiTab = 'connect' | 'browser' | 'refresh' | 'analyze' | 'ask' | 'simulate' | 'proofs' | 'system';
   type AnalyzeTab = 'perms' | 'automation' | 'impact';
   type AuthPath = 'cci' | 'sf' | 'magic';
+  type OperatorRole = 'admin' | 'architect' | 'reviewer';
 
   const [uiTab, setUiTab] = useState<UiTab>('connect');
   const [analyzeTab, setAnalyzeTab] = useState<AnalyzeTab>('perms');
   const [authPath, setAuthPath] = useState<AuthPath>('cci');
+  const [operatorRole, setOperatorRole] = useState<OperatorRole>('architect');
   const [magicLink, setMagicLink] = useState('');
   const [actionCounts, setActionCounts] = useState<Record<string, number>>({});
   const [firstRunDismissed, setFirstRunDismissed] = useState(false);
@@ -235,6 +238,10 @@ export default function Page(): JSX.Element {
       if (savedAuthPath) {
         setAuthPath(savedAuthPath);
       }
+      const savedRole = localStorage.getItem('orgumented.ui.operatorRole') as OperatorRole | null;
+      if (savedRole) {
+        setOperatorRole(savedRole);
+      }
       const savedAlias = localStorage.getItem('orgumented.ui.alias');
       if (savedAlias) {
         setOrgSessionAlias(savedAlias);
@@ -279,6 +286,7 @@ export default function Page(): JSX.Element {
       localStorage.setItem('orgumented.ui.tab', uiTab);
       localStorage.setItem('orgumented.ui.analyzeTab', analyzeTab);
       localStorage.setItem('orgumented.ui.authPath', authPath);
+      localStorage.setItem('orgumented.ui.operatorRole', operatorRole);
       localStorage.setItem('orgumented.ui.alias', orgSessionAlias);
       localStorage.setItem('orgumented.ui.user', user);
       localStorage.setItem('orgumented.ui.object', objectName);
@@ -290,7 +298,7 @@ export default function Page(): JSX.Element {
     } catch {
       // ignore localStorage failures
     }
-  }, [uiTab, analyzeTab, authPath, orgSessionAlias, user, objectName, fieldName, askQuery, magicLink, actionCounts, firstRunDismissed]);
+  }, [uiTab, analyzeTab, authPath, operatorRole, orgSessionAlias, user, objectName, fieldName, askQuery, magicLink, actionCounts, firstRunDismissed]);
 
   const endpointHint = useMemo(() => {
     if (kind === 'refresh') {
@@ -365,6 +373,9 @@ export default function Page(): JSX.Element {
     if (kind === 'askMetrics') {
       return 'GET /ask/metrics/export';
     }
+    if (kind === 'askTrustDashboard') {
+      return 'GET /ask/trust/dashboard';
+    }
     if (kind === 'metaContext') {
       return 'GET /meta/context';
     }
@@ -373,6 +384,26 @@ export default function Page(): JSX.Element {
     }
     return 'POST /ask';
   }, [kind]);
+
+  const visibleTabs = useMemo((): Array<[UiTab, string]> => {
+    const all: Array<[UiTab, string]> = [
+      ['connect', 'Connect'],
+      ['browser', 'Org Browser'],
+      ['refresh', 'Refresh'],
+      ['analyze', 'Analyze'],
+      ['ask', 'Ask'],
+      ['simulate', 'Simulate'],
+      ['proofs', 'Prove'],
+      ['system', 'System']
+    ];
+    if (operatorRole === 'admin') {
+      return all;
+    }
+    if (operatorRole === 'reviewer') {
+      return all.filter(([tab]) => ['analyze', 'ask', 'proofs', 'system'].includes(tab));
+    }
+    return all.filter(([tab]) => tab !== 'connect');
+  }, [operatorRole]);
 
   async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Promise<Response> {
     let lastError: Error | undefined;
@@ -853,6 +884,18 @@ export default function Page(): JSX.Element {
         <h1>Orgumented Mission Control</h1>
         <p>Connect, retrieve, build, analyze, and explain from one guided flow.</p>
         <p className="endpoint-hint">UI Build: {BUILD_VERSION}</p>
+        <div className="row">
+          <label htmlFor="operatorRole">Operator Role</label>
+          <select
+            id="operatorRole"
+            value={operatorRole}
+            onChange={(e) => setOperatorRole(e.target.value as OperatorRole)}
+          >
+            <option value="admin">admin</option>
+            <option value="architect">architect</option>
+            <option value="reviewer">reviewer</option>
+          </select>
+        </div>
       </section>
 
       {!firstRunDismissed ? (
@@ -903,16 +946,7 @@ export default function Page(): JSX.Element {
         <aside className="panel nav-panel">
           <h2>Workflows</h2>
           <div className="top-tabs" role="tablist" aria-label="workflow sections">
-            {([
-              ['connect', 'Connect'],
-              ['browser', 'Org Browser'],
-              ['refresh', 'Refresh'],
-              ['analyze', 'Analyze'],
-              ['ask', 'Ask'],
-              ['simulate', 'Simulate'],
-              ['proofs', 'Prove'],
-              ['system', 'System']
-            ] as Array<[UiTab, string]>).map(([key, label]) => (
+            {visibleTabs.map(([key, label]) => (
               <button
                 key={key}
                 type="button"
@@ -1195,6 +1229,7 @@ export default function Page(): JSX.Element {
                 <button type="button" onClick={() => void runQuery('askProof')} disabled={loading || proofId.trim().length === 0}>Get Proof</button>
                 <button type="button" onClick={() => void runQuery('askReplay')} disabled={loading || (replayToken.trim().length === 0 && proofId.trim().length === 0)}>Replay Proof</button>
                 <button type="button" onClick={() => void runQuery('askMetrics')} disabled={loading}>Export Metrics</button>
+                <button type="button" onClick={() => void runQuery('askTrustDashboard')} disabled={loading}>Trust Dashboard</button>
               </div>
               <p className="endpoint-hint">Tip: run \"List Recent Proofs\" first, then paste proofId/replayToken.</p>
             </>

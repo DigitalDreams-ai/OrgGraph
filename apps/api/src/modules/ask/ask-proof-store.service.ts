@@ -32,6 +32,10 @@ export class AskProofStoreService {
     return this.readAll().slice(0, Math.max(1, Math.min(100, limit)));
   }
 
+  countAll(): number {
+    return this.readAll().length;
+  }
+
   private readAll(): AskProofArtifact[] {
     if (!fs.existsSync(this.storePath)) {
       return [];

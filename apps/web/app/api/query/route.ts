@@ -29,6 +29,7 @@ type QueryKind =
   | 'askProof'
   | 'askReplay'
   | 'askMetrics'
+  | 'askTrustDashboard'
   | 'metaContext'
   | 'metaAdapt';
 
@@ -252,6 +253,10 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
 
   if (request.kind === 'askMetrics') {
     return { url: `${API_BASE}/ask/metrics/export`, init: { method: 'GET' } };
+  }
+
+  if (request.kind === 'askTrustDashboard') {
+    return { url: `${API_BASE}/ask/trust/dashboard`, init: { method: 'GET' } };
   }
 
   if (request.kind === 'metaContext') {
