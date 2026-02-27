@@ -24,6 +24,7 @@ services:
       dockerfile: docker/Dockerfile
       args:
         CCI_VERSION: "${CCI_VERSION:-3.78.0}"
+        SF_CLI_VERSION: "${SF_CLI_VERSION:-latest}"
     container_name: orgumented-api
     restart: unless-stopped
     env_file:
