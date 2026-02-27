@@ -102,12 +102,6 @@ export function resolveSfProjectPath(projectPath?: string): string {
   return path.resolve(workspaceRoot, raw);
 }
 
-export function resolveSfManifestPath(manifestPath?: string): string {
-  const workspaceRoot = findWorkspaceRoot(process.cwd());
-  const raw = manifestPath?.trim() || 'manifest/package.xml';
-  return path.resolve(workspaceRoot, raw);
-}
-
 export function resolveSfParsePath(parsePath?: string): string {
   const workspaceRoot = findWorkspaceRoot(process.cwd());
   const raw = parsePath?.trim() || 'data/sf-project/force-app/main/default';

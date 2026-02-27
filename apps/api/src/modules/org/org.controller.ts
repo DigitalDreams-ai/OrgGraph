@@ -8,6 +8,8 @@ import type {
   OrgPreflightResponse,
   OrgRetrieveRequest,
   OrgRetrieveResponse,
+  OrgSessionConnectRequest,
+  OrgSessionConnectResponse,
   OrgSessionDisconnectResponse,
   OrgSessionStatusResponse,
   OrgSessionSwitchRequest,
@@ -16,9 +18,11 @@ import type {
 } from './org.types';
 
 interface OrgRetrieveBody {
+  alias?: unknown;
   runAuth?: unknown;
   runRetrieve?: unknown;
   autoRefresh?: unknown;
+  selections?: unknown;
 }
 
 interface OrgMetadataRetrieveBody {
@@ -36,13 +40,32 @@ export class OrgController {
   }
 
   @Get('/org/preflight')
-  async preflight(): Promise<OrgPreflightResponse> {
-    return this.orgService.preflight();
+  async preflight(@Query('alias') alias?: string): Promise<OrgPreflightResponse> {
+    return this.orgService.preflight(alias?.trim() || undefined);
   }
 
   @Get('/org/session')
   async sessionStatus(): Promise<OrgSessionStatusResponse> {
     return this.orgService.sessionStatus();
+  }
+
+  @Post('/org/session/connect')
+  async sessionConnect(
+    @Body() body: Partial<OrgSessionConnectRequest> = {}
+  ): Promise<OrgSessionConnectResponse> {
+    const coerce = (value: unknown): string | undefined => {
+      if (typeof value !== 'string') return undefined;
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : undefined;
+    };
+
+    return this.orgService.connectSession({
+      alias: coerce(body.alias),
+      sfdxAuthUrl: coerce(body.sfdxAuthUrl),
+      accessToken: coerce(body.accessToken),
+      instanceUrl: coerce(body.instanceUrl),
+      frontdoorUrl: coerce(body.frontdoorUrl)
+    });
   }
 
   @Post('/org/session/switch')
@@ -60,14 +83,43 @@ export class OrgController {
 
   @Post('/org/retrieve')
   async retrieve(@Body() body: OrgRetrieveBody = {}): Promise<OrgRetrieveResponse> {
+    if (body.alias !== undefined && (typeof body.alias !== 'string' || body.alias.trim().length === 0)) {
+      throw new BadRequestException('alias must be a non-empty string when provided');
+    }
     this.ensureBoolean('runAuth', body.runAuth);
     this.ensureBoolean('runRetrieve', body.runRetrieve);
     this.ensureBoolean('autoRefresh', body.autoRefresh);
+    if (
+      body.selections !== undefined &&
+      (!Array.isArray(body.selections) || body.selections.some((item) => !item || typeof item !== 'object'))
+    ) {
+      throw new BadRequestException('selections must be an array of objects when provided');
+    }
+
+    const selections =
+      body.selections === undefined
+        ? undefined
+        : body.selections.map((item) => {
+            const type = (item as { type?: unknown }).type;
+            const members = (item as { members?: unknown }).members;
+            if (typeof type !== 'string' || type.trim().length === 0) {
+              throw new BadRequestException('selection.type must be a non-empty string');
+            }
+            if (members !== undefined && (!Array.isArray(members) || members.some((m) => typeof m !== 'string'))) {
+              throw new BadRequestException('selection.members must be an array of strings');
+            }
+            return {
+              type: type.trim(),
+              members: (members as string[] | undefined)?.map((m) => m.trim()).filter((m) => m.length > 0)
+            };
+          });
 
     const request: OrgRetrieveRequest = {
+      alias: typeof body.alias === 'string' ? body.alias.trim() : undefined,
       runAuth: body.runAuth as boolean | undefined,
       runRetrieve: body.runRetrieve as boolean | undefined,
-      autoRefresh: body.autoRefresh as boolean | undefined
+      autoRefresh: body.autoRefresh as boolean | undefined,
+      selections
     };
     return this.orgService.retrieveAndRefresh(request);
   }

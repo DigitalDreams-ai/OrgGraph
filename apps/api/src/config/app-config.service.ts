@@ -35,10 +35,10 @@ export class AppConfigService {
     this.validateOptionalString('DRIFT_ALLOWLIST_NODE_TYPES');
     this.validateOptionalString('DRIFT_ALLOWLIST_RELATIONS');
     this.validateOptionalString('SF_INTEGRATION_ENABLED');
+    this.validateOptionalString('CCI_VERSION_PIN');
     this.validateOptionalString('SF_ALIAS');
     this.validateOptionalString('SF_BASE_URL');
     this.validateOptionalString('SF_PROJECT_PATH');
-    this.validateOptionalString('SF_MANIFEST_PATH');
     this.validateOptionalString('SF_PARSE_PATH');
     this.validateOptionalString('SF_WAIT_MINUTES');
     this.validateOptionalString('SF_RETRY_COUNT');
@@ -205,6 +205,10 @@ export class AppConfigService {
     return 'sf_cli_keychain';
   }
 
+  cciVersionPin(): string {
+    return process.env.CCI_VERSION_PIN?.trim() || '3.78.0';
+  }
+
   sfAlias(): string {
     return process.env.SF_ALIAS?.trim() || 'orgumented-sandbox';
   }
@@ -215,10 +219,6 @@ export class AppConfigService {
 
   sfProjectPath(): string | undefined {
     return process.env.SF_PROJECT_PATH;
-  }
-
-  sfManifestPath(): string | undefined {
-    return process.env.SF_MANIFEST_PATH;
   }
 
   sfParsePath(): string | undefined {

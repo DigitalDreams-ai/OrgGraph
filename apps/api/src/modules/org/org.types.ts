@@ -1,9 +1,11 @@
 export type OrgAuthMode = 'sf_cli_keychain';
 
 export interface OrgRetrieveRequest {
+  alias?: string;
   runAuth?: boolean;
   runRetrieve?: boolean;
   autoRefresh?: boolean;
+  selections?: Array<{ type: string; members?: string[] }>;
 }
 
 export interface OrgStepResult {
@@ -22,8 +24,8 @@ export interface OrgRetrieveResponse {
   authMode: OrgAuthMode;
   alias: string;
   projectPath: string;
-  manifestPath: string;
   parsePath: string;
+  metadataArgs?: string[];
   steps: OrgStepResult[];
 }
 
@@ -31,6 +33,13 @@ export interface OrgStatusResponse {
   integrationEnabled: boolean;
   authMode: OrgAuthMode;
   alias: string;
+  cci: {
+    installed: boolean;
+    version?: string;
+    requiredVersion: string;
+    versionPinned: boolean;
+    message: string;
+  };
   sf: {
     installed: boolean;
     message: string;
@@ -103,6 +112,22 @@ export interface OrgSessionSwitchRequest {
   alias: string;
 }
 
+export interface OrgSessionConnectRequest {
+  alias?: string;
+  sfdxAuthUrl?: string;
+  accessToken?: string;
+  instanceUrl?: string;
+  frontdoorUrl?: string;
+}
+
+export interface OrgSessionConnectResponse {
+  status: 'connected';
+  activeAlias: string;
+  authMode: OrgAuthMode;
+  connectedAt: string;
+  method: 'existing' | 'sfdx_url' | 'access_token' | 'frontdoor';
+}
+
 export interface OrgSessionSwitchResponse {
   status: 'connected';
   activeAlias: string;
@@ -130,8 +155,10 @@ export interface OrgPreflightResponse {
   authMode: OrgAuthMode;
   alias: string;
   checks: {
+    cciInstalled: boolean;
+    cciVersionPinned: boolean;
+    cciAliasAvailable: boolean;
     sfInstalled: boolean;
-    manifestPresent: boolean;
     parsePathPresent: boolean;
     aliasAuthenticated: boolean;
     sessionConnected: boolean;

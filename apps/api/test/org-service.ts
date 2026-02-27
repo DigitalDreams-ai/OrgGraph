@@ -19,19 +19,13 @@ class StubRunner {
 
 async function run(): Promise<void> {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orgumented-org-'));
-  const manifestDir = path.join(root, 'manifest');
   const sfProjectDir = path.join(root, 'data', 'sf-project');
   const parsePath = path.join(sfProjectDir, 'force-app', 'main', 'default');
 
-  fs.mkdirSync(manifestDir, { recursive: true });
   fs.mkdirSync(parsePath, { recursive: true });
-
-  const manifestPath = path.join(manifestDir, 'package.xml');
-  fs.writeFileSync(manifestPath, '<Package/>', 'utf8');
 
   process.env.SF_INTEGRATION_ENABLED = 'true';
   process.env.SF_PROJECT_PATH = sfProjectDir;
-  process.env.SF_MANIFEST_PATH = manifestPath;
   process.env.SF_PARSE_PATH = parsePath;
   process.env.SF_AUTO_REFRESH_AFTER_RETRIEVE = 'true';
   process.env.SF_RETRY_COUNT = '0';
@@ -40,9 +34,9 @@ async function run(): Promise<void> {
   const fakeConfig = {
     sfIntegrationEnabled: () => true,
     sfAuthMode: () => 'sf_cli_keychain' as const,
+    cciVersionPin: () => '3.78.0',
     sfAlias: () => 'orgumented-sandbox',
     sfProjectPath: () => sfProjectDir,
-    sfManifestPath: () => manifestPath,
     sfParsePath: () => parsePath,
     sfAutoRefreshAfterRetrieve: () => true,
     sfRetryCount: () => 0,
@@ -75,12 +69,21 @@ async function run(): Promise<void> {
     assert.equal(preflight.checks.sfInstalled, true);
     assert.equal(preflight.checks.aliasAuthenticated, true);
 
-    const result = await service.retrieveAndRefresh();
+    const result = await service.retrieveAndRefresh({
+      selections: [{ type: 'CustomObject', members: ['Account'] }]
+    });
     assert.equal(result.status, 'completed');
     assert.ok(result.steps.some((step) => step.step === 'auth' && step.status === 'completed'));
     assert.ok(result.steps.some((step) => step.step === 'retrieve' && step.status === 'completed'));
     assert.ok(result.steps.some((step) => step.step === 'refresh' && step.status === 'completed'));
+    assert.deepEqual(result.metadataArgs, ['CustomObject:Account']);
     assert.ok(runner.calls.length >= 2, 'expected auth and retrieve sf commands');
+    const retrieveCall = runner.calls.find(
+      (call) => call.command === 'sf' && call.args.includes('project') && call.args.includes('retrieve')
+    );
+    assert.ok(retrieveCall, 'expected retrieve sf command');
+    assert.ok(retrieveCall?.args.includes('--metadata'), 'expected selector-based metadata retrieve');
+    assert.ok(!retrieveCall?.args.includes('--manifest'), 'manifest retrieve must not be used');
     console.log('org service test passed');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
