@@ -52,6 +52,7 @@ async function run(): Promise<void> {
     sfManifestPath: () => manifestPath,
     sfParsePath: () => parsePath,
     sfAutoRefreshAfterRetrieve: () => true,
+    cciVersionPin: () => '3.78.0',
     sfRetryCount: () => 0,
     sfRetryDelayMs: () => 1,
     sfTimeoutSeconds: () => 30,
@@ -80,6 +81,11 @@ async function run(): Promise<void> {
   const service = new OrgService(fakeConfig as never, fakeIngestion as never, runner as never);
 
   try {
+    const preflight = await service.preflight();
+    assert.equal(preflight.integrationEnabled, true);
+    assert.equal(preflight.checks.sfInstalled, true);
+    assert.equal(preflight.checks.aliasAuthenticated, true);
+
     const result = await service.retrieveAndRefresh();
     assert.equal(result.status, 'completed');
     assert.ok(result.steps.some((step) => step.step === 'auth' && step.status === 'completed'));
