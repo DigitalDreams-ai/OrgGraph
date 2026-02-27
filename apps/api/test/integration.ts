@@ -323,12 +323,10 @@ async function run(): Promise<void> {
     const orgStatusBody = (await orgStatusRes.json()) as {
       integrationEnabled: boolean;
       authMode: string;
-      cci: { requiredVersion: string };
       sf: { installed: boolean };
     };
     assert.equal(orgStatusBody.integrationEnabled, false);
-    assert.equal(orgStatusBody.authMode, 'cci');
-    assert.equal(orgStatusBody.cci.requiredVersion, '3.78.0');
+    assert.equal(orgStatusBody.authMode, 'sf_cli_keychain');
     assert.equal(typeof orgStatusBody.sf.installed, 'boolean');
 
     const orgRetrieveBadBodyRes = await fetch(`${base}/org/retrieve`, {

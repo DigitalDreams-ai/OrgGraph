@@ -20,22 +20,16 @@ class StubRunner {
 async function run(): Promise<void> {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orgumented-org-'));
   const manifestDir = path.join(root, 'manifest');
-  const secretsDir = path.join(root, '.secrets');
   const sfProjectDir = path.join(root, 'data', 'sf-project');
   const parsePath = path.join(sfProjectDir, 'force-app', 'main', 'default');
 
   fs.mkdirSync(manifestDir, { recursive: true });
-  fs.mkdirSync(secretsDir, { recursive: true });
   fs.mkdirSync(parsePath, { recursive: true });
 
   const manifestPath = path.join(manifestDir, 'package.xml');
-  const authFile = path.join(secretsDir, 'sandbox.sfdx-url.txt');
   fs.writeFileSync(manifestPath, '<Package/>', 'utf8');
-  fs.writeFileSync(authFile, 'force://token@example', 'utf8');
 
   process.env.SF_INTEGRATION_ENABLED = 'true';
-  process.env.SF_AUTH_MODE = 'sfdx_url';
-  process.env.SF_AUTH_URL_PATH = authFile;
   process.env.SF_PROJECT_PATH = sfProjectDir;
   process.env.SF_MANIFEST_PATH = manifestPath;
   process.env.SF_PARSE_PATH = parsePath;
@@ -45,22 +39,17 @@ async function run(): Promise<void> {
 
   const fakeConfig = {
     sfIntegrationEnabled: () => true,
-    sfAuthMode: () => 'sfdx_url' as const,
-    sfAuthUrlPath: () => authFile,
+    sfAuthMode: () => 'sf_cli_keychain' as const,
     sfAlias: () => 'orgumented-sandbox',
     sfProjectPath: () => sfProjectDir,
     sfManifestPath: () => manifestPath,
     sfParsePath: () => parsePath,
     sfAutoRefreshAfterRetrieve: () => true,
-    cciVersionPin: () => '3.78.0',
     sfRetryCount: () => 0,
     sfRetryDelayMs: () => 1,
     sfTimeoutSeconds: () => 30,
     sfWaitMinutes: () => 1,
-    sfClientId: () => undefined,
-    sfJwtKeyPath: () => undefined,
-    sfUsername: () => undefined,
-    sfInstanceUrl: () => undefined
+    sfBaseUrl: () => 'https://test.salesforce.com'
   };
 
   const fakeIngestion = {
