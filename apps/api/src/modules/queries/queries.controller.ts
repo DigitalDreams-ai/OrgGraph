@@ -92,4 +92,28 @@ export class QueriesController {
 
     return this.queriesService.systemPermission(user.trim(), permission.trim(), limit);
   }
+
+  @Get('/perms/diagnose')
+  async diagnoseUser(
+    @Query('user') user?: string
+  ): Promise<{
+    user: string;
+    mapPath: string;
+    mapExists: boolean;
+    mapModifiedAt?: string;
+    mapAgeHours?: number;
+    staleThresholdHours: number;
+    stale: boolean;
+    principals: string[];
+    mappingStatus: 'resolved' | 'unmapped_user' | 'map_missing';
+    warnings: string[];
+  }> {
+    if (!user) {
+      throw new BadRequestException('user query param is required');
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.trim())) {
+      throw new BadRequestException('user must be a valid email address');
+    }
+    return this.queriesService.diagnoseUserMapping(user.trim());
+  }
 }

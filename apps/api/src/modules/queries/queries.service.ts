@@ -7,6 +7,7 @@ import { resolveUserProfileMapPath } from '../../common/path';
 @Injectable()
 export class QueriesService {
   private static readonly DEFAULT_LIMIT = 25;
+  private static readonly MAP_STALE_THRESHOLD_HOURS = 24;
 
   private readonly userProfileMapPath: string;
 
@@ -249,5 +250,59 @@ export class QueriesService {
     }
 
     return [`no principals found for ${user} in user principal map`];
+  }
+
+  diagnoseUserMapping(user: string): {
+    user: string;
+    mapPath: string;
+    mapExists: boolean;
+    mapModifiedAt?: string;
+    mapAgeHours?: number;
+    staleThresholdHours: number;
+    stale: boolean;
+    principals: string[];
+    mappingStatus: 'resolved' | 'unmapped_user' | 'map_missing';
+    warnings: string[];
+  } {
+    const mapResult = this.readUserProfileMap();
+    const principals = mapResult.map[user.toLowerCase()] ?? [];
+    const mappingStatus = mapResult.exists
+      ? principals.length > 0
+        ? 'resolved'
+        : 'unmapped_user'
+      : 'map_missing';
+    const warnings = this.buildWarnings(mappingStatus, user);
+
+    let mapModifiedAt: string | undefined;
+    let mapAgeHours: number | undefined;
+    let stale = false;
+    if (mapResult.exists) {
+      try {
+        const stat = fs.statSync(this.userProfileMapPath);
+        mapModifiedAt = stat.mtime.toISOString();
+        mapAgeHours = Number(((Date.now() - stat.mtimeMs) / 3_600_000).toFixed(2));
+        stale = mapAgeHours > QueriesService.MAP_STALE_THRESHOLD_HOURS;
+      } catch {
+        // ignore stat failures
+      }
+    }
+    if (stale) {
+      warnings.push(
+        `user principal map appears stale (${mapAgeHours}h old > ${QueriesService.MAP_STALE_THRESHOLD_HOURS}h threshold)`
+      );
+    }
+
+    return {
+      user,
+      mapPath: this.userProfileMapPath,
+      mapExists: mapResult.exists,
+      mapModifiedAt,
+      mapAgeHours,
+      staleThresholdHours: QueriesService.MAP_STALE_THRESHOLD_HOURS,
+      stale,
+      principals,
+      mappingStatus,
+      warnings
+    };
   }
 }
