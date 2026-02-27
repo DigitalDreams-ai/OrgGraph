@@ -16,6 +16,7 @@ import type {
   OrgMetadataMembersResponse,
   OrgMetadataRetrieveRequest,
   OrgMetadataRetrieveResponse,
+  OrgPreflightResponse,
   OrgRetrieveRequest,
   OrgRetrieveResponse,
   OrgSessionDisconnectResponse,
@@ -68,6 +69,118 @@ export class OrgService {
             : 'cci not found in PATH'
       },
       session: this.sessionStatus()
+    };
+  }
+
+  async preflight(): Promise<OrgPreflightResponse> {
+    const integrationEnabled = this.configService.sfIntegrationEnabled();
+    const authMode = this.configService.sfAuthMode();
+    const alias = this.resolveActiveAlias();
+    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
+    const manifestPath = resolveSfManifestPath(this.configService.sfManifestPath());
+    const parsePath = resolveSfParsePath(this.configService.sfParsePath());
+    const session = this.sessionStatus();
+    const cciRequiredVersion = this.configService.cciVersionPin();
+
+    const sfProbe = await this.probeCommand('sf', ['--version'], projectPath);
+    const cciProbe = await this.probeCommand('cci', ['version'], projectPath);
+    const cciVersion = this.extractCciVersion(cciProbe.stdout, cciProbe.stderr);
+    const cciVersionPinned = cciProbe.exitCode === 0 && cciVersion === cciRequiredVersion;
+    const manifestPresent = fs.existsSync(manifestPath);
+    const parsePathPresent = fs.existsSync(parsePath);
+
+    let aliasAuthenticated = false;
+    if (sfProbe.exitCode === 0) {
+      const aliasCheck = await this.commandRunner.run(
+        'sf',
+        ['org', 'display', '--target-org', alias, '--json'],
+        { cwd: projectPath, timeoutMs: 30_000 }
+      );
+      aliasAuthenticated = aliasCheck.exitCode === 0;
+    }
+
+    const issues: OrgPreflightResponse['issues'] = [];
+    if (!integrationEnabled) {
+      issues.push({
+        code: 'SF_INTEGRATION_DISABLED',
+        severity: 'error',
+        message: 'Salesforce integration is disabled.',
+        remediation: 'Set SF_INTEGRATION_ENABLED=true and restart API.'
+      });
+    }
+    if (sfProbe.exitCode !== 0) {
+      issues.push({
+        code: 'SF_CLI_MISSING',
+        severity: 'error',
+        message: 'sf CLI is not available in API runtime.',
+        remediation: 'Install sf CLI in API runtime/image and restart.'
+      });
+    }
+    if (authMode === 'cci' && cciProbe.exitCode !== 0) {
+      issues.push({
+        code: 'CCI_MISSING',
+        severity: 'error',
+        message: 'CumulusCI is not available in API runtime.',
+        remediation: 'Install CumulusCI 3.78.0 in API runtime/image and restart.'
+      });
+    }
+    if (authMode === 'cci' && cciProbe.exitCode === 0 && !cciVersionPinned) {
+      issues.push({
+        code: 'CCI_VERSION_MISMATCH',
+        severity: 'warning',
+        message: `CumulusCI version mismatch (expected ${cciRequiredVersion}, found ${cciVersion || 'unknown'}).`,
+        remediation: `Pin CumulusCI to ${cciRequiredVersion} in runtime image.`
+      });
+    }
+    if (!manifestPresent) {
+      issues.push({
+        code: 'MANIFEST_MISSING',
+        severity: 'error',
+        message: `Manifest not found at ${manifestPath}.`,
+        remediation: 'Create/update manifest or migrate retrieve flow to explicit metadata selection.'
+      });
+    }
+    if (!parsePathPresent) {
+      issues.push({
+        code: 'PARSE_PATH_MISSING',
+        severity: 'warning',
+        message: `Parse path not present at ${parsePath}.`,
+        remediation: 'Run retrieve once to create parse tree, then refresh graph.'
+      });
+    }
+    if (!aliasAuthenticated) {
+      issues.push({
+        code: 'ALIAS_NOT_AUTHENTICATED',
+        severity: 'error',
+        message: `No authenticated org for alias ${alias}.`,
+        remediation: 'Authenticate alias in this runtime (cci/sf), then retry Connect Org.'
+      });
+    }
+    if (session.status !== 'connected') {
+      issues.push({
+        code: 'SESSION_DISCONNECTED',
+        severity: 'warning',
+        message: 'Org session is currently disconnected.',
+        remediation: 'Use Check Session/Connect Org after authentication succeeds.'
+      });
+    }
+
+    return {
+      ok: issues.every((issue) => issue.severity !== 'error'),
+      integrationEnabled,
+      authMode,
+      alias,
+      checks: {
+        sfInstalled: sfProbe.exitCode === 0,
+        cciInstalled: cciProbe.exitCode === 0,
+        cciVersionPinned,
+        manifestPresent,
+        parsePathPresent,
+        aliasAuthenticated,
+        sessionConnected: session.status === 'connected'
+      },
+      issues,
+      session
     };
   }
 

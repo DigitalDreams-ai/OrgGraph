@@ -7,6 +7,7 @@ type QueryKind =
   | 'refresh'
   | 'orgConnect'
   | 'orgSession'
+  | 'orgPreflight'
   | 'orgSessionSwitch'
   | 'orgSessionDisconnect'
   | 'perms'
@@ -105,6 +106,9 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
   }
   if (request.kind === 'orgSession') {
     return { url: `${API_BASE}/org/session`, init: { method: 'GET' } };
+  }
+  if (request.kind === 'orgPreflight') {
+    return { url: `${API_BASE}/org/preflight`, init: { method: 'GET' } };
   }
   if (request.kind === 'orgSessionSwitch') {
     return {
@@ -296,6 +300,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         'refresh',
         'orgConnect',
         'orgSession',
+        'orgPreflight',
         'orgSessionSwitch',
         'orgSessionDisconnect',
         'perms',

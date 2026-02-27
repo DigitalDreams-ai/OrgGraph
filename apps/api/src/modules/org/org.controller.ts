@@ -5,6 +5,7 @@ import type {
   OrgMetadataMembersResponse,
   OrgMetadataRetrieveRequest,
   OrgMetadataRetrieveResponse,
+  OrgPreflightResponse,
   OrgRetrieveRequest,
   OrgRetrieveResponse,
   OrgSessionDisconnectResponse,
@@ -32,6 +33,11 @@ export class OrgController {
   @Get('/org/status')
   async status(): Promise<OrgStatusResponse> {
     return this.orgService.status();
+  }
+
+  @Get('/org/preflight')
+  async preflight(): Promise<OrgPreflightResponse> {
+    return this.orgService.preflight();
   }
 
   @Get('/org/session')

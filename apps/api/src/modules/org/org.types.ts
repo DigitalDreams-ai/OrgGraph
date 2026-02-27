@@ -121,3 +121,28 @@ export interface OrgSessionDisconnectResponse {
   authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
   disconnectedAt: string;
 }
+
+export interface OrgPreflightIssue {
+  code: string;
+  severity: 'error' | 'warning';
+  message: string;
+  remediation: string;
+}
+
+export interface OrgPreflightResponse {
+  ok: boolean;
+  integrationEnabled: boolean;
+  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  alias: string;
+  checks: {
+    sfInstalled: boolean;
+    cciInstalled: boolean;
+    cciVersionPinned: boolean;
+    manifestPresent: boolean;
+    parsePathPresent: boolean;
+    aliasAuthenticated: boolean;
+    sessionConnected: boolean;
+  };
+  issues: OrgPreflightIssue[];
+  session: OrgSessionStatusResponse;
+}

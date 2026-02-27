@@ -6,6 +6,7 @@ type QueryKind =
   | 'refresh'
   | 'orgConnect'
   | 'orgSession'
+  | 'orgPreflight'
   | 'orgSessionSwitch'
   | 'orgSessionDisconnect'
   | 'perms'
@@ -76,6 +77,16 @@ type OrgStatusPayload = {
   alias?: string;
   cci?: { installed?: boolean; version?: string; requiredVersion?: string; versionPinned?: boolean };
   sf?: { installed?: boolean };
+  session?: OrgSessionPayload;
+};
+
+type OrgPreflightPayload = {
+  ok?: boolean;
+  integrationEnabled?: boolean;
+  authMode?: string;
+  alias?: string;
+  checks?: Record<string, boolean>;
+  issues?: Array<{ code?: string; severity?: string; message?: string; remediation?: string }>;
   session?: OrgSessionPayload;
 };
 
@@ -163,6 +174,7 @@ export default function Page(): JSX.Element {
   const [latestOrgStatus, setLatestOrgStatus] = useState<OrgStatusPayload | null>(null);
   const [latestRefresh, setLatestRefresh] = useState<RefreshPayload | null>(null);
   const [latestAsk, setLatestAsk] = useState<AskPayload | null>(null);
+  const [latestPreflight, setLatestPreflight] = useState<OrgPreflightPayload | null>(null);
 
   const askPayload = useMemo(() => {
     if (kind !== 'ask' || !responseObject || typeof responseObject.payload !== 'object' || responseObject.payload === null) {
@@ -251,6 +263,9 @@ export default function Page(): JSX.Element {
     }
     if (kind === 'orgSession') {
       return 'GET /org/session';
+    }
+    if (kind === 'orgPreflight') {
+      return 'GET /org/preflight';
     }
     if (kind === 'orgSessionSwitch') {
       return 'POST /org/session/switch';
@@ -505,6 +520,8 @@ export default function Page(): JSX.Element {
             ? {}
           : activeKind === 'orgSession'
             ? {}
+            : activeKind === 'orgPreflight'
+              ? {}
             : activeKind === 'orgSessionSwitch'
               ? { alias: orgSessionAlias }
               : activeKind === 'orgSessionDisconnect'
@@ -583,6 +600,9 @@ export default function Page(): JSX.Element {
       if (activeKind === 'orgSession' && wrapped?.payload && typeof wrapped.payload === 'object') {
         setLatestSession(wrapped.payload as OrgSessionPayload);
       }
+      if (activeKind === 'orgPreflight' && wrapped?.payload && typeof wrapped.payload === 'object') {
+        setLatestPreflight(wrapped.payload as OrgPreflightPayload);
+      }
       if (activeKind === 'orgStatus' && wrapped?.payload && typeof wrapped.payload === 'object') {
         const statusPayload = wrapped.payload as OrgStatusPayload;
         setLatestOrgStatus(statusPayload);
@@ -611,9 +631,7 @@ export default function Page(): JSX.Element {
           `query ${activeKind} failed with status ${response.status}`;
         appendOperatorError(category, message);
         appendTimeline(activeKind, `failed (${category})`);
-        setErrorText(
-          'Request failed. Check API readiness, query format, and container health. Use /api/ready and /metrics for diagnosis.'
-        );
+        setErrorText(`${category}: ${message}`);
       } else {
         appendTimeline(activeKind, 'completed');
         trackAction(activeKind);
@@ -839,12 +857,32 @@ export default function Page(): JSX.Element {
                 </div>
               ) : null}
               <div className="action-row">
+                <button type="button" onClick={() => void runQuery('orgPreflight')} disabled={loading}>Run Preflight</button>
                 <button type="button" onClick={() => void runQuery('orgSession')} disabled={loading}>Check Session</button>
                 <button type="button" onClick={() => void runQuery('orgStatus')} disabled={loading}>Check Tool Status</button>
                 <button type="button" onClick={() => void runQuery('orgSessionSwitch')} disabled={loading}>Switch Alias</button>
                 <button type="button" onClick={() => void runQuery('orgConnect')} disabled={loading}>Connect Org</button>
                 <button type="button" onClick={() => void runQuery('orgSessionDisconnect')} disabled={loading}>Disconnect</button>
               </div>
+              {latestPreflight ? (
+                <details open>
+                  <summary>Preflight Findings</summary>
+                  <p className="endpoint-hint">ok: {String(latestPreflight.ok)}</p>
+                  <p className="endpoint-hint">authMode: {latestPreflight.authMode ?? 'n/a'}</p>
+                  <p className="endpoint-hint">alias: {latestPreflight.alias ?? 'n/a'}</p>
+                  {latestPreflight.issues && latestPreflight.issues.length > 0 ? (
+                    <ul>
+                      {latestPreflight.issues.map((issue, index) => (
+                        <li key={`${issue.code || 'issue'}-${index}`}>
+                          {(issue.severity || 'unknown').toUpperCase()} {issue.code}: {issue.message} {issue.remediation ? ` | Fix: ${issue.remediation}` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="endpoint-hint">No blocking issues detected.</p>
+                  )}
+                </details>
+              ) : null}
               <p className="endpoint-hint">Next step: open Org Browser tab to select metadata for retrieval.</p>
             </>
           ) : null}

@@ -3,8 +3,8 @@
 Goal: make core runtime paths consistently reliable so the platform can be trusted before higher-order UX and reasoning upgrades.
 
 ## Entry Criteria
-- [ ] Phase 27 merged
-- [ ] API and Web health checks stable in local and Docker runtime
+- [x] Phase 27 merged
+- [x] API and Web health checks stable in local and Docker runtime
 
 ## Exit Criteria
 - [ ] Connect/session/retrieve flows are deterministic and actionable
@@ -14,9 +14,9 @@ Goal: make core runtime paths consistently reliable so the platform can be trust
 ## Deliverables
 - [ ] Fix auth-path behavior so Connect tab does not imply unsupported backend mode switching
 - [ ] Harden org session lifecycle (`check`, `switch`, `connect`, `disconnect`) with explicit state transitions
-- [ ] Add runtime preflight endpoint for sf/cci/auth/keychain readiness
-- [ ] Replace generic UI error copy with structured actionable remediation
-- [ ] Add fallback-safe copy-to-clipboard behavior and visual confirmation states
+- [x] Add runtime preflight endpoint for sf/cci/auth/keychain readiness
+- [x] Replace generic UI error copy with structured actionable remediation
+- [x] Add fallback-safe copy-to-clipboard behavior and visual confirmation states
 - [ ] Add integration tests for known failure classes (`alias not authenticated`, `tool missing`, `bad request`, `drift-gated refresh`)
 
 ## Test Gates
