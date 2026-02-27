@@ -1,0 +1,38 @@
+{
+  "name": "first-success",
+  "description": "Minimal onboarding dataset and workflow seed for a successful first Orgumented run.",
+  "orgAlias": "orgumented-sandbox",
+  "steps": [
+    {
+      "action": "metadataRetrieve",
+      "selections": [
+        { "type": "CustomObject", "members": ["Opportunity"] },
+        { "type": "Profile" },
+        { "type": "PermissionSet" },
+        { "type": "Flow" },
+        { "type": "ApexClass" },
+        { "type": "ApexTrigger" }
+      ],
+      "autoRefresh": true
+    },
+    {
+      "action": "ask",
+      "query": "What touches Opportunity.StageName?"
+    },
+    {
+      "action": "simulate",
+      "user": "jane@example.com",
+      "object": "Opportunity",
+      "field": "Opportunity.StageName",
+      "profile": "balanced",
+      "proposedChanges": [
+        {
+          "action": "modify_field",
+          "object": "Opportunity",
+          "field": "Opportunity.StageName",
+          "description": "tighten stage transition behavior"
+        }
+      ]
+    }
+  ]
+}
