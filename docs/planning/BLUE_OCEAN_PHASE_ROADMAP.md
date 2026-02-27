@@ -22,6 +22,14 @@ Turn Orgumented into a replayable semantic decision runtime for Salesforce archi
 14. `Phase 24` - WebUI workflow overhaul and operator experience hardening
 15. `Phase 25` - WebUI product overhaul and workflow-first operator experience
 16. `Phase 26` - LLM rollout governance, regression benchmarking, and ops hardening
+17. `Phase 27` - LLM governance implementation I (shadow/canary foundations)
+18. `Phase 28` - Runtime reliability and trust baseline
+19. `Phase 29` - Identity and permission truth layer
+20. `Phase 30` - Ask core semantic query compilation
+21. `Phase 31` - Proof productization and decision packets
+22. `Phase 32` - What-if simulation and risk engine
+23. `Phase 33` - WebUI revolutionary overhaul
+24. `Phase 34` - Production trust, adoption, and commercialization readiness
 
 ## Gate Policy
 - No phase starts without entry criteria met.
