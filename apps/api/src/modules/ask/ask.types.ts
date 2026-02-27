@@ -138,6 +138,19 @@ export interface AskProofLookupResponse {
   status: 'implemented';
 }
 
+export interface AskProofListResponse {
+  proofs: Array<{
+    proofId: string;
+    replayToken: string;
+    generatedAt: string;
+    snapshotId: string;
+    trustLevel: AskTrustLevel;
+    query: string;
+  }>;
+  total: number;
+  status: 'implemented';
+}
+
 export interface AskReplayRequest {
   replayToken?: string;
   proofId?: string;

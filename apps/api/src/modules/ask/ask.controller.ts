@@ -6,7 +6,8 @@ import {
   HttpException,
   InternalServerErrorException,
   Param,
-  Post
+  Post,
+  Query
 } from '@nestjs/common';
 import { AskService } from './ask.service';
 import type {
@@ -14,6 +15,7 @@ import type {
   AskArchitectureDecisionResponse,
   AskInternalErrorEnvelope,
   AskMetricsExportResponse,
+  AskProofListResponse,
   AskPolicyValidateRequest,
   AskPolicyValidateResponse,
   AskProofLookupResponse,
@@ -142,6 +144,12 @@ export class AskController {
       throw new BadRequestException('proofId is required');
     }
     return this.askService.getProof(proofId.trim());
+  }
+
+  @Get('/ask/proofs/recent')
+  listRecentProofs(@Query('limit') limitRaw?: string): AskProofListResponse {
+    const limit = limitRaw ? Number(limitRaw) : 10;
+    return this.askService.listRecentProofs(Number.isInteger(limit) ? limit : 10);
   }
 
   @Get('/ask/metrics/export')
