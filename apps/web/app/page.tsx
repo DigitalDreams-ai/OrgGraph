@@ -22,6 +22,7 @@ type QueryKind =
   | 'metadataRetrieve'
   | 'refreshDiff'
   | 'askArchitecture'
+  | 'askProofsRecent'
   | 'askProof'
   | 'askReplay'
   | 'askMetrics'
@@ -310,6 +311,9 @@ export default function Page(): JSX.Element {
     if (kind === 'askArchitecture') {
       return 'POST /ask/architecture';
     }
+    if (kind === 'askProofsRecent') {
+      return 'GET /ask/proofs/recent?limit=...';
+    }
     if (kind === 'askProof') {
       return 'GET /ask/proof/:proofId';
     }
@@ -542,6 +546,8 @@ export default function Page(): JSX.Element {
                     ? { fromSnapshot, toSnapshot }
                     : activeKind === 'askArchitecture'
                       ? { user: archUser, object: archObject, field: archField, maxPaths: archMaxPaths }
+                      : activeKind === 'askProofsRecent'
+                        ? { limit }
                       : activeKind === 'askProof'
                         ? { proofId }
                         : activeKind === 'askReplay'
@@ -1092,10 +1098,12 @@ export default function Page(): JSX.Element {
                 <input id="replayToken" value={replayToken} onChange={(e) => setReplayToken(e.target.value)} />
               </div>
               <div className="action-row">
-                <button type="button" onClick={() => void runQuery('askProof')} disabled={loading}>Get Proof</button>
-                <button type="button" onClick={() => void runQuery('askReplay')} disabled={loading}>Replay Proof</button>
+                <button type="button" onClick={() => void runQuery('askProofsRecent')} disabled={loading}>List Recent Proofs</button>
+                <button type="button" onClick={() => void runQuery('askProof')} disabled={loading || proofId.trim().length === 0}>Get Proof</button>
+                <button type="button" onClick={() => void runQuery('askReplay')} disabled={loading || (replayToken.trim().length === 0 && proofId.trim().length === 0)}>Replay Proof</button>
                 <button type="button" onClick={() => void runQuery('askMetrics')} disabled={loading}>Export Metrics</button>
               </div>
+              <p className="endpoint-hint">Tip: run \"List Recent Proofs\" first, then paste proofId/replayToken.</p>
             </>
           ) : null}
 

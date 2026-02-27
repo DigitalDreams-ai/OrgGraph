@@ -17,6 +17,7 @@ import type {
   AskArchitectureDecisionResponse,
   AskMeaningMetrics,
   AskMetricsExportResponse,
+  AskProofListResponse,
   AskPolicyValidateRequest,
   AskPolicyValidateResponse,
   AskProofArtifact,
@@ -75,6 +76,22 @@ export class AskService {
       throw new NotFoundException(`proof not found: ${proofId}`);
     }
     return { proof, status: 'implemented' };
+  }
+
+  listRecentProofs(limit = 10): AskProofListResponse {
+    const proofs = this.proofStore.listRecent(limit).map((proof) => ({
+      proofId: proof.proofId,
+      replayToken: proof.replayToken,
+      generatedAt: proof.generatedAt,
+      snapshotId: proof.snapshotId,
+      trustLevel: proof.trustLevel,
+      query: proof.request.query
+    }));
+    return {
+      proofs,
+      total: proofs.length,
+      status: 'implemented'
+    };
   }
 
   exportMetrics(): AskMetricsExportResponse {

@@ -832,6 +832,7 @@ async function run(): Promise<void> {
       answer: string;
       deterministicAnswer: string;
       plan: { intent: string };
+      proof: { proofId: string; replayToken: string };
       llm: {
         used: boolean;
         provider: string;
@@ -859,6 +860,21 @@ async function run(): Promise<void> {
     assert.equal(askProofBody.proof.proofId, askPerms.proof.proofId);
     assert.equal(askProofBody.proof.replayToken, askPerms.proof.replayToken);
     assert.equal(typeof askProofBody.proof.policyId, 'string');
+
+    const askRecentProofsRes = await fetch(`${base}/ask/proofs/recent?limit=10`);
+    assert.equal(askRecentProofsRes.status, 200, 'ask recent proofs should return 200');
+    const askRecentProofsBody = (await askRecentProofsRes.json()) as {
+      status: string;
+      total: number;
+      proofs: Array<{ proofId: string; replayToken: string }>;
+    };
+    assert.equal(askRecentProofsBody.status, 'implemented');
+    assert.ok(askRecentProofsBody.total > 0);
+    assert.equal(
+      askRecentProofsBody.proofs[0]?.proofId,
+      askLlmOpenAi.proof.proofId,
+      'recent proofs should be newest-first and include the latest ask proof first'
+    );
 
     const askReplayRes = await fetch(`${base}/ask/replay`, {
       method: 'POST',

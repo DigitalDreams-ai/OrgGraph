@@ -23,6 +23,7 @@ type QueryKind =
   | 'metadataRetrieve'
   | 'refreshDiff'
   | 'askArchitecture'
+  | 'askProofsRecent'
   | 'askProof'
   | 'askReplay'
   | 'askMetrics'
@@ -190,6 +191,12 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
     };
   }
 
+  if (request.kind === 'askProofsRecent') {
+    const params = new URLSearchParams();
+    appendParam(params, 'limit', body.limit);
+    return { url: `${API_BASE}/ask/proofs/recent?${params.toString()}`, init: { method: 'GET' } };
+  }
+
   if (request.kind === 'askProof') {
     const proofId = typeof body.proofId === 'string' ? body.proofId : '';
     return { url: `${API_BASE}/ask/proof/${encodeURIComponent(proofId)}`, init: { method: 'GET' } };
@@ -323,6 +330,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         'metadataRetrieve',
         'refreshDiff',
         'askArchitecture',
+        'askProofsRecent',
         'askProof',
         'askReplay',
         'askMetrics',

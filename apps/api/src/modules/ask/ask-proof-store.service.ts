@@ -28,6 +28,10 @@ export class AskProofStoreService {
     return entries.find((entry) => entry.replayToken === replayToken);
   }
 
+  listRecent(limit = 10): AskProofArtifact[] {
+    return this.readAll().slice(0, Math.max(1, Math.min(100, limit)));
+  }
+
   private readAll(): AskProofArtifact[] {
     if (!fs.existsSync(this.storePath)) {
       return [];
