@@ -8,6 +8,7 @@ function run(): void {
   assert.equal(permsPlan.intent, 'perms');
   assert.equal(permsPlan.entities.user, 'jane@example.com');
   assert.equal(permsPlan.entities.object, 'Case');
+  assert.equal(typeof permsPlan.normalizedQuery, 'string');
 
   const complexEmailPermsPlan = planner.plan(
     'Can _john.shbu0nbf92ei.98wz66bcffvd.lb7cpijolxkf.rvguteb2fgug@litify.com.uat edit object Opportunity?'
@@ -35,6 +36,18 @@ function run(): void {
   const autoPlan = planner.plan('What runs on object Opportunity?');
   assert.equal(autoPlan.intent, 'automation');
   assert.equal(autoPlan.entities.object, 'Opportunity');
+
+  const normalizedPermPlan = planner.plan('Who can edit object Opportunity?');
+  assert.equal(normalizedPermPlan.intent, 'perms');
+  assert.ok(normalizedPermPlan.rewriteRules?.includes('perm_who_can_edit'));
+
+  const normalizedAutoPlan = planner.plan('Which flows run on object Opportunity?');
+  assert.equal(normalizedAutoPlan.intent, 'automation');
+  assert.ok(normalizedAutoPlan.rewriteRules?.includes('auto_which_flows'));
+
+  const normalizedImpactPlan = planner.plan('What changes if Opportunity.StageName is updated?');
+  assert.equal(normalizedImpactPlan.intent, 'impact');
+  assert.ok(normalizedImpactPlan.rewriteRules?.includes('impact_what_changes_if'));
 
   const unknownPlan = planner.plan('hello world');
   assert.equal(unknownPlan.intent, 'unknown');
