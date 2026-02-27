@@ -5,15 +5,16 @@ import type { AskPlan, AskIntent } from './planner.types';
 export class PlannerService {
   plan(query: string): AskPlan {
     const normalized = query.trim();
-    const lower = normalized.toLowerCase();
+    const { normalizedQuery, rewriteRules } = this.normalizeQuery(normalized);
+    const lower = normalizedQuery.toLowerCase();
 
     const user = this.extractUser(normalized);
     const field = this.extractField(normalized);
-    const object = this.extractObject(normalized, field);
+    const object = this.extractObject(normalized, field) ?? this.extractObject(normalizedQuery, field);
 
-    const hasPerms = /(perm|permission|edit|access|can\s+i)/i.test(lower);
-    const hasAutomation = /(automation|trigger|flow|runs\s+on|what\s+runs)/i.test(lower);
-    const hasImpact = /(impact|break|touches|what\s+touches)/i.test(lower);
+    const hasPerms = /(perm|permission|edit|access|who can edit|who has access|can\s+i)/i.test(lower);
+    const hasAutomation = /(automation|trigger|flow|runs\s+on|what\s+runs|which\s+flows|which\s+triggers)/i.test(lower);
+    const hasImpact = /(impact|break|touches|what\s+touches|blast radius|what changes if)/i.test(lower);
 
     let intent: AskIntent = 'unknown';
     const activeCount = [hasPerms, hasAutomation, hasImpact].filter(Boolean).length;
@@ -40,10 +41,35 @@ export class PlannerService {
 
     return {
       intent,
+      normalizedQuery,
+      rewriteRules,
       entities: { user, object, field },
       graphCalls,
       evidenceCalls: ['evidence.search']
     };
+  }
+
+  private normalizeQuery(input: string): { normalizedQuery: string; rewriteRules: string[] } {
+    let normalized = input.toLowerCase().replace(/\s+/g, ' ').trim();
+    const rewriteRules: string[] = [];
+
+    const rules: Array<{ pattern: RegExp; replacement: string; id: string }> = [
+      { pattern: /\bwho can edit\b/g, replacement: 'permission edit', id: 'perm_who_can_edit' },
+      { pattern: /\bwho has access\b/g, replacement: 'permission access', id: 'perm_who_has_access' },
+      { pattern: /\bwhich flows\b/g, replacement: 'automation flows', id: 'auto_which_flows' },
+      { pattern: /\bwhich triggers\b/g, replacement: 'automation triggers', id: 'auto_which_triggers' },
+      { pattern: /\bblast radius\b/g, replacement: 'impact', id: 'impact_blast_radius' },
+      { pattern: /\bwhat changes if\b/g, replacement: 'impact', id: 'impact_what_changes_if' }
+    ];
+
+    for (const rule of rules) {
+      if (rule.pattern.test(normalized)) {
+        normalized = normalized.replace(rule.pattern, rule.replacement);
+        rewriteRules.push(rule.id);
+      }
+    }
+
+    return { normalizedQuery: normalized, rewriteRules };
   }
 
   private extractUser(input: string): string | undefined {
