@@ -260,7 +260,24 @@ Response includes deterministic engines:
 - `engines.releaseRisk`
 - `composite.trustLevel`, `composite.topRiskDrivers`, `composite.replayToken`
 
-### 8.6 Meta-Context Adaptation (Phase 16)
+### 8.6 Ask Simulation and Compare (Phase 32)
+```bash
+curl -X POST http://localhost:3100/ask/simulate \
+  -H 'content-type: application/json' \
+  -d '{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"balanced","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"}]}'
+
+curl -X POST http://localhost:3100/ask/simulate/compare \
+  -H 'content-type: application/json' \
+  -d '{"scenarioA":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"strict","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"}]},"scenarioB":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"exploratory","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"},{"action":"add_automation","object":"Opportunity"}]}}'
+```
+
+### 8.7 Trust Dashboard (Phase 34)
+```bash
+curl http://localhost:3100/ask/trust/dashboard
+```
+Includes replay/pass proxy rate, proof coverage, drift snapshot trend, and failure classes.
+
+### 8.8 Meta-Context Adaptation (Phase 16)
 ```bash
 curl http://localhost:3100/meta/context
 curl -X POST http://localhost:3100/meta/adapt -H 'content-type: application/json' -d '{"dryRun":true}'

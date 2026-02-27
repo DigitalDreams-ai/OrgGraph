@@ -26,7 +26,8 @@ import type {
   AskReplayRequest,
   AskReplayResponse,
   AskRequest,
-  AskResponse
+  AskResponse,
+  AskTrustDashboardResponse
 } from './ask.types';
 
 @Controller()
@@ -159,6 +160,11 @@ export class AskController {
   @Get('/ask/metrics/export')
   exportMetrics(): AskMetricsExportResponse {
     return this.askService.exportMetrics();
+  }
+
+  @Get('/ask/trust/dashboard')
+  trustDashboard(): AskTrustDashboardResponse {
+    return this.askService.trustDashboard();
   }
 
   @Post('/ask/policy/validate')

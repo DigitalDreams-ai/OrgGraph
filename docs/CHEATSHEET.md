@@ -49,6 +49,8 @@ curl "http://localhost:3100/automation?object=Opportunity"
 curl "http://localhost:3100/impact?field=Opportunity.StageName"
 curl -X POST http://localhost:3100/ask -H 'content-type: application/json' -d '{"query":"What touches Opportunity.StageName?"}'
 curl -X POST http://localhost:3100/ask/architecture -H 'content-type: application/json' -d '{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName"}'
+curl -X POST http://localhost:3100/ask/simulate -H 'content-type: application/json' -d '{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"balanced","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"}]}'
+curl -X POST http://localhost:3100/ask/simulate/compare -H 'content-type: application/json' -d '{"scenarioA":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"strict","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"}]},"scenarioB":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"exploratory","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"},{"action":"add_automation","object":"Opportunity"}]}}'
 curl -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgConnect","payload":{}}'
 curl http://localhost:3100/org/session
 curl -X POST http://localhost:3100/org/session/switch -H 'content-type: application/json' -d '{"alias":"orgumented-sandbox"}'
@@ -64,6 +66,7 @@ curl -X POST http://localhost:3100/ask/replay -H 'content-type: application/json
 curl -X POST http://localhost:3100/ask -H 'content-type: application/json' -d '{"query":"What touches Opportunity.StageName?","traceLevel":"full","mode":"deterministic"}'
 curl -X POST http://localhost:3100/ask/policy/validate -H 'content-type: application/json' -d '{"groundingThreshold":0.7,"constraintThreshold":0.9,"ambiguityMaxThreshold":0.45,"dryRun":true}'
 curl http://localhost:3100/ask/metrics/export
+curl http://localhost:3100/ask/trust/dashboard
 ```
 
 ## Web Proxy (`/api/query`)
@@ -96,13 +99,14 @@ npm run phase14:drift-gate
 ./scripts/phase17-benchmark.sh
 ```
 
-## WebUI Tabs (Phase 25)
+## WebUI Tabs
 - `Connect`: auth path + session/alias actions
 - `Org Browser`: searchable metadata tree + retrieval cart
-- `Refresh & Build`: full/incremental refresh + snapshot diff
+- `Refresh`: full/incremental refresh + snapshot diff
 - `Analyze`: permissions/automation/impact workflows
 - `Ask`: deterministic answer + proof envelope + optional elaboration
-- `Proofs & Metrics`: proof lookup/replay + metrics export
+- `Simulate`: what-if risk scoring + A/B compare
+- `Prove`: proof lookup/replay + metrics/trust dashboard
 - `System`: diagnostics, meta-context, action telemetry
 
 ## Fast Fixes

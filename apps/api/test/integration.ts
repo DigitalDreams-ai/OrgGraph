@@ -1033,6 +1033,24 @@ async function run(): Promise<void> {
       )
     );
 
+    const askTrustDashboardRes = await fetch(`${base}/ask/trust/dashboard`);
+    assert.equal(askTrustDashboardRes.status, 200);
+    const askTrustDashboardBody = (await askTrustDashboardRes.json()) as {
+      status: string;
+      replayPassRate: number;
+      proofCoverageRate: number;
+      totals: { askRecords: number; proofArtifacts: number };
+      driftTrend: { snapshotCount: number };
+      failureClasses: Array<{ class: string; count: number }>;
+    };
+    assert.equal(askTrustDashboardBody.status, 'implemented');
+    assert.equal(typeof askTrustDashboardBody.replayPassRate, 'number');
+    assert.equal(typeof askTrustDashboardBody.proofCoverageRate, 'number');
+    assert.ok(askTrustDashboardBody.totals.askRecords > 0);
+    assert.ok(askTrustDashboardBody.totals.proofArtifacts > 0);
+    assert.ok(askTrustDashboardBody.driftTrend.snapshotCount >= 1);
+    assert.ok(askTrustDashboardBody.failureClasses.length >= 1);
+
     const metaContextRes = await fetch(`${base}/meta/context`);
     assert.equal(metaContextRes.status, 200, 'meta context should return 200');
     const metaContextBody = (await metaContextRes.json()) as {

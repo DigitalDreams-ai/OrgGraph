@@ -348,6 +348,29 @@ export interface AskMetricsExportResponse {
   }>;
 }
 
+export interface AskTrustDashboardResponse {
+  status: 'implemented';
+  generatedAt: string;
+  totals: {
+    askRecords: number;
+    proofArtifacts: number;
+    trusted: number;
+    conditional: number;
+    refused: number;
+  };
+  replayPassRate: number;
+  proofCoverageRate: number;
+  driftTrend: {
+    snapshotCount: number;
+    latestSnapshotId?: string;
+    previousSnapshotId?: string;
+  };
+  failureClasses: Array<{
+    class: 'llm_fallback' | 'policy_refusal' | 'constraint_risk' | 'none';
+    count: number;
+  }>;
+}
+
 export interface AskInternalErrorEnvelope {
   error: {
     code: 'ASK_INTERNAL_ERROR';

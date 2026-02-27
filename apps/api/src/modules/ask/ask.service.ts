@@ -17,6 +17,7 @@ import type {
   AskArchitectureDecisionResponse,
   AskMeaningMetrics,
   AskMetricsExportResponse,
+  AskTrustDashboardResponse,
   AskSimulationCompareRequest,
   AskSimulationCompareResponse,
   AskSimulationRequest,
@@ -101,6 +102,52 @@ export class AskService {
 
   exportMetrics(): AskMetricsExportResponse {
     return this.metricsStore.exportSummary();
+  }
+
+  trustDashboard(): AskTrustDashboardResponse {
+    const metrics = this.metricsStore.exportSummary();
+    const proofCount = this.proofStore.countAll();
+    const trusted = metrics.bySnapshot.reduce((sum, item) => sum + item.trusted, 0);
+    const conditional = metrics.bySnapshot.reduce((sum, item) => sum + item.conditional, 0);
+    const refused = metrics.bySnapshot.reduce((sum, item) => sum + item.refused, 0);
+    const llmFallbackCount = metrics.byProvider.reduce((sum, item) => sum + item.errorCount, 0);
+    const replayPassRate = metrics.totalRecords === 0 ? 1 : Number((trusted / metrics.totalRecords).toFixed(4));
+    const proofCoverageRate =
+      metrics.totalRecords === 0 ? 1 : Number((Math.min(1, proofCount / metrics.totalRecords)).toFixed(4));
+    const sortedSnapshots = [...metrics.bySnapshot].sort((a, b) => a.latestRecordedAt.localeCompare(b.latestRecordedAt));
+    const latest = sortedSnapshots[sortedSnapshots.length - 1];
+    const previous = sortedSnapshots[sortedSnapshots.length - 2];
+
+    return {
+      status: 'implemented',
+      generatedAt: new Date().toISOString(),
+      totals: {
+        askRecords: metrics.totalRecords,
+        proofArtifacts: proofCount,
+        trusted,
+        conditional,
+        refused
+      },
+      replayPassRate,
+      proofCoverageRate,
+      driftTrend: {
+        snapshotCount: metrics.bySnapshot.length,
+        latestSnapshotId: latest?.snapshotId,
+        previousSnapshotId: previous?.snapshotId
+      },
+      failureClasses: [
+        { class: 'llm_fallback', count: llmFallbackCount },
+        { class: 'policy_refusal', count: refused },
+        { class: 'constraint_risk', count: conditional },
+        {
+          class: 'none',
+          count: Math.max(
+            0,
+            metrics.totalRecords - (llmFallbackCount + refused + conditional)
+          )
+        }
+      ]
+    };
   }
 
   validatePolicy(input: AskPolicyValidateRequest): AskPolicyValidateResponse {
