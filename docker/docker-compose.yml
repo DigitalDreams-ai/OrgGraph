@@ -51,6 +51,8 @@ services:
       - ../config:/app/config:ro
       - ../fixtures:/app/fixtures:ro
       - ../manifest:/app/manifest:ro
+      - ../data/sf-keychain/.sf:/root/.sf
+      - ../data/sf-keychain/.sfdx:/root/.sfdx
     depends_on:
       postgres:
         condition: service_healthy

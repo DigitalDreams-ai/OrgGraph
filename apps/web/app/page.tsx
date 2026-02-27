@@ -80,7 +80,6 @@ type OrgStatusPayload = {
   integrationEnabled?: boolean;
   authMode?: string;
   alias?: string;
-  cci?: { installed?: boolean; version?: string; requiredVersion?: string; versionPinned?: boolean };
   sf?: { installed?: boolean };
   session?: OrgSessionPayload;
 };
@@ -113,14 +112,11 @@ function sleep(ms: number): Promise<void> {
 export default function Page(): JSX.Element {
   type UiTab = 'connect' | 'browser' | 'refresh' | 'analyze' | 'ask' | 'simulate' | 'proofs' | 'system';
   type AnalyzeTab = 'perms' | 'automation' | 'impact';
-  type AuthPath = 'cci' | 'sf' | 'magic';
   type OperatorRole = 'admin' | 'architect' | 'reviewer';
 
   const [uiTab, setUiTab] = useState<UiTab>('connect');
   const [analyzeTab, setAnalyzeTab] = useState<AnalyzeTab>('perms');
-  const [authPath, setAuthPath] = useState<AuthPath>('cci');
   const [operatorRole, setOperatorRole] = useState<OperatorRole>('architect');
-  const [magicLink, setMagicLink] = useState('');
   const [actionCounts, setActionCounts] = useState<Record<string, number>>({});
   const [firstRunDismissed, setFirstRunDismissed] = useState(false);
 
@@ -234,10 +230,6 @@ export default function Page(): JSX.Element {
       if (savedAnalyzeTab) {
         setAnalyzeTab(savedAnalyzeTab);
       }
-      const savedAuthPath = localStorage.getItem('orgumented.ui.authPath') as AuthPath | null;
-      if (savedAuthPath) {
-        setAuthPath(savedAuthPath);
-      }
       const savedRole = localStorage.getItem('orgumented.ui.operatorRole') as OperatorRole | null;
       if (savedRole) {
         setOperatorRole(savedRole);
@@ -270,10 +262,6 @@ export default function Page(): JSX.Element {
       if (dismissed === '1') {
         setFirstRunDismissed(true);
       }
-      const savedMagicLink = localStorage.getItem('orgumented.ui.magicLink');
-      if (savedMagicLink) {
-        setMagicLink(savedMagicLink);
-      }
     } catch {
       // ignore localStorage failures
     }
@@ -285,20 +273,18 @@ export default function Page(): JSX.Element {
     try {
       localStorage.setItem('orgumented.ui.tab', uiTab);
       localStorage.setItem('orgumented.ui.analyzeTab', analyzeTab);
-      localStorage.setItem('orgumented.ui.authPath', authPath);
       localStorage.setItem('orgumented.ui.operatorRole', operatorRole);
       localStorage.setItem('orgumented.ui.alias', orgSessionAlias);
       localStorage.setItem('orgumented.ui.user', user);
       localStorage.setItem('orgumented.ui.object', objectName);
       localStorage.setItem('orgumented.ui.field', fieldName);
       localStorage.setItem('orgumented.ui.askQuery', askQuery);
-      localStorage.setItem('orgumented.ui.magicLink', magicLink);
       localStorage.setItem('orgumented.ui.actionCounts', JSON.stringify(actionCounts));
       localStorage.setItem('orgumented.ui.firstRunDismissed', firstRunDismissed ? '1' : '0');
     } catch {
       // ignore localStorage failures
     }
-  }, [uiTab, analyzeTab, authPath, operatorRole, orgSessionAlias, user, objectName, fieldName, askQuery, magicLink, actionCounts, firstRunDismissed]);
+  }, [uiTab, analyzeTab, operatorRole, orgSessionAlias, user, objectName, fieldName, askQuery, actionCounts, firstRunDismissed]);
 
   const endpointHint = useMemo(() => {
     if (kind === 'refresh') {
@@ -902,7 +888,7 @@ export default function Page(): JSX.Element {
         <section className="panel status-card">
           <h2>First-Run Checklist</h2>
           <ol>
-            <li>Connect to org using CCI/SF/magic-link path.</li>
+            <li>Authenticate alias with Salesforce CLI keychain (`sf org login ...`).</li>
             <li>Browse metadata and add items to retrieval cart.</li>
             <li>Retrieve selected metadata and rebuild graph.</li>
             <li>Run Analyze and Ask workflows.</li>
@@ -922,8 +908,6 @@ export default function Page(): JSX.Element {
         </section>
         <section className="panel status-card">
           <h2>Toolchain</h2>
-          <p className="endpoint-hint">cci installed: {String(latestOrgStatus?.cci?.installed ?? false)}</p>
-          <p className="endpoint-hint">cci version: {latestOrgStatus?.cci?.version ?? 'n/a'}</p>
           <p className="endpoint-hint">sf installed: {String(latestOrgStatus?.sf?.installed ?? false)}</p>
           <p className="endpoint-hint">auth mode: {latestOrgStatus?.authMode ?? latestSession?.authMode ?? 'n/a'}</p>
           <p className="endpoint-hint">Next: go to Connect tab if session is not ready.</p>
@@ -972,29 +956,16 @@ export default function Page(): JSX.Element {
           {uiTab === 'connect' ? (
             <>
               <h2>Connect Org</h2>
-              <p className="endpoint-hint">Choose a path, set alias, then run connect/session actions.</p>
-              <div className="tab-row">
-                {([
-                  ['cci', 'CumulusCI'],
-                  ['sf', 'SF CLI'],
-                  ['magic', 'Magic Link']
-                ] as Array<[AuthPath, string]>).map(([path, label]) => (
-                  <button key={path} type="button" className={authPath === path ? 'tab active' : 'tab'} onClick={() => setAuthPath(path)}>
-                    {label}
-                  </button>
-                ))}
-              </div>
+              <p className="endpoint-hint">
+                Org auth is delegated to Salesforce CLI keychain only. Authenticate once in runtime, then connect using alias.
+              </p>
               <div className="row">
                 <label htmlFor="orgSessionAlias">Org Alias</label>
                 <input id="orgSessionAlias" value={orgSessionAlias} onChange={(e) => setOrgSessionAlias(e.target.value)} />
               </div>
-              {authPath === 'magic' ? (
-                <div className="row">
-                  <label htmlFor="magicLink">Magic Link / SFDX URL</label>
-                  <textarea id="magicLink" value={magicLink} onChange={(e) => setMagicLink(e.target.value)} rows={3} />
-                  <p className="endpoint-hint">Paste-only helper for operator workflow tracking. Auth execution still uses runtime config.</p>
-                </div>
-              ) : null}
+              <p className="endpoint-hint">
+                Login command: <code>sf org login web --alias {orgSessionAlias || 'orgumented-sandbox'} --instance-url https://test.salesforce.com --set-default</code>
+              </p>
               <div className="action-row">
                 <button type="button" onClick={() => void runQuery('orgPreflight')} disabled={loading}>Run Preflight</button>
                 <button type="button" onClick={() => void runQuery('orgSession')} disabled={loading}>Check Session</button>

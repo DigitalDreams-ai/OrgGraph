@@ -113,15 +113,3 @@ export function resolveSfParsePath(parsePath?: string): string {
   const raw = parsePath?.trim() || 'data/sf-project/force-app/main/default';
   return path.resolve(workspaceRoot, raw);
 }
-
-export function resolveSfAuthCodePath(authCodePath?: string): string {
-  const workspaceRoot = findWorkspaceRoot(process.cwd());
-  const raw = authCodePath?.trim() || '.secrets/sf-auth-code.txt';
-  return path.resolve(workspaceRoot, raw);
-}
-
-export function resolveSfTokenStorePath(tokenStorePath?: string): string {
-  const workspaceRoot = findWorkspaceRoot(process.cwd());
-  const raw = tokenStorePath?.trim() || '.secrets/sf-oauth-token.json';
-  return path.resolve(workspaceRoot, raw);
-}

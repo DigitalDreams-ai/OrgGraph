@@ -35,18 +35,8 @@ export class AppConfigService {
     this.validateOptionalString('DRIFT_ALLOWLIST_NODE_TYPES');
     this.validateOptionalString('DRIFT_ALLOWLIST_RELATIONS');
     this.validateOptionalString('SF_INTEGRATION_ENABLED');
-    this.validateOptionalString('SF_AUTH_MODE');
-    this.validateOptionalString('CCI_VERSION_PIN');
-    this.validateOptionalString('SF_AUTH_URL_PATH');
     this.validateOptionalString('SF_ALIAS');
-    this.validateOptionalString('SF_CLIENT_ID');
-    this.validateOptionalString('SF_JWT_KEY_PATH');
-    this.validateOptionalString('SF_USERNAME');
     this.validateOptionalString('SF_BASE_URL');
-    this.validateOptionalString('SF_CLIENT_SECRET');
-    this.validateOptionalString('SF_REDIRECT_URI');
-    this.validateOptionalString('SF_AUTH_CODE_PATH');
-    this.validateOptionalString('SF_TOKEN_STORE_PATH');
     this.validateOptionalString('SF_PROJECT_PATH');
     this.validateOptionalString('SF_MANIFEST_PATH');
     this.validateOptionalString('SF_PARSE_PATH');
@@ -211,56 +201,16 @@ export class AppConfigService {
     return (process.env.SF_INTEGRATION_ENABLED || 'false').trim().toLowerCase() === 'true';
   }
 
-  sfAuthMode(): 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token' {
-    const mode = (process.env.SF_AUTH_MODE || 'cci').trim().toLowerCase();
-    if (mode !== 'cci' && mode !== 'sfdx_url' && mode !== 'jwt' && mode !== 'oauth_refresh_token') {
-      throw new Error(`Invalid SF_AUTH_MODE: ${mode}`);
-    }
-    return mode as 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
-  }
-
-  cciVersionPin(): string {
-    return process.env.CCI_VERSION_PIN?.trim() || '3.78.0';
-  }
-
-  sfAuthUrlPath(): string | undefined {
-    return process.env.SF_AUTH_URL_PATH;
+  sfAuthMode(): 'sf_cli_keychain' {
+    return 'sf_cli_keychain';
   }
 
   sfAlias(): string {
     return process.env.SF_ALIAS?.trim() || 'orgumented-sandbox';
   }
 
-  sfClientId(): string | undefined {
-    return process.env.SF_CLIENT_ID;
-  }
-
-  sfJwtKeyPath(): string | undefined {
-    return process.env.SF_JWT_KEY_PATH;
-  }
-
-  sfUsername(): string | undefined {
-    return process.env.SF_USERNAME;
-  }
-
   sfBaseUrl(): string {
     return process.env.SF_BASE_URL?.trim() || 'https://test.salesforce.com';
-  }
-
-  sfClientSecret(): string | undefined {
-    return process.env.SF_CLIENT_SECRET;
-  }
-
-  sfRedirectUri(): string | undefined {
-    return process.env.SF_REDIRECT_URI;
-  }
-
-  sfAuthCodePath(): string | undefined {
-    return process.env.SF_AUTH_CODE_PATH;
-  }
-
-  sfTokenStorePath(): string | undefined {
-    return process.env.SF_TOKEN_STORE_PATH;
   }
 
   sfProjectPath(): string | undefined {

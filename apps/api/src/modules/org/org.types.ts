@@ -1,3 +1,5 @@
+export type OrgAuthMode = 'sf_cli_keychain';
+
 export interface OrgRetrieveRequest {
   runAuth?: boolean;
   runRetrieve?: boolean;
@@ -17,7 +19,7 @@ export interface OrgRetrieveResponse {
   startedAt: string;
   completedAt: string;
   integrationEnabled: boolean;
-  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: OrgAuthMode;
   alias: string;
   projectPath: string;
   manifestPath: string;
@@ -27,15 +29,8 @@ export interface OrgRetrieveResponse {
 
 export interface OrgStatusResponse {
   integrationEnabled: boolean;
-  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: OrgAuthMode;
   alias: string;
-  cci: {
-    installed: boolean;
-    version?: string;
-    requiredVersion: string;
-    versionPinned: boolean;
-    message: string;
-  };
   sf: {
     installed: boolean;
     message: string;
@@ -98,7 +93,7 @@ export interface OrgMetadataRetrieveResponse {
 export interface OrgSessionStatusResponse {
   status: 'connected' | 'disconnected';
   activeAlias: string;
-  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: OrgAuthMode;
   connectedAt?: string;
   disconnectedAt?: string;
   lastError?: string;
@@ -111,14 +106,14 @@ export interface OrgSessionSwitchRequest {
 export interface OrgSessionSwitchResponse {
   status: 'connected';
   activeAlias: string;
-  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: OrgAuthMode;
   switchedAt: string;
 }
 
 export interface OrgSessionDisconnectResponse {
   status: 'disconnected';
   activeAlias: string;
-  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: OrgAuthMode;
   disconnectedAt: string;
 }
 
@@ -132,12 +127,10 @@ export interface OrgPreflightIssue {
 export interface OrgPreflightResponse {
   ok: boolean;
   integrationEnabled: boolean;
-  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: OrgAuthMode;
   alias: string;
   checks: {
     sfInstalled: boolean;
-    cciInstalled: boolean;
-    cciVersionPinned: boolean;
     manifestPresent: boolean;
     parsePathPresent: boolean;
     aliasAuthenticated: boolean;
