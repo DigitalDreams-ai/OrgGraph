@@ -22,14 +22,14 @@ Purpose: define objective gates for delivery success from Phase 18 onward.
 - [ ] Failure states mapped to explicit operator actions
 
 ## 4) Auth/Retrieve Contract (Phase 18–19 Critical)
-- [ ] CumulusCI pinned to `3.78.0`
-- [ ] WebUI auth path uses `cci` as primary flow
-- [ ] External Client App flow marked legacy (and behavior clearly defined)
+- [ ] WebUI auth path uses Salesforce CLI keychain as primary flow
+- [ ] Alias/session contract is explicit (`SF_ALIAS`, `SF_BASE_URL`, `sf org login web`, `sf org display`)
+- [ ] Legacy OAuth and magic-link auth paths are removed from runtime and docs
 - [ ] Org-wide metadata browser behavior defined (expand/select/search across types)
 - [ ] package.xml-all retrieval is not default
 
 ## 5) CI/Runtime Hardening
-- [ ] CI validates cci version pin and availability
+- [ ] CI validates `sf` CLI availability in runtime paths used by retrieve/connect flows
 - [ ] Web smoke includes auth -> retrieve -> refresh -> query -> proof path
 - [ ] No secret leakage in logs/artifacts checks
 - [ ] Determinism regression checks run in CI for replay/trust gates

@@ -22,8 +22,8 @@ Operational checklist for routine Orgumented upgrades and safe promotion.
 - [ ] Rollback command verified: `npm run phase8:restore-point:apply -- <stamp>`
 
 ## 4. Security/Config
-- [ ] `SF_CLIENT_ID` / `SF_CLIENT_SECRET` current and scoped
-- [ ] Token store path exists and readable (`SF_TOKEN_STORE_PATH`)
+- [ ] Salesforce CLI keychain alias is authenticated in runtime (`sf org display --target-org <alias> --json`)
+- [ ] Keychain persistence paths are mounted and writable (`/root/.sf`, `/root/.sfdx`)
 - [ ] No secrets committed (`git status`, secret scan if available)
 
 ## 5. Post-Release

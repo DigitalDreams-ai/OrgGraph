@@ -1,10 +1,10 @@
 # Orgumented Phase 22 Task List (WebUI Org Browser Retrieval Core)
 
-Goal: make WebUI the primary operational surface for org connection and selective metadata retrieval, using CCI/sf flows and avoiding package.xml as the primary path.
+Goal: make WebUI the primary operational surface for org connection and selective metadata retrieval, using Salesforce CLI keychain flows and avoiding package.xml as the primary path.
 
 ## Entry Criteria
 - [x] Phase 21 complete
-- [x] CCI auth baseline stable (`SF_AUTH_MODE=cci`)
+- [x] Salesforce CLI keychain auth baseline stable
 - [x] Existing org status and retrieve endpoints available
 
 ## Exit Criteria
@@ -29,7 +29,7 @@ Goal: make WebUI the primary operational surface for org connection and selectiv
   - [x] by member name
   - [x] clear/reset filters
 - [x] Add selective retrieve execution from WebUI:
-  - [x] execute via sf/cci commands
+  - [x] execute via `sf` keychain-authenticated commands
   - [x] do not require package.xml for standard UI flows
   - [x] show retrieve job progress + result summary
 - [x] Persist retrieval outputs to runtime paths:

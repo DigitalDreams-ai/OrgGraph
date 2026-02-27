@@ -10,7 +10,7 @@ Use this runbook when WebUI actions fail, look inconsistent, or return generic e
 - `curl -s http://localhost:3101/api/ready && echo`
 
 2. Confirm org toolchain in API container:
-- `docker exec orgumented-api sh -lc 'which cci && cci version && which sf && sf --version'`
+- `docker exec orgumented-api sh -lc 'which sf && sf --version'`
 
 3. Confirm org status API:
 - `curl -s -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgStatus","payload":{}}'`
@@ -35,11 +35,12 @@ Checks:
 - API logs for `OrgService` auth/retrieve path
 
 Fix:
-- Authenticate org first in same runtime/container.
+- Authenticate org first in same runtime/container via Salesforce CLI keychain:
+- `docker exec -it orgumented-api sf org login web --alias <alias> --instance-url <url> --set-default`
 - Then retry `Check Session` -> `Connect Org` -> `Retrieve Selected`.
 
 Important:
-- Current Connect tab selector (`CumulusCI`, `SF CLI`, `Magic Link`) is operator UI state; it does not by itself switch backend auth mode.
+- Connect flow uses `sf` CLI keychain session only.
 
 ### 2) Permissions returns false for a user known to have access
 Typical indicators:
@@ -110,7 +111,7 @@ Include all of:
 6. Timestamp
 
 ## Recommended Debug Priority
-1. Runtime/install issues (sf/cci missing)
+1. Runtime/install issues (`sf` missing)
 2. Auth/session issues (alias not authenticated)
 3. Data/mapping issues (`user-profile-map` and refresh source)
 4. UX validation gaps (missing required proof inputs)

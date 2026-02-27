@@ -203,7 +203,7 @@ They ask:
 
 ## WebUI-First Operating Constraints
 - WebUI is the primary operator surface for auth, retrieval, refresh, analysis, and proof inspection.
-- Authentication path should be CCI-driven in primary UX (pin CumulusCI to `3.78.0`).
+- Authentication path should be Salesforce CLI keychain-driven in primary UX (`sf org login web`, alias/session contract).
 - Metadata retrieval UX should be org-wide and selective (VS Code Org Browser style), not package.xml-all by default.
 - Ask UX should layer outputs:
   - deterministic evidence summary first

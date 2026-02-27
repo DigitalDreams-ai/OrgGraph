@@ -48,29 +48,23 @@ Compare two snapshots deterministically:
 curl "http://localhost:3100/refresh/diff/<snapshotA>/<snapshotB>"
 ```
 
-## 6. Connect Sandbox Org (Current Legacy Flow)
-Current implemented flow in this build uses External Client App OAuth.
-Planned direction (Phase 18+) is WebUI-first CCI auth with CumulusCI `3.78.0`.
+## 6. Connect Sandbox Org (Salesforce CLI Keychain)
+Auth is delegated to Salesforce CLI keychain sessions.
 
-### 6.1 Legacy External Client App OAuth
-1. Configure `.env` with Salesforce values (`SF_BASE_URL`, `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REDIRECT_URI`, etc.).
-2. Generate OAuth URL:
+1. Configure `.env` with org settings (`SF_ALIAS`, `SF_BASE_URL`, etc.).
+2. Authenticate in the API runtime:
 ```bash
-npm run sf:oauth:url
+docker exec -it orgumented-api sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default
 ```
-3. Approve app in browser and copy `code` into `.secrets/sf-auth-code.txt`.
-4. Exchange code for tokens:
+3. Validate alias session:
 ```bash
-npm run sf:oauth:exchange
+curl http://localhost:3100/org/preflight
+curl http://localhost:3100/org/session
 ```
-5. Authenticate CLI session:
+4. Run:
 ```bash
 npm run sf:auth
 ```
-
-### 6.2 Planned Primary Flow (Phase 18+)
-- WebUI-auth via `cci` will become primary operator path.
-- External Client App OAuth will remain legacy/fallback until migration completes.
 
 ## 7. Retrieve and Ingest Sandbox Metadata
 Avoid package.xml-all retrieval as default operator behavior.

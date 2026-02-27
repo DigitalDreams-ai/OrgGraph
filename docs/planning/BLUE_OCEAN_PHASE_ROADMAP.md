@@ -13,11 +13,11 @@ Turn Orgumented into a replayable semantic decision runtime for Salesforce archi
 5. `Phase 15` - Salesforce decision engines (permission/automation/release risk)
 6. `Phase 16` - Meta-context adaptation under deterministic bounds
 7. `Phase 17` - Specialized storage/runtime go-no-go and implementation
-8. `Phase 18` - WebUI-first auth/runtime alignment using CumulusCI `3.78.0`
+8. `Phase 18` - WebUI-first auth/runtime alignment using Salesforce CLI keychain
 9. `Phase 19` - Org-wide metadata retrieval UX (VS Code Org Browser style)
 10. `Phase 20` - WebUI capability overhaul and operator experience hardening
 11. `Phase 21` - LLM reliability, citation integrity, and budget guardrails
-12. `Phase 22` - WebUI Org Browser retrieval core (CCI/sf selective retrieve)
+12. `Phase 22` - WebUI Org Browser retrieval core (sf selective retrieve)
 13. `Phase 23` - WebUI authentication and org session UX
 14. `Phase 24` - WebUI workflow overhaul and operator experience hardening
 15. `Phase 25` - WebUI product overhaul and workflow-first operator experience

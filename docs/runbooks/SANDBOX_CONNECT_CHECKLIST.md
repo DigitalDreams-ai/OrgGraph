@@ -1,60 +1,34 @@
-# Sandbox Connection Checklist (Legacy External Client App OAuth)
+# Sandbox Connection Checklist (Salesforce CLI Keychain)
 
-This runbook documents the current legacy OAuth flow.
-Planned primary flow (Phase 18+) is WebUI-first authentication via CumulusCI `3.78.0`.
+## 1) Runtime prerequisites
+- [ ] `sf` CLI available in API runtime (`docker exec orgumented-api sf --version`)
+- [ ] API container running and healthy
+- [ ] keychain volumes mounted (`/root/.sf`, `/root/.sfdx`)
 
-## 1) Create External Client App in Salesforce Sandbox
-- [x] In Sandbox org: Setup -> App Manager -> New External Client App.
-- [x] Enable OAuth.
-- [x] Set callback URL (must exactly match `SF_REDIRECT_URI`).
-- [x] Add OAuth scopes: `refresh_token`, `api`, `web`.
-- [x] Save and capture `Client ID` and `Client Secret`.
+## 2) Environment baseline
+- [ ] `SF_INTEGRATION_ENABLED=true`
+- [ ] `SF_ALIAS=orgumented-sandbox` (or target alias)
+- [ ] `SF_BASE_URL=https://test.salesforce.com` (or org login URL)
 
-## 2) Configure NAS Environment
-- [x] Confirm login domain: `https://test.salesforce.com`.
-- [x] Set `SF_BASE_URL` to the org host you want to target (quick switch variable).
-- [x] Set `SF_INTEGRATION_ENABLED=true`.
-- [x] Set `SF_AUTH_MODE=oauth_refresh_token`.
-- [x] Set `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REDIRECT_URI`.
-- [x] Set `SF_AUTH_CODE_PATH=.secrets/sf-auth-code.txt`.
-- [x] Set `SF_TOKEN_STORE_PATH=.secrets/sf-oauth-token.json`.
-- [x] Ensure `.secrets/` exists.
+## 3) Authenticate alias in runtime
+- [ ] Run:
+  - `docker exec -it orgumented-api sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default`
+- [ ] Verify:
+  - `docker exec orgumented-api sf org display --target-org orgumented-sandbox --json`
 
-## 3) Authorize User and Capture Auth Code
-- [x] Generate URL with `npm run sf:oauth:url`.
-- [ ] Confirm URL format is:
-- [ ] `https://{loginDomain}/services/oauth2/authorize?response_type=code&client_id=...&redirect_uri=...&state=...`
-- [x] Open URL, log in, approve app, copy `code` from redirect.
-- [x] Save only the code value to `.secrets/sf-auth-code.txt`.
+## 4) Validate Orgumented session
+- [ ] `curl http://localhost:3100/org/preflight`
+- [ ] `curl http://localhost:3100/org/session`
+- [ ] Confirm `aliasAuthenticated=true` and session `connected`
 
-## 4) Exchange Auth Code for Tokens
-- [x] Run `npm run sf:oauth:exchange`.
-- [ ] Confirm request target is:
-- [ ] `POST https://{loginDomain}/services/oauth2/token`
-- [ ] Confirm payload includes:
-- [ ] `grant_type=authorization_code`, `client_id`, `client_secret`, `redirect_uri`, `code`.
-- [x] Confirm `.secrets/sf-oauth-token.json` contains `access_token`, `refresh_token`, `instance_url`.
+## 5) Retrieve + refresh
+- [ ] `npm run sf:retrieve`
+- [ ] `npm run sf:retrieve-refresh`
 
-## 5) Use and Refresh Tokens
-- [x] Run `npm run sf:auth` (uses `grant_type=refresh_token` and rotates access token).
-- [ ] Confirm API calls use `Authorization: Bearer {access_token}`.
-- [x] Confirm refresh flow works after access token expiry.
-
-## 6) Run Retrieve + Refresh Pipeline
-- [x] Run `npm run sf:retrieve`.
-- [x] Run `npm run sf:retrieve-refresh`.
-- [x] Capture baseline node/edge/evidence counts.
-
-## 7) Verify Orgumented Endpoints
-- [x] `GET /ready` returns `status=ready`.
-- [ ] Run `npm run sf:export-user-map` (writes `USER_PROFILE_MAP_PATH`) before `/perms` validation.
-- [ ] `GET /perms` returns expected path for known test user/object.
-- [x] `GET /automation` returns expected automations.
-- [x] `GET /impact` returns expected impact paths.
-- [x] `POST /ask` returns deterministic plan + citations.
-
-## 8) Promotion Gate
-- [ ] Sandbox results reviewed and accepted.
-- [ ] Manifest scope tuned to avoid noisy retrieval.
-- [ ] Rollback plan confirmed.
-- [ ] Production credential handling approved.
+## 6) Verify behavior
+- [ ] `curl http://localhost:3100/ready`
+- [ ] `npm run sf:export-user-map`
+- [ ] `/perms` known-positive validation
+- [ ] `/automation` known-positive validation
+- [ ] `/impact` known-positive validation
+- [ ] `/ask` known-positive validation

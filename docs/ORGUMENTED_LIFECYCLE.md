@@ -16,8 +16,8 @@ This document describes how Orgumented works end-to-end, from startup through re
 - Planned Phase 19 UX adds org-wide selective retrieval via metadata browser (expand/select/search across metadata types).
 
 ## 3. Salesforce Retrieval (Optional but Typical)
-- Current auth flow supports SFDX URL, OAuth refresh token, or JWT mode.
-- Planned Phase 18 primary path is WebUI-first auth via `cci` (CumulusCI `3.78.0`), with legacy OAuth retained during migration.
+- Auth is Salesforce CLI keychain only (`sf org login web --alias ... --instance-url ... --set-default`).
+- API/Web connect operations verify alias availability through `sf org display --target-org <alias> --json`.
 - Retrieve command pulls metadata into `SF_PROJECT_PATH`.
 - Retrieve-refresh pipeline can then trigger API refresh to rebuild graph from latest source.
 

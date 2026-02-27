@@ -20,7 +20,7 @@ Define the go/no-go process for promoting Orgumented from sandbox metadata to pr
 4. Validate latest ingest summary:
 `npm run ingest:report`
 5. Confirm secrets are current and scoped:
-`SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_TOKEN_STORE_PATH`
+`SF_ALIAS`, `SF_BASE_URL`, and Salesforce CLI keychain session for alias
 6. Confirm rollback artifacts exist in `data/refresh/restore-points/<stamp>`
 7. Confirm operator sign-off on validation outputs and append promotion log:
 `ORGUMENTED_OPERATOR=<name> npm run phase8:promotion-log -- promoted`
@@ -37,12 +37,13 @@ Define the go/no-go process for promoting Orgumented from sandbox metadata to pr
 - `GET /perms` known-positive check
 
 ## Secrets Rotation Procedure
-1. Rotate credentials for the active auth mode (legacy External Client App today; CCI-based auth after Phase 18 migration).
-2. Update `.env` values for required auth keys (`SF_CLIENT_ID` / `SF_CLIENT_SECRET` for legacy OAuth path).
-3. Re-auth and refresh token store:
-- `npm run sf:oauth:url`
-- `npm run sf:oauth:exchange`
-- `npm run sf:auth`
+1. Keep `.env` auth config minimal and explicit:
+- `SF_ALIAS=<org-alias>`
+- `SF_BASE_URL=<instance-url>`
+2. Authenticate alias in runtime using Salesforce CLI keychain:
+- `sf org login web --alias <alias> --instance-url <url> --set-default`
+3. Verify runtime session:
+- `sf org display --target-org <alias> --json`
 4. Run live smoke:
 `npm run phase7:smoke-live`
 

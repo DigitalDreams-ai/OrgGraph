@@ -115,31 +115,20 @@ Phase 6 adds sandbox-first org retrieval and refresh.
 `mkdir -p /volume1/data/projects/Orgumented/.secrets`
 3. Ensure env file exists at repo root:
 `cp .env.sample .env` (or `cp .env.example .env`)
-4. Create an External Client App in sandbox org and enable OAuth scopes:
-- `refresh_token`
-- `api`
-- `web`
-5. Set OAuth values in `.env` (scripts auto-load this file):
-- `SF_BASE_URL=https://test.salesforce.com` (single variable to switch org host)
-- `SF_AUTH_MODE=oauth_refresh_token`
-- `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REDIRECT_URI`
-6. Generate authorization URL and authorize once:
-`npm run sf:oauth:url`
-7. Paste returned OAuth `code` into `.secrets/sf-auth-code.txt`, then exchange:
-`npm run sf:oauth:exchange`
-8. Review/adjust retrieve manifest:
+4. Set runtime alias/base URL in `.env`:
+- `SF_ALIAS=orgumented-sandbox`
+- `SF_BASE_URL=https://test.salesforce.com`
+5. Authenticate alias once in Salesforce CLI keychain:
+`sf org login web --alias <alias> --instance-url <url> --set-default`
+6. Verify authenticated alias:
+`sf org display --target-org <alias> --json`
+7. Review/adjust retrieve manifest:
 `manifest/package.xml`
 
 ### Commands
 
 ```bash
-# Print authorize URL for External Client App flow
-npm run sf:oauth:url
-
-# Exchange auth code for token store (.secrets/sf-oauth-token.json)
-npm run sf:oauth:exchange
-
-# Auth only
+# Verify keychain auth for configured alias
 npm run sf:auth
 
 # Retrieve metadata only
