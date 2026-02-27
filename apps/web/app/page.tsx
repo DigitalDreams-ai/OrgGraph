@@ -22,6 +22,8 @@ type QueryKind =
   | 'metadataRetrieve'
   | 'refreshDiff'
   | 'askArchitecture'
+  | 'askSimulate'
+  | 'askSimulateCompare'
   | 'askProofsRecent'
   | 'askProof'
   | 'askReplay'
@@ -108,7 +110,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 export default function Page(): JSX.Element {
-  type UiTab = 'connect' | 'browser' | 'refresh' | 'analyze' | 'ask' | 'proofs' | 'system';
+  type UiTab = 'connect' | 'browser' | 'refresh' | 'analyze' | 'ask' | 'simulate' | 'proofs' | 'system';
   type AnalyzeTab = 'perms' | 'automation' | 'impact';
   type AuthPath = 'cci' | 'sf' | 'magic';
 
@@ -165,6 +167,40 @@ export default function Page(): JSX.Element {
   const [archObject, setArchObject] = useState('Opportunity');
   const [archField, setArchField] = useState('Opportunity.StageName');
   const [archMaxPathsRaw, setArchMaxPathsRaw] = useState('10');
+  const [simProfile, setSimProfile] = useState<'strict' | 'balanced' | 'exploratory'>('balanced');
+  const [simChangesRaw, setSimChangesRaw] = useState(
+    JSON.stringify(
+      [
+        {
+          action: 'modify_field',
+          object: 'Opportunity',
+          field: 'Opportunity.StageName',
+          description: 'tighten stage transition behavior'
+        }
+      ],
+      null,
+      2
+    )
+  );
+  const [simScenarioBRaw, setSimScenarioBRaw] = useState(
+    JSON.stringify(
+      [
+        {
+          action: 'modify_field',
+          object: 'Opportunity',
+          field: 'Opportunity.StageName',
+          description: 'same as scenario A'
+        },
+        {
+          action: 'add_automation',
+          object: 'Opportunity',
+          description: 'add enrichment flow on stage update'
+        }
+      ],
+      null,
+      2
+    )
+  );
   const [proofId, setProofId] = useState('');
   const [replayToken, setReplayToken] = useState('');
   const [metaDryRun, setMetaDryRun] = useState(true);
@@ -310,6 +346,12 @@ export default function Page(): JSX.Element {
     }
     if (kind === 'askArchitecture') {
       return 'POST /ask/architecture';
+    }
+    if (kind === 'askSimulate') {
+      return 'POST /ask/simulate';
+    }
+    if (kind === 'askSimulateCompare') {
+      return 'POST /ask/simulate/compare';
     }
     if (kind === 'askProofsRecent') {
       return 'GET /ask/proofs/recent?limit=...';
@@ -513,6 +555,20 @@ export default function Page(): JSX.Element {
       const maxCitations = parseOptionalInt(maxCitationsRaw);
       const askContext = parseContext(askContextRaw);
       const archMaxPaths = parseOptionalInt(archMaxPathsRaw);
+      let simChanges: Array<Record<string, unknown>> = [];
+      let simScenarioBChanges: Array<Record<string, unknown>> = [];
+      if (activeKind === 'askSimulate' || activeKind === 'askSimulateCompare') {
+        const parsedA = JSON.parse(simChangesRaw) as unknown;
+        if (Array.isArray(parsedA)) {
+          simChanges = parsedA as Array<Record<string, unknown>>;
+        }
+      }
+      if (activeKind === 'askSimulateCompare') {
+        const parsedB = JSON.parse(simScenarioBRaw) as unknown;
+        if (Array.isArray(parsedB)) {
+          simScenarioBChanges = parsedB as Array<Record<string, unknown>>;
+        }
+      }
       let metadataSelections: Array<{ type: string; members?: string[] }> = [];
       if (activeKind === 'metadataRetrieve') {
         const parsed = JSON.parse(metadataSelectionsRaw) as unknown;
@@ -546,6 +602,34 @@ export default function Page(): JSX.Element {
                     ? { fromSnapshot, toSnapshot }
                     : activeKind === 'askArchitecture'
                       ? { user: archUser, object: archObject, field: archField, maxPaths: archMaxPaths }
+                      : activeKind === 'askSimulate'
+                        ? {
+                            user: archUser,
+                            object: archObject,
+                            field: archField,
+                            maxPaths: archMaxPaths,
+                            profile: simProfile,
+                            proposedChanges: simChanges
+                          }
+                        : activeKind === 'askSimulateCompare'
+                          ? {
+                              scenarioA: {
+                                user: archUser,
+                                object: archObject,
+                                field: archField,
+                                maxPaths: archMaxPaths,
+                                profile: simProfile,
+                                proposedChanges: simChanges
+                              },
+                              scenarioB: {
+                                user: archUser,
+                                object: archObject,
+                                field: archField,
+                                maxPaths: archMaxPaths,
+                                profile: 'exploratory',
+                                proposedChanges: simScenarioBChanges
+                              }
+                            }
                       : activeKind === 'askProofsRecent'
                         ? { limit }
                       : activeKind === 'askProof'
@@ -815,32 +899,41 @@ export default function Page(): JSX.Element {
         </section>
       </section>
 
-      <section className="panel control-panel">
-        <div className="top-tabs" role="tablist" aria-label="workflow sections">
-          {([
-            ['connect', 'Connect'],
-            ['browser', 'Org Browser'],
-            ['refresh', 'Refresh & Build'],
-            ['analyze', 'Analyze'],
-            ['ask', 'Ask'],
-            ['proofs', 'Proofs & Metrics'],
-            ['system', 'System']
-          ] as Array<[UiTab, string]>).map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              className={uiTab === key ? 'tab active' : 'tab'}
-              role="tab"
-              aria-selected={uiTab === key}
-              onClick={() => setUiTab(key)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </section>
-
       <section className="workspace-grid">
+        <aside className="panel nav-panel">
+          <h2>Workflows</h2>
+          <div className="top-tabs" role="tablist" aria-label="workflow sections">
+            {([
+              ['connect', 'Connect'],
+              ['browser', 'Org Browser'],
+              ['refresh', 'Refresh'],
+              ['analyze', 'Analyze'],
+              ['ask', 'Ask'],
+              ['simulate', 'Simulate'],
+              ['proofs', 'Prove'],
+              ['system', 'System']
+            ] as Array<[UiTab, string]>).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                className={uiTab === key ? 'tab active' : 'tab'}
+                role="tab"
+                aria-selected={uiTab === key}
+                onClick={() => setUiTab(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="endpoint-hint">Current: {uiTab}</p>
+          <p className="endpoint-hint">Ready: {readyStatus}</p>
+          <p className="endpoint-hint">Session: {latestSession?.status ?? 'unknown'}</p>
+          <p className="endpoint-hint">Alias: {latestSession?.activeAlias ?? latestOrgStatus?.alias ?? 'n/a'}</p>
+          <button type="button" onClick={refreshStatuses}>
+            Refresh Status
+          </button>
+        </aside>
+
         <section className="panel control-panel">
           {uiTab === 'connect' ? (
             <>
@@ -1104,6 +1197,54 @@ export default function Page(): JSX.Element {
                 <button type="button" onClick={() => void runQuery('askMetrics')} disabled={loading}>Export Metrics</button>
               </div>
               <p className="endpoint-hint">Tip: run \"List Recent Proofs\" first, then paste proofId/replayToken.</p>
+            </>
+          ) : null}
+
+          {uiTab === 'simulate' ? (
+            <>
+              <h2>What-If Simulation</h2>
+              <p className="endpoint-hint">Run deterministic scenario scoring before release decisions.</p>
+              <div className="row">
+                <label htmlFor="simProfile">Risk Profile</label>
+                <select
+                  id="simProfile"
+                  value={simProfile}
+                  onChange={(e) => setSimProfile(e.target.value as 'strict' | 'balanced' | 'exploratory')}
+                >
+                  <option value="strict">strict</option>
+                  <option value="balanced">balanced</option>
+                  <option value="exploratory">exploratory</option>
+                </select>
+              </div>
+              <div className="row">
+                <label htmlFor="simChangesRaw">Scenario A Changes (JSON Array)</label>
+                <textarea
+                  id="simChangesRaw"
+                  value={simChangesRaw}
+                  onChange={(e) => setSimChangesRaw(e.target.value)}
+                  rows={8}
+                />
+              </div>
+              <div className="row">
+                <label htmlFor="simScenarioBRaw">Scenario B Changes (for Compare)</label>
+                <textarea
+                  id="simScenarioBRaw"
+                  value={simScenarioBRaw}
+                  onChange={(e) => setSimScenarioBRaw(e.target.value)}
+                  rows={8}
+                />
+              </div>
+              <div className="action-row">
+                <button type="button" onClick={() => void runQuery('askArchitecture')} disabled={loading}>
+                  Baseline Decision
+                </button>
+                <button type="button" onClick={() => void runQuery('askSimulate')} disabled={loading}>
+                  Simulate Scenario A
+                </button>
+                <button type="button" onClick={() => void runQuery('askSimulateCompare')} disabled={loading}>
+                  Compare A vs B
+                </button>
+              </div>
             </>
           ) : null}
 
