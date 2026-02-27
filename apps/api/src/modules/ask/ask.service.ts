@@ -17,6 +17,11 @@ import type {
   AskArchitectureDecisionResponse,
   AskMeaningMetrics,
   AskMetricsExportResponse,
+  AskSimulationCompareRequest,
+  AskSimulationCompareResponse,
+  AskSimulationRequest,
+  AskSimulationResponse,
+  AskSimulationRiskProfile,
   AskProofListResponse,
   AskPolicyValidateRequest,
   AskPolicyValidateResponse,
@@ -344,6 +349,158 @@ export class AskService {
       },
       status: 'implemented'
     };
+  }
+
+  async simulateScenario(input: AskSimulationRequest): Promise<AskSimulationResponse> {
+    const maxPaths = Math.max(1, Math.min(50, input.maxPaths ?? 10));
+    const profile: AskSimulationRiskProfile = input.profile ?? 'balanced';
+    const profileWeights = this.profileWeights(profile);
+
+    const perms = await this.queries.perms(input.user, input.object, input.field, maxPaths);
+    const automations = await this.analysis.automation(input.object, maxPaths, false, false, false);
+    const impact = await this.analysis.impact(input.field, maxPaths, false, false, false, false);
+
+    const changeComplexity = Math.min(
+      1,
+      (input.proposedChanges.length / 10) *
+        0.5 +
+        (input.proposedChanges.filter((c) => c.field).length / Math.max(1, input.proposedChanges.length)) *
+          0.5
+    );
+    const permissionImpact = Number(
+      Math.min(
+        1,
+        (perms.granted ? 0.25 : 0.55) +
+          Math.min(0.25, perms.principalsChecked.length / 200) +
+          Math.min(0.2, perms.paths.length / 20)
+      ).toFixed(3)
+    );
+    const releaseRisk = Number(
+      Math.min(
+        1,
+        Math.min(0.5, automations.totalAutomations / 20) +
+          Math.min(0.35, impact.totalPaths / 30) +
+          changeComplexity * 0.15
+      ).toFixed(3)
+    );
+    const compositeRisk = Number(
+      Math.min(
+        1,
+        permissionImpact * profileWeights.permission +
+          releaseRisk * profileWeights.release +
+          changeComplexity * profileWeights.complexity
+      ).toFixed(3)
+    );
+
+    const rollbackConfidence = Number(
+      Math.max(
+        0,
+        Math.min(
+          1,
+          1 -
+            (compositeRisk * 0.7 +
+              Math.min(0.2, automations.totalAutomations / 50) +
+              (perms.granted ? 0 : 0.08))
+        )
+      ).toFixed(3)
+    );
+
+    const mitigations: string[] = [];
+    if (!perms.granted) {
+      mitigations.push('Validate object and field access path in target principals before release.');
+    }
+    if (impact.totalPaths > 0) {
+      mitigations.push('Run impact replay checks for each high-impact field before deploy cutover.');
+    }
+    if (automations.totalAutomations > 0) {
+      mitigations.push('Create sandbox scenario tests for intersecting automations and triggers.');
+    }
+    if (changeComplexity >= 0.5) {
+      mitigations.push('Split rollout into phased change sets to reduce blast radius.');
+    }
+    if (mitigations.length === 0) {
+      mitigations.push('Proceed with standard release checklist and post-deploy replay validation.');
+    }
+
+    const recommendationLevel: AskSimulationResponse['recommendation']['level'] =
+      compositeRisk >= 0.7 || rollbackConfidence < 0.35
+        ? 'block'
+        : compositeRisk >= 0.45 || rollbackConfidence < 0.55
+          ? 'review'
+          : 'proceed';
+    const rationale = `profile=${profile}; compositeRisk=${compositeRisk.toFixed(
+      3
+    )}; rollbackConfidence=${rollbackConfidence.toFixed(3)}; perms=${
+      perms.granted ? 'granted' : 'not_granted'
+    }; impactPaths=${impact.totalPaths}; automations=${automations.totalAutomations}`;
+
+    return {
+      user: input.user,
+      object: input.object,
+      field: input.field,
+      profile,
+      requestedChangeCount: input.proposedChanges.length,
+      simulatedImpactSurface: {
+        permissionPaths: perms.paths.length,
+        automationMatches: automations.totalAutomations,
+        impactPaths: impact.totalPaths
+      },
+      scores: {
+        permissionImpact,
+        releaseRisk,
+        compositeRisk,
+        rollbackConfidence
+      },
+      recommendation: {
+        level: recommendationLevel,
+        rationale,
+        mitigations
+      },
+      status: 'implemented'
+    };
+  }
+
+  async compareSimulations(
+    input: AskSimulationCompareRequest
+  ): Promise<AskSimulationCompareResponse> {
+    const scenarioA = await this.simulateScenario(input.scenarioA);
+    const scenarioB = await this.simulateScenario(input.scenarioB);
+
+    const scoreA = scenarioA.scores.compositeRisk - scenarioA.scores.rollbackConfidence * 0.25;
+    const scoreB = scenarioB.scores.compositeRisk - scenarioB.scores.rollbackConfidence * 0.25;
+
+    let recommendedScenario: 'A' | 'B' | 'tie' = 'tie';
+    if (Math.abs(scoreA - scoreB) >= 0.02) {
+      recommendedScenario = scoreA < scoreB ? 'A' : 'B';
+    }
+    const rationale =
+      recommendedScenario === 'tie'
+        ? 'scenarios are near-equivalent under current risk profile and confidence weighting'
+        : `scenario ${recommendedScenario} has lower weighted risk score (A=${scoreA.toFixed(
+            3
+          )}, B=${scoreB.toFixed(3)})`;
+
+    return {
+      scenarioA,
+      scenarioB,
+      recommendedScenario,
+      rationale,
+      status: 'implemented'
+    };
+  }
+
+  private profileWeights(profile: AskSimulationRiskProfile): {
+    permission: number;
+    release: number;
+    complexity: number;
+  } {
+    if (profile === 'strict') {
+      return { permission: 0.5, release: 0.35, complexity: 0.15 };
+    }
+    if (profile === 'exploratory') {
+      return { permission: 0.25, release: 0.45, complexity: 0.3 };
+    }
+    return { permission: 0.4, release: 0.4, complexity: 0.2 };
   }
 
   private async execute(input: AskRequest, includeCreatedAtInProof: boolean): Promise<{

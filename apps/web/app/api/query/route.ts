@@ -23,6 +23,8 @@ type QueryKind =
   | 'metadataRetrieve'
   | 'refreshDiff'
   | 'askArchitecture'
+  | 'askSimulate'
+  | 'askSimulateCompare'
   | 'askProofsRecent'
   | 'askProof'
   | 'askReplay'
@@ -186,6 +188,38 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
           object: body.object,
           field: body.field,
           maxPaths: body.maxPaths
+        })
+      }
+    };
+  }
+
+  if (request.kind === 'askSimulate') {
+    return {
+      url: `${API_BASE}/ask/simulate`,
+      init: {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          user: body.user,
+          object: body.object,
+          field: body.field,
+          profile: body.profile,
+          maxPaths: body.maxPaths,
+          proposedChanges: Array.isArray(body.proposedChanges) ? body.proposedChanges : []
+        })
+      }
+    };
+  }
+
+  if (request.kind === 'askSimulateCompare') {
+    return {
+      url: `${API_BASE}/ask/simulate/compare`,
+      init: {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          scenarioA: body.scenarioA,
+          scenarioB: body.scenarioB
         })
       }
     };

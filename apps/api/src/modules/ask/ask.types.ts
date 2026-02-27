@@ -241,6 +241,62 @@ export interface AskArchitectureDecisionResponse {
   status: 'implemented';
 }
 
+export type AskSimulationRiskProfile = 'strict' | 'balanced' | 'exploratory';
+
+export interface AskSimulationChange {
+  action: 'modify_field' | 'modify_object' | 'add_automation' | 'remove_automation' | 'other';
+  object: string;
+  field?: string;
+  description?: string;
+}
+
+export interface AskSimulationRequest {
+  user: string;
+  object: string;
+  field: string;
+  profile?: AskSimulationRiskProfile;
+  maxPaths?: number;
+  proposedChanges: AskSimulationChange[];
+}
+
+export interface AskSimulationResponse {
+  user: string;
+  object: string;
+  field: string;
+  profile: AskSimulationRiskProfile;
+  requestedChangeCount: number;
+  simulatedImpactSurface: {
+    permissionPaths: number;
+    automationMatches: number;
+    impactPaths: number;
+  };
+  scores: {
+    permissionImpact: number;
+    releaseRisk: number;
+    compositeRisk: number;
+    rollbackConfidence: number;
+  };
+  recommendation: {
+    level: 'proceed' | 'review' | 'block';
+    rationale: string;
+    mitigations: string[];
+  };
+  status: 'implemented';
+}
+
+export interface AskSimulationCompareRequest {
+  scenarioA: AskSimulationRequest;
+  scenarioB: AskSimulationRequest;
+}
+
+export interface AskSimulationCompareResponse {
+  scenarioA: AskSimulationResponse;
+  scenarioB: AskSimulationResponse;
+  recommendedScenario: 'A' | 'B' | 'tie';
+  rationale: string;
+  status: 'implemented';
+}
+
 export interface AskPolicyValidateRequest {
   groundingThreshold?: number;
   constraintThreshold?: number;

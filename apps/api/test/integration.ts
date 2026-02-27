@@ -731,6 +731,75 @@ async function run(): Promise<void> {
     });
     assert.equal(architectureDecisionBadRes.status, 400, 'ask architecture should validate user');
 
+    const askSimulateRes = await fetch(`${base}/ask/simulate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        user: 'jane@example.com',
+        object: 'Opportunity',
+        field: 'Opportunity.StageName',
+        profile: 'strict',
+        proposedChanges: [
+          {
+            action: 'modify_field',
+            object: 'Opportunity',
+            field: 'Opportunity.StageName',
+            description: 'tighten stage transition guardrails'
+          }
+        ]
+      })
+    });
+    assert.equal(askSimulateRes.status, 201, 'ask simulate should return 201');
+    const askSimulate = (await askSimulateRes.json()) as {
+      status: string;
+      profile: string;
+      requestedChangeCount: number;
+      scores: { permissionImpact: number; releaseRisk: number; compositeRisk: number; rollbackConfidence: number };
+      recommendation: { level: string; mitigations: string[] };
+    };
+    assert.equal(askSimulate.status, 'implemented');
+    assert.equal(askSimulate.profile, 'strict');
+    assert.equal(askSimulate.requestedChangeCount, 1);
+    assert.ok(['proceed', 'review', 'block'].includes(askSimulate.recommendation.level));
+    assert.ok(Array.isArray(askSimulate.recommendation.mitigations));
+    assert.equal(typeof askSimulate.scores.compositeRisk, 'number');
+    assert.equal(typeof askSimulate.scores.rollbackConfidence, 'number');
+
+    const askSimulateCompareRes = await fetch(`${base}/ask/simulate/compare`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        scenarioA: {
+          user: 'jane@example.com',
+          object: 'Opportunity',
+          field: 'Opportunity.StageName',
+          profile: 'strict',
+          proposedChanges: [{ action: 'modify_field', object: 'Opportunity', field: 'Opportunity.StageName' }]
+        },
+        scenarioB: {
+          user: 'jane@example.com',
+          object: 'Opportunity',
+          field: 'Opportunity.StageName',
+          profile: 'exploratory',
+          proposedChanges: [
+            { action: 'modify_field', object: 'Opportunity', field: 'Opportunity.StageName' },
+            { action: 'add_automation', object: 'Opportunity', description: 'new stage enrichment flow' }
+          ]
+        }
+      })
+    });
+    assert.equal(askSimulateCompareRes.status, 201, 'ask simulation compare should return 201');
+    const askSimulateCompare = (await askSimulateCompareRes.json()) as {
+      status: string;
+      recommendedScenario: string;
+      scenarioA: { profile: string };
+      scenarioB: { profile: string };
+    };
+    assert.equal(askSimulateCompare.status, 'implemented');
+    assert.ok(['A', 'B', 'tie'].includes(askSimulateCompare.recommendedScenario));
+    assert.equal(askSimulateCompare.scenarioA.profile, 'strict');
+    assert.equal(askSimulateCompare.scenarioB.profile, 'exploratory');
+
     const askUnknownRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

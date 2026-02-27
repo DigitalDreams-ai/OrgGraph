@@ -13,6 +13,10 @@ import { AskService } from './ask.service';
 import type {
   AskArchitectureDecisionRequest,
   AskArchitectureDecisionResponse,
+  AskSimulationCompareRequest,
+  AskSimulationCompareResponse,
+  AskSimulationRequest,
+  AskSimulationResponse,
   AskInternalErrorEnvelope,
   AskMetricsExportResponse,
   AskProofListResponse,
@@ -224,5 +228,79 @@ export class AskController {
       field: body.field.trim(),
       maxPaths: body.maxPaths
     });
+  }
+
+  @Post('/ask/simulate')
+  async simulate(@Body() body: AskSimulationRequest): Promise<AskSimulationResponse> {
+    this.validateSimulationRequest(body);
+    return this.askService.simulateScenario({
+      ...body,
+      user: body.user.trim().toLowerCase(),
+      object: body.object.trim(),
+      field: body.field.trim()
+    });
+  }
+
+  @Post('/ask/simulate/compare')
+  async compareSimulation(
+    @Body() body: AskSimulationCompareRequest
+  ): Promise<AskSimulationCompareResponse> {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw new BadRequestException('body is required');
+    }
+    this.validateSimulationRequest(body.scenarioA);
+    this.validateSimulationRequest(body.scenarioB);
+    return this.askService.compareSimulations({
+      scenarioA: {
+        ...body.scenarioA,
+        user: body.scenarioA.user.trim().toLowerCase(),
+        object: body.scenarioA.object.trim(),
+        field: body.scenarioA.field.trim()
+      },
+      scenarioB: {
+        ...body.scenarioB,
+        user: body.scenarioB.user.trim().toLowerCase(),
+        object: body.scenarioB.object.trim(),
+        field: body.scenarioB.field.trim()
+      }
+    });
+  }
+
+  private validateSimulationRequest(body: AskSimulationRequest): void {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw new BadRequestException('body is required');
+    }
+    if (!body.user || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.user.trim())) {
+      throw new BadRequestException('user must be a valid email address');
+    }
+    if (!body.object || !/^[A-Za-z][A-Za-z0-9_]*$/.test(body.object.trim())) {
+      throw new BadRequestException('object must be a valid Salesforce object name');
+    }
+    if (
+      !body.field ||
+      !/^[A-Za-z][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/.test(body.field.trim())
+    ) {
+      throw new BadRequestException('field must match Object.Field format');
+    }
+    if (
+      body.profile !== undefined &&
+      body.profile !== 'strict' &&
+      body.profile !== 'balanced' &&
+      body.profile !== 'exploratory'
+    ) {
+      throw new BadRequestException("profile must be 'strict', 'balanced', or 'exploratory'");
+    }
+    if (
+      body.maxPaths !== undefined &&
+      (!Number.isInteger(body.maxPaths) || body.maxPaths < 1 || body.maxPaths > 50)
+    ) {
+      throw new BadRequestException('maxPaths must be an integer between 1 and 50');
+    }
+    if (!Array.isArray(body.proposedChanges) || body.proposedChanges.length === 0) {
+      throw new BadRequestException('proposedChanges must include at least one change');
+    }
+    if (body.proposedChanges.length > 25) {
+      throw new BadRequestException('proposedChanges supports at most 25 items');
+    }
   }
 }
