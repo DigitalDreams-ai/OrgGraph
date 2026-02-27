@@ -15,12 +15,24 @@ esac
 # quick static sanity against rendered markup
 HTML_PATH="$OUT_DIR/ui-smoke-page.html"
 curl -fsSL "$BASE_URL" > "$HTML_PATH"
-for token in "Mission Control" "Connect" "Org Browser" "Refresh &amp; Build" "Analyze" "Ask" "Proofs &amp; Metrics" "System"; do
-  if ! grep -q "$token" "$HTML_PATH"; then
-    echo "missing expected token in rendered html: $token"
+
+assert_html_token() {
+  label="$1"
+  pattern="$2"
+  if ! grep -Eq "$pattern" "$HTML_PATH"; then
+    echo "missing expected token in rendered html: $label"
     exit 1
   fi
-done
+}
+
+assert_html_token "Mission Control" "Mission Control"
+assert_html_token "Connect" "Connect"
+assert_html_token "Org Browser" "Org Browser"
+assert_html_token "Refresh & Build" "Refresh (&amp;|&) Build"
+assert_html_token "Analyze" "Analyze"
+assert_html_token "Ask" "Ask"
+assert_html_token "Proofs & Metrics" "Proofs (&amp;|&) Metrics"
+assert_html_token "System" "System"
 
 # browser-level screenshot proof via Playwright Docker image
 SCREENSHOT_FILE="ui-smoke-playwright.png"

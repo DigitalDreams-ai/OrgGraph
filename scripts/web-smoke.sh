@@ -9,6 +9,12 @@ if [ "${WEB_SMOKE_USE_SF_PROJECT:-0}" = "1" ] && [ -d "data/sf-project/force-app
 fi
 WEB_SMOKE_FIXTURES_PATH="${WEB_SMOKE_FIXTURES_PATH:-$DEFAULT_FIXTURES_PATH}"
 WEB_SMOKE_REFRESH_MODE="${WEB_SMOKE_REFRESH_MODE:-incremental}"
+WEB_SMOKE_ENFORCE_NON_FIXTURE="${WEB_SMOKE_ENFORCE_NON_FIXTURE:-0}"
+WEB_SMOKE_REFRESH_REBASELINE="${WEB_SMOKE_REFRESH_REBASELINE:-0}"
+if [ "${WEB_SMOKE_USE_SF_PROJECT:-0}" = "1" ]; then
+  WEB_SMOKE_ENFORCE_NON_FIXTURE=1
+  WEB_SMOKE_REFRESH_REBASELINE=1
+fi
 mkdir -p "$ARTIFACT_DIR"
 
 health_code="$(curl -sS -o "$ARTIFACT_DIR/web-health.json" -w '%{http_code}' "$BASE_URL/api/health")"
@@ -48,7 +54,19 @@ run_query() {
   fi
 }
 
-run_query refresh "{\"mode\":\"$WEB_SMOKE_REFRESH_MODE\",\"fixturesPath\":\"$WEB_SMOKE_FIXTURES_PATH\"}"
+run_query refresh "{\"mode\":\"$WEB_SMOKE_REFRESH_MODE\",\"fixturesPath\":\"$WEB_SMOKE_FIXTURES_PATH\",\"rebaseline\":$( [ \"$WEB_SMOKE_REFRESH_REBASELINE\" = \"1\" ] && printf true || printf false )}"
+if [ "$WEB_SMOKE_ENFORCE_NON_FIXTURE" = "1" ]; then
+  node -e '
+    const fs = require("fs");
+    const p = process.argv[1];
+    const d = JSON.parse(fs.readFileSync(p, "utf8"));
+    const sourcePath = d?.payload?.sourcePath || "";
+    if (!sourcePath || sourcePath.includes("/fixtures/permissions")) {
+      console.error("expected non-fixture sourcePath in refresh response; got:", sourcePath || "<empty>");
+      process.exit(1);
+    }
+  ' "$ARTIFACT_DIR/web-query-refresh.json"
+fi
 run_query orgStatus '{}'
 run_query metadataCatalog '{"q":"case","limit":200,"refresh":true}'
 run_query perms '{"user":"jane@example.com","object":"Case","field":"Case.Status"}'
@@ -59,10 +77,20 @@ run_query ask '{"query":"What touches Opportunity.StageName?","maxCitations":5}'
 if [ "${WEB_SMOKE_REQUIRE_ORG_AUTH:-0}" = "1" ]; then
   WEB_SMOKE_ORG_ALIAS="${WEB_SMOKE_ORG_ALIAS:-orgumented-sandbox}"
   run_query orgSession '{}'
+  run_query orgPreflight "{\"alias\":\"$WEB_SMOKE_ORG_ALIAS\"}"
+  node -e '
+    const fs = require("fs");
+    const p = process.argv[1];
+    const d = JSON.parse(fs.readFileSync(p, "utf8"));
+    if (!d?.payload?.ok) {
+      console.error("orgPreflight payload.ok is false; fix auth/session before org smoke");
+      process.exit(1);
+    }
+  ' "$ARTIFACT_DIR/web-query-orgPreflight.json"
   run_query orgSessionSwitch "{\"alias\":\"$WEB_SMOKE_ORG_ALIAS\"}"
   run_query orgConnect '{}'
   run_query orgStatus '{}'
-  run_query orgRetrieve '{"runAuth":false,"runRetrieve":false,"autoRefresh":false}'
+  run_query orgRetrieve '{"runAuth":true,"runRetrieve":false,"autoRefresh":false}'
   run_query metadataMembers '{"type":"CustomObject","q":"Account","limit":1000,"refresh":true}'
   run_query metadataRetrieve '{"selections":[{"type":"CustomObject","members":["Account"]}],"autoRefresh":false}'
   run_query orgSessionDisconnect '{}'
