@@ -9,13 +9,15 @@ import type { EvidenceDocument, EvidenceSearchResult, EvidenceStore } from './ev
 @Injectable()
 export class EvidenceStoreService implements EvidenceStore {
   private readonly indexPath: string;
+  private readonly indexMetaPath: string;
 
   constructor(private readonly configService: AppConfigService) {
     this.indexPath = resolveEvidenceIndexPath(this.configService.evidenceIndexPath());
+    this.indexMetaPath = `${this.indexPath}.meta.json`;
   }
 
   reindexFromFixtures(rootPath: string): { documentCount: number; sourcePath: string } {
-    const docs: EvidenceDocument[] = [];
+    let documentCount = 0;
 
     const targets: Array<{ dir: string; sourceType: string; exts: string[] }> = [
       { dir: path.join(rootPath, 'apex-triggers'), sourceType: 'apex-trigger', exts: ['.trigger'] },
@@ -29,44 +31,60 @@ export class EvidenceStoreService implements EvidenceStore {
       }
     ];
 
-    for (const target of targets) {
-      if (!fs.existsSync(target.dir)) {
-        continue;
-      }
-      const files = fs.readdirSync(target.dir);
+    fs.mkdirSync(path.dirname(this.indexPath), { recursive: true });
+    const tempPath = `${this.indexPath}.tmp`;
+    const fd = fs.openSync(tempPath, 'w');
 
-      for (const file of files) {
-        const ext = path.extname(file).toLowerCase();
-        if (!target.exts.includes(ext)) {
+    try {
+      for (const target of targets) {
+        if (!fs.existsSync(target.dir)) {
           continue;
         }
+        const files = fs.readdirSync(target.dir);
 
-        const filePath = path.join(target.dir, file);
-        const raw = fs.readFileSync(filePath, 'utf8');
-        const chunks = this.chunkText(raw, 700);
-        const tags = this.extractTags(raw);
+        for (const file of files) {
+          const ext = path.extname(file).toLowerCase();
+          if (!target.exts.includes(ext)) {
+            continue;
+          }
 
-        chunks.forEach((chunkText, idx) => {
-          docs.push({
-            id: this.makeId(filePath, idx, chunkText),
-            sourcePath: filePath,
-            sourceType: target.sourceType,
-            chunkText,
-            entityTags: tags
+          const filePath = path.join(target.dir, file);
+          const raw = fs.readFileSync(filePath, 'utf8');
+          const chunks = this.chunkText(raw, 700);
+          const tags = this.extractTags(raw);
+
+          chunks.forEach((chunkText, idx) => {
+            const document: EvidenceDocument = {
+              id: this.makeId(filePath, idx, chunkText),
+              sourcePath: filePath,
+              sourceType: target.sourceType,
+              chunkText,
+              entityTags: tags
+            };
+            fs.writeSync(fd, `${JSON.stringify(document)}\n`, undefined, 'utf8');
+            documentCount += 1;
           });
-        });
+        }
       }
+    } finally {
+      fs.closeSync(fd);
     }
 
-    fs.mkdirSync(path.dirname(this.indexPath), { recursive: true });
-    fs.writeFileSync(this.indexPath, JSON.stringify({ documents: docs }, null, 2), 'utf8');
+    fs.renameSync(tempPath, this.indexPath);
+    this.writeIndexMetadata(documentCount);
 
-    return { documentCount: docs.length, sourcePath: this.indexPath };
+    return { documentCount, sourcePath: this.indexPath };
   }
 
   getDocumentCount(): number {
-    const parsed = this.readIndex();
-    return parsed.documents.length;
+    const metadata = this.readIndexMetadata();
+    if (metadata) {
+      return metadata.documentCount;
+    }
+    if (this.isLegacyJsonIndex()) {
+      return this.readLegacyIndex().documents.length;
+    }
+    return this.countNdjsonDocuments();
   }
 
   getIndexPath(): string {
@@ -74,27 +92,150 @@ export class EvidenceStoreService implements EvidenceStore {
   }
 
   search(query: string, maxResults: number): EvidenceSearchResult[] {
-    const docs = this.readIndex().documents;
     const tokens = this.tokenize(query);
+    if (tokens.length === 0) {
+      return [];
+    }
 
-    const ranked = docs
-      .map((doc) => ({ doc, score: this.score(tokens, doc) }))
-      .filter((item) => item.score > 0)
-      .sort((a, b) => b.score - a.score || a.doc.id.localeCompare(b.doc.id))
-      .slice(0, Math.max(1, maxResults))
-      .map((item) => ({ ...item.doc, score: item.score }));
+    if (this.isLegacyJsonIndex()) {
+      const docs = this.readLegacyIndex().documents;
+      return docs
+        .map((doc) => ({ doc, score: this.score(tokens, doc) }))
+        .filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score || a.doc.id.localeCompare(b.doc.id))
+        .slice(0, Math.max(1, maxResults))
+        .map((item) => ({ ...item.doc, score: item.score }));
+    }
+
+    const limit = Math.max(1, maxResults);
+    const ranked: EvidenceSearchResult[] = [];
+    for (const doc of this.readNdjsonDocuments()) {
+      const score = this.score(tokens, doc);
+      if (score <= 0) {
+        continue;
+      }
+      ranked.push({ ...doc, score });
+      ranked.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+      if (ranked.length > limit) {
+        ranked.length = limit;
+      }
+    }
 
     return ranked;
   }
 
-  private readIndex(): { documents: EvidenceDocument[] } {
+  private readLegacyIndex(): { documents: EvidenceDocument[] } {
     if (!fs.existsSync(this.indexPath)) {
       return { documents: [] };
     }
-
     const raw = fs.readFileSync(this.indexPath, 'utf8');
+    if (raw.trim().length === 0) {
+      return { documents: [] };
+    }
     const parsed = JSON.parse(raw) as { documents?: EvidenceDocument[] };
     return { documents: parsed.documents ?? [] };
+  }
+
+  private readIndexMetadata(): { documentCount: number } | undefined {
+    if (!fs.existsSync(this.indexMetaPath)) {
+      return undefined;
+    }
+    try {
+      const parsed = JSON.parse(fs.readFileSync(this.indexMetaPath, 'utf8')) as {
+        documentCount?: unknown;
+      };
+      if (typeof parsed.documentCount === 'number' && parsed.documentCount >= 0) {
+        return { documentCount: parsed.documentCount };
+      }
+    } catch {
+      return undefined;
+    }
+    return undefined;
+  }
+
+  private writeIndexMetadata(documentCount: number): void {
+    fs.writeFileSync(
+      this.indexMetaPath,
+      JSON.stringify({ documentCount, updatedAt: new Date().toISOString() }, null, 2),
+      'utf8'
+    );
+  }
+
+  private isLegacyJsonIndex(): boolean {
+    if (!fs.existsSync(this.indexPath)) {
+      return false;
+    }
+    const fd = fs.openSync(this.indexPath, 'r');
+    try {
+      const buffer = Buffer.alloc(128);
+      const bytesRead = fs.readSync(fd, buffer, 0, buffer.length, 0);
+      const prefix = buffer.toString('utf8', 0, bytesRead).trimStart();
+      return prefix.startsWith('{') && prefix.includes('"documents"');
+    } finally {
+      fs.closeSync(fd);
+    }
+  }
+
+  private countNdjsonDocuments(): number {
+    if (!fs.existsSync(this.indexPath)) {
+      return 0;
+    }
+    const fd = fs.openSync(this.indexPath, 'r');
+    const buffer = Buffer.alloc(64 * 1024);
+    let count = 0;
+    let leftover = '';
+
+    try {
+      while (true) {
+        const bytesRead = fs.readSync(fd, buffer, 0, buffer.length, null);
+        if (bytesRead === 0) {
+          break;
+        }
+        const chunk = leftover + buffer.toString('utf8', 0, bytesRead);
+        const lines = chunk.split('\n');
+        leftover = lines.pop() ?? '';
+        count += lines.filter((line) => line.trim().length > 0).length;
+      }
+      if (leftover.trim().length > 0) {
+        count += 1;
+      }
+      return count;
+    } finally {
+      fs.closeSync(fd);
+    }
+  }
+
+  private *readNdjsonDocuments(): Generator<EvidenceDocument, void, void> {
+    if (!fs.existsSync(this.indexPath)) {
+      return;
+    }
+    const fd = fs.openSync(this.indexPath, 'r');
+    const buffer = Buffer.alloc(64 * 1024);
+    let leftover = '';
+
+    try {
+      while (true) {
+        const bytesRead = fs.readSync(fd, buffer, 0, buffer.length, null);
+        if (bytesRead === 0) {
+          break;
+        }
+        const chunk = leftover + buffer.toString('utf8', 0, bytesRead);
+        const lines = chunk.split('\n');
+        leftover = lines.pop() ?? '';
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.length === 0) {
+            continue;
+          }
+          yield JSON.parse(trimmed) as EvidenceDocument;
+        }
+      }
+      if (leftover.trim().length > 0) {
+        yield JSON.parse(leftover.trim()) as EvidenceDocument;
+      }
+    } finally {
+      fs.closeSync(fd);
+    }
   }
 
   private chunkText(text: string, maxChunkChars: number): string[] {

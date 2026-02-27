@@ -23,9 +23,17 @@ async function runScenario(backend: 'sqlite' | 'postgres'): Promise<{
   const dbPath = path.join(root, `data/orgumented.parity.${backend}.db`);
   const evidencePath = path.join(root, `data/evidence.parity.${backend}.json`);
   const mapPath = path.join(root, `data/user-profile-map.parity.${backend}.json`);
+  const refreshStatePath = path.join(root, `data/refresh/state.parity.${backend}.json`);
+  const refreshAuditPath = path.join(root, `data/refresh/audit.parity.${backend}.jsonl`);
+  const ontologyReportPath = path.join(root, `data/refresh/ontology.parity.${backend}.json`);
+  const semanticSnapshotPath = path.join(root, `data/refresh/semantic-snapshot.parity.${backend}.json`);
 
   if (fs.existsSync(dbPath)) fs.rmSync(dbPath, { force: true });
   if (fs.existsSync(evidencePath)) fs.rmSync(evidencePath, { force: true });
+  if (fs.existsSync(refreshStatePath)) fs.rmSync(refreshStatePath, { force: true });
+  if (fs.existsSync(refreshAuditPath)) fs.rmSync(refreshAuditPath, { force: true });
+  if (fs.existsSync(ontologyReportPath)) fs.rmSync(ontologyReportPath, { force: true });
+  if (fs.existsSync(semanticSnapshotPath)) fs.rmSync(semanticSnapshotPath, { force: true });
   fs.writeFileSync(mapPath, JSON.stringify({ 'jane@example.com': ['Support'] }, null, 2), 'utf8');
 
   process.env.GRAPH_BACKEND = backend;
@@ -33,6 +41,10 @@ async function runScenario(backend: 'sqlite' | 'postgres'): Promise<{
   process.env.PERMISSIONS_FIXTURES_PATH = path.join(root, 'fixtures', 'permissions');
   process.env.USER_PROFILE_MAP_PATH = mapPath;
   process.env.EVIDENCE_INDEX_PATH = evidencePath;
+  process.env.REFRESH_STATE_PATH = refreshStatePath;
+  process.env.REFRESH_AUDIT_PATH = refreshAuditPath;
+  process.env.ONTOLOGY_REPORT_PATH = ontologyReportPath;
+  process.env.SEMANTIC_SNAPSHOT_PATH = semanticSnapshotPath;
   process.env.SF_INTEGRATION_ENABLED = 'false';
 
   const app = await NestFactory.create(AppModule, { logger: false });
@@ -93,6 +105,10 @@ async function runScenario(backend: 'sqlite' | 'postgres'): Promise<{
     if (fs.existsSync(dbPath)) fs.rmSync(dbPath, { force: true });
     if (fs.existsSync(evidencePath)) fs.rmSync(evidencePath, { force: true });
     if (fs.existsSync(mapPath)) fs.rmSync(mapPath, { force: true });
+    if (fs.existsSync(refreshStatePath)) fs.rmSync(refreshStatePath, { force: true });
+    if (fs.existsSync(refreshAuditPath)) fs.rmSync(refreshAuditPath, { force: true });
+    if (fs.existsSync(ontologyReportPath)) fs.rmSync(ontologyReportPath, { force: true });
+    if (fs.existsSync(semanticSnapshotPath)) fs.rmSync(semanticSnapshotPath, { force: true });
   }
 }
 

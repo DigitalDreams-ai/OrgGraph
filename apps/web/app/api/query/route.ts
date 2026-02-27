@@ -40,6 +40,66 @@ interface QueryRequest {
   params?: Record<string, unknown>;
 }
 
+function summarizeUpstreamPayload(kind: QueryKind, upstreamPayload: unknown): unknown {
+  if (kind !== 'refresh' || typeof upstreamPayload !== 'object' || upstreamPayload === null) {
+    return upstreamPayload;
+  }
+
+  const payload = upstreamPayload as Record<string, unknown>;
+  const driftPolicy =
+    typeof payload.driftPolicy === 'object' && payload.driftPolicy !== null
+      ? (payload.driftPolicy as Record<string, unknown>)
+      : undefined;
+  const driftEvaluation =
+    typeof payload.driftEvaluation === 'object' && payload.driftEvaluation !== null
+      ? (payload.driftEvaluation as Record<string, unknown>)
+      : undefined;
+  const ontology =
+    typeof payload.ontology === 'object' && payload.ontology !== null
+      ? (payload.ontology as Record<string, unknown>)
+      : undefined;
+  const parserStats = Array.isArray(payload.parserStats) ? payload.parserStats : [];
+
+  return {
+    snapshotId: payload.snapshotId,
+    mode: payload.mode,
+    rebaselineApplied: payload.rebaselineApplied === true,
+    skipped: payload.skipped === true,
+    skipReason: payload.skipReason,
+    nodeCount: payload.nodeCount,
+    edgeCount: payload.edgeCount,
+    evidenceCount: payload.evidenceCount,
+    elapsedMs: payload.elapsedMs,
+    sourcePath: payload.sourcePath,
+    databasePath: payload.databasePath,
+    evidenceIndexPath: payload.evidenceIndexPath,
+    meaningChangeSummary: payload.meaningChangeSummary,
+    parserCount: parserStats.length,
+    parserNames: parserStats
+      .map((entry) =>
+        typeof entry === 'object' && entry !== null && typeof (entry as Record<string, unknown>).parser === 'string'
+          ? ((entry as Record<string, unknown>).parser as string)
+          : undefined
+      )
+      .filter((value): value is string => Boolean(value)),
+    ontology: {
+      violationCount: ontology?.violationCount ?? 0,
+      warningCount: ontology?.warningCount ?? 0
+    },
+    driftPolicy: {
+      policyId: driftPolicy?.policyId,
+      enforceOnRefresh: driftPolicy?.enforceOnRefresh
+    },
+    driftEvaluation: {
+      withinBudget: driftEvaluation?.withinBudget,
+      isBootstrap: driftEvaluation?.isBootstrap,
+      summary: driftEvaluation?.summary,
+      violationCount: Array.isArray(driftEvaluation?.violations) ? driftEvaluation?.violations.length : 0
+    },
+    driftReportPath: payload.driftReportPath
+  };
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -91,20 +151,18 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
       init: {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify({ ...body, summaryOnly: true })
       }
     };
   }
   if (request.kind === 'orgConnect') {
     return {
-      url: `${API_BASE}/org/retrieve`,
+      url: `${API_BASE}/org/session/connect`,
       init: {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          runAuth: true,
-          runRetrieve: false,
-          autoRefresh: false
+          alias: typeof body.alias === 'string' ? body.alias : undefined
         })
       }
     };
@@ -113,7 +171,9 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
     return { url: `${API_BASE}/org/session`, init: { method: 'GET' } };
   }
   if (request.kind === 'orgPreflight') {
-    return { url: `${API_BASE}/org/preflight`, init: { method: 'GET' } };
+    const params = new URLSearchParams();
+    appendParam(params, 'alias', body.alias);
+    return { url: `${API_BASE}/org/preflight?${params.toString()}`, init: { method: 'GET' } };
   }
   if (request.kind === 'orgSessionSwitch') {
     return {
@@ -399,7 +459,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       );
     }
 
-    const upstreamPayload = await upstreamRes.json();
+    const upstreamPayload = summarizeUpstreamPayload(kind, await upstreamRes.json());
     if (WEB_LOG_ENABLED) {
       console.log(`[web] POST /api/query kind=${kind} status=${upstreamRes.status}`);
     }

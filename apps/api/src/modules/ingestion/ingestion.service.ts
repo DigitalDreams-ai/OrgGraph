@@ -51,11 +51,13 @@ interface RefreshState {
   ontology: OntologyConstraintReport;
   semanticDiff: SemanticDiffSummary;
   meaningChangeSummary: string;
+  rebaselineApplied: boolean;
 }
 
 interface RefreshOptions {
   fixturesPath?: string;
   mode?: RefreshMode;
+  rebaseline?: boolean;
 }
 
 @Injectable()
@@ -82,6 +84,7 @@ export class IngestionService {
   async refresh(options: RefreshOptions = {}): Promise<{
     snapshotId: string;
     mode: RefreshMode;
+    rebaselineApplied: boolean;
     skipped: boolean;
     skipReason?: 'no_changes_detected';
     nodeCount: number;
@@ -124,6 +127,7 @@ export class IngestionService {
       const driftPolicy = this.driftPolicyService.buildPolicy();
       const start = Date.now();
       const fingerprint = this.buildFixtureFingerprint(sourcePath);
+      const requestedRebaseline = options.rebaseline === true;
 
       if (mode === 'incremental' && (await this.canSkipRefresh(sourcePath, statePath, fingerprint))) {
         const counts = await this.graphService.getCounts();
@@ -175,11 +179,13 @@ export class IngestionService {
           mode,
           ontology,
           semanticDiff,
-          meaningChangeSummary
+          meaningChangeSummary,
+          rebaselineApplied: false
         });
         return {
           snapshotId: previousState?.snapshotId ?? 'unknown',
           mode,
+          rebaselineApplied: false,
           skipped: true,
           skipReason: 'no_changes_detected',
           ...counts,
@@ -235,16 +241,26 @@ export class IngestionService {
         throw error;
       }
 
+      const previousState = this.readState(statePath);
       const previousSemantic = this.readSemanticSnapshot(semanticSnapshotPath);
-      const currentSemantic = this.buildSemanticSnapshot(fingerprint, payload);
+      const sourceTransitionBootstrap = this.shouldBootstrapForSourceTransition(
+        previousSemantic?.sourcePath ?? previousState?.sourcePath,
+        sourcePath
+      );
+      const rebaselineApplied = requestedRebaseline || sourceTransitionBootstrap;
+      const currentSemantic = this.buildSemanticSnapshot(fingerprint, payload, sourcePath);
       const semanticDiff = this.computeSemanticDiff(previousSemantic, currentSemantic);
-      const meaningChangeSummary = this.describeMeaningChange(semanticDiff);
+      const meaningChangeSummary = this.describeMeaningChange(
+        semanticDiff,
+        rebaselineApplied ? 'rebaseline applied before drift evaluation' : undefined
+      );
       const driftEvaluation = this.driftPolicyService.evaluate(
         driftPolicy,
         semanticDiff,
-        previousSemantic
+        rebaselineApplied ? undefined : previousSemantic
       );
       if (
+        !rebaselineApplied &&
         previousSemantic &&
         previousSemantic.fingerprint === fingerprint &&
         this.hasSemanticChanges(semanticDiff)
@@ -295,7 +311,8 @@ export class IngestionService {
         mode,
         ontology,
         semanticDiff,
-        meaningChangeSummary
+        meaningChangeSummary,
+        rebaselineApplied
       };
       this.writeState(statePath, state);
       this.appendAuditEntry(auditPath, state);
@@ -322,6 +339,7 @@ export class IngestionService {
       return {
         snapshotId: currentSemantic.snapshotId,
         mode,
+        rebaselineApplied,
         skipped: false,
         ...counts,
         evidenceCount: evidence.documentCount,
@@ -469,6 +487,7 @@ export class IngestionService {
         edgeCount: typeof parsed.edgeCount === 'number' ? parsed.edgeCount : 0,
         evidenceCount: typeof parsed.evidenceCount === 'number' ? parsed.evidenceCount : 0,
         mode: parsed.mode === 'incremental' ? 'incremental' : 'full',
+        rebaselineApplied: parsed.rebaselineApplied === true,
         semanticDiff:
           typeof parsed.semanticDiff === 'object' && parsed.semanticDiff !== null
             ? (parsed.semanticDiff as SemanticDiffSummary)
@@ -679,7 +698,11 @@ export class IngestionService {
     return artifactPath;
   }
 
-  private buildSemanticSnapshot(fingerprint: string, payload: GraphPayload): SemanticSnapshotRecord {
+  private buildSemanticSnapshot(
+    fingerprint: string,
+    payload: GraphPayload,
+    sourcePath: string
+  ): SemanticSnapshotRecord {
     const nodeTypeCounts: Record<string, number> = {};
     for (const node of payload.nodes) {
       nodeTypeCounts[node.type] = (nodeTypeCounts[node.type] ?? 0) + 1;
@@ -715,6 +738,7 @@ export class IngestionService {
       snapshotId,
       fingerprint,
       generatedAt: new Date().toISOString(),
+      sourcePath,
       nodeCount: sortedNodeIds.length,
       edgeCount: sortedEdgeIds.length,
       nodeDigest: nodeDigestValue,
@@ -789,9 +813,9 @@ export class IngestionService {
     );
   }
 
-  private describeMeaningChange(diff: SemanticDiffSummary): string {
+  private describeMeaningChange(diff: SemanticDiffSummary, prefix?: string): string {
     if (!this.hasSemanticChanges(diff)) {
-      return 'no semantic changes detected';
+      return prefix ? `${prefix}; no semantic changes detected` : 'no semantic changes detected';
     }
     const nodePart = `nodes +${diff.addedNodeCount}/-${diff.removedNodeCount}`;
     const edgePart = `edges +${diff.addedEdgeCount}/-${diff.removedEdgeCount}`;
@@ -801,7 +825,36 @@ export class IngestionService {
             .map(([rel, delta]) => `${rel}:${delta > 0 ? '+' : ''}${delta}`)
             .join(', ')}`
         : 'no relation count deltas';
-    return `${nodePart}; ${edgePart}; ${relPart}`;
+    return prefix ? `${prefix}; ${nodePart}; ${edgePart}; ${relPart}` : `${nodePart}; ${edgePart}; ${relPart}`;
+  }
+
+  private shouldBootstrapForSourceTransition(
+    previousSourcePath: string | undefined,
+    currentSourcePath: string
+  ): boolean {
+    if (!previousSourcePath || previousSourcePath === currentSourcePath) {
+      return false;
+    }
+
+    return (
+      this.classifySourcePath(previousSourcePath) === 'fixtures' &&
+      this.classifySourcePath(currentSourcePath) === 'retrieved_org'
+    );
+  }
+
+  private classifySourcePath(sourcePath: string): 'fixtures' | 'retrieved_org' | 'custom' {
+    const normalized = sourcePath.replace(/\\/g, '/');
+    if (normalized.includes('/fixtures/')) {
+      return 'fixtures';
+    }
+    if (
+      normalized.includes('/data/sf-project/') ||
+      normalized.endsWith('/force-app/main/default') ||
+      normalized.includes('/force-app/main/default/')
+    ) {
+      return 'retrieved_org';
+    }
+    return 'custom';
   }
 
   private mergePayloads(...payloads: GraphPayload[]): GraphPayload {

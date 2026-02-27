@@ -53,18 +53,8 @@ export class OrgController {
   async sessionConnect(
     @Body() body: Partial<OrgSessionConnectRequest> = {}
   ): Promise<OrgSessionConnectResponse> {
-    const coerce = (value: unknown): string | undefined => {
-      if (typeof value !== 'string') return undefined;
-      const trimmed = value.trim();
-      return trimmed.length > 0 ? trimmed : undefined;
-    };
-
     return this.orgService.connectSession({
-      alias: coerce(body.alias),
-      sfdxAuthUrl: coerce(body.sfdxAuthUrl),
-      accessToken: coerce(body.accessToken),
-      instanceUrl: coerce(body.instanceUrl),
-      frontdoorUrl: coerce(body.frontdoorUrl)
+      alias: typeof body.alias === 'string' && body.alias.trim().length > 0 ? body.alias.trim() : undefined
     });
   }
 

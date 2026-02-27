@@ -165,10 +165,6 @@ export default function Page(): JSX.Element {
   const [askElaboration, setAskElaboration] = useState('');
 
   const [orgAlias, setOrgAlias] = useState('orgumented-sandbox');
-  const [orgSfdxAuthUrl, setOrgSfdxAuthUrl] = useState('');
-  const [orgAccessToken, setOrgAccessToken] = useState('');
-  const [orgInstanceUrl, setOrgInstanceUrl] = useState('https://test.salesforce.com');
-  const [orgFrontdoorUrl, setOrgFrontdoorUrl] = useState('');
   const [orgSession, setOrgSession] = useState<OrgSessionPayload | null>(null);
   const [orgStatus, setOrgStatus] = useState<OrgStatusPayload | null>(null);
   const [orgPreflight, setOrgPreflight] = useState<OrgPreflightPayload | null>(null);
@@ -285,11 +281,6 @@ export default function Page(): JSX.Element {
 
       if (kind === 'ask' && parsed.payload) {
         setAskElaboration('');
-      }
-      if (kind === 'orgConnect' && res.ok && parsed.ok !== false) {
-        setOrgSfdxAuthUrl('');
-        setOrgAccessToken('');
-        setOrgFrontdoorUrl('');
       }
       if ((kind === 'orgSession' || kind === 'orgSessionSwitch' || kind === 'orgSessionDisconnect') && parsed.payload) {
         setOrgSession(parsed.payload as OrgSessionPayload);
@@ -575,47 +566,6 @@ cci org import ${orgAlias} <sf-username>`}</pre>
               <input id="orgAlias" value={orgAlias} onChange={(e) => setOrgAlias(e.target.value)} />
 
               <div className="field-grid">
-                <div>
-                  <label htmlFor="orgSfdxAuthUrl">SFDX Auth URL (recommended)</label>
-                  <textarea
-                    id="orgSfdxAuthUrl"
-                    rows={3}
-                    value={orgSfdxAuthUrl}
-                    onChange={(e) => setOrgSfdxAuthUrl(e.target.value)}
-                    placeholder="force://<clientId>:<clientSecret>:<refreshToken>@<instanceHost>"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="orgAccessToken">Access Token</label>
-                  <input
-                    id="orgAccessToken"
-                    value={orgAccessToken}
-                    onChange={(e) => setOrgAccessToken(e.target.value)}
-                    placeholder="00D...!"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="orgInstanceUrl">Instance URL</label>
-                  <input
-                    id="orgInstanceUrl"
-                    value={orgInstanceUrl}
-                    onChange={(e) => setOrgInstanceUrl(e.target.value)}
-                    placeholder="https://mydomain--uat.sandbox.my.salesforce.com"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="orgFrontdoorUrl">Frontdoor / Magic Link</label>
-                  <textarea
-                    id="orgFrontdoorUrl"
-                    rows={3}
-                    value={orgFrontdoorUrl}
-                    onChange={(e) => setOrgFrontdoorUrl(e.target.value)}
-                    placeholder="https://<host>/secur/frontdoor.jsp?sid=<token>"
-                  />
-                </div>
-              </div>
-
-              <div className="field-grid">
                 <div className="sub-card">
                   <h3>sf CLI</h3>
                   <p><strong>Installed:</strong> {orgStatus?.sf?.installed ? 'yes' : 'no'}</p>
@@ -640,33 +590,6 @@ cci org import ${orgAlias} <sf-username>`}</pre>
                 <button type="button" onClick={() => void runQuery('orgPreflight', { alias: orgAlias })} disabled={loading}>Preflight</button>
                 <button type="button" onClick={() => void runQuery('orgSessionSwitch', { alias: orgAlias })} disabled={loading}>Switch Alias</button>
                 <button type="button" onClick={() => void runQuery('orgConnect', { alias: orgAlias })} disabled={loading}>Connect Existing Alias</button>
-                <button
-                  type="button"
-                  onClick={() => void runQuery('orgConnect', { alias: orgAlias, sfdxAuthUrl: orgSfdxAuthUrl })}
-                  disabled={loading || !orgSfdxAuthUrl.trim()}
-                >
-                  Connect via SFDX URL
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    void runQuery('orgConnect', {
-                      alias: orgAlias,
-                      accessToken: orgAccessToken,
-                      instanceUrl: orgInstanceUrl
-                    })
-                  }
-                  disabled={loading || !orgAccessToken.trim() || !orgInstanceUrl.trim()}
-                >
-                  Connect via Access Token
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void runQuery('orgConnect', { alias: orgAlias, frontdoorUrl: orgFrontdoorUrl })}
-                  disabled={loading || !orgFrontdoorUrl.trim()}
-                >
-                  Connect via Magic Link
-                </button>
                 <button type="button" className="ghost" onClick={() => void runQuery('orgSessionDisconnect')} disabled={loading}>Disconnect</button>
               </div>
             </>

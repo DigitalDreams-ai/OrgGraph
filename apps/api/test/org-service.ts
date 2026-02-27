@@ -84,6 +84,14 @@ async function run(): Promise<void> {
     assert.ok(retrieveCall, 'expected retrieve sf command');
     assert.ok(retrieveCall?.args.includes('--metadata'), 'expected selector-based metadata retrieve');
     assert.ok(!retrieveCall?.args.includes('--manifest'), 'manifest retrieve must not be used');
+
+    await assert.rejects(
+      service.retrieveAndRefresh({ runAuth: false, runRetrieve: true, autoRefresh: false, selections: [] }),
+      (error: unknown) => {
+        const response = (error as { response?: { details?: { code?: string } } }).response;
+        return response?.details?.code === 'SF_METADATA_SELECTIONS_REQUIRED';
+      }
+    );
     console.log('org service test passed');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });

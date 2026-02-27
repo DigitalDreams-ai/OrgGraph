@@ -114,10 +114,6 @@ export interface OrgSessionSwitchRequest {
 
 export interface OrgSessionConnectRequest {
   alias?: string;
-  sfdxAuthUrl?: string;
-  accessToken?: string;
-  instanceUrl?: string;
-  frontdoorUrl?: string;
 }
 
 export interface OrgSessionConnectResponse {
@@ -125,7 +121,7 @@ export interface OrgSessionConnectResponse {
   activeAlias: string;
   authMode: OrgAuthMode;
   connectedAt: string;
-  method: 'existing' | 'sfdx_url' | 'access_token' | 'frontdoor';
+  method: 'sf_cli_keychain';
 }
 
 export interface OrgSessionSwitchResponse {

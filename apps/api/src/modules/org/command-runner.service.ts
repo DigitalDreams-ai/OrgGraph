@@ -13,15 +13,26 @@ export class CommandRunnerService {
   run(
     command: string,
     args: string[],
-    options: { cwd?: string; timeoutMs?: number; env?: NodeJS.ProcessEnv } = {}
+    options: { cwd?: string; timeoutMs?: number; env?: NodeJS.ProcessEnv; stdin?: string } = {}
   ): Promise<CommandResult> {
     const startedAt = Date.now();
+    const baseEnv = options.env ?? process.env;
+    const env =
+      command === 'sf'
+        ? {
+            ...baseEnv,
+            SF_DISABLE_TELEMETRY: baseEnv.SF_DISABLE_TELEMETRY ?? 'true',
+            SFDX_DISABLE_TELEMETRY: baseEnv.SFDX_DISABLE_TELEMETRY ?? 'true',
+            SF_HIDE_RELEASE_NOTES: baseEnv.SF_HIDE_RELEASE_NOTES ?? 'true'
+          }
+        : baseEnv;
+
     return new Promise((resolve, reject) => {
       const child = spawn(command, args, {
         cwd: options.cwd,
-        env: options.env ?? process.env,
+        env,
         shell: false,
-        stdio: ['ignore', 'pipe', 'pipe']
+        stdio: ['pipe', 'pipe', 'pipe']
       });
 
       let stdout = '';
@@ -39,6 +50,11 @@ export class CommandRunnerService {
       child.stderr.on('data', (chunk) => {
         stderr += String(chunk);
       });
+
+      if (options.stdin !== undefined) {
+        child.stdin.write(options.stdin);
+      }
+      child.stdin.end();
 
       child.on('error', (error) => {
         clearTimeout(timer);

@@ -228,92 +228,19 @@ export class OrgService {
     await this.ensureSfBinaryInstalled(projectPath);
     await this.ensureCciBinaryInstalled(projectPath);
 
-    const sfdxAuthUrl = input.sfdxAuthUrl?.trim();
-    const accessToken = input.accessToken?.trim();
-    const instanceUrl = input.instanceUrl?.trim();
-    const frontdoorUrl = input.frontdoorUrl?.trim();
-
-    let method: OrgSessionConnectResponse['method'] = 'existing';
-    const mechanismsSelected =
-      (sfdxAuthUrl ? 1 : 0) +
-      (accessToken && instanceUrl ? 1 : 0) +
-      (frontdoorUrl ? 1 : 0);
-    if (mechanismsSelected > 1) {
-      throw new BadRequestException('Provide only one auth mechanism: sfdxAuthUrl, accessToken+instanceUrl, or frontdoorUrl');
-    }
-
-    if (sfdxAuthUrl) {
-      method = 'sfdx_url';
-      const authFile = path.join(projectPath, '.orgumented-sfdx-auth-url.txt');
-      fs.writeFileSync(authFile, `${sfdxAuthUrl}\n`, { encoding: 'utf8', mode: 0o600 });
-      try {
-        const login = await this.commandRunner.run(
-          'sf',
-          ['org', 'login', 'sfdx-url', '--sfdx-url-file', authFile, '--alias', alias, '--set-default', '--json'],
-          { cwd: projectPath, timeoutMs: 120_000 }
-        );
-        if (login.exitCode !== 0) {
-          const reason = this.sanitizeSfError(login.stderr || login.stdout, [sfdxAuthUrl]);
-          throw new BadRequestException(`sf sfdx-url login failed: ${reason || 'unknown error'}`);
+    const aliasCheck = await this.commandRunner.run(
+      'sf',
+      ['org', 'display', '--target-org', alias, '--json'],
+      { cwd: projectPath, timeoutMs: 30_000 }
+    );
+    if (aliasCheck.exitCode !== 0) {
+      throw new BadRequestException({
+        message: `No authenticated org for alias ${alias}.`,
+        details: {
+          code: 'ALIAS_NOT_AUTHENTICATED',
+          hint: `Run 'sf org login web --alias ${alias} --instance-url ${this.configService.sfBaseUrl()} --set-default' in API runtime, then retry.`
         }
-      } finally {
-        fs.rmSync(authFile, { force: true });
-      }
-    } else if (accessToken && instanceUrl) {
-      method = 'access_token';
-      const login = await this.commandRunner.run(
-        'sf',
-        ['org', 'login', 'access-token', '--instance-url', instanceUrl, '--alias', alias, '--set-default', '--no-prompt', '--json'],
-        {
-          cwd: projectPath,
-          timeoutMs: 120_000,
-          env: { ...process.env, SF_ACCESS_TOKEN: accessToken }
-        }
-      );
-      if (login.exitCode !== 0) {
-        const reason = this.sanitizeSfError(login.stderr || login.stdout, [accessToken]);
-        throw new BadRequestException(`sf access-token login failed: ${reason || 'unknown error'}`);
-      }
-    } else if (frontdoorUrl) {
-      method = 'frontdoor';
-      const frontdoor = this.parseFrontdoorAuth(frontdoorUrl);
-      const login = await this.commandRunner.run(
-        'sf',
-        [
-          'org',
-          'login',
-          'access-token',
-          '--instance-url',
-          frontdoor.instanceUrl,
-          '--alias',
-          alias,
-          '--set-default',
-          '--no-prompt',
-          '--json'
-        ],
-        {
-          cwd: projectPath,
-          timeoutMs: 120_000,
-          env: { ...process.env, SF_ACCESS_TOKEN: frontdoor.accessToken }
-        }
-      );
-      if (login.exitCode !== 0) {
-        const reason = this.sanitizeSfError(login.stderr || login.stdout, [frontdoor.accessToken]);
-        throw new BadRequestException(`sf frontdoor login failed: ${reason || 'unknown error'}`);
-      }
-    }
-
-    if (method === 'existing') {
-      const aliasCheck = await this.commandRunner.run(
-        'sf',
-        ['org', 'display', '--target-org', alias, '--json'],
-        { cwd: projectPath, timeoutMs: 30_000 }
-      );
-      if (aliasCheck.exitCode !== 0) {
-        throw new BadRequestException(
-          `No authenticated org for alias ${alias}. Provide one auth mechanism or login in sf keychain first.`
-        );
-      }
+      });
     }
 
     await this.runAuth(alias, projectPath);
@@ -323,13 +250,13 @@ export class OrgService {
       activeAlias: alias,
       connectedAt
     });
-    this.appendAuthAudit('connect', alias, authMode, `session connected via ${method}`);
+    this.appendAuthAudit('connect', alias, authMode, 'session connected via sf_cli_keychain');
     return {
       status: 'connected',
       activeAlias: alias,
       authMode,
       connectedAt,
-      method
+      method: 'sf_cli_keychain'
     };
   }
 
@@ -550,6 +477,11 @@ export class OrgService {
         steps
       });
 
+      const actionable = this.asActionableBadRequest(error, alias);
+      if (actionable) {
+        throw actionable;
+      }
+
       throw new InternalServerErrorException({
         message: 'salesforce retrieve pipeline failed',
         details: {
@@ -635,9 +567,13 @@ export class OrgService {
       { cwd: projectPath, timeoutMs: 30_000 }
     );
     if (sfAliasCheck.exitCode !== 0) {
-      throw new Error(
-        `No authenticated org for alias ${alias}. Use Salesforce CLI keychain login first: sf org login web --alias ${alias} --instance-url ${this.configService.sfBaseUrl()} --set-default`
-      );
+      throw new BadRequestException({
+        message: `No authenticated org for alias ${alias}.`,
+        details: {
+          code: 'ALIAS_NOT_AUTHENTICATED',
+          hint: `Run 'sf org login web --alias ${alias} --instance-url ${this.configService.sfBaseUrl()} --set-default' in API runtime, then retry.`
+        }
+      });
     }
 
     await this.ensureCciBinaryInstalled(projectPath);
@@ -653,9 +589,13 @@ export class OrgService {
 
     const username = this.extractSfUsername(sfAliasCheck.stdout);
     if (!username) {
-      throw new Error(
-        `Unable to resolve Salesforce username for alias ${alias}. Run: sf org display --target-org ${alias} --json`
-      );
+      throw new BadRequestException({
+        message: `Unable to resolve Salesforce username for alias ${alias}.`,
+        details: {
+          code: 'SF_USERNAME_RESOLUTION_FAILED',
+          hint: `Run 'sf org display --target-org ${alias} --json' and verify result.username exists.`
+        }
+      });
     }
 
     const cciImport = await this.commandRunner.run(
@@ -666,9 +606,13 @@ export class OrgService {
     if (cciImport.exitCode !== 0) {
       const err = (cciImport.stderr || cciImport.stdout || '').toLowerCase();
       if (!err.includes('already exists')) {
-        throw new Error(
-          `Failed to import alias ${alias} into cci org registry. Ensure cci is configured in runtime and retry.`
-        );
+        throw new BadRequestException({
+          message: `Failed to import alias ${alias} into cci org registry.`,
+          details: {
+            code: 'CCI_ALIAS_IMPORT_FAILED',
+            hint: `Run 'cci org import ${alias} ${username}' in API runtime and verify cci configuration.`
+          }
+        });
       }
     }
 
@@ -678,9 +622,13 @@ export class OrgService {
       { cwd: projectPath, timeoutMs: 30_000 }
     );
     if (cciAliasRecheck.exitCode !== 0) {
-      throw new Error(
-        `sf keychain login found, but cci alias ${alias} is still unavailable. Run: cci org import ${alias} ${username}`
-      );
+      throw new BadRequestException({
+        message: `sf keychain login found, but cci alias ${alias} is still unavailable.`,
+        details: {
+          code: 'CCI_ALIAS_NOT_CONNECTED',
+          hint: `Run 'cci org import ${alias} ${username}' in API runtime, then retry.`
+        }
+      });
     }
   }
 
@@ -807,6 +755,24 @@ export class OrgService {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const category = this.classifyMetadataRetrieveFailure(message);
+      if (category === 'auth_or_session_error') {
+        throw new BadRequestException({
+          message: 'metadata retrieve requires an authenticated org session',
+          details: {
+            code: 'ALIAS_NOT_AUTHENTICATED',
+            hint: `Run 'sf org login web --alias ${alias} --instance-url ${this.configService.sfBaseUrl()} --set-default' then retry metadata retrieve.`
+          }
+        });
+      }
+      if (category === 'metadata_resolution_error') {
+        throw new BadRequestException({
+          message: 'metadata retrieve failed due to invalid selector values',
+          details: {
+            code: 'SF_METADATA_SELECTOR_INVALID',
+            hint: 'Use /org/metadata/catalog and /org/metadata/members to build valid selections.'
+          }
+        });
+      }
       throw new InternalServerErrorException({
         message: 'metadata retrieve failed',
         details: {
@@ -1006,62 +972,6 @@ export class OrgService {
     return match ? match[1] : undefined;
   }
 
-  private parseFrontdoorAuth(frontdoorUrl: string): { accessToken: string; instanceUrl: string } {
-    let parsed: URL;
-    try {
-      parsed = new URL(frontdoorUrl);
-    } catch {
-      throw new BadRequestException('frontdoorUrl must be a valid URL');
-    }
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-      throw new BadRequestException('frontdoorUrl must use http or https');
-    }
-    const accessToken = parsed.searchParams.get('sid')?.trim();
-    if (!accessToken) {
-      throw new BadRequestException('frontdoorUrl must include sid query parameter');
-    }
-    return {
-      accessToken,
-      instanceUrl: `${parsed.protocol}//${parsed.host}`
-    };
-  }
-
-  private redactSecrets(text: string, secrets: string[]): string {
-    let result = text;
-    for (const secret of secrets) {
-      if (!secret) continue;
-      result = result.split(secret).join('[REDACTED]');
-    }
-    return result;
-  }
-
-  private sanitizeSfError(raw: string, secrets: string[]): string {
-    const redacted = this.redactSecrets(raw, secrets);
-    const parsed = this.extractSfErrorMessage(redacted);
-    return this.normalizeWhitespace(parsed).slice(0, 1200);
-  }
-
-  private extractSfErrorMessage(raw: string): string {
-    const text = raw.trim();
-    if (!text) return '';
-    try {
-      const parsed = JSON.parse(text) as { message?: string; code?: string };
-      if (typeof parsed.message === 'string' && parsed.message.trim().length > 0) {
-        return parsed.message.trim();
-      }
-      if (typeof parsed.code === 'string' && parsed.code.trim().length > 0) {
-        return parsed.code.trim();
-      }
-    } catch {
-      // non-json output
-    }
-    return text;
-  }
-
-  private normalizeWhitespace(text: string): string {
-    return text.replace(/\s+/g, ' ').trim();
-  }
-
   private resolveActiveAlias(): string {
     const session = this.readSessionState();
     if (session && session.status === 'connected' && session.activeAlias.trim().length > 0) {
@@ -1153,6 +1063,42 @@ export class OrgService {
     if (fileName.includes('.trigger')) return 'ApexTrigger';
     if (fileName.includes('.object-meta.xml')) return 'CustomObject';
     return folderName;
+  }
+
+  private asActionableBadRequest(error: unknown, alias: string): BadRequestException | undefined {
+    if (error instanceof BadRequestException) {
+      return error;
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    const normalized = message.toLowerCase();
+    if (normalized.includes('sf cli not found')) {
+      return new BadRequestException({
+        message: 'sf CLI is not available in API runtime.',
+        details: {
+          code: 'SF_CLI_MISSING',
+          hint: 'Install sf CLI in the API runtime/image and restart the service.'
+        }
+      });
+    }
+    if (normalized.includes('cci not found')) {
+      return new BadRequestException({
+        message: 'cci is not available in API runtime.',
+        details: {
+          code: 'CCI_MISSING',
+          hint: 'Install cci in the API runtime/image and restart the service.'
+        }
+      });
+    }
+    if (normalized.includes('no authenticated org for alias')) {
+      return new BadRequestException({
+        message: `No authenticated org for alias ${alias}.`,
+        details: {
+          code: 'ALIAS_NOT_AUTHENTICATED',
+          hint: `Run 'sf org login web --alias ${alias} --instance-url ${this.configService.sfBaseUrl()} --set-default' in API runtime, then retry.`
+        }
+      });
+    }
+    return undefined;
   }
 
   private buildMetadataArgs(selections: Array<{ type: string; members?: string[] }>): string[] {
