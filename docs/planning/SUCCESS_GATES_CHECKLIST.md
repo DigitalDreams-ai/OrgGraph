@@ -1,8 +1,8 @@
 # Orgumented Success Gates Checklist
 
-Purpose: define objective gates for delivery success from Phase 18 onward.
+Purpose: define objective gates for delivery success under the active Wave A-E execution model.
 
-## 1) KPI Lock (Required Before Phase 18 Build Completion)
+## 1) KPI Lock (Required Before Wave B Build Completion)
 - [ ] Replay pass rate target locked (`100%`)
 - [ ] Proof coverage target locked (`100% claim-to-proof linkage`)
 - [ ] Time-to-trusted-answer target locked (percent improvement vs baseline)
@@ -21,7 +21,7 @@ Purpose: define objective gates for delivery success from Phase 18 onward.
 - [ ] Proof/provenance visibility required in UI (`snapshotId`, `policyId`, `replayToken`, trust level)
 - [ ] Failure states mapped to explicit operator actions
 
-## 4) Auth/Retrieve Contract (Phase 18–19 Critical)
+## 4) Auth/Retrieve Contract (Wave A Critical)
 - [ ] WebUI auth path uses Salesforce CLI keychain as primary flow
 - [ ] Alias/session contract is explicit (`SF_ALIAS`, `SF_BASE_URL`, `sf org login web`, `sf org display`)
 - [ ] Legacy OAuth and magic-link auth paths are removed from runtime and docs
@@ -42,9 +42,9 @@ Purpose: define objective gates for delivery success from Phase 18 onward.
 - [ ] “First 15 minutes” onboarding flow is documented and tested
 
 ## 7) Promotion Rule
-- [ ] A phase is only considered complete when all required gates above are satisfied or explicitly deferred with written rationale.
+- [ ] A wave is only considered complete when all required gates above are satisfied or explicitly deferred with written rationale.
 
 ## Ownership
-- Product/Architecture: KPI targets + phase acceptance
+- Product/Architecture: KPI targets + wave acceptance
 - Engineering: implementation + tests + CI gates
 - Operations: runtime safety + release controls + secrets hygiene

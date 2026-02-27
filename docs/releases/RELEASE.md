@@ -19,6 +19,22 @@ This checklist defines repeatable NAS deployment and release steps for Orgumente
 6. Run smoke checks: `./scripts/web-smoke.sh`
 7. Confirm `/metrics`, `/health`, `/ready`, `/api/health`, `/api/ready` are healthy.
 
+## Wave A Operator Baseline Evidence
+- Branch baseline: `wave-a`
+- Selector-first retrieve path is active; standard retrieve no longer depends on `package.xml`.
+- Real org-backed refresh baseline verified with:
+  - `WEB_SMOKE_USE_SF_PROJECT=1 ./scripts/web-smoke.sh`
+  - `GET /api/ready`
+- Verified ready payload:
+  - `checks.fixtures.sourcePath=/app/data/sf-project/force-app/main/default`
+  - `checks.db.nodeCount=7024`
+  - `checks.db.edgeCount=51754`
+- Operator failure messages for auth/session now include remediation for:
+  - missing `sf`
+  - missing `cci`
+  - alias not authenticated in `sf`
+  - alias not imported into `cci`
+
 ## Release Steps
 1. Merge approved PR into `main`.
 2. Pull latest main on NAS:

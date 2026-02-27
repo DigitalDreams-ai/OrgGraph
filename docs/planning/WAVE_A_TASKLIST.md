@@ -13,13 +13,20 @@ Objective: establish a reliable operator baseline and remove legacy runtime fric
 - [x] Deprecate and remove `SF_MANIFEST_PATH` from active runtime/config paths.
 - [x] Keep selective metadata retrieval (`/org/metadata/retrieve`) as the primary retrieve path.
 - [x] Ensure preflight only reports checks relevant to keychain + selector retrieval.
-- [ ] Make auth/session failures actionable with concrete remediation text.
-- [ ] Remove legacy WebUI connect controls not aligned to keychain baseline.
-- [ ] Add smoke suite for WebUI connect/retrieve/refresh against non-fixture source.
+- [x] Make auth/session failures actionable with concrete remediation text.
+- [x] Remove legacy WebUI connect controls not aligned to keychain baseline.
+- [x] Add smoke suite for WebUI connect/retrieve/refresh against non-fixture source.
 - [x] Update runbooks and usage docs to remove package.xml-first instructions.
 
 ## Exit Gates
 - [ ] WebUI connect success rate >= 95% on benchmark runs.
 - [x] Retrieve works without package.xml requirement in standard workflows.
-- [ ] Refresh uses non-fixture source path and succeeds.
-- [ ] Failure classes are explicit and operator-actionable.
+- [x] Refresh uses non-fixture source path and succeeds.
+- [x] Failure classes are explicit and operator-actionable.
+
+## Evidence
+- Live `GET /api/ready` shows non-fixture source path: `/app/data/sf-project/force-app/main/default`.
+- Live `WEB_SMOKE_USE_SF_PROJECT=1 ./scripts/web-smoke.sh` passed on branch `wave-a`.
+- Current ready counts on the real org-backed baseline:
+  - `nodeCount=7024`
+  - `edgeCount=51754`

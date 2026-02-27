@@ -5,11 +5,7 @@ Connect Orgumented to a Salesforce org using Salesforce CLI keychain sessions on
 
 ## Auth Model
 - Single supported auth model: `sf_cli_keychain`
-- UI/API session connect supports three keychain-backed bootstrap inputs:
-  - `sfdxAuthUrl`
-  - `accessToken + instanceUrl`
-  - `frontdoorUrl` (magic link with `sid`)
-- JWT flow is not implemented.
+- UI/API session connect validates an existing `sf` keychain alias and bridges to `cci`.
 
 ## Required Runtime Settings
 - `SF_INTEGRATION_ENABLED=true`
@@ -37,6 +33,8 @@ Connect Orgumented to a Salesforce org using Salesforce CLI keychain sessions on
      - `SF_RETRIEVE_SELECTORS='CustomObject:Account,Flow,PermissionSet' npm run sf:retrieve`
 3. Refresh graph/evidence:
    - `npm run sf:retrieve-refresh`
+   - Or explicitly rebaseline after switching from fixtures to retrieved org metadata:
+     - `curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full","rebaseline":true}'`
 4. Export user principal map:
    - `npm run sf:export-user-map`
 
@@ -48,14 +46,13 @@ Alternative API trigger (`/org/retrieve` now requires explicit selections when `
     - `{ "selections": [{ "type": "CustomObject", "members": ["Account"] }], "autoRefresh": true }`
 
 Session connect API (no retrieve):
-- `POST /org/session/connect` body examples:
-  - `{ "alias":"orgumented-sandbox", "sfdxAuthUrl":"force://..." }`
-  - `{ "alias":"orgumented-sandbox", "accessToken":"00D...!AQEA...", "instanceUrl":"https://...salesforce.com" }`
-  - `{ "alias":"orgumented-sandbox", "frontdoorUrl":"https://.../secur/frontdoor.jsp?sid=..." }`
+- `POST /org/session/connect` body:
+  - `{ "alias":"orgumented-sandbox" }`
 
 ## Validation Checks
 After retrieve + refresh:
 1. `GET /ready`
+   - Expect `checks.fixtures.sourcePath=/app/data/sf-project/force-app/main/default`
 2. `GET /metrics`
 3. `GET /perms?user=<known-user>&object=<known-object>`
 4. `GET /automation?object=<known-object>`

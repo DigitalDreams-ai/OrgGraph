@@ -41,7 +41,7 @@ ssh-copy-id docker@10.0.1.10
 - Open `/volume1/data/projects/Orgumented`
 - Work directly in the repo on the NAS
 
-### Local Bootstrap (Phase 1)
+### Local Bootstrap
 
 ```bash
 cd /volume1/data/projects/Orgumented
@@ -59,7 +59,7 @@ npm exec --yes pnpm@9.12.3 -- typecheck
 npm exec --yes pnpm@9.12.3 -- --filter api build
 ```
 
-Phase 1 user-to-profile resolution is read from `fixtures/permissions/user-profile-map.json`.
+User-to-principal resolution is read from `fixtures/permissions/user-profile-map.json` (or exported org mapping in runtime workflows).
 
 ### Running the Stack
 
@@ -75,7 +75,7 @@ See `docker/docker-compose.yml` for service configuration. The compose file uses
 ### Service Endpoints
 
 - API: `http://<nas-ip>:3100`
-- Web Console (Phase 4): `http://<nas-ip>:3101`
+- Web Console: `http://<nas-ip>:3101`
 - API Health: `GET /health`
 - API Readiness: `GET /ready`
 - API Metrics: `GET /metrics`
@@ -104,13 +104,13 @@ curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -
 curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"mode":"incremental"}'
 ```
 
-## Salesforce Org Integration (Phase 6)
+## Salesforce Org Integration
 
-Phase 6 adds sandbox-first org retrieval and refresh.
+Sandbox-first org retrieval and refresh with Salesforce CLI keychain baseline.
 
 ### Prerequisites
 
-1. Install Salesforce CLI (`sf`) on NAS host.
+1. Install Salesforce CLI (`sf`) and CumulusCI (`cci`) in runtime image/host.
 2. Create secrets directory:
 `mkdir -p /volume1/data/projects/Orgumented/.secrets`
 3. Ensure env file exists at repo root:
@@ -122,8 +122,11 @@ Phase 6 adds sandbox-first org retrieval and refresh.
 `sf org login web --alias <alias> --instance-url <url> --set-default`
 6. Verify authenticated alias:
 `sf org display --target-org <alias> --json`
-7. Review/adjust retrieve manifest:
-`manifest/package.xml`
+7. Import alias into CCI registry:
+`cci org import <alias> <sf-username>`
+8. Verify CCI alias:
+`cci org info <alias>`
+9. Use selective metadata retrieval as the primary operator path (no package.xml requirement for standard workflows).
 
 ### Commands
 
@@ -143,7 +146,7 @@ SF_VERBOSE=true npm run sf:retrieve-refresh
 # Export org-derived user -> [profile, permission-set...] map for /perms
 npm run sf:export-user-map
 
-# Phase 8 promotion safety commands
+# Promotion safety commands
 npm run phase8:promotion-dry-run
 npm run phase8:restore-point:create
 npm run phase8:promotion-log -- promoted
@@ -223,7 +226,7 @@ DATABASE_URL=postgres://orgumented:orgumented@postgres:5432/orgumented
 5. Rebuild stack after updates: `docker compose -f docker/docker-compose.yml up -d --build`
 6. For Dozzle-friendly request logs, ensure `ORGUMENTED_HTTP_LOG_ENABLED=true` (api) and `ORGUMENTED_WEB_LOG_ENABLED=true` (web)
 
-## LLM Ask Mode (Phase 10)
+## LLM Ask Mode
 
 - Deterministic remains default (`ASK_DEFAULT_MODE=deterministic`).
 - Enable LLM assist by setting `LLM_ENABLED=true` and `LLM_PROVIDER=openai` or `LLM_PROVIDER=anthropic`.
@@ -238,6 +241,12 @@ curl -X POST http://localhost:3100/ask \
 
 ## Plan
 
-- Current active phase: **Phase 10 planning** (LLM support plan) with Phase 9 implementation completed.
-- See [PHASE9_TASKLIST.md](./docs/planning/PHASE9_TASKLIST.md) for completed Postgres + metadata expansion scope.
-- See [PLAN_v1_Monorepo.md](./docs/planning/PLAN_v1_Monorepo.md) for the master roadmap.
+- Active execution model: **Wave A-E**.
+- See [Blue Ocean Phase Roadmap](./docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md) for dependency-ordered wave sequencing.
+- Current active tracking files:
+  - [WAVE_A_TASKLIST.md](./docs/planning/WAVE_A_TASKLIST.md)
+  - [WAVE_B_TASKLIST.md](./docs/planning/WAVE_B_TASKLIST.md)
+  - [WAVE_C_TASKLIST.md](./docs/planning/WAVE_C_TASKLIST.md)
+  - [WAVE_D_TASKLIST.md](./docs/planning/WAVE_D_TASKLIST.md)
+  - [WAVE_E_TASKLIST.md](./docs/planning/WAVE_E_TASKLIST.md)
+- Historical phase artifacts are preserved in [docs/planning/archive](./docs/planning/archive/).

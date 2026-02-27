@@ -1,10 +1,11 @@
 # Orgumented — Plan v3 (Monorepo, Validate First)
 
-> Note: This file documents the original monorepo execution model.  
-> For current strategic execution (Phase 11+), use:
+> Note: This file documents a legacy monorepo execution model and is retained for historical context.
+> For active execution, use the Wave model:
 > - `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
 > - `docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md`
-> - `docs/planning/PHASE11_TASKLIST.md` through `docs/planning/PHASE20_TASKLIST.md`
+> - `docs/planning/WAVE_A_TASKLIST.md` through `docs/planning/WAVE_E_TASKLIST.md`
+> - `docs/planning/PHASE_TO_WAVE_MAPPING.md`
 > - `docs/planning/SUCCESS_GATES_CHECKLIST.md`
 
 ## Current Status (2026-02-25)

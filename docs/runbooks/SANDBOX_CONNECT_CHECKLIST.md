@@ -2,6 +2,7 @@
 
 ## 1) Runtime prerequisites
 - [ ] `sf` CLI available in API runtime (`docker exec orgumented-api sf --version`)
+- [ ] `cci` available in API runtime (`docker exec orgumented-api cci version`)
 - [ ] API container running and healthy
 - [ ] keychain volumes mounted (`/root/.sf`, `/root/.sfdx`)
 
@@ -15,11 +16,15 @@
   - `docker exec -it orgumented-api sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default`
 - [ ] Verify:
   - `docker exec orgumented-api sf org display --target-org orgumented-sandbox --json`
+- [ ] Import alias into cci:
+  - `docker exec orgumented-api cci org import orgumented-sandbox <sf-username>`
+- [ ] Verify cci alias:
+  - `docker exec orgumented-api cci org info orgumented-sandbox`
 
 ## 4) Validate Orgumented session
 - [ ] `curl http://localhost:3100/org/preflight`
 - [ ] `curl http://localhost:3100/org/session`
-- [ ] Confirm `aliasAuthenticated=true` and session `connected`
+- [ ] Confirm `aliasAuthenticated=true`, `cciAliasAvailable=true`, and session `connected`
 
 ## 5) Retrieve + refresh
 - [ ] `npm run sf:retrieve`

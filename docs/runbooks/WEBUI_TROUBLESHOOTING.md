@@ -40,7 +40,16 @@ Fix:
 - Then retry `Check Session` -> `Connect Org` -> `Retrieve Selected`.
 
 Important:
-- Connect flow uses `sf` CLI keychain session only.
+- Connect flow uses `sf` CLI keychain session only, with these bootstrap inputs:
+  - SFDX auth URL
+  - access token + instance URL
+  - frontdoor/magic link URL (`sid`)
+
+Quick API checks for connect payload handling:
+- `curl -s -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgConnect","payload":{"alias":"orgumented-sandbox"}}'`
+- `curl -s -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgConnect","payload":{"alias":"orgumented-sandbox","sfdxAuthUrl":"force://..."}}'`
+- `curl -s -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgConnect","payload":{"alias":"orgumented-sandbox","accessToken":"00D...!AQEA...","instanceUrl":"https://...salesforce.com"}}'`
+- `curl -s -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgConnect","payload":{"alias":"orgumented-sandbox","frontdoorUrl":"https://.../secur/frontdoor.jsp?sid=..."}}'`
 
 ### 2) Permissions returns false for a user known to have access
 Typical indicators:

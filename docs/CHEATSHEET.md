@@ -33,7 +33,8 @@ npm run sf:auth
 curl http://localhost:3100/org/status
 npm run sf:retrieve
 npm run sf:export-user-map
-curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full"}'
+curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full","rebaseline":true}'
+curl http://localhost:3100/ready
 ```
 
 ## Enable Staged UI Metadata Ingestion
@@ -52,6 +53,8 @@ curl -X POST http://localhost:3100/ask/architecture -H 'content-type: applicatio
 curl -X POST http://localhost:3100/ask/simulate -H 'content-type: application/json' -d '{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"balanced","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"}]}'
 curl -X POST http://localhost:3100/ask/simulate/compare -H 'content-type: application/json' -d '{"scenarioA":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"strict","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"}]},"scenarioB":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"exploratory","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"},{"action":"add_automation","object":"Opportunity"}]}}'
 curl -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgConnect","payload":{}}'
+docker exec -it orgumented-api sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default
+docker exec orgumented-api cci org import orgumented-sandbox <sf-username>
 curl http://localhost:3100/org/session
 curl -X POST http://localhost:3100/org/session/switch -H 'content-type: application/json' -d '{"alias":"orgumented-sandbox"}'
 curl -X POST http://localhost:3100/org/session/disconnect
@@ -115,7 +118,7 @@ npm run phase14:drift-gate
 npm run sf:export-user-map
 
 # Re-point runtime to sandbox retrieved metadata
-curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full"}'
+curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full","rebaseline":true}'
 
 # Rebuild web if unhealthy
 docker compose -f docker/docker-compose.yml up -d --build web
