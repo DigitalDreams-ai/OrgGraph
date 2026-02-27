@@ -11,6 +11,7 @@ type QueryKind =
   | 'orgSessionSwitch'
   | 'orgSessionDisconnect'
   | 'perms'
+  | 'permsDiagnose'
   | 'permsSystem'
   | 'automation'
   | 'impact'
@@ -238,6 +239,12 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
     return { url: `${API_BASE}/perms?${params.toString()}`, init: { method: 'GET' } };
   }
 
+  if (request.kind === 'permsDiagnose') {
+    const params = new URLSearchParams();
+    appendParam(params, 'user', body.user);
+    return { url: `${API_BASE}/perms/diagnose?${params.toString()}`, init: { method: 'GET' } };
+  }
+
   if (request.kind === 'permsSystem') {
     const params = new URLSearchParams();
     appendParam(params, 'user', body.user);
@@ -304,6 +311,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         'orgSessionSwitch',
         'orgSessionDisconnect',
         'perms',
+        'permsDiagnose',
         'permsSystem',
         'automation',
         'impact',

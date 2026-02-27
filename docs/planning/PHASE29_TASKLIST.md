@@ -10,7 +10,7 @@ Goal: make permission outcomes provably accurate by upgrading user-to-principal 
 - [ ] Mapping freshness and source are visible in API and UI
 
 ## Deliverables
-- [ ] Add principal resolution diagnostics endpoint (`whoami` style for user mapping)
+- [x] Add principal resolution diagnostics endpoint (`whoami` style for user mapping)
 - [ ] Introduce map freshness metadata (generatedAt/source/version) and stale warnings
 - [ ] Add deterministic fallback strategy when user map is missing or partial
 - [ ] Add org-driven user principal export/import workflow in UI and scripts

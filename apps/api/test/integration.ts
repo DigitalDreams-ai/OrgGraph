@@ -439,6 +439,19 @@ async function run(): Promise<void> {
     assert.equal(permsUnknownUser.mappingStatus, 'unmapped_user');
     assert.ok(permsUnknownUser.warnings.length > 0);
 
+    const permsDiagnoseRes = await fetch(`${base}/perms/diagnose?user=jane@example.com`);
+    assert.equal(permsDiagnoseRes.status, 200, 'perms diagnose should return 200');
+    const permsDiagnose = (await permsDiagnoseRes.json()) as {
+      user: string;
+      mapExists: boolean;
+      principals: string[];
+      mappingStatus: 'resolved' | 'unmapped_user' | 'map_missing';
+    };
+    assert.equal(permsDiagnose.user, 'jane@example.com');
+    assert.equal(permsDiagnose.mapExists, true);
+    assert.equal(permsDiagnose.mappingStatus, 'resolved');
+    assert.ok(permsDiagnose.principals.includes('Support'));
+
     const systemPermPositiveRes = await fetch(
       `${base}/perms/system?user=jane@example.com&permission=ApproveUninstalledConnectedApps`
     );

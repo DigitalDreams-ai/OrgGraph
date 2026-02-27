@@ -10,6 +10,7 @@ type QueryKind =
   | 'orgSessionSwitch'
   | 'orgSessionDisconnect'
   | 'perms'
+  | 'permsDiagnose'
   | 'permsSystem'
   | 'automation'
   | 'impact'
@@ -275,6 +276,9 @@ export default function Page(): JSX.Element {
     }
     if (kind === 'perms') {
       return 'GET /perms?user=...&object=...&field=...&limit=...';
+    }
+    if (kind === 'permsDiagnose') {
+      return 'GET /perms/diagnose?user=...';
     }
     if (kind === 'permsSystem') {
       return 'GET /perms/system?user=...&permission=...&limit=...';
@@ -550,6 +554,8 @@ export default function Page(): JSX.Element {
                                 ? { dryRun: metaDryRun }
           : activeKind === 'perms'
             ? { user, object: objectName, field: fieldName, limit }
+            : activeKind === 'permsDiagnose'
+              ? { user }
             : activeKind === 'permsSystem'
               ? { user, permission: systemPermission, limit }
             : activeKind === 'automation'
@@ -1046,6 +1052,11 @@ export default function Page(): JSX.Element {
               <button type="button" onClick={() => void runQuery(analyzeTab === 'perms' ? 'perms' : analyzeTab === 'automation' ? 'automation' : 'impact')} disabled={loading}>
                 Run {analyzeTab === 'perms' ? 'Permissions' : analyzeTab === 'automation' ? 'Automation' : 'Impact'} Analysis
               </button>
+              {analyzeTab === 'perms' ? (
+                <button type="button" onClick={() => void runQuery('permsDiagnose')} disabled={loading}>
+                  Diagnose User Mapping
+                </button>
+              ) : null}
             </>
           ) : null}
 
