@@ -12,7 +12,7 @@ This document describes how Orgumented works end-to-end, from startup through re
 - Orgumented reads metadata from either:
   - fixture path (`fixtures/permissions`) for controlled testing, or
   - retrieved Salesforce source (`data/sf-project/force-app/main/default`) for sandbox/live usage.
-- `manifest/package.xml` can define retrieved metadata scope, but package.xml-all retrieval is not the preferred default operator path.
+- Retrieval scope is selector-driven (`--metadata`) through metadata browser/API contracts, not manifest/package.xml in standard operator workflows.
 - Planned Phase 19 UX adds org-wide selective retrieval via metadata browser (expand/select/search across metadata types).
 
 ## 3. Salesforce Retrieval (Optional but Typical)

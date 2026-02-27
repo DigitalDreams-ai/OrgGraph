@@ -94,7 +94,7 @@ Expanded metadata coverage in current build includes:
 - `ConnectedApp`
 - staged UI metadata (`ApexPage`, `LightningComponentBundle`, `AuraDefinitionBundle`, `QuickAction`, `Layout`) when enabled
 
-### 7.1 Runtime Org Session Controls (Phase 23)
+### 7.1 Runtime Org Session Controls
 Current runtime session status:
 ```bash
 curl http://localhost:3100/org/session
@@ -113,6 +113,7 @@ curl -X POST http://localhost:3100/org/retrieve \
   -H 'content-type: application/json' \
   -d '{"runAuth":true,"runRetrieve":false,"autoRefresh":false}'
 ```
+If `runRetrieve=true`, `/org/retrieve` now requires explicit `selections` (same contract as `/org/metadata/retrieve`).
 
 Disconnect active runtime session:
 ```bash
@@ -121,7 +122,7 @@ curl -X POST http://localhost:3100/org/session/disconnect
 
 ## 8. Query Orgumented
 
-### 8.0 WebUI Product Workflow (Phase 25)
+### 8.0 WebUI Product Workflow
 WebUI is now organized into task-first tabs:
 - `Connect`
 - `Org Browser`
@@ -164,7 +165,7 @@ curl "http://localhost:3100/automation?object=Opportunity"
 curl "http://localhost:3100/impact?field=Opportunity.StageName"
 ```
 
-### 8.3a Metadata Browser APIs (Phase 22)
+### 8.3a Metadata Browser APIs
 Refresh/load metadata type summaries (cache-aware):
 ```bash
 curl "http://localhost:3100/org/metadata/catalog?limit=200&refresh=true"
@@ -235,13 +236,13 @@ Export now includes:
 - `bySnapshot`: trust and meaning metrics rollups
 - `byProvider`: provider/model success, error rate, latency, token, and estimated cost rollups
 
-Phase 12 replay validation scripts:
+Replay validation scripts:
 ```bash
 npm run phase12:replay-regression
 npm run phase12:replay-load
 ```
 
-### 8.5 Ask Architecture Decision (Phase 15)
+### 8.5 Ask Architecture Decision
 ```bash
 curl -X POST http://localhost:3100/ask/architecture \
   -H 'content-type: application/json' \
@@ -254,7 +255,7 @@ Response includes deterministic engines:
 - `engines.releaseRisk`
 - `composite.trustLevel`, `composite.topRiskDrivers`, `composite.replayToken`
 
-### 8.6 Ask Simulation and Compare (Phase 32)
+### 8.6 Ask Simulation and Compare
 ```bash
 curl -X POST http://localhost:3100/ask/simulate \
   -H 'content-type: application/json' \
@@ -265,13 +266,13 @@ curl -X POST http://localhost:3100/ask/simulate/compare \
   -d '{"scenarioA":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"strict","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"}]},"scenarioB":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"exploratory","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"},{"action":"add_automation","object":"Opportunity"}]}}'
 ```
 
-### 8.7 Trust Dashboard (Phase 34)
+### 8.7 Trust Dashboard
 ```bash
 curl http://localhost:3100/ask/trust/dashboard
 ```
 Includes replay/pass proxy rate, proof coverage, drift snapshot trend, and failure classes.
 
-### 8.8 Meta-Context Adaptation (Phase 16)
+### 8.8 Meta-Context Adaptation
 ```bash
 curl http://localhost:3100/meta/context
 curl -X POST http://localhost:3100/meta/adapt -H 'content-type: application/json' -d '{"dryRun":true}'
