@@ -217,3 +217,23 @@ They ask:
 - `Phase 26`: LLM rollout governance after WebUI/runtime stability is proven
 
 This ordering intentionally defers broader LLM rollout governance until the WebUI-first operating model is complete and stable.
+
+## Next Program Expansion (Post-Phase 27)
+- `Phase 28`: Runtime reliability and trust baseline.
+  Focus: remove opaque failures, enforce actionable remediation, and stabilize connect/session/retrieve.
+- `Phase 29`: Identity and permission truth layer.
+  Focus: principal mapping correctness, map freshness visibility, and permissions confidence.
+- `Phase 30`: Ask semantic query compilation core.
+  Focus: natural language to deterministic plan compilation with policy-safe rejection paths.
+- `Phase 31`: Proof productization.
+  Focus: decision packets, replay UX, and metrics context in the product surface.
+- `Phase 32`: Simulation and risk engine.
+  Focus: what-if change analysis, risk scoring, mitigation guidance, and rollback confidence.
+- `Phase 33`: Revolutionary WebUI overhaul.
+  Focus: workflow-native operator experience, not endpoint-first controls.
+- `Phase 34`: Production trust and commercialization readiness.
+  Focus: trust dashboard, role-aware operation, deployment guidance, and value proof pack.
+
+Program intent:
+- Move from "metadata/endpoint console" to "architecture decision operating system".
+- Keep determinism and proof-first behavior as strict non-negotiables.
