@@ -202,7 +202,12 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
     - session switch
     - session disconnect
     - preflight
-- The next live architectural priority is to continue the same cleanup for:
   - org retrieve
   - metadata catalog/members/retrieve
-  - then reassess whether Refresh should stay on the generic seam or receive its own typed boundary
+- Phase 3 now covers the full org operator surface:
+  - org session
+  - org retrieve
+  - metadata catalog/members/retrieve
+- The next live architectural priority is to narrow the remaining generic seam further by deciding whether:
+  - Refresh receives the next typed boundary,
+  - or runtime ownership in Tauri is now the higher-value move

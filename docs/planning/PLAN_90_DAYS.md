@@ -112,9 +112,12 @@ Progress note:
   - dedicated org boundary routes now own status, session, aliases, connect, switch, disconnect, and preflight
   - Connect and top-bar org actions no longer use the generic `/api/query` multiplexer
   - `page.tsx` still owns org-session state and typed org transport orchestration for now
+- Slice 2 completed:
+  - dedicated org boundary routes now own `orgRetrieve` and metadata catalog/member/retrieve
+  - Org Browser and Org Retrieve actions no longer use the generic `/api/query` multiplexer
 - Next narrow step:
-  - move `orgRetrieve` and metadata catalog/member/retrieve flows onto the same typed org boundary
-  - then reassess whether Refresh should stay on the generic seam or receive its own typed boundary
+  - reassess whether Refresh should receive the next typed boundary
+  - or whether runtime ownership in Tauri is now the higher-value move
 
 ## Phase 4: Desktop Runtime Ownership
 
@@ -222,6 +225,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 2 by extracting the next non-Ask workspace from `apps/web/app/page.tsx`.
-- Preferred next step: continue Phase 3 by moving `orgRetrieve` and metadata catalog/member/retrieve off the generic `/api/query` seam.
+- Preferred next step: choose between a typed Refresh boundary and Phase 4 runtime ownership hardening, based on which reduces the remaining desktop-specific architectural risk fastest.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

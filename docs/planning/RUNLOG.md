@@ -264,3 +264,46 @@ Branch: `dna-foundation`
 - The browser-era multiplexer no longer owns Connect or top-bar org-session actions.
 - Org-session boundary cleanup is now underway without widening into metadata/retrieve behavior yet.
 - The next cleanup target is the remaining org retrieve and metadata flows that still use `/api/query`.
+
+## Entry 8: Phase 3 Org Data Boundary Slice 2
+
+### Change
+- Removed `orgRetrieve` and metadata traffic from the generic `/api/query` multiplexer for:
+  - `orgRetrieve`
+  - metadata catalog
+  - metadata members
+  - metadata retrieve
+- Added dedicated typed org boundary routes for:
+  - `/api/org/retrieve`
+  - `/api/org/metadata/catalog`
+  - `/api/org/metadata/members`
+  - `/api/org/metadata/retrieve`
+- Expanded `apps/web/app/lib/org-client.ts` so the Org Browser and Org Retrieve surfaces use the same typed org boundary as Connect.
+- Updated `apps/web/app/page.tsx` so Browser and Refresh org actions no longer dispatch generic query kinds for org data operations.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - dedicated org data routes were emitted for:
+    - `/api/org/retrieve`
+    - `/api/org/metadata/catalog`
+    - `/api/org/metadata/members`
+    - `/api/org/metadata/retrieve`
+
+3. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `org service test passed`
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+### Outcome
+- The generic query multiplexer no longer owns the org operator surface.
+- Phase 3 now covers org session, org retrieve, and metadata catalog/member/retrieve flows.
+- The next architectural decision is whether to give Refresh its own typed boundary or pivot into desktop runtime ownership hardening.

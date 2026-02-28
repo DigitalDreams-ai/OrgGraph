@@ -7,9 +7,13 @@ import {
 import {
   connectOrgSession,
   disconnectOrgSession,
+  getOrgMetadataCatalog,
+  getOrgMetadataMembers,
   getOrgSession,
   getOrgStatus,
   listOrgSessionAliases,
+  retrieveOrgMetadata,
+  runOrgRetrieve,
   runOrgPreflight,
   switchOrgSession
 } from './lib/org-client';
@@ -33,10 +37,6 @@ type QueryKind =
   | 'permsSystem'
   | 'automation'
   | 'impact'
-  | 'orgRetrieve'
-  | 'metadataCatalog'
-  | 'metadataMembers'
-  | 'metadataRetrieve'
   | 'refreshDiff'
   | 'metaContext'
   | 'metaAdapt';
@@ -48,7 +48,11 @@ type OrgQueryKind =
   | 'orgPreflight'
   | 'orgSessionSwitch'
   | 'orgSessionDisconnect'
-  | 'orgStatus';
+  | 'orgStatus'
+  | 'orgRetrieve'
+  | 'metadataCatalog'
+  | 'metadataMembers'
+  | 'metadataRetrieve';
 
 type UiTab = 'ask' | 'connect' | 'browser' | 'refresh' | 'analyze' | 'proofs' | 'system';
 
@@ -267,17 +271,6 @@ export default function Page(): JSX.Element {
       if (!res.ok || parsed.ok === false) {
         setErrorText(resolveErrorMessage(parsed));
       }
-      if (kind === 'metadataCatalog' && parsed.payload) {
-        setMetadataCatalog(parsed.payload as MetadataCatalogPayload);
-      }
-      if (kind === 'metadataMembers' && parsed.payload && typeof payload.type === 'string') {
-        const type = payload.type;
-        setMetadataMembersByType((current) => ({
-          ...current,
-          [type]: parsed.payload as MetadataMembersPayload
-        }));
-      }
-
       return parsed;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected query failure';
@@ -301,6 +294,19 @@ export default function Page(): JSX.Element {
         parsed = await listOrgSessionAliases();
       } else if (kind === 'orgSession') {
         parsed = await getOrgSession();
+      } else if (kind === 'metadataCatalog') {
+        parsed = await getOrgMetadataCatalog({
+          q: typeof payload.q === 'string' ? payload.q : undefined,
+          limit: typeof payload.limit === 'number' ? payload.limit : undefined,
+          refresh: typeof payload.refresh === 'boolean' ? payload.refresh : undefined
+        });
+      } else if (kind === 'metadataMembers') {
+        parsed = await getOrgMetadataMembers({
+          type: typeof payload.type === 'string' ? payload.type : '',
+          q: typeof payload.q === 'string' ? payload.q : undefined,
+          limit: typeof payload.limit === 'number' ? payload.limit : undefined,
+          refresh: typeof payload.refresh === 'boolean' ? payload.refresh : undefined
+        });
       } else if (kind === 'orgPreflight') {
         parsed = await runOrgPreflight(typeof payload.alias === 'string' ? payload.alias : undefined);
       } else if (kind === 'orgSessionSwitch') {
@@ -309,6 +315,20 @@ export default function Page(): JSX.Element {
         });
       } else if (kind === 'orgSessionDisconnect') {
         parsed = await disconnectOrgSession();
+      } else if (kind === 'metadataRetrieve') {
+        parsed = await retrieveOrgMetadata({
+          selections: Array.isArray(payload.selections)
+            ? (payload.selections as Array<{ type: string; members?: string[] }>)
+            : [],
+          autoRefresh: typeof payload.autoRefresh === 'boolean' ? payload.autoRefresh : undefined
+        });
+      } else if (kind === 'orgRetrieve') {
+        parsed = await runOrgRetrieve({
+          alias: typeof payload.alias === 'string' ? payload.alias : undefined,
+          runAuth: typeof payload.runAuth === 'boolean' ? payload.runAuth : undefined,
+          runRetrieve: typeof payload.runRetrieve === 'boolean' ? payload.runRetrieve : undefined,
+          autoRefresh: typeof payload.autoRefresh === 'boolean' ? payload.autoRefresh : undefined
+        });
       } else if (kind === 'orgConnect') {
         parsed = await connectOrgSession({
           alias: typeof payload.alias === 'string' ? payload.alias : undefined
@@ -333,6 +353,16 @@ export default function Page(): JSX.Element {
       }
       if (kind === 'orgPreflight' && parsed.payload) {
         setOrgPreflight(parsed.payload as OrgPreflightPayload);
+      }
+      if (kind === 'metadataCatalog' && parsed.payload) {
+        setMetadataCatalog(parsed.payload as MetadataCatalogPayload);
+      }
+      if (kind === 'metadataMembers' && parsed.payload && typeof payload.type === 'string') {
+        const type = payload.type;
+        setMetadataMembersByType((current) => ({
+          ...current,
+          [type]: parsed.payload as MetadataMembersPayload
+        }));
       }
 
       return parsed;
@@ -392,7 +422,7 @@ export default function Page(): JSX.Element {
 
   async function loadMembers(type: string): Promise<void> {
     setMetadataLoadingType(type);
-    await runQuery('metadataMembers', {
+    await runOrgQuery('metadataMembers', {
       type,
       q: metadataMemberSearch,
       limit: parseOptionalInt(metadataLimitRaw) ?? 1000,
@@ -605,7 +635,7 @@ export default function Page(): JSX.Element {
                 <button
                   type="button"
                   onClick={() =>
-                    void runQuery('metadataCatalog', {
+                    void runOrgQuery('metadataCatalog', {
                       q: metadataSearch,
                       limit: parseOptionalInt(metadataLimitRaw) ?? 200,
                       refresh: metadataForceRefresh
@@ -685,7 +715,7 @@ export default function Page(): JSX.Element {
                     } catch {
                       // keep structured selection
                     }
-                    void runQuery('metadataRetrieve', { selections, autoRefresh: metadataAutoRefresh });
+                    void runOrgQuery('metadataRetrieve', { selections, autoRefresh: metadataAutoRefresh });
                   }}
                   disabled={loading}
                 >
@@ -750,7 +780,7 @@ export default function Page(): JSX.Element {
                 <button
                   type="button"
                   onClick={() =>
-                    void runQuery('orgRetrieve', {
+                    void runOrgQuery('orgRetrieve', {
                       alias: orgAlias,
                       runAuth: orgRunAuth,
                       runRetrieve: orgRunRetrieve,

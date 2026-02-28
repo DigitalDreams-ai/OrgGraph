@@ -4,6 +4,36 @@ interface OrgAliasPayload {
   alias?: string;
 }
 
+interface OrgRetrievePayload {
+  alias?: string;
+  runAuth?: boolean;
+  runRetrieve?: boolean;
+  autoRefresh?: boolean;
+}
+
+interface MetadataCatalogPayload {
+  q?: string;
+  limit?: number;
+  refresh?: boolean;
+}
+
+interface MetadataMembersPayload {
+  type: string;
+  q?: string;
+  limit?: number;
+  refresh?: boolean;
+}
+
+interface MetadataSelection {
+  type: string;
+  members?: string[];
+}
+
+interface MetadataRetrievePayload {
+  selections: MetadataSelection[];
+  autoRefresh?: boolean;
+}
+
 async function parseBoundaryResponse(res: Response): Promise<QueryResponse> {
   const text = await res.text();
 
@@ -64,4 +94,50 @@ export function switchOrgSession(payload: OrgAliasPayload): Promise<QueryRespons
 
 export function disconnectOrgSession(): Promise<QueryResponse> {
   return requestBoundary('/api/org/session/disconnect', { method: 'POST' });
+}
+
+export function runOrgRetrieve(payload: OrgRetrievePayload): Promise<QueryResponse> {
+  return requestBoundary('/api/org/retrieve', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
+
+export function getOrgMetadataCatalog(payload: MetadataCatalogPayload): Promise<QueryResponse> {
+  const params = new URLSearchParams();
+  if (typeof payload.q === 'string' && payload.q.length > 0) {
+    params.set('q', payload.q);
+  }
+  if (typeof payload.limit === 'number' && Number.isFinite(payload.limit)) {
+    params.set('limit', String(payload.limit));
+  }
+  if (typeof payload.refresh === 'boolean') {
+    params.set('refresh', String(payload.refresh));
+  }
+  const suffix = params.toString();
+  return requestBoundary(`/api/org/metadata/catalog${suffix ? `?${suffix}` : ''}`, { method: 'GET' });
+}
+
+export function getOrgMetadataMembers(payload: MetadataMembersPayload): Promise<QueryResponse> {
+  const params = new URLSearchParams();
+  params.set('type', payload.type);
+  if (typeof payload.q === 'string' && payload.q.length > 0) {
+    params.set('q', payload.q);
+  }
+  if (typeof payload.limit === 'number' && Number.isFinite(payload.limit)) {
+    params.set('limit', String(payload.limit));
+  }
+  if (typeof payload.refresh === 'boolean') {
+    params.set('refresh', String(payload.refresh));
+  }
+  return requestBoundary(`/api/org/metadata/members?${params.toString()}`, { method: 'GET' });
+}
+
+export function retrieveOrgMetadata(payload: MetadataRetrievePayload): Promise<QueryResponse> {
+  return requestBoundary('/api/org/metadata/retrieve', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
 }
