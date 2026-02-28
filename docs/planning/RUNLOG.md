@@ -1015,3 +1015,54 @@ Branch: `dna-foundation`
 ### Outcome
 - The packaged desktop shell now has an explicit runtime contract for launch entrypoints instead of a Rust-side hardcoded API path.
 - The next narrow step remains evaluating whether the packaged API should move from a trimmed deployed tree to a standalone bundled artifact.
+
+## Entry 29: Standalone Packaged API Bundle
+
+### Change
+- Updated `apps/desktop/scripts/prepare-packaged-runtime.mjs` so packaged build now:
+  - bundles `apps/api/dist/main.js` into `apps/desktop/src-tauri/runtime/api/main.cjs` using `esbuild`
+  - keeps only the native `better-sqlite3` runtime dependency set in `apps/desktop/src-tauri/runtime/api/node_modules`
+  - points `runtime/manifest.json` at `api/main.cjs` instead of a deployed `dist/main.js`
+- Added `esbuild` to `apps/desktop/package.json` dev dependencies for the packaged API bundle step.
+
+### Verification
+1. `pnpm desktop:build`
+- Result: passed
+- Proof:
+  - `src-tauri\\runtime\\api\\main.cjs  4.5mb`
+  - `Built application at: ...\\apps\\desktop\\src-tauri\\target\\release\\orgumented-desktop.exe`
+  - `Finished 2 bundles`
+
+2. staged runtime size check
+- Result: passed
+- Proof:
+  - `apps/desktop/src-tauri/runtime/api` measured about `7.33 MB`
+  - `apps/desktop/src-tauri/runtime/api/main.cjs` measured about `4.50 MB`
+  - `apps/desktop/src-tauri/runtime/api/node_modules` measured about `2.82 MB`
+  - remaining native runtime packages were limited to:
+    - `better-sqlite3`
+    - `bindings`
+    - `file-uri-to-path`
+
+3. `$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH='1'; pnpm desktop:smoke:release`
+- Result: passed
+- Proof:
+  - `logs/desktop-release-smoke-result.json` recorded:
+    - `status=passed`
+    - `sessionConnectStatus=verified`
+    - `sessionSwitchStatus=verified`
+    - `sessionRestoreStatus=restored-alias`
+
+4. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `validation passed`
+  - `org service test passed`
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+### Outcome
+- The packaged shell now launches a single bundled API entry instead of a deployed `dist/` tree.
+- The packaged runtime is materially smaller and simpler while preserving the current deterministic proof and desktop auth behavior.
+- The next step is to decide whether any more runtime packaging churn is justified, or whether the higher-value work has shifted back to core product behavior.

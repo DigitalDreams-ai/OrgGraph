@@ -12,6 +12,7 @@ const runtimeWebRoot = path.join(runtimeRoot, 'web');
 const runtimeApiRoot = path.join(runtimeRoot, 'api');
 const runtimeNodeRoot = path.join(runtimeRoot, 'node');
 const runtimeConfigPath = path.join(runtimeRoot, 'config.json');
+const runtimeApiBundlePath = path.join(runtimeApiRoot, 'main.cjs');
 const webNextRoot = path.join(workspaceRoot, 'apps', 'web', '.next');
 const webIndexPath = path.join(webNextRoot, 'server', 'app', 'index.html');
 const webStaticPath = path.join(webNextRoot, 'static');
@@ -32,15 +33,120 @@ const packagedConfigKeys = [
 ];
 const packagedApiPruneTargets = [
   'apps',
+  'dist',
   'src',
   'test',
   'nest-cli.json',
   'tsconfig.build.json',
   'tsconfig.json',
+  path.join('node_modules', '.modules.yaml'),
+  path.join('node_modules', '.pnpm'),
   path.join('node_modules', '.bin'),
-  path.join('node_modules', '@orgumented', 'ontology', 'src'),
-  path.join('node_modules', '@orgumented', 'ontology', 'test'),
-  path.join('node_modules', '@orgumented', 'ontology', 'tsconfig.json'),
+  path.join('node_modules', '@orgumented'),
+  path.join('node_modules', '@nestjs'),
+  path.join('node_modules', 'accepts'),
+  path.join('node_modules', 'append-field'),
+  path.join('node_modules', 'array-flatten'),
+  path.join('node_modules', 'base64-js'),
+  path.join('node_modules', 'body-parser'),
+  path.join('node_modules', 'busboy'),
+  path.join('node_modules', 'bytes'),
+  path.join('node_modules', 'concat-stream'),
+  path.join('node_modules', 'consola'),
+  path.join('node_modules', 'content-disposition'),
+  path.join('node_modules', 'content-type'),
+  path.join('node_modules', 'cookie'),
+  path.join('node_modules', 'cookie-signature'),
+  path.join('node_modules', 'cors'),
+  path.join('node_modules', 'debug'),
+  path.join('node_modules', 'depd'),
+  path.join('node_modules', 'destroy'),
+  path.join('node_modules', 'ee-first'),
+  path.join('node_modules', 'encodeurl'),
+  path.join('node_modules', 'es-errors'),
+  path.join('node_modules', 'escape-html'),
+  path.join('node_modules', 'etag'),
+  path.join('node_modules', 'express'),
+  path.join('node_modules', 'fast-xml-parser'),
+  path.join('node_modules', 'fflate'),
+  path.join('node_modules', 'finalhandler'),
+  path.join('node_modules', 'forwarded'),
+  path.join('node_modules', 'fresh'),
+  path.join('node_modules', 'function-bind'),
+  path.join('node_modules', 'get-intrinsic'),
+  path.join('node_modules', 'get-proto'),
+  path.join('node_modules', 'gopd'),
+  path.join('node_modules', 'has-symbols'),
+  path.join('node_modules', 'hasown'),
+  path.join('node_modules', 'http-errors'),
+  path.join('node_modules', 'iconv-lite'),
+  path.join('node_modules', 'inherits'),
+  path.join('node_modules', 'ipaddr.js'),
+  path.join('node_modules', 'isarray'),
+  path.join('node_modules', 'math-intrinsics'),
+  path.join('node_modules', 'media-typer'),
+  path.join('node_modules', 'merge-descriptors'),
+  path.join('node_modules', 'methods'),
+  path.join('node_modules', 'mime'),
+  path.join('node_modules', 'mime-db'),
+  path.join('node_modules', 'mime-types'),
+  path.join('node_modules', 'minimist'),
+  path.join('node_modules', 'mkdirp-classic'),
+  path.join('node_modules', 'ms'),
+  path.join('node_modules', 'multer'),
+  path.join('node_modules', 'negotiator'),
+  path.join('node_modules', 'node-abi'),
+  path.join('node_modules', 'node-addon-api'),
+  path.join('node_modules', 'node-fetch'),
+  path.join('node_modules', 'object-inspect'),
+  path.join('node_modules', 'on-finished'),
+  path.join('node_modules', 'parseurl'),
+  path.join('node_modules', 'path-to-regexp'),
+  path.join('node_modules', 'pg'),
+  path.join('node_modules', 'pg-cloudflare'),
+  path.join('node_modules', 'pg-connection-string'),
+  path.join('node_modules', 'pg-int8'),
+  path.join('node_modules', 'pg-pool'),
+  path.join('node_modules', 'pg-protocol'),
+  path.join('node_modules', 'pg-types'),
+  path.join('node_modules', 'pgpass'),
+  path.join('node_modules', 'postgres-array'),
+  path.join('node_modules', 'postgres-bytea'),
+  path.join('node_modules', 'postgres-date'),
+  path.join('node_modules', 'postgres-interval'),
+  path.join('node_modules', 'proxy-addr'),
+  path.join('node_modules', 'qs'),
+  path.join('node_modules', 'range-parser'),
+  path.join('node_modules', 'raw-body'),
+  path.join('node_modules', 'readable-stream'),
+  path.join('node_modules', 'reflect-metadata'),
+  path.join('node_modules', 'router'),
+  path.join('node_modules', 'rxjs'),
+  path.join('node_modules', 'safe-buffer'),
+  path.join('node_modules', 'safer-buffer'),
+  path.join('node_modules', 'send'),
+  path.join('node_modules', 'serve-static'),
+  path.join('node_modules', 'setprototypeof'),
+  path.join('node_modules', 'side-channel'),
+  path.join('node_modules', 'split2'),
+  path.join('node_modules', 'statuses'),
+  path.join('node_modules', 'streamsearch'),
+  path.join('node_modules', 'string_decoder'),
+  path.join('node_modules', 'strnum'),
+  path.join('node_modules', 'toidentifier'),
+  path.join('node_modules', 'tr46'),
+  path.join('node_modules', 'tslib'),
+  path.join('node_modules', 'type-is'),
+  path.join('node_modules', 'typedarray'),
+  path.join('node_modules', 'uid'),
+  path.join('node_modules', 'undici-types'),
+  path.join('node_modules', 'unpipe'),
+  path.join('node_modules', 'util-deprecate'),
+  path.join('node_modules', 'vary'),
+  path.join('node_modules', 'webidl-conversions'),
+  path.join('node_modules', 'whatwg-url'),
+  path.join('node_modules', 'xtend'),
+  path.join('node_modules', 'yallist'),
   path.join('node_modules', 'better-sqlite3', 'deps'),
   path.join('node_modules', 'better-sqlite3', 'src'),
   path.join('node_modules', 'better-sqlite3', 'binding.gyp')
@@ -181,6 +287,28 @@ function prunePackagedApiArtifacts() {
   }
 }
 
+function bundlePackagedApi() {
+  runStep('api-bundle', 'pnpm.cmd', [
+    '--filter',
+    'desktop',
+    'exec',
+    'esbuild',
+    path.join(workspaceRoot, 'apps', 'api', 'dist', 'main.js'),
+    '--bundle',
+    '--platform=node',
+    '--format=cjs',
+    '--target=node20',
+    `--outfile=${runtimeApiBundlePath}`,
+    '--external:better-sqlite3',
+    '--external:class-transformer',
+    '--external:class-validator',
+    '--external:@nestjs/microservices',
+    '--external:@nestjs/microservices/microservices-module',
+    '--external:@nestjs/websockets',
+    '--external:@nestjs/websockets/socket-module'
+  ]);
+}
+
 stopLingeringPackagedProcesses();
 rmSync(runtimeRoot, { recursive: true, force: true });
 mkdirSync(runtimeWebRoot, { recursive: true });
@@ -191,12 +319,13 @@ runStep('web-build', 'pnpm.cmd', ['--filter', 'web', 'build']);
 runStep('api-build', 'pnpm.cmd', ['--filter', 'api', 'build']);
 runStep('api-deploy', 'pnpm.cmd', ['--filter', 'api', 'deploy', '--prod', runtimeApiRoot]);
 waitForReadableCopy(path.join(runtimeApiRoot, 'node_modules', 'better-sqlite3', 'build', 'Release', 'better_sqlite3.node'));
+bundlePackagedApi();
 prunePackagedApiArtifacts();
 
 ensureExists(webIndexPath, 'web index');
 ensureExists(webStaticPath, 'web static assets');
 ensureExists(process.execPath, 'node runtime');
-ensureExists(path.join(runtimeApiRoot, 'dist', 'main.js'), 'deployed api entrypoint');
+ensureExists(runtimeApiBundlePath, 'bundled api entrypoint');
 
 cpSync(webIndexPath, path.join(runtimeWebRoot, 'index.html'));
 cpSync(webStaticPath, path.join(runtimeWebRoot, '_next', 'static'), { recursive: true });
@@ -208,7 +337,7 @@ writeFileSync(
     {
       nodeBinary: nodeBinaryName,
       nodeVersion: process.version,
-      apiEntry: path.join('api', 'dist', 'main.js'),
+      apiEntry: path.join('api', 'main.cjs'),
       webEntry: path.join('web', 'index.html'),
       configEntry: 'config.json'
     },

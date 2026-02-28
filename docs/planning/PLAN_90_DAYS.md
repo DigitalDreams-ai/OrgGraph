@@ -182,9 +182,14 @@ Progress note:
   - packaged shell launch now reads `runtime/manifest.json` for `nodeBinary`, `apiEntry`, and `configEntry`
   - the packaged runtime no longer depends on a Rust-side hardcoded `runtime/api/dist/main.js` assumption
   - packaged build and release smoke both passed after the manifest-driven launch change
+- Slice 9 completed:
+  - packaged API build now emits `runtime/api/main.cjs` from `apps/api/dist/main.js`
+  - packaged runtime keeps only the native `better-sqlite3` dependency set under `runtime/api/node_modules`
+  - staged packaged API footprint dropped again from about `13.93 MB` to about `7.33 MB`
+  - packaged build, packaged release smoke, and the full API suite all remained green after the bundle swap
 - Next narrow step:
-  - evaluate whether the packaged API runtime should stay as a trimmed deployed tree or move to a standalone bundled artifact
-  - stop if that change would threaten replay parity, org-session behavior, or packaged smoke reliability
+  - measure whether any additional packaged-runtime pruning still buys enough to justify another slice
+  - stop if the remaining potential wins are mostly cosmetic rather than architectural
 
 ## Phase 5: Modular UI Reconstruction
 
@@ -323,6 +328,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: evaluate a standalone packaged API bundle now that the deployed runtime tree is trimmed and release smoke is stable again.
+- Preferred next step: reassess whether runtime hardening has reached the point of diminishing returns before making more desktop packaging changes.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

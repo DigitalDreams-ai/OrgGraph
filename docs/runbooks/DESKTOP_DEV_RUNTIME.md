@@ -86,11 +86,12 @@ Current packaged build behavior:
 - `runtime/manifest.json` explicitly declares the packaged Node binary, API entry, web entry, and config entry used by the shell
 - the staged runtime includes:
   - static web entry assets
-  - trimmed deployed API runtime
+  - bundled API entry at `runtime/api/main.cjs`
   - bundled `node.exe`
   - `config.json` with non-secret Salesforce runtime config snapshot from `.env` and current shell overrides
 - packaged build preflight stops stale packaged desktop processes before restaging on Windows
 - build-only API baggage is pruned from the staged runtime before Tauri bundles it
+- only the native `better-sqlite3` dependency set remains under `runtime/api/node_modules`
 - the package build emits:
   - `apps/desktop/src-tauri/target/release/orgumented-desktop.exe`
   - `apps/desktop/src-tauri/target/release/bundle/msi/Orgumented_0.1.0_x64_en-US.msi`

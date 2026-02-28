@@ -260,6 +260,14 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - `apps/desktop/src-tauri/src/lib.rs` now reads `runtime/manifest.json`
   - the packaged shell resolves `nodeBinary`, `apiEntry`, and `configEntry` from the manifest rather than assuming `runtime/api/dist/main.js`
   - packaged build and release smoke both stayed green after the manifest-driven launch change
+- Packaged API bundle now exists:
+  - `apps/desktop/scripts/prepare-packaged-runtime.mjs` now bundles `apps/api/dist/main.js` into `apps/desktop/src-tauri/runtime/api/main.cjs`
+  - packaged runtime size dropped again:
+    - `runtime/api` is now about `7.33 MB`
+    - `runtime/api/main.cjs` is about `4.5 MB`
+    - remaining `runtime/api/node_modules` is about `2.82 MB`
+  - the packaged runtime keeps only the native `better-sqlite3` dependency set (`better-sqlite3`, `bindings`, `file-uri-to-path`)
+  - packaged build, packaged release smoke, and the full API suite stayed green after switching away from the deployed `dist/` tree
 - Phase 5 modular UI reconstruction is now moving again:
   - `Org Browser` rendering is no longer inlined inside `apps/web/app/page.tsx`
   - browser types and rendering now live under `apps/web/app/workspaces/browser/`
@@ -284,6 +292,6 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - Local tab/alias/ask persistence is no longer owned directly by `apps/web/app/page.tsx`
   - shell preference hydration/persistence now lives under `apps/web/app/shell/use-shell-preferences.ts`
 - The next live architectural priority is to reduce packaged runtime complexity further without widening scope:
-  - evaluate whether the packaged API can move from deployed `node_modules` to a standalone bundled artifact
-  - if that is not yet worth the risk, stop and keep the current trimmed deployed-runtime approach
+  - measure whether any additional packaged-runtime pruning is still worth it now that the API bundle is explicit and release-smoke stable
+  - if not, stop runtime hardening here and avoid churn for cosmetic payload wins
   - avoid resuming page-shell extraction unless the remaining shared helpers become a measured blocker again
