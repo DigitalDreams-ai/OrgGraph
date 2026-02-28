@@ -820,3 +820,36 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns System workspace state or System action handlers directly.
 - The remaining page shell is now concentrated around local persistence, shared copy/error/raw-response state, `limitRaw`, and the generic secondary-query helper.
 - The next narrow slice is extracting the remaining shared response and persistence shell orchestration or deciding that the shell is small enough to pivot back to runtime work.
+
+## Entry 24: Phase 5 Response Inspector Extraction
+
+### Change
+- Extracted shared response presentation and copy/error handling out of `apps/web/app/page.tsx`.
+- Added `apps/web/app/shell/use-response-inspector.ts`.
+- Moved the following into the response inspector hook:
+  - raw JSON response state
+  - copy button state
+  - shared error-text state
+  - response presentation helper
+  - copy-to-clipboard fallback logic
+  - shared query error-message resolver
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - typed desktop boundary routes remained present after the response inspector extraction
+
+3. Page-shell reduction proof
+- Result: passed
+- Proof:
+  - `apps/web/app/page.tsx` line count dropped from `431` to `375`
+
+### Outcome
+- `page.tsx` no longer owns shared response presentation or copy/error mechanics directly.
+- The remaining page shell is now concentrated around local persistence, `limitRaw`, the generic secondary-query helper, and tab composition.
+- The next narrow slice is extracting the remaining local persistence shell orchestration or deciding that the shell is now small enough to pivot back to runtime work.

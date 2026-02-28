@@ -6,6 +6,7 @@ import {
 } from './lib/ask-client';
 import { runSecondaryQueryRequest, type SecondaryQueryKind } from './lib/secondary-client';
 import { OperatorRail } from './shell/operator-rail';
+import { resolveQueryErrorMessage, useResponseInspector } from './shell/use-response-inspector';
 import { ShellTopbar } from './shell/shell-topbar';
 import { StatusStrip } from './shell/status-strip';
 import { useShellRuntime } from './shell/use-shell-runtime';
@@ -50,81 +51,48 @@ function parseOptionalInt(raw: string): number | undefined {
   return Number.isInteger(parsed) ? parsed : undefined;
 }
 
-function pretty(value: unknown): string {
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
-
-function resolveErrorMessage(data: QueryResponse): string {
-  const payload = data.payload as
-    | {
-        error?: {
-          message?: string;
-          details?: { reason?: string; hint?: string };
-        };
-      }
-    | undefined;
-  const payloadErrorReason = payload?.error?.details?.reason;
-  const payloadErrorHint = payload?.error?.details?.hint;
-  const payloadError = payload?.error?.message;
-  const topError = data.error?.message;
-  return (
-    payloadErrorReason ||
-    payloadErrorHint ||
-    payloadError ||
-    topError ||
-    'Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.'
-  );
-}
-
 export default function Page(): JSX.Element {
   const [uiTab, setUiTab] = useState<UiTab>('ask');
 
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [responseText, setResponseText] = useState('');
-  const [errorText, setErrorText] = useState('');
-
   const [limitRaw, setLimitRaw] = useState('25');
 
+  const responseInspector = useResponseInspector();
   const askWorkspace = useAskWorkspace({
-    presentResponse,
-    resolveErrorMessage,
+    presentResponse: responseInspector.presentResponse,
+    resolveErrorMessage: resolveQueryErrorMessage,
     setLoading,
-    setCopied,
-    setErrorText
+    setCopied: responseInspector.setCopied,
+    setErrorText: responseInspector.setErrorText
   });
   const proofsWorkspace = useProofsWorkspace({
-    presentResponse,
-    resolveErrorMessage,
+    presentResponse: responseInspector.presentResponse,
+    resolveErrorMessage: resolveQueryErrorMessage,
     setLoading,
-    setCopied,
-    setErrorText
+    setCopied: responseInspector.setCopied,
+    setErrorText: responseInspector.setErrorText
   });
   const browserWorkspace = useBrowserWorkspace({
-    presentResponse,
-    resolveErrorMessage,
+    presentResponse: responseInspector.presentResponse,
+    resolveErrorMessage: resolveQueryErrorMessage,
     setLoading,
-    setCopied,
-    setErrorText
+    setCopied: responseInspector.setCopied,
+    setErrorText: responseInspector.setErrorText
   });
   const connectWorkspace = useConnectWorkspace({
-    presentResponse,
-    resolveErrorMessage,
+    presentResponse: responseInspector.presentResponse,
+    resolveErrorMessage: resolveQueryErrorMessage,
     setLoading,
-    setCopied,
-    setErrorText
+    setCopied: responseInspector.setCopied,
+    setErrorText: responseInspector.setErrorText
   });
   const refreshWorkspace = useRefreshWorkspace({
     orgAlias: connectWorkspace.orgAlias,
-    presentResponse,
-    resolveErrorMessage,
+    presentResponse: responseInspector.presentResponse,
+    resolveErrorMessage: resolveQueryErrorMessage,
     setLoading,
-    setCopied,
-    setErrorText
+    setCopied: responseInspector.setCopied,
+    setErrorText: responseInspector.setErrorText
   });
   const shellRuntime = useShellRuntime();
   const analyzeWorkspace = useAnalyzeWorkspace({
@@ -168,59 +136,27 @@ export default function Page(): JSX.Element {
 
   async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}): Promise<QueryResponse | null> {
     setLoading(true);
-    setCopied(false);
-    setErrorText('');
+    responseInspector.setCopied(false);
+    responseInspector.setErrorText('');
 
     try {
       const parsed = await runSecondaryQueryRequest(kind, payload);
 
-      presentResponse(parsed);
+      responseInspector.presentResponse(parsed);
 
       if (parsed.ok === false) {
-        setErrorText(resolveErrorMessage(parsed));
+        responseInspector.setErrorText(resolveQueryErrorMessage(parsed));
       }
       return parsed;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected query failure';
       const fallback: QueryResponse = { ok: false, error: { message } };
-      presentResponse(fallback);
-      setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.');
+      responseInspector.presentResponse(fallback);
+      responseInspector.setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.');
       return null;
     } finally {
       setLoading(false);
     }
-  }
-
-  function presentResponse(parsed: QueryResponse): void {
-    setResponseText(pretty(parsed));
-  }
-
-  async function copyJson(): Promise<void> {
-    if (!responseText) return;
-
-    try {
-      await navigator.clipboard.writeText(responseText);
-      setCopied(true);
-      return;
-    } catch {
-      // fallback
-    }
-
-    const area = document.createElement('textarea');
-    area.value = responseText;
-    area.setAttribute('readonly', 'true');
-    area.style.position = 'absolute';
-    area.style.left = '-9999px';
-    document.body.appendChild(area);
-    area.select();
-    const copiedFallback = document.execCommand('copy');
-    document.body.removeChild(area);
-    if (copiedFallback) {
-      setCopied(true);
-      return;
-    }
-
-    setErrorText('Copy failed in this browser context. Select JSON from Raw JSON and copy manually.');
   }
 
   return (
@@ -444,9 +380,9 @@ export default function Page(): JSX.Element {
         </section>
 
         <OperatorRail
-          copied={copied}
-          responseText={responseText}
-          errorText={errorText}
+          copied={responseInspector.copied}
+          responseText={responseInspector.responseText}
+          errorText={responseInspector.errorText}
           readyDetails={shellRuntime.readyDetails}
           askSummary={askWorkspace.askSummary}
           askTrust={askWorkspace.askTrust}
@@ -458,7 +394,7 @@ export default function Page(): JSX.Element {
           orgSession={connectWorkspace.orgSession}
           orgStatus={connectWorkspace.orgStatus}
           orgPreflight={connectWorkspace.orgPreflight}
-          onCopy={() => void copyJson()}
+          onCopy={() => void responseInspector.copyJson()}
         />
       </section>
     </main>
