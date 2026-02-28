@@ -942,3 +942,48 @@ Branch: `dna-foundation`
 - Packaged desktop auth behavior now matches the desktop operator model instead of silently falling back to `SF_INTEGRATION_ENABLED=false`.
 - Packaged smoke now proves authenticated attach/switch/restore behavior from the bundled shell, not just health/readiness.
 - The next narrow step is to trim unnecessary packaged API payload and reduce bundle/lock surface in `apps/desktop/src-tauri/runtime/api`.
+
+## Entry 27: Packaged API Payload Trim and Cleanup Hardening
+
+### Change
+- Updated `apps/desktop/scripts/prepare-packaged-runtime.mjs` so packaged build staging now:
+  - prunes build-only baggage from `apps/desktop/src-tauri/runtime/api`
+  - removes root `src/`, `test/`, `apps/`, and tsconfig/Nest config files from the staged API payload
+  - removes workspace-package source/test files from `node_modules/@orgumented/ontology`
+  - removes build-only `deps/` and `src/` from `node_modules/better-sqlite3`
+  - stops stale packaged `orgumented-desktop.exe` and bundled `node.exe` before rebuilding on Windows
+- Updated `scripts/desktop-release-smoke.ps1` so packaged smoke cleanup now retries until the packaged desktop process tree is gone.
+
+### Verification
+1. `pnpm desktop:build`
+- Result: passed
+- Proof:
+  - `Built application at: ...\\apps\\desktop\\src-tauri\\target\\release\\orgumented-desktop.exe`
+  - `Finished 2 bundles`
+
+2. staged runtime size check
+- Result: passed
+- Proof:
+  - `apps/desktop/src-tauri/runtime/api` measured about `13.93 MB`
+  - `apps/desktop/src-tauri/runtime/api/node_modules/better-sqlite3` measured about `1.67 MB`
+  - staged `src/`, `test/`, and duplicate `apps/` directories were absent
+
+3. `$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH='1'; pnpm desktop:smoke:release`
+- Result: passed
+- Proof:
+  - packaged smoke completed successfully after the cleanup hardening
+  - release smoke artifacts were refreshed under `logs/desktop-release-smoke-*.json`
+
+4. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `validation passed`
+  - `org service test passed`
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+### Outcome
+- The packaged API runtime is materially smaller and carries less build-time baggage into release bundles.
+- Repeated packaged builds no longer require manual cleanup of stale bundled Windows processes to avoid native-module lock failures.
+- The next narrow decision is whether to keep the trimmed deployed API tree or replace it with a standalone bundled API artifact.

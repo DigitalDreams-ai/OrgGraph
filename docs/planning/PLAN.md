@@ -249,6 +249,13 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
     - `logs/desktop-release-smoke-session-switch.json`
     - `logs/desktop-release-smoke-session-restore.json`
   - packaged smoke cleanup now tears down the bundled `node.exe` child correctly on Windows
+- Packaged API payload hardening now exists:
+  - `apps/desktop/scripts/prepare-packaged-runtime.mjs` now prunes build-only baggage from `apps/desktop/src-tauri/runtime/api`
+  - staged payload dropped from about `24.09 MB` to about `13.93 MB`
+  - packaged `better-sqlite3` payload dropped from about `11.32 MB` to about `1.67 MB` by removing build-time `deps/` and `src/`
+  - repeated packaged builds no longer depend on manual cleanup:
+    - build preflight now stops stale packaged `orgumented-desktop.exe` and bundled `node.exe`
+    - release smoke cleanup now loops until packaged processes are actually gone on Windows
 - Phase 5 modular UI reconstruction is now moving again:
   - `Org Browser` rendering is no longer inlined inside `apps/web/app/page.tsx`
   - browser types and rendering now live under `apps/web/app/workspaces/browser/`
@@ -272,7 +279,7 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - response presentation and copy/error handling now live under `apps/web/app/shell/use-response-inspector.ts`
   - Local tab/alias/ask persistence is no longer owned directly by `apps/web/app/page.tsx`
   - shell preference hydration/persistence now lives under `apps/web/app/shell/use-shell-preferences.ts`
-- The next live architectural priority is to harden the packaged runtime payload itself:
-  - trim unnecessary packaged API files from `apps/desktop/src-tauri/runtime/api`
-  - reduce bundle surface and the chances of Windows native-module lock churn during repeated builds
-  - then reassess whether any remaining shared page-shell helpers still justify extraction
+- The next live architectural priority is to reduce packaged runtime complexity further without widening scope:
+  - evaluate whether the packaged API can move from deployed `node_modules` to a standalone bundled artifact
+  - if that is not yet worth the risk, stop and keep the current trimmed deployed-runtime approach
+  - avoid resuming page-shell extraction unless the remaining shared helpers become a measured blocker again

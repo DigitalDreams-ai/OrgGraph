@@ -85,9 +85,11 @@ Current packaged build behavior:
 - `beforeBuildCommand` stages a packaged runtime under `apps/desktop/src-tauri/runtime/`
 - the staged runtime includes:
   - static web entry assets
-  - deployed API runtime
+  - trimmed deployed API runtime
   - bundled `node.exe`
   - `config.json` with non-secret Salesforce runtime config snapshot from `.env` and current shell overrides
+- packaged build preflight stops stale packaged desktop processes before restaging on Windows
+- build-only API baggage is pruned from the staged runtime before Tauri bundles it
 - the package build emits:
   - `apps/desktop/src-tauri/target/release/orgumented-desktop.exe`
   - `apps/desktop/src-tauri/target/release/bundle/msi/Orgumented_0.1.0_x64_en-US.msi`
@@ -127,6 +129,7 @@ Current packaged smoke proof:
 - Ask returned a deterministic proof ID
 - alias inventory is captured from `/org/session/aliases`
 - when local aliases are available, the smoke verifies `POST /org/session/connect` and restores the original session state before shutdown
+- cleanup now retries until packaged `orgumented-desktop.exe` and bundled `node.exe` are actually gone
 
 Optional deeper packaged auth proof:
 

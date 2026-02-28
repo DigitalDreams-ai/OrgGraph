@@ -29,6 +29,21 @@ const packagedConfigKeys = [
   'SF_TIMEOUT_SECONDS',
   'SF_AUTO_REFRESH_AFTER_RETRIEVE'
 ];
+const packagedApiPruneTargets = [
+  'apps',
+  'src',
+  'test',
+  'nest-cli.json',
+  'tsconfig.build.json',
+  'tsconfig.json',
+  path.join('node_modules', '.bin'),
+  path.join('node_modules', '@orgumented', 'ontology', 'src'),
+  path.join('node_modules', '@orgumented', 'ontology', 'test'),
+  path.join('node_modules', '@orgumented', 'ontology', 'tsconfig.json'),
+  path.join('node_modules', 'better-sqlite3', 'deps'),
+  path.join('node_modules', 'better-sqlite3', 'src'),
+  path.join('node_modules', 'better-sqlite3', 'binding.gyp')
+];
 
 function parseDotenvFile(filePath) {
   if (!existsSync(filePath)) {
@@ -124,12 +139,32 @@ function runStep(name, command, args) {
   }
 }
 
+function stopLingeringPackagedProcesses() {
+  if (process.platform !== 'win32') {
+    return;
+  }
+
+  const command = [
+    "$targets = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.Name -in @('orgumented-desktop.exe', 'node.exe') -and ($_.ExecutablePath -like '*OrgGraph\\\\apps\\\\desktop\\\\src-tauri\\\\target\\\\release*' -or $_.CommandLine -like '*OrgGraph\\\\apps\\\\desktop\\\\src-tauri\\\\target\\\\release*' -or $_.CommandLine -like '*OrgGraph\\\\apps\\\\desktop\\\\src-tauri\\\\runtime*') }",
+    "if ($targets) { $targets | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; Start-Sleep -Milliseconds 500 }"
+  ].join('; ');
+  runStep('packaged-process-cleanup', 'powershell.exe', ['-NoProfile', '-Command', command]);
+}
+
 function ensureExists(filePath, label) {
   if (!existsSync(filePath)) {
     throw new Error(`${label} missing at ${filePath}`);
   }
 }
 
+function prunePackagedApiArtifacts() {
+  for (const relativeTarget of packagedApiPruneTargets) {
+    const absoluteTarget = path.join(runtimeApiRoot, relativeTarget);
+    rmSync(absoluteTarget, { recursive: true, force: true });
+  }
+}
+
+stopLingeringPackagedProcesses();
 rmSync(runtimeRoot, { recursive: true, force: true });
 mkdirSync(runtimeWebRoot, { recursive: true });
 mkdirSync(runtimeApiRoot, { recursive: true });
@@ -139,6 +174,7 @@ runStep('web-build', 'pnpm.cmd', ['--filter', 'web', 'build']);
 runStep('api-build', 'pnpm.cmd', ['--filter', 'api', 'build']);
 runStep('api-deploy', 'pnpm.cmd', ['--filter', 'api', 'deploy', '--prod', runtimeApiRoot]);
 waitForReadableCopy(path.join(runtimeApiRoot, 'node_modules', 'better-sqlite3', 'build', 'Release', 'better_sqlite3.node'));
+prunePackagedApiArtifacts();
 
 ensureExists(webIndexPath, 'web index');
 ensureExists(webStaticPath, 'web static assets');

@@ -19,15 +19,38 @@ $sessionRestoreArtifact = Join-Path $logsDir 'desktop-release-smoke-session-rest
 $resultArtifact = Join-Path $logsDir 'desktop-release-smoke-result.json'
 
 function Stop-PackagedProcesses {
-  $targets = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+  param(
+    [int]$Attempts = 6,
+    [int]$DelayMilliseconds = 500
+  )
+
+  for ($attempt = 0; $attempt -lt $Attempts; $attempt += 1) {
+    $targets = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+      Where-Object {
+        $_.Name -in @('orgumented-desktop.exe', 'node.exe') -and (
+          $_.ExecutablePath -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
+          $_.CommandLine -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
+          $_.CommandLine -like "*OrgGraph\\apps\\desktop\\src-tauri\\runtime*"
+        )
+      }
+    if (-not $targets) {
+      return
+    }
+
+    $targets | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+    Start-Sleep -Milliseconds $DelayMilliseconds
+  }
+
+  $remaining = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
     Where-Object {
       $_.Name -in @('orgumented-desktop.exe', 'node.exe') -and (
         $_.ExecutablePath -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
-        $_.CommandLine -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*"
+        $_.CommandLine -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
+        $_.CommandLine -like "*OrgGraph\\apps\\desktop\\src-tauri\\runtime*"
       )
     }
-  if ($targets) {
-    $targets | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+  if ($remaining) {
+    throw "Failed to stop packaged desktop runtime processes before/after smoke."
   }
 }
 

@@ -172,9 +172,15 @@ Progress note:
     - alias switch
     - original session restoration before shutdown
   - packaged smoke cleanup now reliably tears down the bundled `node.exe` child on Windows
+- Slice 7 completed:
+  - packaged build now prunes build-only API baggage from `apps/desktop/src-tauri/runtime/api`
+  - staged packaged API payload dropped from about `24.09 MB` to about `13.93 MB`
+  - packaged `better-sqlite3` payload dropped from about `11.32 MB` to about `1.67 MB`
+  - packaged build preflight now stops stale packaged desktop processes before staging on Windows
+  - release smoke cleanup now loops until packaged `orgumented-desktop.exe` and bundled `node.exe` are gone
 - Next narrow step:
-  - trim unnecessary packaged API files from `apps/desktop/src-tauri/runtime/api`
-  - reduce bundle surface and repeated-build lock risk before returning to UI cleanup
+  - evaluate whether the packaged API runtime should stay as a trimmed deployed tree or move to a standalone bundled artifact
+  - stop if that change would threaten replay parity, org-session behavior, or packaged smoke reliability
 
 ## Phase 5: Modular UI Reconstruction
 
@@ -313,6 +319,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: trim the packaged API payload now that packaged attach/switch/restore proof is green, then reassess whether any remaining page-shell orchestration still justifies extraction.
+- Preferred next step: evaluate a standalone packaged API bundle now that the deployed runtime tree is trimmed and release smoke is stable again.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.
