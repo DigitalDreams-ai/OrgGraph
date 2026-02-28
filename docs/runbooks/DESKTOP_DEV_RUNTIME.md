@@ -4,21 +4,24 @@ Purpose: run Orgumented in the desktop-transition model without treating Docker 
 
 ## Current Direction
 - Product target: desktop-native
+- Supported desktop OS: Windows only
 - UI framework: Next.js
 - engine: NestJS
 - shell: Tauri
 - auth source of truth: local Salesforce CLI keychain
 - Docker status: migration/dev scaffold only
 
-## Local Prerequisites
+## Windows Prerequisites
 1. `pnpm`
 2. Node.js 20+
 3. Salesforce CLI (`sf`)
 4. CumulusCI (`cci`)
 5. Rust toolchain (`cargo`, `rustc`)
-6. Linux desktop prerequisites for Tauri
-   - `webkit2gtk-4.1`
-   - `librsvg2`
+6. Microsoft Edge WebView2 runtime
+
+Non-goal for product support:
+- Linux desktop runtime
+- macOS desktop runtime
 
 ## Check Desktop Shell Readiness
 
@@ -28,10 +31,10 @@ cd /volume1/data/projects/OrgGraph
 pnpm desktop:info
 ```
 
-Expected current reality on this NAS:
+Expected target reality on Windows:
 - Rust toolchain present
 - Tauri CLI present
-- Linux GUI runtime deps may still be missing
+- WebView2 runtime available
 
 ## Run Local Dev Runtime Without Docker
 
@@ -53,7 +56,7 @@ Observed proof in current repo state:
 
 ## Run Tauri Dev Shell
 
-Once Linux GUI prerequisites are installed:
+On the supported Windows desktop runtime:
 
 ```bash
 cd /volume1/data/projects/OrgGraph
@@ -83,10 +86,12 @@ curl "http://127.0.0.1:3200/org/session/validate?alias=orgumented-sandbox"
 curl http://127.0.0.1:3200/org/preflight
 ```
 
-## Known NAS Blocker
+## NAS Note
 
-`pnpm desktop:info` currently reports missing:
-- `webkit2gtk-4.1`
-- `rsvg2`
+This NAS can still be used for:
+- repo development
+- planning work
+- backend/runtime scaffolding
+- local engine smoke checks
 
-That blocks an actual desktop window launch on this NAS until those Linux desktop runtime dependencies are available.
+It is not the target desktop runtime. Linux-specific Tauri launch blockers on the NAS do not block the Windows desktop product path.

@@ -6,6 +6,7 @@ Purpose: define the desktop-native architecture for Orgumented after retiring Do
 
 ## 1. Architectural Decision
 - Product runtime: desktop-native application
+- Supported desktop platform: Windows only
 - UI framework: Next.js
 - backend framework: NestJS
 - desktop shell: Tauri
@@ -41,6 +42,11 @@ Orgumented desktop consists of five cooperating layers:
 
 5. Local persistence layer
 - app-managed local storage for graph state, evidence, proofs, config, logs, and run history
+
+Platform scope:
+- Windows is the only supported desktop operating system.
+- Linux and macOS desktop builds are out of scope.
+- NAS/Linux environments may still be used for repo development, test scaffolding, and migration work, but not as target desktop product environments.
 
 ## 4. System Context
 ```mermaid
@@ -144,8 +150,8 @@ Responsibilities:
 This layer should prevent `sf` and `cci` assumptions from spreading across UI or business logic.
 
 ## 9. Local Persistence
-Recommended local app data root:
-- `~/.orgumented/`
+Recommended Windows app data root:
+- `%APPDATA%\\Orgumented\\`
 
 Suggested structure:
 - `config/`
@@ -199,6 +205,8 @@ Each job needs:
 - preserving Docker as a first-class runtime
 - preserving legacy auth paths
 - preserving the current endpoint-console WebUI
+- supporting macOS desktop runtime
+- supporting Linux desktop runtime
 - building a hosted multi-tenant SaaS before local operator workflows are solved
 
 ## 14. Exit Criteria For Architecture Adoption

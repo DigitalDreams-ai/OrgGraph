@@ -11,6 +11,7 @@ Move Orgumented to a desktop-native runtime where:
 - Tauri provides the desktop shell
 - Salesforce CLI keychain becomes the only auth source of truth
 - Docker is removed from product architecture
+- Windows is the only supported desktop platform
 
 ## 2. Transition Constraints
 - No big-bang rewrite combined with backend contract churn.
@@ -28,6 +29,7 @@ Move Orgumented to a desktop-native runtime where:
 
 ## 4. Target State
 - desktop-native local app
+- Windows desktop application only
 - clean local auth/session model based on `sf` + `cci`
 - fresh workflow-native UI
 - Ask-first interaction model
@@ -158,7 +160,8 @@ Replace:
 ## 12. Completion Criteria
 Desktop transition is complete when:
 1. Orgumented runs locally as a desktop application
-2. operator connects an org using local CLI-backed alias workflows
-3. selective retrieve works from desktop UX
-4. Ask, proof, replay, and explain flows run in desktop UX
-5. Docker is no longer required for product use
+2. the supported desktop runtime is Windows and does not depend on Linux/macOS desktop support
+3. operator connects an org using local CLI-backed alias workflows
+4. selective retrieve works from desktop UX
+5. Ask, proof, replay, and explain flows run in desktop UX
+6. Docker is no longer required for product use

@@ -4,6 +4,7 @@ Objective: move Orgumented onto a desktop-native runtime foundation before furth
 
 ## Scope
 - Establish Tauri as the desktop shell.
+- Target Windows only for desktop runtime support.
 - Keep Next.js for UI and NestJS for the semantic engine.
 - Deprecate Docker as a product runtime.
 - Replace container-shaped auth/runtime assumptions with local CLI-backed alias workflows.
@@ -24,10 +25,10 @@ Objective: move Orgumented onto a desktop-native runtime foundation before furth
 - [x] Define local dev/test strategy after Docker product-runtime deprecation.
 
 ## Exit Gates
-- [ ] Desktop shell launches successfully.
+- [ ] Desktop shell launches successfully on Windows.
 - [x] Local NestJS engine runs under desktop-managed lifecycle.
-- [ ] Operator can discover at least one locally authenticated alias through Orgumented desktop.
-- [ ] Operator can attach an existing alias without using Docker, browser brokers, or legacy auth paths.
+- [ ] Operator can discover at least one locally authenticated alias through Orgumented desktop on Windows.
+- [ ] Operator can attach an existing alias without using Docker, browser brokers, or legacy auth paths on Windows.
 - [x] Local app data, logs, and proof paths are explicit and functioning.
 - [x] Docker is documented as migration/dev scaffolding only, not target runtime.
 
@@ -39,7 +40,7 @@ Objective: move Orgumented onto a desktop-native runtime foundation before furth
 - `docs/planning/DESKTOP_UX_BLUEPRINT.md`
 
 ## Evidence Required
-- desktop shell startup artifact
+- Windows desktop shell startup artifact
 - local engine startup artifact
 - alias discovery sample
 - alias attach sample

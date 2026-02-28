@@ -25,6 +25,7 @@ Interpretation rules:
 - Wave E remains valid as later-stage product expansion.
 - Wave F is a prerequisite platform wave for the desktop-native future state.
 - Wave G is the desktop implementation of the fresh Ask-first UX target.
+- Desktop target platform for Waves F-G is Windows only.
 
 Supersession rules:
 - Any wave item that assumes Docker as product runtime is obsolete.
@@ -122,6 +123,7 @@ Exit gates:
 ## Wave F - Desktop Foundation and Runtime Cutover
 Scope:
 - establish Tauri as the desktop shell
+- support Windows only as the desktop platform
 - preserve Next.js for UI and NestJS for semantic engine
 - remove Docker as a product-runtime assumption
 - replace auth/session model with local CLI-backed alias discovery and attach flows
@@ -133,8 +135,8 @@ Entry prerequisites:
 - reuse/refactor/delete inventory agreed
 
 Exit gates:
-- desktop shell launches local UI and local NestJS engine successfully
-- operator can discover and attach a locally authenticated Salesforce alias
+- desktop shell launches local UI and local NestJS engine successfully on Windows
+- operator can discover and attach a locally authenticated Salesforce alias on Windows
 - no core auth workflow depends on Docker, VNC, browser brokers, or external client app flows
 - local runtime paths for graph, evidence, proofs, and logs are defined and functioning
 
