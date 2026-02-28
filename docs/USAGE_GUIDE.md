@@ -147,25 +147,30 @@ curl -X POST http://localhost:3100/org/session/disconnect
 
 ### 8.0 Desktop Product Workflow
 The Tauri desktop app uses an embedded workflow-first UI:
-- `Connect`
+- `Ask`
+- `Org Sessions`
 - `Org Browser`
 - `Refresh & Build`
-- `Analyze`
-- `Ask`
-- `Proofs & Metrics`
-- `System`
+- `Explain & Analyze`
+- `Proofs & History`
+- `Settings & Diagnostics`
 
 Operator flow:
-1. Connect alias/session in `Connect`.
-2. Browse and select metadata in `Org Browser`.
-3. Retrieve selected metadata and refresh graph.
-4. Run deterministic checks in `Analyze` and `Ask`.
-5. Inspect replay/proof/metrics in `Proofs & Metrics`.
+1. Open on `Ask`, review current alias/session status, and enter the primary architecture question.
+2. Use the Ask decision packet to inspect the short answer, trust envelope, proof context, citations, and follow-up actions.
+3. Move into `Org Sessions` to connect or switch the active local alias.
+4. Browse and select metadata in `Org Browser`, then retrieve and refresh semantic state.
+5. Use `Explain & Analyze`, `Proofs & History`, and `Settings & Diagnostics` as secondary workspaces.
 
 Desktop UI quality gates in this phase include:
 - desktop browser screenshot proof: `artifacts/phase25-workflow-ui.png`
 - mobile browser screenshot proof: `artifacts/phase25-mobile-ui.png`
 - embedded UI smoke script: `npm run test:ui-smoke`
+
+Current Ask-first behavior:
+- the desktop app opens on `Ask`
+- raw JSON is available only through the `Raw JSON Inspector`
+- primary Ask output is a decision packet with trust, proof, citations, and follow-up actions
 
 ### 8.1 Permissions
 ```bash

@@ -9,10 +9,10 @@ Objective: deliver the fresh desktop-native Orgumented experience with Ask as th
 - Replace JSON-first operator experience with decision-packet-first rendering.
 
 ## Tasks
-- [ ] Implement desktop navigation from the UX blueprint.
-- [ ] Make Ask the default landing workspace.
-- [ ] Render deterministic answer summary, explanation, trust envelope, proof context, and follow-up actions as the primary Ask response.
-- [ ] Keep raw JSON as a secondary inspector only.
+- [x] Implement desktop navigation from the UX blueprint.
+- [x] Make Ask the default landing workspace.
+- [x] Render deterministic answer summary, explanation, trust envelope, proof context, and follow-up actions as the primary Ask response.
+- [x] Keep raw JSON as a secondary inspector only.
 - [ ] Implement desktop Org Sessions workspace.
 - [ ] Implement desktop Org Browser workspace with org-wide selective retrieve.
 - [ ] Implement desktop Refresh and Build workspace.
@@ -23,9 +23,9 @@ Objective: deliver the fresh desktop-native Orgumented experience with Ask as th
 - [ ] Remove dependency on the legacy embedded dev-server workflow for primary operator usage.
 
 ## Exit Gates
-- [ ] Ask-first desktop experience is the default product interaction.
+- [x] Ask-first desktop experience is the default product interaction.
 - [ ] Core operator workflows reach parity in the desktop product.
-- [ ] Decision packets, not raw JSON, are the default Ask output.
+- [x] Decision packets, not raw JSON, are the default Ask output.
 - [ ] Proof/history access works without manual tracking of opaque IDs/tokens.
 - [ ] Org Browser supports org-wide selection and retrieve workflows in the desktop UX.
 - [ ] Desktop shell is the required primary usage path; standalone dev-server access is secondary verification only.
@@ -39,3 +39,8 @@ Objective: deliver the fresh desktop-native Orgumented experience with Ask as th
 - Ask parity smoke results
 - org browser retrieve demonstration
 - proof/history workflow demonstration
+
+## Current Proof
+- First Wave G slice landed on February 28, 2026 with blueprint-aligned desktop navigation, Ask as the default workspace, decision-packet rendering in the primary content area, and raw JSON moved behind the secondary inspector.
+- Verified with `pnpm --filter web build`.
+- Verified with `pnpm desktop:build`.

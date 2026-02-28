@@ -123,6 +123,20 @@ type QueryResponse = {
 };
 
 const BUILD_VERSION = process.env.NEXT_PUBLIC_BUILD_VERSION || 'dev-local';
+const PRIMARY_TABS: Array<[UiTab, string, string]> = [
+  ['ask', 'Ask', 'Decision packets, trust, and follow-up actions.'],
+  ['connect', 'Org Sessions', 'Local Salesforce sessions backed by sf and cci.'],
+  ['browser', 'Org Browser', 'Browse metadata types and retrieve selected members.'],
+  ['refresh', 'Refresh & Build', 'Refresh semantic state and compare snapshot drift.'],
+  ['analyze', 'Explain & Analyze', 'Readable analysis cards for permissions and automation.'],
+  ['proofs', 'Proofs & History', 'Replay, inspect, and export proof artifacts.'],
+  ['system', 'Settings & Diagnostics', 'Runtime health, tool versions, and diagnostics.']
+];
+const ASK_PRESETS = [
+  'What touches Opportunity.StageName?',
+  'Who can edit Opportunity.StageName?',
+  'What automations update Opportunity.StageName?'
+];
 
 function parseOptionalInt(raw: string): number | undefined {
   if (!raw.trim()) return undefined;
@@ -221,6 +235,13 @@ export default function Page(): JSX.Element {
     if (!responseData?.payload) return null;
     return responseData.payload as AskPayload;
   }, [responseData]);
+  const activeAlias = orgSession?.activeAlias || orgStatus?.session?.activeAlias || orgStatus?.alias || orgAlias;
+  const sessionStatus = orgSession?.status || orgStatus?.session?.status || 'unknown';
+  const askSummary = askPayload?.answer || askPayload?.deterministicAnswer || 'Run Ask to generate a decision packet.';
+  const askTrust = askPayload?.trustLevel || 'waiting';
+  const askProofId = askPayload?.proof?.proofId || '';
+  const askReplayToken = askPayload?.proof?.replayToken || '';
+  const askCitations = askPayload?.citations || [];
 
   useEffect(() => {
     try {
@@ -436,8 +457,14 @@ export default function Page(): JSX.Element {
   }
 
   const statusTone = (status: string): string => {
-    if (status === 'ok' || status === 'ready') return 'good';
+    if (status === 'ok' || status === 'ready' || status === 'connected') return 'good';
     if (status === 'unknown') return 'muted';
+    return 'bad';
+  };
+
+  const trustTone = (trustLevel: string): string => {
+    if (trustLevel === 'trusted') return 'good';
+    if (trustLevel === 'conditional' || trustLevel === 'waiting') return 'muted';
     return 'bad';
   };
 
@@ -446,8 +473,8 @@ export default function Page(): JSX.Element {
       <header className="og-topbar">
         <div className="brand-block">
           <p className="brand-kicker">Deterministic Semantic Runtime</p>
-          <h1>Orgumented Mission Control</h1>
-          <p className="brand-sub">Ask-first architecture operations with replayable proof and trusted evidence.</p>
+          <h1>Orgumented Desktop</h1>
+          <p className="brand-sub">Ask-first architecture operations with a local desktop shell, trusted evidence, and replayable proof.</p>
         </div>
         <div className="topbar-actions">
           <button type="button" onClick={() => void refreshStatuses()} disabled={loading}>Refresh Status</button>
@@ -465,13 +492,13 @@ export default function Page(): JSX.Element {
           <span>API Ready</span>
           <strong>{readyStatus}</strong>
         </article>
-        <article className="status-pill muted">
-          <span>Build</span>
-          <strong>{BUILD_VERSION}</strong>
+        <article className={`status-pill ${statusTone(sessionStatus)}`}>
+          <span>Org Session</span>
+          <strong>{sessionStatus}</strong>
         </article>
-        <article className="status-pill muted">
-          <span>Alias</span>
-          <strong>{orgSession?.activeAlias || orgStatus?.alias || orgAlias}</strong>
+        <article className={`status-pill ${trustTone(askTrust)}`}>
+          <span>Ask Trust</span>
+          <strong>{askTrust}</strong>
         </article>
       </section>
 
@@ -479,15 +506,7 @@ export default function Page(): JSX.Element {
         <aside className="left-nav panel">
           <h2>Workspace</h2>
           <nav className="tab-stack" role="tablist" aria-label="Primary navigation tabs">
-            {([
-              ['connect', 'Connect'],
-              ['browser', 'Org Browser'],
-              ['refresh', 'Refresh & Build'],
-              ['analyze', 'Analyze'],
-              ['ask', 'Ask'],
-              ['proofs', 'Proofs & Metrics'],
-              ['system', 'System']
-            ] as Array<[UiTab, string]>).map(([id, label]) => (
+            {PRIMARY_TABS.map(([id, label, caption]) => (
               <button
                 key={id}
                 role="tab"
@@ -496,16 +515,16 @@ export default function Page(): JSX.Element {
                 className={uiTab === id ? 'tab-btn active' : 'tab-btn'}
                 onClick={() => setUiTab(id)}
               >
-                {label}
+                <span>{label}</span>
+                <small>{caption}</small>
               </button>
             ))}
           </nav>
 
           <div className="hint-card">
-            <h3>Flagship</h3>
+            <h3>Launch Rule</h3>
             <p>
-              Ask is the primary workflow. Deterministic answer first, then optional elaboration,
-              with replayable proof and citations.
+              Ask stays first. JSON and low-level payloads are still available, but only as secondary inspection surfaces.
             </p>
           </div>
         </aside>
@@ -514,61 +533,196 @@ export default function Page(): JSX.Element {
           {uiTab === 'ask' && (
             <>
               <h2>Ask</h2>
-              <p className="section-lead">Ask architecture questions in natural language. Orgumented compiles to deterministic graph operations.</p>
+              <p className="section-lead">Ask architecture questions in natural language, then move through proof, trust, and follow-up actions without leaving the desktop shell.</p>
 
-              <label htmlFor="askQuery">Question</label>
-              <textarea
-                id="askQuery"
-                rows={5}
-                value={askQuery}
-                onChange={(e) => setAskQuery(e.target.value)}
-                placeholder="What touches Opportunity.StageName?"
-              />
+              <div className="launch-grid">
+                <article className="sub-card launch-card launch-card-accent">
+                  <p className="panel-caption">Current launch state</p>
+                  <h3>Ask-first desktop runtime</h3>
+                  <p className="launch-copy">The main window opens on Ask, with session health, trust, and recovery actions visible before any deep operator workflow.</p>
+                  <div className="launch-stat-grid">
+                    <div className="hero-metric">
+                      <span>Active alias</span>
+                      <strong>{activeAlias}</strong>
+                    </div>
+                    <div className="hero-metric">
+                      <span>Session</span>
+                      <strong>{sessionStatus}</strong>
+                    </div>
+                    <div className="hero-metric">
+                      <span>Trust state</span>
+                      <strong>{askTrust}</strong>
+                    </div>
+                    <div className="hero-metric">
+                      <span>Build</span>
+                      <strong>{BUILD_VERSION}</strong>
+                    </div>
+                  </div>
+                </article>
 
-              <div className="field-grid">
-                <div>
-                  <label htmlFor="maxCitations">Max Citations</label>
-                  <input id="maxCitations" value={maxCitationsRaw} onChange={(e) => setMaxCitationsRaw(e.target.value)} />
-                </div>
-                <label className="check-row" htmlFor="consistencyCheck">
-                  <input
-                    id="consistencyCheck"
-                    type="checkbox"
-                    checked={consistencyCheck}
-                    onChange={(e) => setConsistencyCheck(e.target.checked)}
-                  />
-                  Consistency Check
-                </label>
-                <label className="check-row" htmlFor="includeLowConfidence">
-                  <input
-                    id="includeLowConfidence"
-                    type="checkbox"
-                    checked={includeLowConfidence}
-                    onChange={(e) => setIncludeLowConfidence(e.target.checked)}
-                  />
-                  Include Low Confidence
-                </label>
+                <article className="sub-card launch-card">
+                  <p className="panel-caption">Quick actions</p>
+                  <h3>Next operator move</h3>
+                  <div className="quick-actions-grid">
+                    <button type="button" className="ghost" onClick={() => setUiTab('connect')}>Connect org</button>
+                    <button type="button" className="ghost" onClick={() => void runQuery('orgSessionAliases')} disabled={loading}>Refresh aliases</button>
+                    <button type="button" className="ghost" onClick={() => setUiTab('browser')}>Browse metadata</button>
+                    <button type="button" className="ghost" onClick={() => setUiTab('refresh')}>Run refresh</button>
+                  </div>
+                </article>
               </div>
 
-              <div className="action-row">
-                <button type="button" onClick={() => void runAsk()} disabled={loading}>Run Ask</button>
-                <button type="button" onClick={() => void runAskElaboration()} disabled={loading}>Generate Elaboration</button>
-                <button type="button" className="ghost" onClick={() => setAskQuery('Who can edit Opportunity.StageName?')}>Prompt: Permissions</button>
-                <button type="button" className="ghost" onClick={() => setAskQuery('What automations update Opportunity.StageName?')}>Prompt: Automation</button>
-              </div>
+              <div className="decision-grid">
+                <article className="sub-card decision-card decision-card-wide">
+                  <p className="panel-caption">Question composer</p>
+                  <label htmlFor="askQuery">Question</label>
+                  <textarea
+                    id="askQuery"
+                    rows={5}
+                    value={askQuery}
+                    onChange={(e) => setAskQuery(e.target.value)}
+                    placeholder="What touches Opportunity.StageName?"
+                  />
 
-              {askElaboration ? (
-                <div className="sub-card">
-                  <h3>Elaboration</h3>
-                  <p>{askElaboration}</p>
-                </div>
-              ) : null}
+                  <div className="field-grid ask-controls">
+                    <div>
+                      <label htmlFor="maxCitations">Max Citations</label>
+                      <input id="maxCitations" value={maxCitationsRaw} onChange={(e) => setMaxCitationsRaw(e.target.value)} />
+                    </div>
+                    <label className="check-row" htmlFor="consistencyCheck">
+                      <input
+                        id="consistencyCheck"
+                        type="checkbox"
+                        checked={consistencyCheck}
+                        onChange={(e) => setConsistencyCheck(e.target.checked)}
+                      />
+                      Consistency Check
+                    </label>
+                    <label className="check-row" htmlFor="includeLowConfidence">
+                      <input
+                        id="includeLowConfidence"
+                        type="checkbox"
+                        checked={includeLowConfidence}
+                        onChange={(e) => setIncludeLowConfidence(e.target.checked)}
+                      />
+                      Include Low Confidence
+                    </label>
+                  </div>
+
+                  <div className="action-row">
+                    <button type="button" onClick={() => void runAsk()} disabled={loading}>Run Ask</button>
+                    <button type="button" onClick={() => void runAskElaboration()} disabled={loading}>Generate Elaboration</button>
+                  </div>
+
+                  <div className="preset-row">
+                    {ASK_PRESETS.map((preset) => (
+                      <button key={preset} type="button" className="ghost chip-btn" onClick={() => setAskQuery(preset)}>
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
+                </article>
+
+                <article className="sub-card decision-card decision-card-accent">
+                  <p className="panel-caption">Decision packet</p>
+                  <h3>Short answer</h3>
+                  <p className="decision-answer">{askSummary}</p>
+                  <div className="decision-meta">
+                    <span className={`decision-badge ${trustTone(askTrust)}`}>Trust: {askTrust}</span>
+                    <span className="decision-badge muted">Confidence: {typeof askPayload?.confidence === 'number' ? askPayload.confidence : 'n/a'}</span>
+                  </div>
+                  {askElaboration ? (
+                    <>
+                      <h4>Deterministic explanation</h4>
+                      <p>{askElaboration}</p>
+                    </>
+                  ) : (
+                    <p className="muted">Run elaboration when you want a longer explanation built from the same grounded answer.</p>
+                  )}
+                </article>
+
+                <article className="sub-card decision-card">
+                  <p className="panel-caption">Proof context</p>
+                  <h3>Why this answer is trusted</h3>
+                  <p><strong>Policy:</strong> {askPayload?.policy?.policyId || 'n/a'}</p>
+                  <p><strong>Proof ID:</strong> {askProofId || 'n/a'}</p>
+                  <p><strong>Replay token:</strong> {askReplayToken || 'n/a'}</p>
+                  <p><strong>Snapshot:</strong> {askPayload?.proof?.snapshotId || 'n/a'}</p>
+                </article>
+
+                <article className="sub-card decision-card">
+                  <p className="panel-caption">Evidence</p>
+                  <h3>Citations</h3>
+                  {askCitations.length > 0 ? (
+                    <ul className="citation-list">
+                      {askCitations.map((citation, index) => (
+                        <li key={`${citation.sourcePath || 'citation'}-${index}`} className="citation-item">
+                          <strong>{citation.sourcePath || `citation-${index + 1}`}</strong>
+                          <span>score {typeof citation.score === 'number' ? citation.score : 'n/a'}</span>
+                          <p>{citation.snippet || 'No snippet returned.'}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="muted">Run Ask to populate grounded evidence.</p>
+                  )}
+                </article>
+
+                <article className="sub-card decision-card">
+                  <p className="panel-caption">Follow-up actions</p>
+                  <h3>Next actions</h3>
+                  <div className="follow-up-grid">
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => {
+                        setAnalyzeMode('automation');
+                        setUiTab('analyze');
+                      }}
+                    >
+                      Inspect impacted automation
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => {
+                        setAnalyzeMode('perms');
+                        setUiTab('analyze');
+                      }}
+                    >
+                      Inspect permissions
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => {
+                        if (askProofId) setProofId(askProofId);
+                        if (askReplayToken) setReplayToken(askReplayToken);
+                        setUiTab('proofs');
+                      }}
+                    >
+                      Open proof
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => {
+                        if (askReplayToken) setReplayToken(askReplayToken);
+                        if (askProofId) setProofId(askProofId);
+                        setUiTab('proofs');
+                      }}
+                    >
+                      Save to history
+                    </button>
+                  </div>
+                </article>
+              </div>
             </>
           )}
 
           {uiTab === 'connect' && (
             <>
-              <h2>Connect Org</h2>
+              <h2>Org Sessions</h2>
               <p className="section-lead">
                 Login uses Salesforce CLI keychain first, then CCI registry import for deterministic org tooling.
               </p>
@@ -842,7 +996,7 @@ cci org import ${orgAlias} <sf-username>`}</pre>
 
           {uiTab === 'analyze' && (
             <>
-              <h2>Analyze</h2>
+              <h2>Explain &amp; Analyze</h2>
               <p className="section-lead">Deterministic permission, automation, and impact analysis with controlled strictness.</p>
 
               <div className="sub-tab-row" role="tablist" aria-label="Analyze sub tabs">
@@ -968,8 +1122,8 @@ cci org import ${orgAlias} <sf-username>`}</pre>
 
           {uiTab === 'proofs' && (
             <>
-              <h2>Proofs &amp; Metrics</h2>
-              <p className="section-lead">Inspect deterministic proof artifacts, replay tokens, and metrics export.</p>
+              <h2>Proofs &amp; History</h2>
+              <p className="section-lead">Inspect deterministic proof artifacts, replay tokens, and history exports without managing raw tokens as the primary workflow.</p>
 
               <div className="field-grid">
                 <div>
@@ -993,8 +1147,8 @@ cci org import ${orgAlias} <sf-username>`}</pre>
 
           {uiTab === 'system' && (
             <>
-              <h2>System</h2>
-              <p className="section-lead">Operational context, adaptation dry-run, and org runtime status.</p>
+              <h2>Settings &amp; Diagnostics</h2>
+              <p className="section-lead">Operational context, adaptation dry-run, runtime health, and local diagnostics.</p>
               <label className="check-row" htmlFor="metaDryRun">
                 <input id="metaDryRun" type="checkbox" checked={metaDryRun} onChange={(e) => setMetaDryRun(e.target.checked)} />
                 Meta Adapt Dry Run
@@ -1010,30 +1164,30 @@ cci org import ${orgAlias} <sf-username>`}</pre>
 
         <aside className="right-rail panel">
           <div className="rail-head">
-            <h2>Proof Rail</h2>
-            <button type="button" onClick={() => void copyJson()} disabled={!responseText}>{copied ? 'Copied' : 'Copy JSON'}</button>
+            <h2>Operator Rail</h2>
+            <button type="button" onClick={() => void copyJson()} disabled={!responseText}>{copied ? 'Copied' : 'Copy Response'}</button>
           </div>
 
           {errorText ? <p className="error-text">{errorText}</p> : null}
 
           <div className="sub-card">
-            <h3>Deterministic Summary</h3>
-            <p>{askPayload?.answer || askPayload?.deterministicAnswer || 'Run Ask to populate this panel.'}</p>
+            <h3>Ask Snapshot</h3>
+            <p>{askSummary}</p>
           </div>
 
           <div className="sub-card">
-            <h3>Trust + Replay</h3>
-            <p><strong>Trust:</strong> {askPayload?.trustLevel || 'n/a'}</p>
+            <h3>Trust Envelope</h3>
+            <p><strong>Trust:</strong> {askTrust}</p>
             <p><strong>Confidence:</strong> {typeof askPayload?.confidence === 'number' ? askPayload.confidence : 'n/a'}</p>
             <p><strong>Policy ID:</strong> {askPayload?.policy?.policyId || 'n/a'}</p>
-            <p><strong>Proof ID:</strong> {askPayload?.proof?.proofId || 'n/a'}</p>
-            <p><strong>Replay Token:</strong> {askPayload?.proof?.replayToken || 'n/a'}</p>
+            <p><strong>Proof ID:</strong> {askProofId || 'n/a'}</p>
+            <p><strong>Replay Token:</strong> {askReplayToken || 'n/a'}</p>
           </div>
 
           <div className="sub-card">
             <h3>Connection</h3>
-            <p><strong>Session:</strong> {orgSession?.status || orgStatus?.session?.status || 'unknown'}</p>
-            <p><strong>Alias:</strong> {orgSession?.activeAlias || orgStatus?.session?.activeAlias || orgAlias}</p>
+            <p><strong>Session:</strong> {sessionStatus}</p>
+            <p><strong>Alias:</strong> {activeAlias}</p>
             <p><strong>Auth Mode:</strong> {orgSession?.authMode || orgStatus?.authMode || 'sf_cli_keychain'}</p>
             <p><strong>sf Installed:</strong> {orgStatus?.sf?.installed ? 'yes' : 'no'}</p>
             <p><strong>CCI Installed:</strong> {orgStatus?.cci?.installed ? 'yes' : 'no'}</p>
@@ -1052,8 +1206,8 @@ cci org import ${orgAlias} <sf-username>`}</pre>
             </div>
           ) : null}
 
-          <details open>
-            <summary>Raw JSON</summary>
+          <details>
+            <summary>Raw JSON Inspector</summary>
             <pre>{responseText || '{\n  "hint": "Run an action to view response"\n}'}</pre>
           </details>
 

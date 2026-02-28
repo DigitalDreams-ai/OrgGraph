@@ -21,6 +21,11 @@ Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:dev
 ```
 
+Desktop launch expectation:
+- app opens on `Ask`
+- use `Org Sessions` to connect/switch aliases
+- use `Raw JSON Inspector` only for secondary payload inspection
+
 ## Health
 ```bash
 curl http://localhost:3100/health
