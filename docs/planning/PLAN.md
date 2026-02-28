@@ -255,6 +255,13 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - current packaged proof remained stable at:
     - `proofId=proof_dd7bcb4c6e249d0ebae058a6`
     - `replayToken=trace_f64fd67605f1ed56028f0e73`
+- Packaged replay parity proof now exists:
+  - `scripts/desktop-release-smoke.ps1` replays the packaged Ask proof through `/ask/replay`
+  - the packaged smoke now fails if replay does not preserve:
+    - `matched=true`
+    - `corePayloadMatched=true`
+    - `metricsMatched=true`
+  - the current packaged replay proof matched the original Ask artifact on all three signals
 - Packaged API payload hardening now exists:
   - `apps/desktop/scripts/prepare-packaged-runtime.mjs` now prunes build-only baggage from `apps/desktop/src-tauri/runtime/api`
   - staged payload dropped from about `24.09 MB` to about `13.93 MB`

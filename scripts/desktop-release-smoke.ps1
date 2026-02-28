@@ -9,6 +9,7 @@ $healthArtifact = Join-Path $logsDir 'desktop-release-smoke-health.json'
 $readyArtifact = Join-Path $logsDir 'desktop-release-smoke-ready.json'
 $askArtifact = Join-Path $logsDir 'desktop-release-smoke-ask.json'
 $askRepeatArtifact = Join-Path $logsDir 'desktop-release-smoke-ask-repeat.json'
+$replayArtifact = Join-Path $logsDir 'desktop-release-smoke-replay.json'
 $orgStatusArtifact = Join-Path $logsDir 'desktop-release-smoke-org-status.json'
 $sessionBeforeArtifact = Join-Path $logsDir 'desktop-release-smoke-session-before.json'
 $sessionAliasesArtifact = Join-Path $logsDir 'desktop-release-smoke-session-aliases.json'
@@ -172,7 +173,7 @@ if (-not (Test-Path $exePath)) {
 }
 
 New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
-Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $resultArtifact -ErrorAction SilentlyContinue
+Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $replayArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $resultArtifact -ErrorAction SilentlyContinue
 
 $desktopProcess = $null
 $sessionBefore = $null
@@ -226,6 +227,19 @@ try {
   }
   if ($ask.proof.replayToken -ne $askRepeat.proof.replayToken) {
     throw "Repeated ask changed replayToken from $($ask.proof.replayToken) to $($askRepeat.proof.replayToken)"
+  }
+  $replay = Invoke-JsonPost -Url 'http://127.0.0.1:3100/ask/replay' -ArtifactPath $replayArtifact -Body @{ replayToken = $ask.proof.replayToken }
+  if ($replay.status -ne 'implemented') {
+    throw 'Ask replay did not return status=implemented'
+  }
+  if (-not $replay.matched -or -not $replay.corePayloadMatched -or -not $replay.metricsMatched) {
+    throw 'Ask replay did not preserve deterministic, payload, and metric parity'
+  }
+  if ($replay.proofId -ne $ask.proof.proofId) {
+    throw "Ask replay proofId $($replay.proofId) did not match original $($ask.proof.proofId)"
+  }
+  if ($replay.replayToken -ne $ask.proof.replayToken) {
+    throw "Ask replay token $($replay.replayToken) did not match original $($ask.proof.replayToken)"
   }
 
   $orgStatus = Invoke-JsonGet -Url 'http://127.0.0.1:3100/org/status' -ArtifactPath $orgStatusArtifact
@@ -296,6 +310,7 @@ try {
     'logs/desktop-release-smoke-ready.json'
     'logs/desktop-release-smoke-ask.json'
     'logs/desktop-release-smoke-ask-repeat.json'
+    'logs/desktop-release-smoke-replay.json'
     'logs/desktop-release-smoke-org-status.json'
     'logs/desktop-release-smoke-session-before.json'
     'logs/desktop-release-smoke-session-aliases.json'
@@ -320,6 +335,9 @@ try {
     askTrustLevel = $ask.trustLevel
     askProofId = $ask.proof.proofId
     askReplayToken = $ask.proof.replayToken
+    replayMatched = $replay.matched
+    replayCorePayloadMatched = $replay.corePayloadMatched
+    replayMetricsMatched = $replay.metricsMatched
     sessionConnectStatus = $sessionConnectStatus
     sessionConnectAlias = $sessionConnectAlias
     sessionSwitchStatus = $sessionSwitchStatus

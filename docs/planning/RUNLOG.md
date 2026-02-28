@@ -1158,3 +1158,29 @@ Branch: `dna-foundation`
 ### Outcome
 - The packaged desktop proof path now checks the core deterministic Ask contract directly, not just service availability.
 - This is a better use of Phase 4 verification than further payload-only pruning unless a new runtime risk appears.
+
+## Entry 33: Assert Packaged Replay Parity
+
+### Change
+- Updated `scripts/desktop-release-smoke.ps1` so packaged smoke now:
+  - calls `POST /ask/replay` using the replay token from the packaged Ask response
+  - writes replay output to `logs/desktop-release-smoke-replay.json`
+  - fails if replay does not preserve:
+    - `matched=true`
+    - `corePayloadMatched=true`
+    - `metricsMatched=true`
+- The packaged smoke result now records the replay parity flags directly.
+
+### Verification
+1. `$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH='1'; pnpm desktop:smoke:release`
+- Result: passed
+- Proof:
+  - `status=passed`
+  - `replayMatched=true`
+  - `replayCorePayloadMatched=true`
+  - `replayMetricsMatched=true`
+  - `logs/desktop-release-smoke-replay.json` was written alongside the Ask artifacts
+
+### Outcome
+- The packaged desktop proof path now exercises both determinism and replay parity, not just service readiness.
+- Additional Phase 4 work should now be driven by real runtime gaps rather than by missing proof coverage.

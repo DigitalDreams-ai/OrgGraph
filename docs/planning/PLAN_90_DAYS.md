@@ -199,6 +199,12 @@ Progress note:
   - deterministic packaged Ask proof passed with:
     - `proofId=proof_dd7bcb4c6e249d0ebae058a6`
     - `replayToken=trace_f64fd67605f1ed56028f0e73`
+- Slice 13 completed:
+  - packaged smoke now replays the packaged Ask proof through `/ask/replay`
+  - replay verification passed with:
+    - `matched=true`
+    - `corePayloadMatched=true`
+    - `metricsMatched=true`
 - Next narrow step:
   - reassess whether any additional packaged-runtime pruning still buys enough to justify another slice
   - stop if the remaining potential wins are mostly cosmetic rather than architectural
