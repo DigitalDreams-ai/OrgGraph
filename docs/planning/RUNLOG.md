@@ -762,3 +762,35 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns the operator rail render tree inline.
 - The remaining page shell is now mostly local persistence, a small amount of shared action state, and Analyze/System state not yet lifted into dedicated hooks.
 - The next narrow slice is extracting the remaining System/shared shell orchestration or reassessing whether the page shell is now small enough to pivot back to deeper runtime work.
+
+## Entry 22: Phase 5 Analyze State Extraction
+
+### Change
+- Extracted Analyze state and action orchestration out of `apps/web/app/page.tsx`.
+- Added `apps/web/app/workspaces/analyze/use-analyze-workspace.ts`.
+- Moved the following into the Analyze workspace hook:
+  - analyze sub-mode state
+  - user/object/field/system-permission inputs
+  - strict/explain/debug toggles
+  - permission, automation, impact, and system-permission action handlers
+- Kept `limitRaw` in the page shell because the Proofs workspace still uses it for recent-proof listing.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - typed desktop boundary routes remained present after the Analyze hook extraction
+
+3. Page-shell reduction proof
+- Result: passed
+- Proof:
+  - `apps/web/app/page.tsx` line count dropped from `458` to `427`
+
+### Outcome
+- `page.tsx` no longer owns Analyze workflow state or Analyze action lambdas directly.
+- The remaining page shell is now concentrated around local persistence, shared copy/error state, `limitRaw`, and the remaining System/shared shell orchestration.
+- The next narrow slice is extracting the remaining System/shared shell state or deciding that the page shell is now small enough to pivot back to runtime and packaged-workflow proof work.

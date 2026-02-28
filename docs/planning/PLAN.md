@@ -251,6 +251,8 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - shell runtime state and top-level status rendering now live under `apps/web/app/shell/`
   - Operator rail rendering is no longer owned directly by `apps/web/app/page.tsx`
   - rail rendering now lives under `apps/web/app/shell/operator-rail.tsx`
+  - Analyze state and action orchestration are no longer owned directly by `apps/web/app/page.tsx`
+  - Analyze state and action handlers now live under `apps/web/app/workspaces/analyze/use-analyze-workspace.ts`
 - The next live architectural priority is to keep moving runtime expectations into the shell:
   - move remaining System/shared shell orchestration out of `apps/web/app/page.tsx`
   - then decide whether packaged smoke should grow into an authenticated org-session attach workflow

@@ -11,7 +11,8 @@ import { StatusStrip } from './shell/status-strip';
 import { useShellRuntime } from './shell/use-shell-runtime';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
 import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
-import { AnalyzeWorkspace, type AnalyzeMode } from './workspaces/analyze/analyze-workspace';
+import { AnalyzeWorkspace } from './workspaces/analyze/analyze-workspace';
+import { useAnalyzeWorkspace } from './workspaces/analyze/use-analyze-workspace';
 import { BrowserWorkspace } from './workspaces/browser/browser-workspace';
 import { useBrowserWorkspace } from './workspaces/browser/use-browser-workspace';
 import { ConnectWorkspace } from './workspaces/connect/connect-workspace';
@@ -80,21 +81,13 @@ function resolveErrorMessage(data: QueryResponse): string {
 
 export default function Page(): JSX.Element {
   const [uiTab, setUiTab] = useState<UiTab>('ask');
-  const [analyzeMode, setAnalyzeMode] = useState<AnalyzeMode>('perms');
 
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [responseText, setResponseText] = useState('');
   const [errorText, setErrorText] = useState('');
 
-  const [user, setUser] = useState('sbingham@shulman-hill.com.uat');
-  const [objectName, setObjectName] = useState('Opportunity');
-  const [fieldName, setFieldName] = useState('Opportunity.StageName');
-  const [systemPermission, setSystemPermission] = useState('ApproveUninstalledConnectedApps');
   const [limitRaw, setLimitRaw] = useState('25');
-  const [strictMode, setStrictMode] = useState(true);
-  const [explainMode, setExplainMode] = useState(false);
-  const [debugMode, setDebugMode] = useState(false);
 
   const [metaDryRun, setMetaDryRun] = useState(true);
 
@@ -135,6 +128,12 @@ export default function Page(): JSX.Element {
     setErrorText
   });
   const shellRuntime = useShellRuntime();
+  const analyzeWorkspace = useAnalyzeWorkspace({
+    runQuery,
+    parseOptionalInt,
+    limitRaw,
+    includeLowConfidence: askWorkspace.includeLowConfidence
+  });
 
   useEffect(() => {
     try {
@@ -298,11 +297,11 @@ export default function Page(): JSX.Element {
               onOpenBrowser={() => setUiTab('browser')}
               onOpenRefresh={() => setUiTab('refresh')}
               onInspectAutomation={() => {
-                setAnalyzeMode('automation');
+                analyzeWorkspace.setAnalyzeMode('automation');
                 setUiTab('analyze');
               }}
               onInspectPermissions={() => {
-                setAnalyzeMode('perms');
+                analyzeWorkspace.setAnalyzeMode('perms');
                 setUiTab('analyze');
               }}
               onOpenProof={() => {
@@ -388,60 +387,30 @@ export default function Page(): JSX.Element {
 
           {uiTab === 'analyze' && (
             <AnalyzeWorkspace
-              analyzeMode={analyzeMode}
-              setAnalyzeMode={setAnalyzeMode}
-              user={user}
-              setUser={setUser}
-              objectName={objectName}
-              setObjectName={setObjectName}
-              fieldName={fieldName}
-              setFieldName={setFieldName}
-              systemPermission={systemPermission}
-              setSystemPermission={setSystemPermission}
+              analyzeMode={analyzeWorkspace.analyzeMode}
+              setAnalyzeMode={analyzeWorkspace.setAnalyzeMode}
+              user={analyzeWorkspace.user}
+              setUser={analyzeWorkspace.setUser}
+              objectName={analyzeWorkspace.objectName}
+              setObjectName={analyzeWorkspace.setObjectName}
+              fieldName={analyzeWorkspace.fieldName}
+              setFieldName={analyzeWorkspace.setFieldName}
+              systemPermission={analyzeWorkspace.systemPermission}
+              setSystemPermission={analyzeWorkspace.setSystemPermission}
               limitRaw={limitRaw}
               setLimitRaw={setLimitRaw}
-              strictMode={strictMode}
-              setStrictMode={setStrictMode}
-              explainMode={explainMode}
-              setExplainMode={setExplainMode}
-              debugMode={debugMode}
-              setDebugMode={setDebugMode}
+              strictMode={analyzeWorkspace.strictMode}
+              setStrictMode={analyzeWorkspace.setStrictMode}
+              explainMode={analyzeWorkspace.explainMode}
+              setExplainMode={analyzeWorkspace.setExplainMode}
+              debugMode={analyzeWorkspace.debugMode}
+              setDebugMode={analyzeWorkspace.setDebugMode}
               loading={loading}
-              onRunPermissions={() =>
-                void runQuery('perms', {
-                  user,
-                  object: objectName,
-                  field: fieldName,
-                  limit: parseOptionalInt(limitRaw)
-                })
-              }
-              onDiagnoseUserMapping={() => void runQuery('permsDiagnose', { user })}
-              onRunAutomation={() =>
-                void runQuery('automation', {
-                  object: objectName,
-                  limit: parseOptionalInt(limitRaw),
-                  strict: strictMode,
-                  explain: explainMode,
-                  includeLowConfidence: askWorkspace.includeLowConfidence
-                })
-              }
-              onRunImpact={() =>
-                void runQuery('impact', {
-                  field: fieldName,
-                  limit: parseOptionalInt(limitRaw),
-                  strict: strictMode,
-                  explain: explainMode,
-                  debug: debugMode,
-                  includeLowConfidence: askWorkspace.includeLowConfidence
-                })
-              }
-              onRunSystemPermission={() =>
-                void runQuery('permsSystem', {
-                  user,
-                  permission: systemPermission,
-                  limit: parseOptionalInt(limitRaw)
-                })
-              }
+              onRunPermissions={() => void analyzeWorkspace.runPermissions()}
+              onDiagnoseUserMapping={() => void analyzeWorkspace.diagnoseUserMapping()}
+              onRunAutomation={() => void analyzeWorkspace.runAutomationAnalysis()}
+              onRunImpact={() => void analyzeWorkspace.runImpactAnalysis()}
+              onRunSystemPermission={() => void analyzeWorkspace.runSystemPermissionCheck()}
             />
           )}
 
