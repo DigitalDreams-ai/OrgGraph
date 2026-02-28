@@ -120,6 +120,16 @@ Current Ask-first behavior:
 - raw JSON is available only through the `Raw JSON Inspector`
 - the default answer shape is a decision packet, not a raw endpoint payload
 
+Current `Proofs & History` behavior:
+- recent proof history is listed directly in the workspace
+- selecting a recent proof fills `proofId` and `replayToken` for reuse
+- proof lookup shows structured artifact details instead of requiring raw JSON inspection
+- replay shows parity status for:
+  - `matched`
+  - `corePayloadMatched`
+  - `metricsMatched`
+- metrics export shows summary counts by snapshot and provider
+
 ## 6. Connect a Sandbox Org
 Auth is delegated to Salesforce CLI keychain sessions.
 

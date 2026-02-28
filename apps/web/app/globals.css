@@ -498,6 +498,50 @@ button.ghost {
   margin-top: 0.35rem;
 }
 
+.proofs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.proof-list {
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+}
+
+.proof-list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+  border: 1px solid #dbe5f3;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.65rem 0.7rem;
+}
+
+.proof-list-item p {
+  margin: 0.3rem 0 0;
+  color: var(--ink-soft);
+}
+
+.proof-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.proof-inline-list {
+  margin: 0.45rem 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.35rem;
+  color: var(--ink-soft);
+}
+
 pre {
   margin: 0;
   background: #0f172a;
@@ -658,6 +702,11 @@ details summary {
   }
 
   .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .proofs-grid,
+  .proof-metric-grid {
     grid-template-columns: 1fr;
   }
 }

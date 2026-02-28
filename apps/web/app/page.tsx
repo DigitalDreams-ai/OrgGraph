@@ -280,11 +280,16 @@ export default function Page(): JSX.Element {
               setProofId={proofsWorkspace.setProofId}
               replayToken={proofsWorkspace.replayToken}
               setReplayToken={proofsWorkspace.setReplayToken}
+              recentProofs={proofsWorkspace.recentProofs}
+              selectedProof={proofsWorkspace.selectedProof}
+              replayResult={proofsWorkspace.replayResult}
+              metricsExport={proofsWorkspace.metricsExport}
               loading={secondaryQueryRunner.loading}
               onListRecent={() => void proofsWorkspace.runProofsRecent(parseOptionalInt(secondaryQueryRunner.limitRaw) ?? 20)}
               onGetProof={() => void proofsWorkspace.runProofLookup()}
               onReplay={() => void proofsWorkspace.runReplay()}
               onExportMetrics={() => void proofsWorkspace.runMetricsExport()}
+              onUseRecentProof={proofsWorkspace.useRecentProof}
             />
           )}
 

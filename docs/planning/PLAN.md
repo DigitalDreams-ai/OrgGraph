@@ -329,3 +329,20 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
     - live org attach/switch/restore
   - continue shrinking the remaining page-shell composition surface only where shared state or cross-workspace orchestration is still concentrated
   - avoid returning to packaging churn unless a new runtime gap or proof failure appears
+- The first higher-value product slice beyond page-shell reduction is now complete:
+  - `Proofs & History` surfaces structured recent-proof history
+  - selected proof artifacts now show:
+    - query
+    - trust
+    - policy
+    - trace level
+    - deterministic answer
+    - citation and derivation counts
+  - replay now shows parity badges for:
+    - `matched`
+    - `corePayloadMatched`
+    - `metricsMatched`
+  - metrics export now surfaces snapshot and provider summaries instead of relying on raw JSON inspection
+- The next architectural priority should stay product/runtime focused:
+  - improve `Org Sessions` and related retrieval workflows as operator-first desktop surfaces
+  - do not return to low-value page-shell shaving unless a real boundary concentration reappears

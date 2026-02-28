@@ -1278,3 +1278,42 @@ Branch: `dna-foundation`
 ### Outcome
 - The page shell is now substantially smaller and more composition-focused.
 - Remaining Phase 5 work should focus only on the last page-level orchestration hotspots that still matter architecturally.
+
+## Entry 38: Productize Proofs and History Workspace
+
+### Change
+- Expanded `apps/web/app/workspaces/proofs/` into a product-facing proof workflow surface instead of a thin transport form.
+- Added `apps/web/app/workspaces/proofs/types.ts` for structured desktop UI models covering:
+  - recent proof history
+  - selected proof artifact details
+  - replay parity state
+  - metrics export summaries
+- Updated `apps/web/app/workspaces/proofs/use-proofs-workspace.ts` so proof, replay, recent-history, and metrics actions now parse structured proof views instead of only presenting raw payloads.
+- Updated `apps/web/app/workspaces/proofs/proofs-workspace.tsx` so the desktop UI now surfaces:
+  - recent proof selection
+  - deterministic proof artifact details
+  - replay parity badges
+  - metrics summaries by snapshot and provider
+- Wired the new proof workspace state through `apps/web/app/page.tsx` and added workspace styling in `apps/web/app/globals.css`.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - Next build completed successfully after the proof workspace productization
+  - the typed Ask route family remained intact:
+    - `/api/ask`
+    - `/api/ask/proof/[proofId]`
+    - `/api/ask/proofs/recent`
+    - `/api/ask/replay`
+    - `/api/ask/metrics`
+
+### Outcome
+- `Proofs & History` is now aligned more closely with Orgumented’s actual DNA:
+  - deterministic proof inspection
+  - replay parity verification
+  - trust-history review
+- The next higher-value product slice is improving `Org Sessions` and retrieval handoff rather than doing more low-value page-shell cleanup.

@@ -231,8 +231,8 @@ Progress note:
   - workspace navigation and the launch-rule panel moved out of `apps/web/app/page.tsx` into `apps/web/app/shell/workspace-nav.tsx`
   - `page.tsx` is now about `305` lines after web verification
 - Next narrow step:
-  - continue Phase 5 shell reduction from the current `page.tsx` composition surface
-  - stop only if the remaining page-level state is no longer a meaningful boundary concentration
+  - shift from low-value page-shell trimming into higher-value operator productization
+  - use the reduced shell to improve desktop-native workflows where proof, replay, session, and retrieval behavior are still too raw
 
 ## Phase 5: Modular UI Reconstruction
 
@@ -281,8 +281,11 @@ Progress note:
 - Slice 11 completed:
   - local tab/alias/ask persistence moved out of `apps/web/app/page.tsx`
   - shell preference hydration/persistence now lives in `apps/web/app/shell/use-shell-preferences.ts`
+- Slice 12 completed:
+  - `Proofs & History` now surfaces structured recent-proof history, selected proof artifacts, replay parity badges, and metrics summaries
+  - operators can reuse recent proofs directly instead of treating proof and replay identifiers as a raw copy/paste workflow
 - Next narrow step:
-  - pivot back to deeper runtime and packaged org-session proof work
+  - productize `Org Sessions` and related retrieval workflows as operator-first desktop surfaces
   - only return for more UI cleanup if the remaining page shell still blocks architectural clarity
 
 ## Determinism and Replay Harness Plan
@@ -370,7 +373,7 @@ Progress note:
 4. If Windows packaging regresses for two consecutive attempts, stop feature work and stabilize desktop runtime ownership first.
 
 ## Current Next Step
-- Continue Phase 5 modular UI reconstruction from the reduced page shell.
-- Preferred next step: extract the remaining page-level composition helpers or shared shell state only where that state still creates a real UI-engine boundary concentration.
+- Continue from the reduced shell into higher-value product/runtime slices.
+- Preferred next step: improve `Org Sessions` and retrieval handoff so the desktop operator flow is as structured as the new `Proofs & History` surface.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.
