@@ -695,3 +695,40 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns org session/status/preflight/alias lifecycle state directly.
 - Shared org-side desktop state now has a single UI hook boundary instead of being duplicated across top bar, Connect, System, and operator rail consumers.
 - The next narrow slice is extracting the remaining System or shared shell orchestration out of `apps/web/app/page.tsx`.
+
+## Entry 20: Phase 5 Shell Runtime Extraction
+
+### Change
+- Extracted shell runtime status orchestration out of `apps/web/app/page.tsx`.
+- Added:
+  - `apps/web/app/shell/use-shell-runtime.ts`
+  - `apps/web/app/shell/shell-topbar.tsx`
+  - `apps/web/app/shell/status-strip.tsx`
+- Moved the following out of the page shell:
+  - health status state
+  - ready status state
+  - ready details state
+  - shell status refresh action
+  - top-bar rendering
+  - status-strip rendering
+- Removed dead `responseData` state from `apps/web/app/page.tsx`.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - typed desktop boundary routes remained present after the shell extraction
+
+3. Page-shell reduction proof
+- Result: passed
+- Proof:
+  - `apps/web/app/page.tsx` line count dropped from `533` to `489`
+
+### Outcome
+- `page.tsx` no longer owns shell health/ready orchestration or the top-level status render tree.
+- The remaining page shell is now concentrated around shared operator state, local persistence, and the operator rail.
+- The next narrow slice is extracting the operator rail or remaining System/shared shell state out of `apps/web/app/page.tsx`.

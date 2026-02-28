@@ -5,7 +5,9 @@ import {
   type QueryResponse
 } from './lib/ask-client';
 import { runSecondaryQueryRequest, type SecondaryQueryKind } from './lib/secondary-client';
-import { getApiHealth, getApiReady } from './lib/status-client';
+import { ShellTopbar } from './shell/shell-topbar';
+import { StatusStrip } from './shell/status-strip';
+import { useShellRuntime } from './shell/use-shell-runtime';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
 import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
 import { AnalyzeWorkspace, type AnalyzeMode } from './workspaces/analyze/analyze-workspace';
@@ -82,12 +84,7 @@ export default function Page(): JSX.Element {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [responseText, setResponseText] = useState('');
-  const [responseData, setResponseData] = useState<QueryResponse | null>(null);
   const [errorText, setErrorText] = useState('');
-
-  const [healthStatus, setHealthStatus] = useState('unknown');
-  const [readyStatus, setReadyStatus] = useState('unknown');
-  const [readyDetails, setReadyDetails] = useState('');
 
   const [user, setUser] = useState('sbingham@shulman-hill.com.uat');
   const [objectName, setObjectName] = useState('Opportunity');
@@ -136,6 +133,7 @@ export default function Page(): JSX.Element {
     setCopied,
     setErrorText
   });
+  const shellRuntime = useShellRuntime();
 
   useEffect(() => {
     try {
@@ -148,7 +146,7 @@ export default function Page(): JSX.Element {
     } catch {
       // ignore
     }
-    void refreshStatuses();
+    void shellRuntime.refreshStatuses();
   }, []);
 
   useEffect(() => {
@@ -164,26 +162,6 @@ export default function Page(): JSX.Element {
   useEffect(() => {
     proofsWorkspace.syncFromAsk(askWorkspace.askProofId, askWorkspace.askReplayToken);
   }, [askWorkspace.askProofId, askWorkspace.askReplayToken]);
-
-  async function refreshStatuses(): Promise<void> {
-    try {
-      const healthRes = await getApiHealth();
-      const payload = healthRes.payload as { status?: string } | undefined;
-      setHealthStatus(healthRes.ok ? payload?.status ?? 'ok' : `http_${healthRes.statusCode ?? 503}`);
-    } catch {
-      setHealthStatus('unreachable');
-    }
-
-    try {
-      const readyRes = await getApiReady();
-      const payload = readyRes.payload as { status?: string } | undefined;
-      setReadyStatus(readyRes.ok ? payload?.status ?? 'ready' : `http_${readyRes.statusCode ?? 503}`);
-      setReadyDetails(readyRes.payload ? pretty(readyRes.payload) : '');
-    } catch {
-      setReadyStatus('unreachable');
-      setReadyDetails('');
-    }
-  }
 
   async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}): Promise<QueryResponse | null> {
     setLoading(true);
@@ -211,7 +189,6 @@ export default function Page(): JSX.Element {
   }
 
   function presentResponse(parsed: QueryResponse): void {
-    setResponseData(parsed);
     setResponseText(pretty(parsed));
   }
 
@@ -243,51 +220,21 @@ export default function Page(): JSX.Element {
     setErrorText('Copy failed in this browser context. Select JSON from Raw JSON and copy manually.');
   }
 
-  const statusTone = (status: string): string => {
-    if (status === 'ok' || status === 'ready' || status === 'connected') return 'good';
-    if (status === 'unknown') return 'muted';
-    return 'bad';
-  };
-
-  const trustTone = (trustLevel: string): string => {
-    if (trustLevel === 'trusted') return 'good';
-    if (trustLevel === 'conditional' || trustLevel === 'waiting') return 'muted';
-    return 'bad';
-  };
-
   return (
     <main className="og-shell">
-      <header className="og-topbar">
-        <div className="brand-block">
-          <p className="brand-kicker">Deterministic Semantic Runtime</p>
-          <h1>Orgumented Desktop</h1>
-          <p className="brand-sub">Ask-first architecture operations with a local desktop shell, trusted evidence, and replayable proof.</p>
-        </div>
-        <div className="topbar-actions">
-          <button type="button" onClick={() => void refreshStatuses()} disabled={loading}>Refresh Status</button>
-          <button type="button" onClick={() => void connectWorkspace.runPreflight()} disabled={loading}>Preflight</button>
-          <button type="button" onClick={() => void connectWorkspace.connectExistingAlias()} disabled={loading}>Connect Org</button>
-        </div>
-      </header>
+      <ShellTopbar
+        loading={loading}
+        onRefreshStatus={() => void shellRuntime.refreshStatuses()}
+        onRunPreflight={() => void connectWorkspace.runPreflight()}
+        onConnectOrg={() => void connectWorkspace.connectExistingAlias()}
+      />
 
-      <section className="status-strip">
-        <article className={`status-pill ${statusTone(healthStatus)}`}>
-          <span>API Health</span>
-          <strong>{healthStatus}</strong>
-        </article>
-        <article className={`status-pill ${statusTone(readyStatus)}`}>
-          <span>API Ready</span>
-          <strong>{readyStatus}</strong>
-        </article>
-        <article className={`status-pill ${statusTone(connectWorkspace.sessionStatus)}`}>
-          <span>Org Session</span>
-          <strong>{connectWorkspace.sessionStatus}</strong>
-        </article>
-        <article className={`status-pill ${trustTone(askWorkspace.askTrust)}`}>
-          <span>Ask Trust</span>
-          <strong>{askWorkspace.askTrust}</strong>
-        </article>
-      </section>
+      <StatusStrip
+        healthStatus={shellRuntime.healthStatus}
+        readyStatus={shellRuntime.readyStatus}
+        sessionStatus={connectWorkspace.sessionStatus}
+        askTrust={askWorkspace.askTrust}
+      />
 
       <section className="workspace-grid">
         <aside className="left-nav panel">
@@ -338,7 +285,11 @@ export default function Page(): JSX.Element {
               askReplayToken={askWorkspace.askReplayToken}
               askCitations={askWorkspace.askCitations}
               loading={loading}
-              trustTone={trustTone}
+              trustTone={(trustLevel) => {
+                if (trustLevel === 'trusted') return 'good';
+                if (trustLevel === 'conditional' || trustLevel === 'waiting') return 'muted';
+                return 'bad';
+              }}
               onRunAsk={() => void askWorkspace.runAsk(parseOptionalInt(askWorkspace.maxCitationsRaw) ?? 5)}
               onRunAskElaboration={() => void askWorkspace.runAskElaboration(parseOptionalInt(askWorkspace.maxCitationsRaw) ?? 5)}
               onOpenConnect={() => setUiTab('connect')}
@@ -568,10 +519,10 @@ export default function Page(): JSX.Element {
             <pre>{responseText || '{\n  "hint": "Run an action to view response"\n}'}</pre>
           </details>
 
-          {readyDetails ? (
+          {shellRuntime.readyDetails ? (
             <details>
               <summary>Ready Details</summary>
-              <pre>{readyDetails}</pre>
+              <pre>{shellRuntime.readyDetails}</pre>
             </details>
           ) : null}
         </aside>

@@ -247,6 +247,8 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - Refresh state and actions now live under `apps/web/app/workspaces/refresh/`
   - Org session alias, status, preflight, and session lifecycle state are no longer owned directly by `apps/web/app/page.tsx`
   - Connect state and actions now live under `apps/web/app/workspaces/connect/use-connect-workspace.ts`
+  - Shell health/ready orchestration is no longer owned directly by `apps/web/app/page.tsx`
+  - shell runtime state and top-level status rendering now live under `apps/web/app/shell/`
 - The next live architectural priority is to keep moving runtime expectations into the shell:
   - move remaining System/shared shell orchestration out of `apps/web/app/page.tsx`
   - then decide whether packaged smoke should grow into an authenticated org-session attach workflow
