@@ -561,3 +561,25 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns the `Org Browser` render tree inline.
 - The remaining large inline workspace in the page shell is `Settings & Diagnostics`, plus shared shell/orchestration state.
 - The next narrow slice is extracting `Settings & Diagnostics` out of `apps/web/app/page.tsx`.
+
+## Entry 16: Phase 5 System Workspace Extraction
+
+### Change
+- Extracted `Settings & Diagnostics` rendering out of `apps/web/app/page.tsx`.
+- Added `apps/web/app/workspaces/system/system-workspace.tsx`.
+- Kept meta-context, meta-adapt, and org-status request orchestration in the page shell so this stays a presentation-only slice.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - typed boundary route output remained unchanged after the workspace move
+
+### Outcome
+- `page.tsx` no longer owns the `Settings & Diagnostics` render tree inline.
+- The page shell is now mostly shared shell state, workflow orchestration, and the operator rail.
+- The next narrow slice is extracting Browser/System state or shared shell orchestration out of `apps/web/app/page.tsx`.

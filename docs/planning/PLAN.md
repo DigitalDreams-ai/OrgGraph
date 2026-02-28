@@ -239,6 +239,8 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
 - Phase 5 modular UI reconstruction is now moving again:
   - `Org Browser` rendering is no longer inlined inside `apps/web/app/page.tsx`
   - browser types and rendering now live under `apps/web/app/workspaces/browser/`
+  - `Settings & Diagnostics` rendering is no longer inlined inside `apps/web/app/page.tsx`
+  - system rendering now lives under `apps/web/app/workspaces/system/`
 - The next live architectural priority is to keep moving runtime expectations into the shell:
-  - shrink the page shell further so System stops shaping engine requests inline
+  - move Browser/System state and shell orchestration out of `apps/web/app/page.tsx`
   - then decide whether packaged smoke should grow into an authenticated org-session attach workflow

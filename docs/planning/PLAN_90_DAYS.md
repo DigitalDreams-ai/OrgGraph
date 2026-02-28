@@ -185,8 +185,11 @@ Progress note:
 - Slice 1 completed:
   - `Org Browser` rendering moved out of `apps/web/app/page.tsx`
   - browser types now live under `apps/web/app/workspaces/browser/`
+- Slice 2 completed:
+  - `Settings & Diagnostics` rendering moved out of `apps/web/app/page.tsx`
+  - system rendering now lives under `apps/web/app/workspaces/system/`
 - Next narrow step:
-  - extract the `Settings & Diagnostics` workspace out of `apps/web/app/page.tsx`
+  - move Browser/System state or shared shell orchestration out of `apps/web/app/page.tsx`
   - then reassess whether the remaining page shell is small enough to pivot back to deeper runtime or org-session proof work
 
 ## Determinism and Replay Harness Plan

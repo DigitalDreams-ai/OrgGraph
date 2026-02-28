@@ -33,6 +33,7 @@ import type {
 } from './workspaces/connect/types';
 import { ProofsWorkspace } from './workspaces/proofs/proofs-workspace';
 import { useProofsWorkspace } from './workspaces/proofs/use-proofs-workspace';
+import { SystemWorkspace } from './workspaces/system/system-workspace';
 import type {
   MetadataCatalogPayload,
   MetadataMembersPayload,
@@ -801,19 +802,14 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
           )}
 
           {uiTab === 'system' && (
-            <>
-              <h2>Settings &amp; Diagnostics</h2>
-              <p className="section-lead">Operational context, adaptation dry-run, runtime health, and local diagnostics.</p>
-              <label className="check-row" htmlFor="metaDryRun">
-                <input id="metaDryRun" type="checkbox" checked={metaDryRun} onChange={(e) => setMetaDryRun(e.target.checked)} />
-                Meta Adapt Dry Run
-              </label>
-              <div className="action-row">
-                <button type="button" onClick={() => void runQuery('metaContext')} disabled={loading}>Meta Context</button>
-                <button type="button" onClick={() => void runQuery('metaAdapt', { dryRun: metaDryRun })} disabled={loading}>Meta Adapt (Dry Run)</button>
-                <button type="button" onClick={() => void runOrgQuery('orgStatus')} disabled={loading}>Org Status</button>
-              </div>
-            </>
+            <SystemWorkspace
+              metaDryRun={metaDryRun}
+              setMetaDryRun={setMetaDryRun}
+              loading={loading}
+              onLoadMetaContext={() => void runQuery('metaContext')}
+              onRunMetaAdapt={() => void runQuery('metaAdapt', { dryRun: metaDryRun })}
+              onLoadOrgStatus={() => void runOrgQuery('orgStatus')}
+            />
           )}
         </section>
 
