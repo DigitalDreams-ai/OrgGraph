@@ -15,8 +15,8 @@ Objective: move Orgumented onto a desktop-native runtime foundation before furth
 - [ ] Define local process lifecycle for launching and stopping the NestJS engine.
 - [x] Define local app data root and storage paths for graph, evidence, proofs, logs, and history.
 - [x] Create a single tool-adapter boundary around `sf` and `cci`.
-- [ ] Implement local alias discovery from `sf org list --json`.
-- [ ] Implement local alias validation from `sf org display --target-org <alias> --json`.
+- [x] Implement local alias discovery from `sf org list --json`.
+- [x] Implement local alias validation from `sf org display --target-org <alias> --json`.
 - [ ] Implement attach/switch/disconnect session flows without Docker/runtime indirection.
 - [ ] Remove browser-broker, VNC, and other headless browser auth experiments from the target design and active runtime plan.
 - [ ] Remove remaining primary-doc instructions that treat Docker as required product runtime.
