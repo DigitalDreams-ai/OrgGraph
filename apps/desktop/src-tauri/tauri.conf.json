@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Orgumented",
+  "version": "0.1.0",
+  "identifier": "com.orgumented.desktop",
+  "build": {
+    "beforeDevCommand": "pnpm --filter web dev -- --hostname 127.0.0.1 --port 3001",
+    "devUrl": "http://127.0.0.1:3001",
+    "beforeBuildCommand": "pnpm --filter web build",
+    "frontendDist": "../web/.next"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Orgumented",
+        "width": 1440,
+        "height": 960,
+        "minWidth": 1200,
+        "minHeight": 800,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all"
+  }
+}

@@ -6,6 +6,9 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm --filter api start:dev",
+    "desktop:dev": "pnpm --filter desktop dev",
+    "desktop:build": "pnpm --filter desktop build",
+    "desktop:info": "pnpm --filter desktop info",
     "lint": "pnpm -r lint",
     "mcp:project-memory": "./scripts/project-memory-mcp.sh",
     "test": "pnpm -r test",
