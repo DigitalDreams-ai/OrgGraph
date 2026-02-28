@@ -140,7 +140,7 @@ function resolveErrorMessage(data: QueryResponse): string {
     payloadErrorHint ||
     payloadError ||
     topError ||
-    'Request failed. Check API readiness, query format, and container health. Use /api/ready and /metrics for diagnosis.'
+    'Request failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.'
   );
 }
 
@@ -308,7 +308,7 @@ export default function Page(): JSX.Element {
       const fallback: QueryResponse = { ok: false, error: { message } };
       setResponseData(fallback);
       setResponseText(pretty(fallback));
-      setErrorText('Request failed. Check API readiness, query format, and container health. Use /api/ready and /metrics for diagnosis.');
+      setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.');
       return null;
     } finally {
       setLoading(false);

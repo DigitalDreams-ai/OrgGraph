@@ -10,7 +10,7 @@
     "desktop:build": "pnpm --filter desktop build",
     "desktop:info": "pnpm --filter desktop info",
     "lint": "pnpm -r lint",
-    "mcp:project-memory": "./scripts/project-memory-mcp.sh",
+    "mcp:project-memory": "node ./scripts/project-memory-mcp.mjs",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "test:web-smoke": "./scripts/web-smoke.sh",

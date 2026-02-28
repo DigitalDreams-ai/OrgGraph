@@ -18,7 +18,7 @@ class StubToolAdapter {
 
   async probeCci(cwd: string) {
     this.calls.push({ command: 'cci', args: ['version'], cwd });
-    return this.ok('3.78.0');
+    return this.ok('4.5.0');
   }
 
   async ensureSfInstalled(cwd: string) {
@@ -124,7 +124,7 @@ async function run(): Promise<void> {
   const fakeConfig = {
     sfIntegrationEnabled: () => true,
     sfAuthMode: () => 'sf_cli_keychain' as const,
-    cciVersionPin: () => '3.78.0',
+    cciVersionPin: () => '4.5.0',
     sfAlias: () => 'orgumented-sandbox',
     sfProjectPath: () => sfProjectDir,
     sfParsePath: () => parsePath,

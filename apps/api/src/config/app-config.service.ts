@@ -211,7 +211,7 @@ export class AppConfigService {
   }
 
   cciVersionPin(): string {
-    return process.env.CCI_VERSION_PIN?.trim() || '3.78.0';
+    return process.env.CCI_VERSION_PIN?.trim() || '4.5.0';
   }
 
   sfAlias(): string {

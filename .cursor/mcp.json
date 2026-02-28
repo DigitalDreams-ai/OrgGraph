@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "project-memory": {
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/packages/project-memory-mcp/dist/index.js"
+      ],
+      "env": {
+        "ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT": "${workspaceFolder}",
+        "ORGUMENTED_PROJECT_MEMORY_PATH": "data/project-memory/events.jsonl"
+      }
+    }
+  }
+}

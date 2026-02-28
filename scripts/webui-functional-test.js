@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { chromium } = require('playwright');
 
-const BASE = process.env.WEB_BASE || 'http://host.docker.internal:3101';
+const BASE = process.env.WEB_BASE || 'http://127.0.0.1:3101';
 const outDir = '/work/artifacts';
 function now() { return new Date().toISOString(); }
 

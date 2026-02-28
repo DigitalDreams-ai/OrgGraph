@@ -106,25 +106,25 @@ function run() {
   assert.equal(stale.effectiveValidity, 'stale');
   assert.match(stale.invalidationReasons[0], /source_modified:/);
 
-  const expiringId = store.createRecordId('runtime_observation', 'Docker health', '2026-02-27T00:00:00.000Z');
+  const expiringId = store.createRecordId('runtime_observation', 'Desktop runtime health', '2026-02-27T00:00:00.000Z');
   store.putRecord({
     id: expiringId,
     recordType: 'runtime_observation',
-    title: 'Docker health',
-    summary: 'Observed unhealthy docker discovery root.',
+    title: 'Desktop runtime health',
+    summary: 'Observed unhealthy desktop runtime startup state.',
     createdAt: '2026-02-27T00:00:00.000Z',
     updatedAt: '2026-02-27T00:00:00.000Z',
     createdBy: 'codex',
-    sourceRefs: [{ kind: 'service', ref: 'docker' }],
+    sourceRefs: [{ kind: 'service', ref: 'desktop-runtime' }],
     confidence: 'medium',
     validity: 'advisory',
     scope: {
       area: 'project-memory',
-      paths: ['docker'],
+      paths: ['apps/desktop', 'apps/web', 'apps/api'],
       tags: ['runtime']
     },
     tags: ['runtime'],
-    service: 'docker',
+    service: 'desktop-runtime',
     observation: 'Discovery root mismatch when cwd is not explicit.',
     ttlSeconds: 1
   });

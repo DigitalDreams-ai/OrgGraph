@@ -37,7 +37,8 @@ async function run() {
     { capabilities: {} }
   );
   const transport = new StdioClientTransport({
-    command: path.join(__dirname, '..', '..', '..', 'scripts', 'project-memory-mcp.sh'),
+    command: process.execPath,
+    args: [path.join(__dirname, '..', '..', '..', 'scripts', 'project-memory-mcp.mjs')],
     cwd: path.join(__dirname, '..', '..', '..'),
     env,
     stderr: 'pipe'
