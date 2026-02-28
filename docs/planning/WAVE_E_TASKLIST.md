@@ -2,6 +2,11 @@
 
 Objective: expand from proof-backed explanation into simulation-backed decision guidance and production trust packaging.
 
+## Interpretation Update
+- Wave E remains valid.
+- It should build on the desktop-native foundation, not on the legacy browser-hosted/Docker-first runtime.
+- Simulation, risk, and commercialization work should not proceed in ways that deepen obsolete runtime assumptions.
+
 ## Scope
 - What-if simulation engine.
 - Permission/automation/release-risk guidance.
@@ -21,3 +26,5 @@ Objective: expand from proof-backed explanation into simulation-backed decision 
 - [ ] False-positive risk alerts reduced vs baseline.
 - [ ] Production readiness and commercialization artifacts complete.
 
+## Dependency Note
+- Future Wave E implementation should target the runtime established in [WAVE_F_TASKLIST.md](/volume1/data/projects/OrgGraph/docs/planning/WAVE_F_TASKLIST.md) and the UX patterns established in [WAVE_G_TASKLIST.md](/volume1/data/projects/OrgGraph/docs/planning/WAVE_G_TASKLIST.md).

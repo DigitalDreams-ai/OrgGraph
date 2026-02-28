@@ -2,6 +2,12 @@
 
 Objective: deliver a fresh workflow-native Next.js UI where Ask is the flagship and raw JSON is secondary.
 
+## Interpretation Update
+- Wave D remains valid as a capability target.
+- Its original browser-hosted implementation path is superseded by Wave G.
+- Do not implement Wave D as a standalone browser-hosted modernization track.
+- Use this wave to preserve the product requirements that must be realized in the desktop UX.
+
 ## Scope
 - Fresh Ask-first UI baseline (not legacy endpoint-console derivative).
 - Workflow-native tabs: Ask, Connect, Retrieve, Refresh, Analyze, Proofs, System.
@@ -23,3 +29,5 @@ Objective: deliver a fresh workflow-native Next.js UI where Ask is the flagship 
 - [ ] No legacy UI route required for core workflows.
 - [ ] New UI supports connect/retrieve/refresh/ask/proof end-to-end.
 
+## Implementation Note
+- Wave D requirements should now be delivered through [WAVE_G_TASKLIST.md](/volume1/data/projects/OrgGraph/docs/planning/WAVE_G_TASKLIST.md) on top of the desktop foundation defined in [WAVE_F_TASKLIST.md](/volume1/data/projects/OrgGraph/docs/planning/WAVE_F_TASKLIST.md).

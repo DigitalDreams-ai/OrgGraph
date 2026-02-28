@@ -2,6 +2,12 @@
 
 Objective: establish a reliable operator baseline and remove legacy runtime friction before deeper semantic/runtime work.
 
+## Interpretation Update
+- Wave A remains active where legacy removal is still incomplete.
+- The original web/Docker implementation framing is no longer the future-state product target.
+- Remaining Wave A work should be interpreted as legacy-removal and contract-hardening work that supports the desktop transition.
+- Any Wave A item that depends on browser-broker auth, VNC, or Docker as product runtime is obsolete.
+
 ## Scope
 - Remove legacy auth/session paths from primary workflows.
 - Enforce Salesforce CLI keychain baseline (`sf` + `cci`).
@@ -23,6 +29,12 @@ Objective: establish a reliable operator baseline and remove legacy runtime fric
 - [x] Retrieve works without package.xml requirement in standard workflows.
 - [x] Refresh uses non-fixture source path and succeeds.
 - [x] Failure classes are explicit and operator-actionable.
+
+## Remaining Relevant Wave A Work
+- close remaining legacy-auth removal items
+- make alias/session contracts explicit and stable
+- ensure selector-first retrieve remains the standard path
+- remove obsolete runtime/docs assumptions that conflict with the desktop target
 
 ## Evidence
 - Live `GET /api/ready` shows non-fixture source path: `/app/data/sf-project/force-app/main/default`.

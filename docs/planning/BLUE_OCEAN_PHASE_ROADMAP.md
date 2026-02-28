@@ -10,6 +10,27 @@ Turn Orgumented into a replayable semantic decision runtime for Salesforce archi
 - Active execution follows wave gates below.
 - No wave starts until all predecessor wave exit gates pass.
 
+## Wave Interpretation Update
+The roadmap now has two layers:
+
+1. Capability waves
+- Waves A-E define product capabilities and proof/trust goals.
+
+2. Platform transition waves
+- Waves F-G define the desktop-runtime cutover required to deliver the future-state product correctly.
+
+Interpretation rules:
+- Waves A-C remain valid capability foundations.
+- Wave D remains directionally valid, but its original browser-hosted UX framing is superseded by Wave G.
+- Wave E remains valid as later-stage product expansion.
+- Wave F is a prerequisite platform wave for the desktop-native future state.
+- Wave G is the desktop implementation of the fresh Ask-first UX target.
+
+Supersession rules:
+- Any wave item that assumes Docker as product runtime is obsolete.
+- Any wave item that assumes the browser-hosted operator UI is the long-term product surface is superseded by Waves F-G.
+- Any auth path outside Salesforce CLI keychain is legacy and should be treated as removal work under Wave A / Wave F.
+
 ## Wave A - Operator Baseline (Foundation)
 Scope:
 - remove legacy auth paths and duplicate session logic
@@ -68,6 +89,11 @@ Scope:
 - Ask as flagship primary pane
 - raw JSON as secondary operator view only
 - route-grouped workflows: Ask, Connect, Retrieve, Refresh, Analyze, Proofs, System
+
+Status interpretation:
+- Original Wave D intent is still valid.
+- Original browser-hosted implementation framing is superseded by Wave G.
+- Use Wave D as the capability target and Wave G as the desktop product implementation path.
 
 Entry prerequisites:
 - Wave C exit gates passed
@@ -137,6 +163,26 @@ Exit gates:
 4. Wave D -> required by E, G
 5. Wave E -> independent commercialization layer after D, may continue in parallel with late G hardening
 6. Wave F -> required by G
+
+## Practical Execution Order
+For the desktop-native program, the practical order is:
+1. close remaining relevant Wave A legacy-removal items
+2. preserve Wave B deterministic Ask core requirements
+3. preserve Wave C proof productization requirements
+4. execute Wave F desktop foundation and runtime cutover
+5. execute Wave G desktop Ask-first product UX
+6. continue Wave E simulation/risk/commercialization on the desktop foundation
+
+Execution note:
+- Wave D should no longer be implemented as a browser-hosted UX modernization track.
+- Its intended product outcomes should be realized through Wave G.
+
+## Remaining Relevance of Waves A-E
+- Wave A: still active where legacy removal, auth simplification, and selector-first retrieval are incomplete.
+- Wave B: still critical and architecture-defining.
+- Wave C: still critical and product-defining.
+- Wave D: capability target retained, implementation path moved to Wave G.
+- Wave E: still valid, but should build on the desktop runtime rather than the legacy web/Docker runtime.
 
 ## Program-Level Lift Targets
 - `Replay pass rate`: 100% for benchmark corpus.
