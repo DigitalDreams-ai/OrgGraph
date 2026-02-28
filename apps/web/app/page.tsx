@@ -1,6 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  exportAskMetrics,
+  getAskProof,
+  listAskProofsRecent,
+  replayAskProof,
+  runAskRequest,
+  type QueryResponse
+} from './lib/ask-client';
 
 type QueryKind =
   | 'refresh'
@@ -15,17 +23,12 @@ type QueryKind =
   | 'permsSystem'
   | 'automation'
   | 'impact'
-  | 'ask'
   | 'orgStatus'
   | 'orgRetrieve'
   | 'metadataCatalog'
   | 'metadataMembers'
   | 'metadataRetrieve'
   | 'refreshDiff'
-  | 'askProofsRecent'
-  | 'askProof'
-  | 'askReplay'
-  | 'askMetrics'
   | 'metaContext'
   | 'metaAdapt';
 
@@ -115,13 +118,6 @@ type OrgPreflightPayload = {
   issues?: Array<{ code?: string; severity?: string; message?: string; remediation?: string }>;
 };
 
-type QueryResponse = {
-  ok?: boolean;
-  statusCode?: number;
-  payload?: Record<string, unknown>;
-  error?: { message?: string };
-};
-
 const BUILD_VERSION = process.env.NEXT_PUBLIC_BUILD_VERSION || 'dev-local';
 const PRIMARY_TABS: Array<[UiTab, string, string]> = [
   ['ask', 'Ask', 'Decision packets, trust, and follow-up actions.'],
@@ -183,6 +179,7 @@ export default function Page(): JSX.Element {
   const [responseText, setResponseText] = useState('');
   const [responseData, setResponseData] = useState<QueryResponse | null>(null);
   const [errorText, setErrorText] = useState('');
+  const [askResult, setAskResult] = useState<AskPayload | null>(null);
 
   const [healthStatus, setHealthStatus] = useState('unknown');
   const [readyStatus, setReadyStatus] = useState('unknown');
@@ -231,17 +228,13 @@ export default function Page(): JSX.Element {
   const [replayToken, setReplayToken] = useState('');
   const [metaDryRun, setMetaDryRun] = useState(true);
 
-  const askPayload = useMemo(() => {
-    if (!responseData?.payload) return null;
-    return responseData.payload as AskPayload;
-  }, [responseData]);
   const activeAlias = orgSession?.activeAlias || orgStatus?.session?.activeAlias || orgStatus?.alias || orgAlias;
   const sessionStatus = orgSession?.status || orgStatus?.session?.status || 'unknown';
-  const askSummary = askPayload?.answer || askPayload?.deterministicAnswer || 'Run Ask to generate a decision packet.';
-  const askTrust = askPayload?.trustLevel || 'waiting';
-  const askProofId = askPayload?.proof?.proofId || '';
-  const askReplayToken = askPayload?.proof?.replayToken || '';
-  const askCitations = askPayload?.citations || [];
+  const askSummary = askResult?.answer || askResult?.deterministicAnswer || 'Run Ask to generate a decision packet.';
+  const askTrust = askResult?.trustLevel || 'waiting';
+  const askProofId = askResult?.proof?.proofId || '';
+  const askReplayToken = askResult?.proof?.replayToken || '';
+  const askCitations = askResult?.citations || [];
 
   useEffect(() => {
     try {
@@ -310,15 +303,10 @@ export default function Page(): JSX.Element {
         parsed = { ok: false, statusCode: res.status, error: { message: text } };
       }
 
-      setResponseData(parsed);
-      setResponseText(pretty(parsed));
+      presentResponse(parsed);
 
       if (!res.ok || parsed.ok === false) {
         setErrorText(resolveErrorMessage(parsed));
-      }
-
-      if (kind === 'ask' && parsed.payload) {
-        setAskElaboration('');
       }
       if ((kind === 'orgSession' || kind === 'orgSessionSwitch' || kind === 'orgSessionDisconnect') && parsed.payload) {
         setOrgSession(parsed.payload as OrgSessionPayload);
@@ -347,13 +335,17 @@ export default function Page(): JSX.Element {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected query failure';
       const fallback: QueryResponse = { ok: false, error: { message } };
-      setResponseData(fallback);
-      setResponseText(pretty(fallback));
+      presentResponse(fallback);
       setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.');
       return null;
     } finally {
       setLoading(false);
     }
+  }
+
+  function presentResponse(parsed: QueryResponse): void {
+    setResponseData(parsed);
+    setResponseText(pretty(parsed));
   }
 
   function toggleTypeSelection(type: string): void {
@@ -434,25 +426,163 @@ export default function Page(): JSX.Element {
   }
 
   async function runAsk(): Promise<void> {
-    await runQuery('ask', {
-      query: askQuery,
-      maxCitations: parseOptionalInt(maxCitationsRaw) ?? 5,
-      consistencyCheck,
-      includeLowConfidence
-    });
+    setLoading(true);
+    setCopied(false);
+    setErrorText('');
+
+    try {
+      const result = await runAskRequest({
+        query: askQuery,
+        maxCitations: parseOptionalInt(maxCitationsRaw) ?? 5,
+        consistencyCheck,
+        includeLowConfidence
+      });
+      presentResponse(result);
+
+      if (result.ok === false) {
+        setErrorText(resolveErrorMessage(result));
+        return;
+      }
+
+      const payload = result.payload as AskPayload | undefined;
+      if (payload) {
+        setAskResult(payload);
+        setAskElaboration('');
+        setProofId(payload.proof?.proofId || '');
+        setReplayToken(payload.proof?.replayToken || '');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected ask failure';
+      const fallback: QueryResponse = { ok: false, error: { message } };
+      presentResponse(fallback);
+      setErrorText('Ask failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function runAskElaboration(): Promise<void> {
     if (!askQuery.trim()) return;
-    const result = await runQuery('ask', {
-      query: `Provide a concise operator explanation for: ${askQuery}`,
-      maxCitations: parseOptionalInt(maxCitationsRaw) ?? 5,
-      consistencyCheck,
-      includeLowConfidence
-    });
-    const payload = result?.payload as AskPayload | undefined;
-    if (payload) {
-      setAskElaboration(payload.answer || payload.deterministicAnswer || 'No elaboration returned.');
+    setLoading(true);
+    setCopied(false);
+    setErrorText('');
+
+    try {
+      const result = await runAskRequest({
+        query: `Provide a concise operator explanation for: ${askQuery}`,
+        maxCitations: parseOptionalInt(maxCitationsRaw) ?? 5,
+        consistencyCheck,
+        includeLowConfidence
+      });
+      presentResponse(result);
+
+      if (result.ok === false) {
+        setErrorText(resolveErrorMessage(result));
+        return;
+      }
+
+      const payload = result.payload as AskPayload | undefined;
+      if (payload) {
+        setAskElaboration(payload.answer || payload.deterministicAnswer || 'No elaboration returned.');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected ask elaboration failure';
+      const fallback: QueryResponse = { ok: false, error: { message } };
+      presentResponse(fallback);
+      setErrorText('Ask elaboration failed. Check API readiness, query format, and local runtime health.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function runAskProofsRecent(): Promise<void> {
+    setLoading(true);
+    setCopied(false);
+    setErrorText('');
+
+    try {
+      const result = await listAskProofsRecent(parseOptionalInt(limitRaw) ?? 20);
+      presentResponse(result);
+      if (result.ok === false) {
+        setErrorText(resolveErrorMessage(result));
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected recent proofs failure';
+      const fallback: QueryResponse = { ok: false, error: { message } };
+      presentResponse(fallback);
+      setErrorText('Proof history request failed. Check API readiness and local runtime health.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function runAskProofLookup(): Promise<void> {
+    if (!proofId.trim()) return;
+
+    setLoading(true);
+    setCopied(false);
+    setErrorText('');
+
+    try {
+      const result = await getAskProof(proofId.trim());
+      presentResponse(result);
+      if (result.ok === false) {
+        setErrorText(resolveErrorMessage(result));
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected proof lookup failure';
+      const fallback: QueryResponse = { ok: false, error: { message } };
+      presentResponse(fallback);
+      setErrorText('Proof lookup failed. Check API readiness and local runtime health.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function runAskReplay(): Promise<void> {
+    if (!proofId.trim() && !replayToken.trim()) return;
+
+    setLoading(true);
+    setCopied(false);
+    setErrorText('');
+
+    try {
+      const result = await replayAskProof({
+        replayToken: replayToken.trim() || undefined,
+        proofId: proofId.trim() || undefined
+      });
+      presentResponse(result);
+      if (result.ok === false) {
+        setErrorText(resolveErrorMessage(result));
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected replay failure';
+      const fallback: QueryResponse = { ok: false, error: { message } };
+      presentResponse(fallback);
+      setErrorText('Replay failed. Check API readiness and local runtime health.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function runAskMetricsExport(): Promise<void> {
+    setLoading(true);
+    setCopied(false);
+    setErrorText('');
+
+    try {
+      const result = await exportAskMetrics();
+      presentResponse(result);
+      if (result.ok === false) {
+        setErrorText(resolveErrorMessage(result));
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected metrics export failure';
+      const fallback: QueryResponse = { ok: false, error: { message } };
+      presentResponse(fallback);
+      setErrorText('Metrics export failed. Check API readiness and local runtime health.');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -629,7 +759,7 @@ export default function Page(): JSX.Element {
                   <p className="decision-answer">{askSummary}</p>
                   <div className="decision-meta">
                     <span className={`decision-badge ${trustTone(askTrust)}`}>Trust: {askTrust}</span>
-                    <span className="decision-badge muted">Confidence: {typeof askPayload?.confidence === 'number' ? askPayload.confidence : 'n/a'}</span>
+                    <span className="decision-badge muted">Confidence: {typeof askResult?.confidence === 'number' ? askResult.confidence : 'n/a'}</span>
                   </div>
                   {askElaboration ? (
                     <>
@@ -644,10 +774,10 @@ export default function Page(): JSX.Element {
                 <article className="sub-card decision-card">
                   <p className="panel-caption">Proof context</p>
                   <h3>Why this answer is trusted</h3>
-                  <p><strong>Policy:</strong> {askPayload?.policy?.policyId || 'n/a'}</p>
+                  <p><strong>Policy:</strong> {askResult?.policy?.policyId || 'n/a'}</p>
                   <p><strong>Proof ID:</strong> {askProofId || 'n/a'}</p>
                   <p><strong>Replay token:</strong> {askReplayToken || 'n/a'}</p>
-                  <p><strong>Snapshot:</strong> {askPayload?.proof?.snapshotId || 'n/a'}</p>
+                  <p><strong>Snapshot:</strong> {askResult?.proof?.snapshotId || 'n/a'}</p>
                 </article>
 
                 <article className="sub-card decision-card">
@@ -1137,10 +1267,10 @@ cci org import ${orgAlias} <sf-username>`}</pre>
               </div>
 
               <div className="action-row">
-                <button type="button" onClick={() => void runQuery('askProofsRecent', { limit: parseOptionalInt(limitRaw) ?? 20 })} disabled={loading}>List Recent Proofs</button>
-                <button type="button" onClick={() => void runQuery('askProof', { proofId })} disabled={loading || !proofId.trim()}>Get Proof</button>
-                <button type="button" onClick={() => void runQuery('askReplay', { replayToken, proofId })} disabled={loading || (!proofId.trim() && !replayToken.trim())}>Replay Proof</button>
-                <button type="button" onClick={() => void runQuery('askMetrics')} disabled={loading}>Export Metrics</button>
+                <button type="button" onClick={() => void runAskProofsRecent()} disabled={loading}>List Recent Proofs</button>
+                <button type="button" onClick={() => void runAskProofLookup()} disabled={loading || !proofId.trim()}>Get Proof</button>
+                <button type="button" onClick={() => void runAskReplay()} disabled={loading || (!proofId.trim() && !replayToken.trim())}>Replay Proof</button>
+                <button type="button" onClick={() => void runAskMetricsExport()} disabled={loading}>Export Metrics</button>
               </div>
             </>
           )}
@@ -1178,8 +1308,8 @@ cci org import ${orgAlias} <sf-username>`}</pre>
           <div className="sub-card">
             <h3>Trust Envelope</h3>
             <p><strong>Trust:</strong> {askTrust}</p>
-            <p><strong>Confidence:</strong> {typeof askPayload?.confidence === 'number' ? askPayload.confidence : 'n/a'}</p>
-            <p><strong>Policy ID:</strong> {askPayload?.policy?.policyId || 'n/a'}</p>
+            <p><strong>Confidence:</strong> {typeof askResult?.confidence === 'number' ? askResult.confidence : 'n/a'}</p>
+            <p><strong>Policy ID:</strong> {askResult?.policy?.policyId || 'n/a'}</p>
             <p><strong>Proof ID:</strong> {askProofId || 'n/a'}</p>
             <p><strong>Replay Token:</strong> {askReplayToken || 'n/a'}</p>
           </div>

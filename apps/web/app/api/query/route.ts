@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3100';
-const WEB_LOG_ENABLED = (process.env.ORGUMENTED_WEB_LOG_ENABLED || 'false').trim().toLowerCase() === 'true';
+import { API_BASE, fetchWithRetry, upstreamErrorResponse } from '../_lib/upstream';
 
 type QueryKind =
   | 'refresh'
@@ -16,7 +14,6 @@ type QueryKind =
   | 'permsSystem'
   | 'automation'
   | 'impact'
-  | 'ask'
   | 'orgStatus'
   | 'orgRetrieve'
   | 'metadataCatalog'
@@ -26,10 +23,6 @@ type QueryKind =
   | 'askArchitecture'
   | 'askSimulate'
   | 'askSimulateCompare'
-  | 'askProofsRecent'
-  | 'askProof'
-  | 'askReplay'
-  | 'askMetrics'
   | 'askTrustDashboard'
   | 'metaContext'
   | 'metaAdapt';
@@ -99,35 +92,6 @@ function summarizeUpstreamPayload(kind: QueryKind, upstreamPayload: unknown): un
     },
     driftReportPath: payload.driftReportPath
   };
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function fetchWithRetry(url: string, init: RequestInit, attempts = 3): Promise<Response> {
-  let lastError: Error | undefined;
-
-  for (let i = 0; i < attempts; i += 1) {
-    try {
-      const res = await fetch(url, init);
-      if (res.status === 502 || res.status === 503 || res.status === 504) {
-        if (i < attempts - 1) {
-          await sleep(200 * (i + 1));
-          continue;
-        }
-      }
-      return res;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error('unknown fetch error');
-      if (i < attempts - 1) {
-        await sleep(200 * (i + 1));
-        continue;
-      }
-    }
-  }
-
-  throw lastError ?? new Error('request failed after retries');
 }
 
 function buildUpstream(request: QueryRequest): { url: string; init: RequestInit } {
@@ -290,35 +254,6 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
     };
   }
 
-  if (request.kind === 'askProofsRecent') {
-    const params = new URLSearchParams();
-    appendParam(params, 'limit', body.limit);
-    return { url: `${API_BASE}/ask/proofs/recent?${params.toString()}`, init: { method: 'GET' } };
-  }
-
-  if (request.kind === 'askProof') {
-    const proofId = typeof body.proofId === 'string' ? body.proofId : '';
-    return { url: `${API_BASE}/ask/proof/${encodeURIComponent(proofId)}`, init: { method: 'GET' } };
-  }
-
-  if (request.kind === 'askReplay') {
-    return {
-      url: `${API_BASE}/ask/replay`,
-      init: {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          replayToken: body.replayToken,
-          proofId: body.proofId
-        })
-      }
-    };
-  }
-
-  if (request.kind === 'askMetrics') {
-    return { url: `${API_BASE}/ask/metrics/export`, init: { method: 'GET' } };
-  }
-
   if (request.kind === 'askTrustDashboard') {
     return { url: `${API_BASE}/ask/trust/dashboard`, init: { method: 'GET' } };
   }
@@ -384,20 +319,7 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
     return { url: `${API_BASE}/impact?${params.toString()}`, init: { method: 'GET' } };
   }
 
-  return {
-    url: `${API_BASE}/ask`,
-    init: {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        query: body.query,
-        maxCitations: typeof body.maxCitations === 'number' ? body.maxCitations : 5,
-        includeLowConfidence: typeof body.includeLowConfidence === 'boolean' ? body.includeLowConfidence : undefined,
-        consistencyCheck: typeof body.consistencyCheck === 'boolean' ? body.consistencyCheck : undefined,
-        context: typeof body.context === 'object' && body.context !== null ? body.context : undefined
-      })
-    }
-  };
+  throw new Error(`unsupported query kind: ${request.kind}`);
 }
 
 export async function POST(req: Request): Promise<NextResponse> {
@@ -426,7 +348,6 @@ export async function POST(req: Request): Promise<NextResponse> {
         'permsSystem',
         'automation',
         'impact',
-        'ask',
         'orgStatus',
         'orgRetrieve',
         'metadataCatalog',
@@ -434,10 +355,6 @@ export async function POST(req: Request): Promise<NextResponse> {
         'metadataRetrieve',
         'refreshDiff',
         'askArchitecture',
-        'askProofsRecent',
-        'askProof',
-        'askReplay',
-        'askMetrics',
         'metaContext',
         'metaAdapt'
       ].includes(kind)
@@ -450,9 +367,6 @@ export async function POST(req: Request): Promise<NextResponse> {
 
     const payload = (json.payload ?? json.params) as Record<string, unknown> | undefined;
     const upstream = buildUpstream({ kind, payload });
-    if (WEB_LOG_ENABLED) {
-      console.log(`[web] POST /api/query kind=${kind} -> ${upstream.url}`);
-    }
     const upstreamRes = await fetchWithRetry(upstream.url, { ...upstream.init, cache: 'no-store' });
 
     const contentType = upstreamRes.headers.get('content-type') ?? '';
@@ -465,26 +379,11 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
 
     const upstreamPayload = summarizeUpstreamPayload(kind, await upstreamRes.json());
-    if (WEB_LOG_ENABLED) {
-      console.log(`[web] POST /api/query kind=${kind} status=${upstreamRes.status}`);
-    }
     return NextResponse.json(
       { ok: upstreamRes.ok, statusCode: upstreamRes.status, payload: upstreamPayload },
       { status: upstreamRes.status }
     );
   } catch (error) {
-    if (WEB_LOG_ENABLED) {
-      const message = error instanceof Error ? error.message : 'Unexpected query route error';
-      console.error(`[web] POST /api/query failed: ${message}`);
-    }
-    return NextResponse.json(
-      {
-        error: {
-          code: 'UPSTREAM_ERROR',
-          message: error instanceof Error ? error.message : 'Unexpected query route error'
-        }
-      },
-      { status: 502 }
-    );
+    return upstreamErrorResponse('POST /api/query', error);
   }
 }
