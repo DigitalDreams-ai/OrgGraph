@@ -1136,3 +1136,25 @@ Branch: `dna-foundation`
 ### Outcome
 - The packaged smoke harness is now more deterministic under repeated local verification on Windows.
 - Further Phase 4 work should be justified by architectural need, not by cleanup gaps in the current packaged proof path.
+
+## Entry 32: Assert Deterministic Ask in Packaged Smoke
+
+### Change
+- Updated `scripts/desktop-release-smoke.ps1` so packaged smoke now:
+  - sends the same `/ask` request twice to the packaged desktop runtime
+  - writes the repeated response to `logs/desktop-release-smoke-ask-repeat.json`
+  - fails if `proofId` or `replayToken` differ between the two responses
+- The packaged smoke result now also records `askReplayToken`.
+
+### Verification
+1. `$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH='1'; pnpm desktop:smoke:release`
+- Result: passed
+- Proof:
+  - `status=passed`
+  - `askProofId=proof_dd7bcb4c6e249d0ebae058a6`
+  - `askReplayToken=trace_f64fd67605f1ed56028f0e73`
+  - `logs/desktop-release-smoke-ask-repeat.json` was written alongside the original ask artifact
+
+### Outcome
+- The packaged desktop proof path now checks the core deterministic Ask contract directly, not just service availability.
+- This is a better use of Phase 4 verification than further payload-only pruning unless a new runtime risk appears.

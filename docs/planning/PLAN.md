@@ -249,6 +249,12 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
     - `logs/desktop-release-smoke-session-switch.json`
     - `logs/desktop-release-smoke-session-restore.json`
   - packaged smoke cleanup now tears down the bundled `node.exe` child correctly on Windows
+- Packaged deterministic Ask proof now exists:
+  - `scripts/desktop-release-smoke.ps1` issues the same `/ask` request twice against the packaged desktop runtime
+  - the packaged smoke now fails if `proofId` or `replayToken` diverge across repeated identical requests
+  - current packaged proof remained stable at:
+    - `proofId=proof_dd7bcb4c6e249d0ebae058a6`
+    - `replayToken=trace_f64fd67605f1ed56028f0e73`
 - Packaged API payload hardening now exists:
   - `apps/desktop/scripts/prepare-packaged-runtime.mjs` now prunes build-only baggage from `apps/desktop/src-tauri/runtime/api`
   - staged payload dropped from about `24.09 MB` to about `13.93 MB`

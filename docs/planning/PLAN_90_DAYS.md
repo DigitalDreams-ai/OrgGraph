@@ -194,6 +194,11 @@ Progress note:
 - Slice 11 completed:
   - `scripts/desktop-release-smoke.ps1` now kills any leftover listener on port `3100` before launch and waits for the port to release
   - two consecutive packaged smoke runs passed with attach, switch, and restore verification enabled
+- Slice 12 completed:
+  - packaged smoke now issues the same `/ask` request twice and asserts stable `proofId` plus `replayToken`
+  - deterministic packaged Ask proof passed with:
+    - `proofId=proof_dd7bcb4c6e249d0ebae058a6`
+    - `replayToken=trace_f64fd67605f1ed56028f0e73`
 - Next narrow step:
   - reassess whether any additional packaged-runtime pruning still buys enough to justify another slice
   - stop if the remaining potential wins are mostly cosmetic rather than architectural

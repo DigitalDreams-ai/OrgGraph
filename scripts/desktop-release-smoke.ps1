@@ -8,6 +8,7 @@ $stderrLog = Join-Path $logsDir 'desktop-release-smoke.stderr.log'
 $healthArtifact = Join-Path $logsDir 'desktop-release-smoke-health.json'
 $readyArtifact = Join-Path $logsDir 'desktop-release-smoke-ready.json'
 $askArtifact = Join-Path $logsDir 'desktop-release-smoke-ask.json'
+$askRepeatArtifact = Join-Path $logsDir 'desktop-release-smoke-ask-repeat.json'
 $orgStatusArtifact = Join-Path $logsDir 'desktop-release-smoke-org-status.json'
 $sessionBeforeArtifact = Join-Path $logsDir 'desktop-release-smoke-session-before.json'
 $sessionAliasesArtifact = Join-Path $logsDir 'desktop-release-smoke-session-aliases.json'
@@ -171,7 +172,7 @@ if (-not (Test-Path $exePath)) {
 }
 
 New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
-Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $resultArtifact -ErrorAction SilentlyContinue
+Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $resultArtifact -ErrorAction SilentlyContinue
 
 $desktopProcess = $null
 $sessionBefore = $null
@@ -211,6 +212,20 @@ try {
   }
   if (-not $ask.proof -or [string]::IsNullOrWhiteSpace($ask.proof.proofId) -or [string]::IsNullOrWhiteSpace($ask.proof.replayToken)) {
     throw 'Ask response missing deterministic proof identifiers'
+  }
+  $askRepeat = Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:3100/ask' -ContentType 'application/json' -Body $askBody
+  $askRepeat | ConvertTo-Json -Depth 12 | Set-Content -Path $askRepeatArtifact
+  if ([string]::IsNullOrWhiteSpace($askRepeat.trustLevel)) {
+    throw 'Repeated ask response missing trustLevel'
+  }
+  if (-not $askRepeat.proof -or [string]::IsNullOrWhiteSpace($askRepeat.proof.proofId) -or [string]::IsNullOrWhiteSpace($askRepeat.proof.replayToken)) {
+    throw 'Repeated ask response missing deterministic proof identifiers'
+  }
+  if ($ask.proof.proofId -ne $askRepeat.proof.proofId) {
+    throw "Repeated ask changed proofId from $($ask.proof.proofId) to $($askRepeat.proof.proofId)"
+  }
+  if ($ask.proof.replayToken -ne $askRepeat.proof.replayToken) {
+    throw "Repeated ask changed replayToken from $($ask.proof.replayToken) to $($askRepeat.proof.replayToken)"
   }
 
   $orgStatus = Invoke-JsonGet -Url 'http://127.0.0.1:3100/org/status' -ArtifactPath $orgStatusArtifact
@@ -280,6 +295,7 @@ try {
     'logs/desktop-release-smoke-health.json'
     'logs/desktop-release-smoke-ready.json'
     'logs/desktop-release-smoke-ask.json'
+    'logs/desktop-release-smoke-ask-repeat.json'
     'logs/desktop-release-smoke-org-status.json'
     'logs/desktop-release-smoke-session-before.json'
     'logs/desktop-release-smoke-session-aliases.json'
@@ -303,6 +319,7 @@ try {
     readyStatus = $ready.status
     askTrustLevel = $ask.trustLevel
     askProofId = $ask.proof.proofId
+    askReplayToken = $ask.proof.replayToken
     sessionConnectStatus = $sessionConnectStatus
     sessionConnectAlias = $sessionConnectAlias
     sessionSwitchStatus = $sessionSwitchStatus
