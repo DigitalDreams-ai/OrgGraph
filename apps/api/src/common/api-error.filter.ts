@@ -63,6 +63,16 @@ export class ApiErrorFilter implements ExceptionFilter {
       message = exception.message || message;
     }
 
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      const stack =
+        exception instanceof Error && typeof exception.stack === 'string'
+          ? exception.stack
+          : String(exception);
+      console.error(
+        `[api-error] ${request.method} ${request.url} -> ${status}: ${message}\n${stack}`
+      );
+    }
+
     response.status(status).json({
       error: {
         code: mapStatusToCode(status),
@@ -78,4 +88,3 @@ export class ApiErrorFilter implements ExceptionFilter {
     });
   }
 }
-

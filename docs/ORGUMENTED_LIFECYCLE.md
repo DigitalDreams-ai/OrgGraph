@@ -5,19 +5,19 @@ This document describes how Orgumented works end-to-end, from startup through re
 ## 1. Startup and Configuration
 - API loads environment configuration (`GRAPH_BACKEND`, data paths, Salesforce auth settings, logging flags).
 - API initializes graph backend (`sqlite` or `postgres`) and ensures schema/tables exist.
-- Web starts as an operator UI/proxy over API.
+- Embedded UI starts as a local operator UI/proxy over API.
 - Health and readiness endpoints come online.
 
 ## 2. Metadata Source Setup
 - Orgumented reads metadata from either:
   - fixture path (`fixtures/permissions`) for controlled testing, or
   - retrieved Salesforce source (`data/sf-project/force-app/main/default`) for sandbox/live usage.
-- `manifest/package.xml` can define retrieved metadata scope, but package.xml-all retrieval is not the preferred default operator path.
+- Retrieval scope is selector-driven (`--metadata`) through metadata browser/API contracts, not manifest/package.xml in standard operator workflows.
 - Planned Phase 19 UX adds org-wide selective retrieval via metadata browser (expand/select/search across metadata types).
 
 ## 3. Salesforce Retrieval (Optional but Typical)
-- Current auth flow supports SFDX URL, OAuth refresh token, or JWT mode.
-- Planned Phase 18 primary path is WebUI-first auth via `cci` (CumulusCI `3.78.0`), with legacy OAuth retained during migration.
+- Auth is Salesforce CLI keychain only (`sf org login web --alias ... --instance-url ... --set-default`).
+- API/Web connect operations verify alias availability through `sf org display --target-org <alias> --json`.
 - Retrieve command pulls metadata into `SF_PROJECT_PATH`.
 - Retrieve-refresh pipeline can then trigger API refresh to rebuild graph from latest source.
 
@@ -102,9 +102,9 @@ This document describes how Orgumented works end-to-end, from startup through re
 ## 13. Observability and Operations
 - Metrics interceptor records route status and latency.
 - `/metrics` exposes request metrics and DB backend.
-- Logging supports detailed Dozzle visibility with reduced readiness-noise filtering.
+- Logging supports detailed local runtime visibility with reduced readiness-noise filtering.
 - `/ready` reports the active fixtures path for the current runtime context and ignores stale cross-runtime state paths.
-- Docker healthchecks keep services supervised.
+- Desktop runtime health is verified through local readiness probes and shell-managed process supervision.
 
 ## 14. Iteration Loop
 - Retrieve latest metadata.
@@ -170,7 +170,7 @@ flowchart TD
     U --> W
     V --> W
 
-    S --> X["/metrics + logs + Dozzle"]
+    S --> X["/metrics + local runtime logs"]
 ```
 
 ## Visual: Runtime Components
@@ -194,5 +194,5 @@ graph LR
     Query --> Evidence
 
     API --> Metrics[Metrics + Logs]
-    Metrics --> Dozzle[Dozzle / Docker Logs]
+    Metrics --> Logs[Local Runtime Logs]
 ```

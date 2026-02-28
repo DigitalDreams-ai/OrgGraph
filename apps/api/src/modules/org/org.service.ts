@@ -1,16 +1,10 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import fs from 'node:fs';
 import path from 'node:path';
-import {
-  resolveSfAuthCodePath,
-  resolveSfManifestPath,
-  resolveSfParsePath,
-  resolveSfProjectPath,
-  resolveSfTokenStorePath
-} from '../../common/path';
 import { AppConfigService } from '../../config/app-config.service';
+import { RuntimePathsService } from '../../config/runtime-paths.service';
 import { IngestionService } from '../ingestion/ingestion.service';
-import { CommandRunnerService } from './command-runner.service';
+import { OrgToolAdapterService } from './org-tool-adapter.service';
 import type {
   OrgMetadataCatalogResponse,
   OrgMetadataMembersResponse,
@@ -19,11 +13,16 @@ import type {
   OrgPreflightResponse,
   OrgRetrieveRequest,
   OrgRetrieveResponse,
+  OrgSessionAliasValidationResponse,
+  OrgSessionAliasesResponse,
   OrgSessionDisconnectResponse,
+  OrgSessionConnectRequest,
+  OrgSessionConnectResponse,
   OrgSessionStatusResponse,
   OrgSessionSwitchResponse,
   OrgStatusResponse,
-  OrgStepResult
+  OrgStepResult,
+  OrgAuthMode
 } from './org.types';
 
 @Injectable()
@@ -32,30 +31,28 @@ export class OrgService {
 
   constructor(
     private readonly configService: AppConfigService,
+    private readonly runtimePaths: RuntimePathsService,
     private readonly ingestionService: IngestionService,
-    private readonly commandRunner: CommandRunnerService
+    private readonly orgToolAdapter: OrgToolAdapterService
   ) {}
 
   async status(): Promise<OrgStatusResponse> {
     const integrationEnabled = this.configService.sfIntegrationEnabled();
     const authMode = this.configService.sfAuthMode();
     const alias = this.resolveActiveAlias();
-    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
-    const cciRequiredVersion = this.configService.cciVersionPin();
+    const projectPath = this.runtimePaths.sfProjectPath();
+    this.ensureProjectScaffold(projectPath);
 
-    const sfProbe = await this.probeCommand('sf', ['--version'], projectPath);
-    const cciProbe = await this.probeCommand('cci', ['version'], projectPath);
-    const cciVersion = this.extractCciVersion(cciProbe.stdout, cciProbe.stderr);
-    const cciVersionPinned = cciProbe.exitCode === 0 && cciVersion === cciRequiredVersion;
+    const sfProbe = await this.orgToolAdapter.probeSf(projectPath);
+    const cciProbe = await this.orgToolAdapter.probeCci(projectPath);
+    const cciVersion = this.orgToolAdapter.extractCciVersion(cciProbe.stdout, cciProbe.stderr);
+    const cciRequiredVersion = this.configService.cciVersionPin();
+    const cciVersionPinned = cciVersion !== undefined && cciVersion === cciRequiredVersion;
 
     return {
       integrationEnabled,
       authMode,
       alias,
-      sf: {
-        installed: sfProbe.exitCode === 0,
-        message: sfProbe.exitCode === 0 ? 'sf CLI available' : 'sf CLI not found in PATH'
-      },
       cci: {
         installed: cciProbe.exitCode === 0,
         version: cciVersion,
@@ -64,39 +61,43 @@ export class OrgService {
         message:
           cciProbe.exitCode === 0
             ? cciVersionPinned
-              ? 'cci available and version-pinned'
-              : `cci available but version mismatch (expected ${cciRequiredVersion})`
+              ? `cci available and version-pinned (${cciRequiredVersion})`
+              : `cci available but version mismatch (found ${cciVersion ?? 'unknown'}, expected ${cciRequiredVersion})`
             : 'cci not found in PATH'
+      },
+      sf: {
+        installed: sfProbe.exitCode === 0,
+        message: sfProbe.exitCode === 0 ? 'sf CLI available' : 'sf CLI not found in PATH'
       },
       session: this.sessionStatus()
     };
   }
 
-  async preflight(): Promise<OrgPreflightResponse> {
+  async preflight(aliasOverride?: string): Promise<OrgPreflightResponse> {
     const integrationEnabled = this.configService.sfIntegrationEnabled();
     const authMode = this.configService.sfAuthMode();
-    const alias = this.resolveActiveAlias();
-    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
-    const manifestPath = resolveSfManifestPath(this.configService.sfManifestPath());
-    const parsePath = resolveSfParsePath(this.configService.sfParsePath());
+    const alias = aliasOverride?.trim() || this.resolveActiveAlias();
+    const projectPath = this.runtimePaths.sfProjectPath();
+    const parsePath = this.runtimePaths.sfParsePath();
+    this.ensureProjectScaffold(projectPath);
     const session = this.sessionStatus();
-    const cciRequiredVersion = this.configService.cciVersionPin();
 
-    const sfProbe = await this.probeCommand('sf', ['--version'], projectPath);
-    const cciProbe = await this.probeCommand('cci', ['version'], projectPath);
-    const cciVersion = this.extractCciVersion(cciProbe.stdout, cciProbe.stderr);
-    const cciVersionPinned = cciProbe.exitCode === 0 && cciVersion === cciRequiredVersion;
-    const manifestPresent = fs.existsSync(manifestPath);
+    const sfProbe = await this.orgToolAdapter.probeSf(projectPath);
+    const cciProbe = await this.orgToolAdapter.probeCci(projectPath);
+    const cciVersion = this.orgToolAdapter.extractCciVersion(cciProbe.stdout, cciProbe.stderr);
+    const cciRequiredVersion = this.configService.cciVersionPin();
+    const cciVersionPinned = cciVersion !== undefined && cciVersion === cciRequiredVersion;
     const parsePathPresent = fs.existsSync(parsePath);
 
     let aliasAuthenticated = false;
     if (sfProbe.exitCode === 0) {
-      const aliasCheck = await this.commandRunner.run(
-        'sf',
-        ['org', 'display', '--target-org', alias, '--json'],
-        { cwd: projectPath, timeoutMs: 30_000 }
-      );
+      const aliasCheck = await this.orgToolAdapter.displayOrg(alias, projectPath);
       aliasAuthenticated = aliasCheck.exitCode === 0;
+    }
+    let cciAliasAvailable = false;
+    if (cciProbe.exitCode === 0) {
+      const cciAliasCheck = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
+      cciAliasAvailable = cciAliasCheck.exitCode === 0;
     }
 
     const issues: OrgPreflightResponse['issues'] = [];
@@ -112,32 +113,23 @@ export class OrgService {
       issues.push({
         code: 'SF_CLI_MISSING',
         severity: 'error',
-        message: 'sf CLI is not available in API runtime.',
-        remediation: 'Install sf CLI in API runtime/image and restart.'
+        message: 'sf CLI is not available in local runtime.',
+        remediation: 'Install sf CLI locally and restart Orgumented.'
       });
     }
-    if (authMode === 'cci' && cciProbe.exitCode !== 0) {
+    if (cciProbe.exitCode !== 0) {
       issues.push({
         code: 'CCI_MISSING',
         severity: 'error',
-        message: 'CumulusCI is not available in API runtime.',
-        remediation: 'Install CumulusCI 3.78.0 in API runtime/image and restart.'
+        message: 'cci is not available in local runtime.',
+        remediation: 'Install cci locally and restart Orgumented.'
       });
-    }
-    if (authMode === 'cci' && cciProbe.exitCode === 0 && !cciVersionPinned) {
+    } else if (!cciVersionPinned) {
       issues.push({
         code: 'CCI_VERSION_MISMATCH',
         severity: 'warning',
-        message: `CumulusCI version mismatch (expected ${cciRequiredVersion}, found ${cciVersion || 'unknown'}).`,
-        remediation: `Pin CumulusCI to ${cciRequiredVersion} in runtime image.`
-      });
-    }
-    if (!manifestPresent) {
-      issues.push({
-        code: 'MANIFEST_MISSING',
-        severity: 'error',
-        message: `Manifest not found at ${manifestPath}.`,
-        remediation: 'Create/update manifest or migrate retrieve flow to explicit metadata selection.'
+        message: `cci version is not pinned to ${cciRequiredVersion} (found ${cciVersion ?? 'unknown'}).`,
+        remediation: `Pin cci to ${cciRequiredVersion} in runtime image for deterministic org tooling behavior.`
       });
     }
     if (!parsePathPresent) {
@@ -153,7 +145,15 @@ export class OrgService {
         code: 'ALIAS_NOT_AUTHENTICATED',
         severity: 'error',
         message: `No authenticated org for alias ${alias}.`,
-        remediation: 'Authenticate alias in this runtime (cci/sf), then retry Connect Org.'
+        remediation: `Run 'sf org login web --alias ${alias} --instance-url ${this.configService.sfBaseUrl()} --set-default' locally, then retry.`
+      });
+    }
+    if (aliasAuthenticated && !cciAliasAvailable) {
+      issues.push({
+        code: 'CCI_ALIAS_NOT_CONNECTED',
+        severity: 'warning',
+        message: `Alias ${alias} not found in cci org registry.`,
+        remediation: `Run 'cci org import ${alias} <sf-username>' locally after sf keychain login.`
       });
     }
     if (session.status !== 'connected') {
@@ -171,16 +171,121 @@ export class OrgService {
       authMode,
       alias,
       checks: {
-        sfInstalled: sfProbe.exitCode === 0,
         cciInstalled: cciProbe.exitCode === 0,
         cciVersionPinned,
-        manifestPresent,
+        cciAliasAvailable,
+        sfInstalled: sfProbe.exitCode === 0,
         parsePathPresent,
         aliasAuthenticated,
         sessionConnected: session.status === 'connected'
       },
       issues,
       session
+    };
+  }
+
+  async listSessionAliases(): Promise<OrgSessionAliasesResponse> {
+    const authMode = this.configService.sfAuthMode();
+    const projectPath = this.runtimePaths.sfProjectPath();
+    this.ensureProjectScaffold(projectPath);
+    const activeAlias = this.resolveActiveAlias();
+    const sfProbe = await this.orgToolAdapter.probeSf(projectPath);
+    if (sfProbe.exitCode !== 0) {
+      return {
+        authMode,
+        activeAlias,
+        aliases: []
+      };
+    }
+
+    const listResult = await this.orgToolAdapter.listAliases(projectPath);
+    return {
+      authMode,
+      activeAlias,
+      aliases: listResult.exitCode === 0 ? this.orgToolAdapter.parseAliasList(listResult.stdout) : []
+    };
+  }
+
+  async validateSessionAlias(aliasRaw: string): Promise<OrgSessionAliasValidationResponse> {
+    const authMode = this.configService.sfAuthMode();
+    const alias = aliasRaw.trim();
+    const projectPath = this.runtimePaths.sfProjectPath();
+    this.ensureProjectScaffold(projectPath);
+    const session = this.sessionStatus();
+    const issues: OrgSessionAliasValidationResponse['issues'] = [];
+
+    const sfProbe = await this.orgToolAdapter.probeSf(projectPath);
+    const cciProbe = await this.orgToolAdapter.probeCci(projectPath);
+
+    let sfAccessible = false;
+    let cciAvailable = false;
+    let username: string | undefined;
+    let orgId: string | undefined;
+    let instanceUrl: string | undefined;
+
+    if (sfProbe.exitCode !== 0) {
+      issues.push({
+        code: 'SF_CLI_MISSING',
+        severity: 'error',
+        message: 'sf CLI is not available in local runtime.',
+        remediation: 'Install sf CLI locally and retry.'
+      });
+    } else {
+      const orgDisplay = await this.orgToolAdapter.displayOrg(alias, projectPath);
+      sfAccessible = orgDisplay.exitCode === 0;
+      const parsed = this.orgToolAdapter.parseDisplayedOrg(orgDisplay.stdout);
+      username = parsed?.username;
+      orgId = parsed?.orgId;
+      instanceUrl = parsed?.instanceUrl;
+      if (!sfAccessible) {
+        issues.push({
+          code: 'ALIAS_NOT_AUTHENTICATED',
+          severity: 'error',
+          message: `No authenticated org for alias ${alias}.`,
+          remediation: `Run 'sf org login web --alias ${alias} --instance-url ${this.configService.sfBaseUrl()} --set-default' locally, then retry.`
+        });
+      }
+    }
+
+    if (cciProbe.exitCode !== 0) {
+      issues.push({
+        code: 'CCI_MISSING',
+        severity: 'warning',
+        message: 'cci is not available in local runtime.',
+        remediation: 'Install cci locally to enable alias import and validation.'
+      });
+    } else {
+      const cciInfo = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
+      cciAvailable = cciInfo.exitCode === 0;
+      if (sfAccessible && !cciAvailable) {
+        issues.push({
+          code: 'CCI_ALIAS_NOT_CONNECTED',
+          severity: 'warning',
+          message: `Alias ${alias} is not present in the cci org registry.`,
+          remediation: `Run 'cci org import ${alias} <sf-username>' locally after sf login.`
+        });
+      }
+    }
+
+    if (session.status !== 'connected' || session.activeAlias !== alias) {
+      issues.push({
+        code: 'SESSION_DISCONNECTED',
+        severity: 'warning',
+        message: `Orgumented session is not currently attached to alias ${alias}.`,
+        remediation: 'Use the session attach flow after validating the alias.'
+      });
+    }
+
+    return {
+      alias,
+      authMode,
+      sessionConnected: session.status === 'connected' && session.activeAlias === alias,
+      sfAccessible,
+      cciAvailable,
+      username,
+      orgId,
+      instanceUrl,
+      issues
     };
   }
 
@@ -205,15 +310,58 @@ export class OrgService {
     };
   }
 
+  async connectSession(input: OrgSessionConnectRequest = {}): Promise<OrgSessionConnectResponse> {
+    if (!this.configService.sfIntegrationEnabled()) {
+      throw new BadRequestException({
+        message: 'Salesforce integration is disabled',
+        details: {
+          code: 'SF_INTEGRATION_DISABLED',
+          hint: 'Set SF_INTEGRATION_ENABLED=true and restart API.'
+        }
+      });
+    }
+
+    const authMode = this.configService.sfAuthMode();
+    const projectPath = this.runtimePaths.sfProjectPath();
+    this.ensureProjectScaffold(projectPath);
+    const alias = input.alias?.trim() || this.configService.sfAlias();
+    await this.orgToolAdapter.ensureSfInstalled(projectPath);
+    await this.orgToolAdapter.ensureCciInstalled(projectPath);
+
+    const aliasCheck = await this.orgToolAdapter.displayOrg(alias, projectPath);
+    if (aliasCheck.exitCode !== 0) {
+      throw new BadRequestException({
+        message: `No authenticated org for alias ${alias}.`,
+        details: {
+          code: 'ALIAS_NOT_AUTHENTICATED',
+          hint: `Run 'sf org login web --alias ${alias} --instance-url ${this.configService.sfBaseUrl()} --set-default' locally, then retry.`
+        }
+      });
+    }
+
+    await this.runAuth(alias, projectPath);
+    const connectedAt = new Date().toISOString();
+    this.writeSessionState({
+      status: 'connected',
+      activeAlias: alias,
+      connectedAt
+    });
+    this.appendAuthAudit('connect', alias, authMode, 'session connected via sf_cli_keychain');
+    return {
+      status: 'connected',
+      activeAlias: alias,
+      authMode,
+      connectedAt,
+      method: 'sf_cli_keychain'
+    };
+  }
+
   async switchSessionAlias(alias: string): Promise<OrgSessionSwitchResponse> {
     const authMode = this.configService.sfAuthMode();
-    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
-    await this.ensureSfBinaryInstalled(projectPath);
-    const aliasCheck = await this.commandRunner.run(
-      'sf',
-      ['org', 'display', '--target-org', alias, '--json'],
-      { cwd: projectPath, timeoutMs: 30_000 }
-    );
+    const projectPath = this.runtimePaths.sfProjectPath();
+    this.ensureProjectScaffold(projectPath);
+    await this.orgToolAdapter.ensureSfInstalled(projectPath);
+    const aliasCheck = await this.orgToolAdapter.displayOrg(alias, projectPath);
     if (aliasCheck.exitCode !== 0) {
       this.writeSessionState({
         status: 'disconnected',
@@ -269,11 +417,11 @@ export class OrgService {
 
     const integrationEnabled = this.configService.sfIntegrationEnabled();
     const authMode = this.configService.sfAuthMode();
-    const alias = this.resolveActiveAlias();
-    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
-    const manifestPath = resolveSfManifestPath(this.configService.sfManifestPath());
-    const parsePath = resolveSfParsePath(this.configService.sfParsePath());
+    const alias = input.alias?.trim() || this.resolveActiveAlias();
+    const projectPath = this.runtimePaths.sfProjectPath();
+    const parsePath = this.runtimePaths.sfParsePath();
     const steps: OrgStepResult[] = [];
+    const metadataArgs = runRetrieve ? this.buildMetadataArgs(input.selections ?? []) : [];
 
     if (!integrationEnabled) {
       throw new BadRequestException({
@@ -284,25 +432,31 @@ export class OrgService {
         }
       });
     }
+    if (runRetrieve && metadataArgs.length === 0) {
+      throw new BadRequestException({
+        message: 'metadata selections are required for /org/retrieve when runRetrieve=true',
+        details: {
+          code: 'SF_METADATA_SELECTIONS_REQUIRED',
+          hint: 'Use /org/metadata/catalog to discover types/members, then pass selections to /org/retrieve or call /org/metadata/retrieve.'
+        }
+      });
+    }
 
     try {
       const validateStarted = Date.now();
-      await this.ensureSfBinaryInstalled(projectPath);
+      await this.orgToolAdapter.ensureSfInstalled(projectPath);
       this.ensureProjectScaffold(projectPath);
-      if (runRetrieve) {
-        this.ensureManifestFile(manifestPath);
-      }
       steps.push({
         step: 'validate',
         status: 'completed',
         message: 'integration prerequisites validated',
         elapsedMs: Date.now() - validateStarted,
-        meta: { projectPath, manifestPath, parsePath }
+        meta: { projectPath, parsePath, metadataSelectionCount: metadataArgs.length }
       });
 
       if (runAuth) {
         const authStarted = Date.now();
-        await this.runAuth(authMode, alias, projectPath);
+        await this.runAuth(alias, projectPath);
         this.writeSessionState({
           status: 'connected',
           activeAlias: alias,
@@ -326,13 +480,13 @@ export class OrgService {
 
       if (runRetrieve) {
         const retrieveStarted = Date.now();
-        await this.runRetrieve(alias, projectPath, manifestPath);
+        await this.runRetrieve(alias, projectPath, metadataArgs);
         steps.push({
           step: 'retrieve',
           status: 'completed',
           message: 'metadata retrieve completed',
           elapsedMs: Date.now() - retrieveStarted,
-          meta: { parsePath }
+          meta: { parsePath, metadataSelectionCount: metadataArgs.length }
         });
       } else {
         steps.push({
@@ -374,8 +528,8 @@ export class OrgService {
         alias,
         authMode,
         projectPath,
-        manifestPath,
         parsePath,
+        metadataArgs,
         startedAt: startedAtIso,
         completedAt: new Date().toISOString(),
         steps
@@ -389,8 +543,8 @@ export class OrgService {
         authMode,
         alias,
         projectPath,
-        manifestPath,
         parsePath,
+        metadataArgs: runRetrieve ? metadataArgs : undefined,
         steps
       };
     } catch (error) {
@@ -409,12 +563,17 @@ export class OrgService {
         alias,
         authMode,
         projectPath,
-        manifestPath,
         parsePath,
+        metadataArgs,
         startedAt: startedAtIso,
         completedAt: new Date().toISOString(),
         steps
       });
+
+      const actionable = this.orgToolAdapter.toActionableBadRequest(error, alias);
+      if (actionable) {
+        throw actionable;
+      }
 
       throw new InternalServerErrorException({
         message: 'salesforce retrieve pipeline failed',
@@ -423,8 +582,8 @@ export class OrgService {
           alias,
           authMode,
           projectPath,
-          manifestPath,
           parsePath,
+          metadataArgs,
           reason: message,
           steps
         }
@@ -435,63 +594,21 @@ export class OrgService {
   private appendAuditEntry(entry: {
     status: 'completed' | 'failed';
     alias: string;
-    authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+    authMode: OrgAuthMode;
     projectPath: string;
-    manifestPath: string;
     parsePath: string;
+    metadataArgs: string[];
     startedAt: string;
     completedAt: string;
     steps: OrgStepResult[];
   }): void {
-    const auditPath = path.join(path.dirname(entry.projectPath), 'sf-retrieve-audit.log');
+    const auditPath = this.runtimePaths.orgRetrieveAuditPath();
     fs.mkdirSync(path.dirname(auditPath), { recursive: true });
     const line = JSON.stringify({
       ...entry,
       stepCount: entry.steps.length
     });
     fs.appendFileSync(auditPath, `${line}\n`, 'utf8');
-  }
-
-  private async ensureSfBinaryInstalled(projectPath: string): Promise<void> {
-    const result = await this.commandRunner.run('sf', ['--version'], {
-      cwd: projectPath,
-      timeoutMs: 30_000
-    });
-    if (result.exitCode !== 0) {
-      throw new Error('sf CLI not found in PATH');
-    }
-  }
-
-  private async probeCommand(
-    command: string,
-    args: string[],
-    cwd: string
-  ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
-    try {
-      const result = await this.commandRunner.run(command, args, {
-        cwd,
-        timeoutMs: 30_000
-      });
-      return { exitCode: result.exitCode, stdout: result.stdout, stderr: result.stderr };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { exitCode: 1, stdout: '', stderr: message };
-    }
-  }
-
-  private async ensureCciBinaryInstalled(projectPath: string): Promise<void> {
-    const result = await this.commandRunner.run('cci', ['version'], {
-      cwd: projectPath,
-      timeoutMs: 30_000
-    });
-    if (result.exitCode !== 0) {
-      throw new Error('cci not found in PATH');
-    }
-    const version = this.extractCciVersion(result.stdout, result.stderr);
-    const required = this.configService.cciVersionPin();
-    if (version !== required) {
-      throw new Error(`cci version mismatch: expected ${required}, received ${version || 'unknown'}`);
-    }
   }
 
   private ensureProjectScaffold(projectPath: string): void {
@@ -502,313 +619,50 @@ export class OrgService {
       const scaffold = {
         packageDirectories: [{ path: 'force-app', default: true }],
         namespace: '',
-        sfdcLoginUrl: 'https://test.salesforce.com',
+        sfdcLoginUrl: this.configService.sfBaseUrl(),
         sourceApiVersion: '61.0'
       };
       fs.writeFileSync(sfdxProjectPath, JSON.stringify(scaffold, null, 2), 'utf8');
     }
   }
 
-  private ensureManifestFile(manifestPath: string): void {
-    if (!fs.existsSync(manifestPath)) {
-      throw new Error(`manifest not found at ${manifestPath}`);
-    }
-  }
-
-  private async runAuth(
-    authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token',
-    alias: string,
-    projectPath: string
-  ): Promise<void> {
-    if (authMode === 'cci') {
-      await this.ensureCciBinaryInstalled(projectPath);
-      const cciList = await this.commandRunner.run('cci', ['org', 'list', '--json'], {
-        cwd: projectPath,
-        timeoutMs: 60_000
-      });
-      if (cciList.exitCode !== 0) {
-        throw new Error('cci org list failed; ensure CCI keychain is initialized for this environment');
-      }
-      const sfAliasCheck = await this.commandRunner.run(
-        'sf',
-        ['org', 'display', '--target-org', alias, '--json'],
-        { cwd: projectPath, timeoutMs: 30_000 }
-      );
-      if (sfAliasCheck.exitCode !== 0) {
-        throw new Error(
-          `No authenticated org for alias ${alias}. Connect via cci first, then retry /org/retrieve.`
-        );
-      }
-      return;
-    }
-
-    if (authMode === 'sfdx_url') {
-      const authUrlPath = this.configService.sfAuthUrlPath();
-      if (!authUrlPath) {
-        throw new Error('SF_AUTH_URL_PATH is required for sfdx_url auth mode');
-      }
-
-      const absAuthUrlPath = path.resolve(authUrlPath);
-      if (!fs.existsSync(absAuthUrlPath)) {
-        throw new Error(`SFDX auth url file not found at ${absAuthUrlPath}`);
-      }
-
-      await this.runSfCommandWithRetry(
-        [
-          'org',
-          'login',
-          'sfdx-url',
-          '--sfdx-url-file',
-          absAuthUrlPath,
-          '--alias',
-          alias,
-          '--set-default',
-          '--json'
-        ],
-        projectPath
-      );
-      return;
-    }
-
-    if (authMode === 'oauth_refresh_token') {
-      const clientId = this.configService.sfClientId();
-      const clientSecret = this.configService.sfClientSecret();
-      const redirectUri = this.configService.sfRedirectUri();
-      const loginDomain = this.configService.sfBaseUrl();
-      const authCodePath = resolveSfAuthCodePath(this.configService.sfAuthCodePath());
-      const tokenStorePath = resolveSfTokenStorePath(this.configService.sfTokenStorePath());
-      if (!clientId || !clientSecret || !redirectUri) {
-        throw new Error(
-          'SF_CLIENT_ID, SF_CLIENT_SECRET, and SF_REDIRECT_URI are required for oauth_refresh_token mode'
-        );
-      }
-
-      const tokenResponse = await this.resolveOrRefreshOAuthToken({
-        clientId,
-        clientSecret,
-        redirectUri,
-        loginDomain,
-        authCodePath,
-        tokenStorePath
-      });
-
-      await this.runSfCommandWithRetry(
-        [
-          'org',
-          'login',
-          'access-token',
-          '--instance-url',
-          tokenResponse.instanceUrl,
-          '--alias',
-          alias,
-          '--set-default',
-          '--no-prompt',
-          '--json'
-        ],
-        projectPath,
-        { SF_ACCESS_TOKEN: tokenResponse.accessToken }
-      );
-      return;
-    }
-
-    const clientId = this.configService.sfClientId();
-    const jwtKeyPath = this.configService.sfJwtKeyPath();
-    const username = this.configService.sfUsername();
-    const instanceUrl = this.configService.sfBaseUrl();
-    if (!clientId || !jwtKeyPath || !username || !instanceUrl) {
-      throw new Error(
-        'SF_CLIENT_ID, SF_JWT_KEY_PATH, SF_USERNAME, and SF_BASE_URL are required for jwt auth mode'
-      );
-    }
-
-    const absJwtPath = path.resolve(jwtKeyPath);
-    if (!fs.existsSync(absJwtPath)) {
-      throw new Error(`JWT key file not found at ${absJwtPath}`);
-    }
-
-    await this.runSfCommandWithRetry(
-      [
-        'org',
-        'login',
-        'jwt',
-        '--client-id',
-        clientId,
-        '--jwt-key-file',
-        absJwtPath,
-        '--username',
-        username,
-        '--instance-url',
-        instanceUrl,
-        '--alias',
-        alias,
-        '--set-default',
-        '--json'
-      ],
-      projectPath
-    );
-  }
-
-  private extractCciVersion(stdout: string, stderr: string): string | undefined {
-    const text = `${stdout}\n${stderr}`.trim();
-    const match = text.match(/(\d+\.\d+\.\d+)/);
-    return match ? match[1] : undefined;
-  }
-
-  private async resolveOrRefreshOAuthToken(input: {
-    clientId: string;
-    clientSecret: string;
-    redirectUri: string;
-    loginDomain: string;
-    authCodePath: string;
-    tokenStorePath: string;
-  }): Promise<{ accessToken: string; refreshToken: string; instanceUrl: string }> {
-    const existing = this.readOAuthTokenStore(input.tokenStorePath);
-    if (existing?.refresh_token) {
-      const refreshed = await this.exchangeOAuthToken(
-        `${input.loginDomain}/services/oauth2/token`,
-        new URLSearchParams({
-          grant_type: 'refresh_token',
-          client_id: input.clientId,
-          client_secret: input.clientSecret,
-          refresh_token: existing.refresh_token
-        })
-      );
-      const resolved = {
-        accessToken: refreshed.access_token,
-        refreshToken: existing.refresh_token,
-        instanceUrl: refreshed.instance_url
-      };
-      this.writeOAuthTokenStore(input.tokenStorePath, {
-        access_token: refreshed.access_token,
-        refresh_token: existing.refresh_token,
-        instance_url: refreshed.instance_url,
-        issued_at: new Date().toISOString()
-      });
-      return resolved;
-    }
-
-    if (!fs.existsSync(input.authCodePath)) {
-      throw new Error(
-        `OAuth auth code file missing at ${input.authCodePath}. Complete external client app authorization first.`
-      );
-    }
-
-    const authCode = fs.readFileSync(input.authCodePath, 'utf8').trim();
-    if (!authCode) {
-      throw new Error(`OAuth auth code file is empty at ${input.authCodePath}`);
-    }
-
-    const exchanged = await this.exchangeOAuthToken(
-      `${input.loginDomain}/services/oauth2/token`,
-      new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: input.clientId,
-        client_secret: input.clientSecret,
-        redirect_uri: input.redirectUri,
-        code: authCode
-      })
-    );
-
-    if (!exchanged.refresh_token) {
-      throw new Error(
-        'OAuth token exchange did not return refresh_token. Ensure refresh_token scope is enabled.'
-      );
-    }
-
-    this.writeOAuthTokenStore(input.tokenStorePath, {
-      access_token: exchanged.access_token,
-      refresh_token: exchanged.refresh_token,
-      instance_url: exchanged.instance_url,
-      issued_at: new Date().toISOString()
-    });
-
-    return {
-      accessToken: exchanged.access_token,
-      refreshToken: exchanged.refresh_token,
-      instanceUrl: exchanged.instance_url
-    };
-  }
-
-  private readOAuthTokenStore(
-    tokenStorePath: string
-  ): { access_token?: string; refresh_token?: string; instance_url?: string } | undefined {
-    if (!fs.existsSync(tokenStorePath)) {
-      return undefined;
-    }
-    try {
-      const raw = fs.readFileSync(tokenStorePath, 'utf8');
-      return JSON.parse(raw) as { access_token?: string; refresh_token?: string; instance_url?: string };
-    } catch {
-      return undefined;
-    }
-  }
-
-  private writeOAuthTokenStore(
-    tokenStorePath: string,
-    payload: {
-      access_token: string;
-      refresh_token: string;
-      instance_url: string;
-      issued_at: string;
-    }
-  ): void {
-    fs.mkdirSync(path.dirname(tokenStorePath), { recursive: true });
-    fs.writeFileSync(tokenStorePath, JSON.stringify(payload, null, 2), 'utf8');
-  }
-
-  private async exchangeOAuthToken(
-    tokenUrl: string,
-    formData: URLSearchParams
-  ): Promise<{ access_token: string; refresh_token?: string; instance_url: string }> {
-    const response = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/x-www-form-urlencoded'
-      },
-      body: formData
-    });
-
-    const raw = await response.text();
-    let parsed:
-      | {
-          access_token?: string;
-          refresh_token?: string;
-          instance_url?: string;
-          error?: string;
-          error_description?: string;
+  private async runAuth(alias: string, projectPath: string): Promise<void> {
+    const sfAliasCheck = await this.orgToolAdapter.displayOrg(alias, projectPath);
+    if (sfAliasCheck.exitCode !== 0) {
+      throw new BadRequestException({
+        message: `No authenticated org for alias ${alias}.`,
+        details: {
+          code: 'ALIAS_NOT_AUTHENTICATED',
+          hint: `Run 'sf org login web --alias ${alias} --instance-url ${this.configService.sfBaseUrl()} --set-default' locally, then retry.`
         }
-      | undefined;
+      });
+    }
     try {
-      parsed = JSON.parse(raw) as {
-        access_token?: string;
-        refresh_token?: string;
-        instance_url?: string;
-        error?: string;
-        error_description?: string;
-      };
+      await this.orgToolAdapter.ensureCciInstalled(projectPath);
     } catch {
-      throw new Error('OAuth token endpoint returned non-JSON response');
+      this.logger.warn(`cci not available; continuing with sf-only auth for alias ${alias}`);
+      return;
     }
 
-    if (!response.ok) {
-      throw new Error(
-        `OAuth token exchange failed: ${response.status} ${parsed.error || ''} ${
-          parsed.error_description || ''
-        }`.trim()
-      );
+    const cciAliasCheck = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
+    if (cciAliasCheck.exitCode === 0) {
+      return;
     }
 
-    if (parsed.error) {
-      throw new Error(`OAuth token exchange failed: ${parsed.error} ${parsed.error_description || ''}`.trim());
+    const username = this.orgToolAdapter.extractSfUsername(sfAliasCheck.stdout);
+    if (!username) {
+      this.logger.warn(`sf alias ${alias} authenticated but username resolution failed for optional cci import`);
+      return;
     }
-    if (!parsed.access_token || !parsed.instance_url) {
-      throw new Error('OAuth token response missing access_token or instance_url');
+
+    const cciImport = await this.orgToolAdapter.importAliasIntoCci(alias, username, projectPath);
+    if (cciImport.exitCode !== 0) {
+      const err = (cciImport.stderr || cciImport.stdout || '').toLowerCase();
+      if (!err.includes('already exists')) {
+        this.logger.warn(`cci import skipped for alias ${alias}: ${cciImport.stderr || cciImport.stdout || 'unknown cci import failure'}`);
+        return;
+      }
     }
-    return {
-      access_token: parsed.access_token,
-      refresh_token: parsed.refresh_token,
-      instance_url: parsed.instance_url
-    };
   }
 
   async metadataCatalog(input: {
@@ -816,7 +670,7 @@ export class OrgService {
     limit?: number;
     refresh?: boolean;
   }): Promise<OrgMetadataCatalogResponse> {
-    const parsePath = resolveSfParsePath(this.configService.sfParsePath());
+    const parsePath = this.runtimePaths.sfParsePath();
     const refresh = input.refresh === true;
     const search = input.search?.trim().toLowerCase();
     const limit = input.limit ?? 200;
@@ -861,7 +715,7 @@ export class OrgService {
     limit?: number;
     refresh?: boolean;
   }): Promise<OrgMetadataMembersResponse> {
-    const parsePath = resolveSfParsePath(this.configService.sfParsePath());
+    const parsePath = this.runtimePaths.sfParsePath();
     const index = this.loadMetadataIndex(parsePath, input.refresh === true);
     const warnings: string[] = [...index.warnings];
     const search = input.search?.trim().toLowerCase();
@@ -902,51 +756,42 @@ export class OrgService {
     }
 
     const alias = this.resolveActiveAlias();
-    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
-    const parsePath = resolveSfParsePath(this.configService.sfParsePath());
+    const projectPath = this.runtimePaths.sfProjectPath();
+    const parsePath = this.runtimePaths.sfParsePath();
     const autoRefresh = input.autoRefresh ?? this.configService.sfAutoRefreshAfterRetrieve();
     const startedAt = new Date().toISOString();
 
-    await this.ensureSfBinaryInstalled(projectPath);
+    await this.orgToolAdapter.ensureSfInstalled(projectPath);
     this.ensureParsePathWithinProject(projectPath, parsePath);
-    if (this.configService.sfAuthMode() === 'cci') {
-      await this.ensureCciBinaryInstalled(projectPath);
-    }
 
-    const metadataArgs: string[] = [];
-    for (const selection of input.selections) {
-      const type = selection.type.trim();
-      if (selection.members && selection.members.length > 0) {
-        for (const member of selection.members) {
-          metadataArgs.push(`${type}:${member}`);
-        }
-      } else {
-        metadataArgs.push(type);
-      }
-    }
+    const metadataArgs = this.buildMetadataArgs(input.selections);
     if (metadataArgs.length === 0) {
       throw new BadRequestException('no valid metadata selections supplied');
     }
 
-    const waitMinutes = this.configService.sfWaitMinutes();
-    const args = [
-      'project',
-      'retrieve',
-      'start',
-      '--target-org',
-      alias,
-      '--wait',
-      String(waitMinutes),
-      '--json'
-    ];
-    for (const metadataArg of metadataArgs) {
-      args.push('--metadata', metadataArg);
-    }
     try {
-      await this.runSfCommandWithRetry(args, projectPath);
+      await this.orgToolAdapter.retrieveMetadata(alias, metadataArgs, projectPath);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const category = this.classifyMetadataRetrieveFailure(message);
+      if (category === 'auth_or_session_error') {
+        throw new BadRequestException({
+          message: 'metadata retrieve requires an authenticated org session',
+          details: {
+            code: 'ALIAS_NOT_AUTHENTICATED',
+            hint: `Run 'sf org login web --alias ${alias} --instance-url ${this.configService.sfBaseUrl()} --set-default' locally, then retry metadata retrieve.`
+          }
+        });
+      }
+      if (category === 'metadata_resolution_error') {
+        throw new BadRequestException({
+          message: 'metadata retrieve failed due to invalid selector values',
+          details: {
+            code: 'SF_METADATA_SELECTOR_INVALID',
+            hint: 'Use /org/metadata/catalog and /org/metadata/members to build valid selections.'
+          }
+        });
+      }
       throw new InternalServerErrorException({
         message: 'metadata retrieve failed',
         details: {
@@ -1129,8 +974,7 @@ export class OrgService {
   }
 
   private getSessionStatePath(): string {
-    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
-    return path.join(path.dirname(projectPath), 'org-session-state.json');
+    return this.runtimePaths.orgSessionStatePath();
   }
 
   private readSessionState():
@@ -1175,11 +1019,10 @@ export class OrgService {
   private appendAuthAudit(
     action: 'connect' | 'switch' | 'disconnect' | 'switch_failed',
     alias: string,
-    authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token',
+    authMode: OrgAuthMode,
     message: string
   ): void {
-    const projectPath = resolveSfProjectPath(this.configService.sfProjectPath());
-    const auditPath = path.join(path.dirname(projectPath), 'auth-session-audit.log');
+    const auditPath = this.runtimePaths.orgAuthAuditPath();
     fs.mkdirSync(path.dirname(auditPath), { recursive: true });
     fs.appendFileSync(
       auditPath,
@@ -1213,51 +1056,28 @@ export class OrgService {
     return folderName;
   }
 
-  private async runRetrieve(alias: string, projectPath: string, manifestPath: string): Promise<void> {
-    const waitMinutes = this.configService.sfWaitMinutes();
-    await this.runSfCommandWithRetry(
-      [
-        'project',
-        'retrieve',
-        'start',
-        '--manifest',
-        manifestPath,
-        '--target-org',
-        alias,
-        '--wait',
-        String(waitMinutes),
-        '--json'
-      ],
-      projectPath
-    );
-  }
-
-  private async runSfCommandWithRetry(
-    args: string[],
-    cwd: string,
-    env?: NodeJS.ProcessEnv
-  ): Promise<void> {
-    const retries = this.configService.sfRetryCount();
-    const retryDelayMs = this.configService.sfRetryDelayMs();
-    const timeoutMs = this.configService.sfTimeoutSeconds() * 1000;
-
-    let lastError = '';
-    for (let attempt = 0; attempt <= retries; attempt += 1) {
-      const result = await this.commandRunner.run('sf', args, {
-        cwd,
-        timeoutMs,
-        env: env ? { ...process.env, ...env } : process.env
-      });
-      if (result.exitCode === 0) {
-        return;
+  private buildMetadataArgs(selections: Array<{ type: string; members?: string[] }>): string[] {
+    const metadataArgs: string[] = [];
+    for (const selection of selections) {
+      const type = selection.type.trim();
+      if (!type) {
+        continue;
       }
-
-      lastError = result.stderr || result.stdout || `sf command failed with exit code ${result.exitCode}`;
-      if (attempt < retries) {
-        await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+      if (selection.members && selection.members.length > 0) {
+        for (const member of selection.members) {
+          const trimmed = member.trim();
+          if (trimmed) {
+            metadataArgs.push(`${type}:${trimmed}`);
+          }
+        }
+      } else {
+        metadataArgs.push(type);
       }
     }
+    return metadataArgs;
+  }
 
-    throw new Error(lastError);
+  private async runRetrieve(alias: string, projectPath: string, metadataArgs: string[]): Promise<void> {
+    await this.orgToolAdapter.retrieveMetadata(alias, metadataArgs, projectPath);
   }
 }

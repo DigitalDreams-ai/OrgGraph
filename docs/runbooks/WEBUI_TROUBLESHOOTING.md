@@ -9,14 +9,14 @@ Use this runbook when WebUI actions fail, look inconsistent, or return generic e
 - `curl -s http://localhost:3100/ready && echo`
 - `curl -s http://localhost:3101/api/ready && echo`
 
-2. Confirm org toolchain in API container:
-- `docker exec orgumented-api sh -lc 'which cci && cci version && which sf && sf --version'`
+2. Confirm local org toolchain:
+- `which sf && sf --version`
+- `which cci && cci version`
 
 3. Confirm org status API:
 - `curl -s -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgStatus","payload":{}}'`
 
-4. Inspect recent API logs:
-- `docker logs --tail 200 orgumented-api`
+4. Inspect recent API logs from the local runtime that launched the API process.
 
 5. Re-test failing UI action and capture raw JSON from WebUI Result panel.
 
@@ -28,18 +28,24 @@ Typical error:
 - reason: `No authenticated org for alias ...`
 
 Meaning:
-- Tools are installed, but no authenticated session exists for the alias in container runtime.
+- Tools are installed, but no authenticated session exists for the alias in the local runtime.
 
 Checks:
 - `orgStatus` payload `session.status`
 - API logs for `OrgService` auth/retrieve path
 
 Fix:
-- Authenticate org first in same runtime/container.
+- Authenticate org first in the same local operator environment via Salesforce CLI keychain:
+- `sf org login web --alias <alias> --instance-url <url> --set-default`
+- `cci org import <alias> <sf-username>`
 - Then retry `Check Session` -> `Connect Org` -> `Retrieve Selected`.
 
 Important:
-- Current Connect tab selector (`CumulusCI`, `SF CLI`, `Magic Link`) is operator UI state; it does not by itself switch backend auth mode.
+- Connect flow should use `sf` CLI keychain session only.
+- Legacy bootstrap inputs such as SFDX auth URLs, pasted access tokens, and frontdoor URLs are obsolete and should not be treated as primary troubleshooting paths.
+
+Quick API checks for connect payload handling:
+- `curl -s -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgConnect","payload":{"alias":"orgumented-sandbox"}}'`
 
 ### 2) Permissions returns false for a user known to have access
 Typical indicators:
@@ -105,12 +111,12 @@ Include all of:
 1. Failing action name
 2. Raw JSON payload from Result panel
 3. `orgStatus` payload
-4. `docker logs --tail 200 orgumented-api`
+4. local API logs from the runtime that launched Orgumented
 5. Current branch and commit
 6. Timestamp
 
 ## Recommended Debug Priority
-1. Runtime/install issues (sf/cci missing)
+1. Runtime/install issues (`sf` missing)
 2. Auth/session issues (alias not authenticated)
 3. Data/mapping issues (`user-profile-map` and refresh source)
 4. UX validation gaps (missing required proof inputs)

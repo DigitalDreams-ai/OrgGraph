@@ -4,10 +4,10 @@ This runbook covers storage/runtime rollback for Orgumented.
 
 ## Baseline Safety
 
-- Keep `GRAPH_BACKEND=postgres` as production default.
-- Keep SQLite parity path available for emergency restore.
+- Keep the stable backend explicit for the current release.
+- Keep SQLite restore available because it is the local-first baseline.
 - Maintain fresh backups for:
-  - Postgres DB
+  - active graph store
   - refresh artifacts (`data/refresh/*`)
   - ask proof/metrics (`data/ask/*`)
 
@@ -22,11 +22,11 @@ This runbook covers storage/runtime rollback for Orgumented.
 
 1. Set backend to stable baseline:
 ```bash
-GRAPH_BACKEND=postgres
+GRAPH_BACKEND=sqlite
 ```
 2. Recreate API service:
 ```bash
-docker compose -f docker/docker-compose.yml up -d --force-recreate api
+restart the local runtime after restoring the previous storage configuration
 ```
 3. Validate health/readiness:
 ```bash
@@ -48,7 +48,7 @@ curl -s -X POST http://localhost:3100/ask/replay \
 
 ## DR Restore
 
-1. Restore Postgres from latest verified backup.
+1. Restore the active graph store from the latest verified backup.
 2. Restore `data/refresh`, `data/ask`, and `data/evidence` artifacts.
 3. Run full refresh:
 ```bash

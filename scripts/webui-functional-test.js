@@ -1,7 +1,7 @@
 const fs = require('fs');
 const { chromium } = require('playwright');
 
-const BASE = process.env.WEB_BASE || 'http://host.docker.internal:3101';
+const BASE = process.env.WEB_BASE || 'http://127.0.0.1:3101';
 const outDir = '/work/artifacts';
 function now() { return new Date().toISOString(); }
 
@@ -79,19 +79,15 @@ function now() { return new Date().toISOString(); }
   await withStep('tab-connect-controls', async (row) => {
     await page.getByRole('tab', { name: 'Connect', exact: true }).click();
     await page.getByLabel('Org Alias').fill('orgumented-sandbox');
-    await page.getByRole('button', { name: 'Magic Link', exact: true }).click();
-    await page.getByLabel('Magic Link / SFDX URL').fill('https://example.invalid/frontdoor.jsp?sid=masked');
-    await page.getByRole('button', { name: 'CumulusCI', exact: true }).click();
-    await page.getByRole('button', { name: 'SF CLI', exact: true }).click();
-    await page.getByRole('button', { name: 'CumulusCI', exact: true }).click();
 
     await clickAndProbe('Check Session');
     await clickAndProbe('Check Tool Status');
+    await clickAndProbe('Preflight');
     await clickAndProbe('Switch Alias');
     const connect = await clickAndProbe('Connect Org', { allowError: true });
     if (connect?.ok === false) {
       row.status = 'warning';
-      row.note = 'Connect Org returned controlled error (likely missing sf/cci runtime tool)';
+      row.note = 'Connect Org returned controlled error (likely missing sf CLI keychain login in runtime)';
     }
     await clickAndProbe('Disconnect');
   });

@@ -278,10 +278,44 @@ async function run(): Promise<void> {
     assert.equal(strictRefreshRes.status, 400, 'drift budget gate should block unsafe update');
     const strictRefreshBody = (await strictRefreshRes.json()) as { error?: { message?: string } };
     assert.match(String(strictRefreshBody.error?.message ?? ''), /drift budget exceeded/i);
+
+    const rebaselineRoot = path.join(
+      fs.mkdtempSync(path.join(workspaceRoot, 'data', 'tmp-phase14-rebaseline-')),
+      'force-app',
+      'main',
+      'default'
+    );
+    fs.mkdirSync(path.dirname(rebaselineRoot), { recursive: true });
+    fs.cpSync(path.join(workspaceRoot, 'fixtures', 'permissions'), rebaselineRoot, { recursive: true });
+    fs.rmSync(path.join(rebaselineRoot, 'flows', 'OpportunityStageSync.flow-meta.xml'), { force: true });
+
+    const rebaselineRefreshRes = await fetch(`${base}/refresh`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ fixturesPath: rebaselineRoot, mode: 'full', rebaseline: true })
+    });
+    assert.equal(rebaselineRefreshRes.status, 201, 'explicit rebaseline should bypass drift gate');
+    const rebaselineRefreshBody = (await rebaselineRefreshRes.json()) as {
+      rebaselineApplied: boolean;
+      driftEvaluation: { isBootstrap: boolean; withinBudget: boolean };
+      sourcePath: string;
+    };
+    assert.equal(rebaselineRefreshBody.rebaselineApplied, true);
+    assert.equal(rebaselineRefreshBody.driftEvaluation.isBootstrap, true);
+    assert.equal(rebaselineRefreshBody.sourcePath, rebaselineRoot);
+
+    fs.rmSync(path.dirname(path.dirname(path.dirname(rebaselineRoot))), { recursive: true, force: true });
     delete process.env.DRIFT_BUDGET_AUTOMATION_NODE_DELTA_MAX;
 
     fs.rmSync(modifiedRoot, { recursive: true, force: true });
     fs.rmSync(strictRoot, { recursive: true, force: true });
+
+    const restoreBaselineRes = await fetch(`${base}/refresh`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{}'
+    });
+    assert.equal(restoreBaselineRes.status, 201, 'baseline refresh should restore canonical fixture graph');
 
     const malformedRefreshRes = await fetch(`${base}/refresh`, {
       method: 'POST',
@@ -323,12 +357,10 @@ async function run(): Promise<void> {
     const orgStatusBody = (await orgStatusRes.json()) as {
       integrationEnabled: boolean;
       authMode: string;
-      cci: { requiredVersion: string };
       sf: { installed: boolean };
     };
     assert.equal(orgStatusBody.integrationEnabled, false);
-    assert.equal(orgStatusBody.authMode, 'cci');
-    assert.equal(orgStatusBody.cci.requiredVersion, '3.78.0');
+    assert.equal(orgStatusBody.authMode, 'sf_cli_keychain');
     assert.equal(typeof orgStatusBody.sf.installed, 'boolean');
 
     const orgRetrieveBadBodyRes = await fetch(`${base}/org/retrieve`, {

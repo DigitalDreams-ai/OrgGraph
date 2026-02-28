@@ -14,7 +14,8 @@ out/
 .secrets/
 
 # Logs
-logs/
+logs/*
+!logs/.gitkeep
 *.log
 npm-debug.log*
 pnpm-debug.log*
@@ -50,7 +51,7 @@ prisma/migrations/**/migration_lock.toml
 # pnpm
 .pnpm-store/
 
-# Docker
+# Local tooling artifacts
 .docker/
 
 # Salesforce (pulled metadata - optional: remove if you want to track)
@@ -62,3 +63,6 @@ prisma/migrations/**/migration_lock.toml
 .cache/
 artifacts/
 docs/planning/archive/
+.cargo/
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/

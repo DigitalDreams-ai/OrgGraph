@@ -30,13 +30,13 @@ Migrate Orgumented graph storage from SQLite to Postgres with parity validation 
 - `GRAPH_BACKEND=sqlite`
 - `DATABASE_URL=file:./data/orgumented.db`
 2. Restart stack:
-- `docker compose -f docker/docker-compose.yml up -d`
+- start the local runtime and ensure the target Postgres instance is reachable before cutover
 3. Validate:
 - `curl http://localhost:3100/ready`
 - `npm run phase7:smoke-live`
 
 ## Backup / Retention
-- Postgres data volume path (docker compose): `data/postgres`
+- Postgres storage is external to the standalone desktop app runtime; use your managed/local Postgres backup process
 - Before major cutover, archive `data/postgres` and `data/orgumented.db`.
 - Keep at least 7 daily restore points and 4 weekly snapshots.
 - Use `npm run phase8:retention-prune` for regular cleanup of refresh artifacts.
@@ -47,4 +47,3 @@ Migrate Orgumented graph storage from SQLite to Postgres with parity validation 
 - Vacuum/analyze cadence:
   - `VACUUM (ANALYZE);` weekly for heavy churn periods
   - `ANALYZE;` after large refresh/import runs
-

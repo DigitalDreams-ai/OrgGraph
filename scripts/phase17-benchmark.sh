@@ -39,23 +39,6 @@ else
   replay_ms="-1"
 fi
 
-mem_mib() {
-  pattern="$1"
-  docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' | awk -v p="$pattern" '
-    $0 ~ p {
-      usage=$2
-      if (usage ~ /KiB$/) { sub(/KiB$/, "", usage); print usage/1024; found=1; exit }
-      if (usage ~ /MiB$/) { sub(/MiB$/, "", usage); print usage; found=1; exit }
-      if (usage ~ /GiB$/) { sub(/GiB$/, "", usage); print usage*1024; found=1; exit }
-      if (usage ~ /B$/)   { sub(/B$/, "", usage); print usage/1048576; found=1; exit }
-    }
-    END { if (!found) print "0" }
-  '
-}
-
-api_mem_mib="$(mem_mib "orgumented-api")"
-postgres_mem_mib="$(mem_mib "orgumented-postgres")"
-
 cat >"$OUT_PATH" <<JSON
 {
   "generatedAt": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
@@ -64,9 +47,7 @@ cat >"$OUT_PATH" <<JSON
     "ingestIncrementalMs": $ingest_ms,
     "queryAutomationMs": $automation_ms,
     "queryImpactMs": $impact_ms,
-    "replayMs": $replay_ms,
-    "memoryApiMiB": $api_mem_mib,
-    "memoryPostgresMiB": $postgres_mem_mib
+    "replayMs": $replay_ms
   }
 }
 JSON

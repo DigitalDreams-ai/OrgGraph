@@ -7,14 +7,29 @@ Orgumented builds a deterministic graph from Salesforce metadata and answers:
 - What might be impacted by a field change (`/impact`)
 - Natural-language queries with evidence (`/ask`)
 
-## 2. Core Services
-- API: `http://localhost:3100`
-- Web UI: `http://localhost:3101`
+## 2. Runtime Shape
+- Product shell: Tauri desktop application
+- Embedded UI runtime: production-backed local Next server
+- Local engine API: `http://localhost:3100`
 
-## 3. Start the Stack
-```bash
-cd /volume1/data/projects/Orgumented
-docker compose -f docker/docker-compose.yml up -d --build
+## 3. Start the Desktop Runtime
+Development runtime:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+$env:ORGUMENTED_DESKTOP_API_PORT="3200"
+$env:ORGUMENTED_DESKTOP_WEB_PORT="3201"
+node apps/desktop/scripts/dev-runtime.mjs
+```
+
+Default behavior:
+- the runtime uses the last verified web build instead of `next dev`
+- set `ORGUMENTED_DESKTOP_WEB_MODE=development` only when you explicitly want the dev server
+- set `ORGUMENTED_DESKTOP_WEB_REBUILD=1` to force a fresh embedded UI build before launch
+
+Standalone desktop shell:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:dev
 ```
 
 ## 4. Health and Readiness
@@ -48,29 +63,31 @@ Compare two snapshots deterministically:
 curl "http://localhost:3100/refresh/diff/<snapshotA>/<snapshotB>"
 ```
 
-## 6. Connect Sandbox Org (Current Legacy Flow)
-Current implemented flow in this build uses External Client App OAuth.
-Planned direction (Phase 18+) is WebUI-first CCI auth with CumulusCI `3.78.0`.
+## 6. Connect Sandbox Org (Salesforce CLI Keychain)
+Auth is delegated to Salesforce CLI keychain sessions.
 
-### 6.1 Legacy External Client App OAuth
-1. Configure `.env` with Salesforce values (`SF_BASE_URL`, `SF_CLIENT_ID`, `SF_CLIENT_SECRET`, `SF_REDIRECT_URI`, etc.).
-2. Generate OAuth URL:
+1. Configure `.env` with org settings (`SF_ALIAS`, `SF_BASE_URL`, etc.).
+2. Authenticate locally in the same operator environment that runs Orgumented:
 ```bash
-npm run sf:oauth:url
+sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default
+sf org display --target-org orgumented-sandbox --json
+cci org import orgumented-sandbox <sf-username>
+cci org info orgumented-sandbox
 ```
-3. Approve app in browser and copy `code` into `.secrets/sf-auth-code.txt`.
-4. Exchange code for tokens:
+`sf` keychain auth is the required attach path.
+`cci` remains optional support tooling for org tasks and diagnostics; failed `cci org import` no longer blocks desktop session attach.
+3. Validate alias session:
 ```bash
-npm run sf:oauth:exchange
+curl http://localhost:3100/org/preflight
+curl http://localhost:3100/org/session
+curl http://localhost:3100/org/session/aliases
+curl "http://localhost:3100/org/session/validate?alias=orgumented-sandbox"
+curl -X POST http://localhost:3100/org/session/connect -H 'content-type: application/json' -d '{"alias":"orgumented-sandbox"}'
 ```
-5. Authenticate CLI session:
+4. Run:
 ```bash
 npm run sf:auth
 ```
-
-### 6.2 Planned Primary Flow (Phase 18+)
-- WebUI-auth via `cci` will become primary operator path.
-- External Client App OAuth will remain legacy/fallback until migration completes.
 
 ## 7. Retrieve and Ingest Sandbox Metadata
 Avoid package.xml-all retrieval as default operator behavior.
@@ -100,7 +117,7 @@ Expanded metadata coverage in current build includes:
 - `ConnectedApp`
 - staged UI metadata (`ApexPage`, `LightningComponentBundle`, `AuraDefinitionBundle`, `QuickAction`, `Layout`) when enabled
 
-### 7.1 Runtime Org Session Controls (Phase 23)
+### 7.1 Runtime Org Session Controls
 Current runtime session status:
 ```bash
 curl http://localhost:3100/org/session
@@ -119,6 +136,7 @@ curl -X POST http://localhost:3100/org/retrieve \
   -H 'content-type: application/json' \
   -d '{"runAuth":true,"runRetrieve":false,"autoRefresh":false}'
 ```
+If `runRetrieve=true`, `/org/retrieve` now requires explicit `selections` (same contract as `/org/metadata/retrieve`).
 
 Disconnect active runtime session:
 ```bash
@@ -127,8 +145,8 @@ curl -X POST http://localhost:3100/org/session/disconnect
 
 ## 8. Query Orgumented
 
-### 8.0 WebUI Product Workflow (Phase 25)
-WebUI is now organized into task-first tabs:
+### 8.0 Desktop Product Workflow
+The Tauri desktop app uses an embedded workflow-first UI:
 - `Connect`
 - `Org Browser`
 - `Refresh & Build`
@@ -144,10 +162,10 @@ Operator flow:
 4. Run deterministic checks in `Analyze` and `Ask`.
 5. Inspect replay/proof/metrics in `Proofs & Metrics`.
 
-UI quality gates in this phase include:
+Desktop UI quality gates in this phase include:
 - desktop browser screenshot proof: `artifacts/phase25-workflow-ui.png`
 - mobile browser screenshot proof: `artifacts/phase25-mobile-ui.png`
-- browser smoke script: `npm run test:ui-smoke`
+- embedded UI smoke script: `npm run test:ui-smoke`
 
 ### 8.1 Permissions
 ```bash
@@ -170,7 +188,7 @@ curl "http://localhost:3100/automation?object=Opportunity"
 curl "http://localhost:3100/impact?field=Opportunity.StageName"
 ```
 
-### 8.3a Metadata Browser APIs (Phase 22)
+### 8.3a Metadata Browser APIs
 Refresh/load metadata type summaries (cache-aware):
 ```bash
 curl "http://localhost:3100/org/metadata/catalog?limit=200&refresh=true"
@@ -237,17 +255,70 @@ Dashboard-ready metrics export:
 ```bash
 curl http://localhost:3100/ask/metrics/export
 ```
+
+## 9. Project Memory MCP
+
+Use this when Codex needs advisory project continuity across many files and moving parts.
+It does not participate in `/ask`, proof generation, or runtime truth.
+
+Start the MCP:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm --filter @orgumented/project-memory-mcp build
+npm run mcp:project-memory
+```
+
+Optional overrides:
+```powershell
+$env:ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl"
+$env:ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$env:USERPROFILE\Projects\GitHub\OrgGraph"
+```
+
+Register it in Cursor with the committed `.cursor/mcp.json`.
+
+Register it in Codex with:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+codex mcp add project-memory --env ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$PWD" --env ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl" -- node "$PWD\packages\project-memory-mcp\dist\index.js"
+```
+
+Available tools:
+- `put_record`
+- `append_event`
+- `get_record`
+- `list_records`
+- `mark_stale`
+- `link_records`
+- `summarize_scope`
+- `prune_expired`
+- `seed_orgumented_baseline`
+- `summarize_orgumented_waves`
+
+Record types supported:
+- `work_item`
+- `decision_note`
+- `repo_map`
+- `verification_result`
+- `risk_item`
+- `handoff_note`
+- `runtime_observation`
+
+Orgumented-specific helpers:
+- `seed_orgumented_baseline`: seed repo-map records for API runtime, operator surfaces, desktop transition architecture, ontology, and planning.
+- `summarize_orgumented_waves`: read `docs/planning/WAVE_A_TASKLIST.md` through `WAVE_G_TASKLIST.md` and return deterministic task/exit-gate counts.
+
+See `docs/runbooks/PROJECT_MEMORY_MCP.md` for operating rules and guardrails.
 Export now includes:
 - `bySnapshot`: trust and meaning metrics rollups
 - `byProvider`: provider/model success, error rate, latency, token, and estimated cost rollups
 
-Phase 12 replay validation scripts:
+Replay validation scripts:
 ```bash
 npm run phase12:replay-regression
 npm run phase12:replay-load
 ```
 
-### 8.5 Ask Architecture Decision (Phase 15)
+### 8.5 Ask Architecture Decision
 ```bash
 curl -X POST http://localhost:3100/ask/architecture \
   -H 'content-type: application/json' \
@@ -260,7 +331,7 @@ Response includes deterministic engines:
 - `engines.releaseRisk`
 - `composite.trustLevel`, `composite.topRiskDrivers`, `composite.replayToken`
 
-### 8.6 Ask Simulation and Compare (Phase 32)
+### 8.6 Ask Simulation and Compare
 ```bash
 curl -X POST http://localhost:3100/ask/simulate \
   -H 'content-type: application/json' \
@@ -271,13 +342,13 @@ curl -X POST http://localhost:3100/ask/simulate/compare \
   -d '{"scenarioA":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"strict","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"}]},"scenarioB":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"exploratory","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"},{"action":"add_automation","object":"Opportunity"}]}}'
 ```
 
-### 8.7 Trust Dashboard (Phase 34)
+### 8.7 Trust Dashboard
 ```bash
 curl http://localhost:3100/ask/trust/dashboard
 ```
 Includes replay/pass proxy rate, proof coverage, drift snapshot trend, and failure classes.
 
-### 8.8 Meta-Context Adaptation (Phase 16)
+### 8.8 Meta-Context Adaptation
 ```bash
 curl http://localhost:3100/meta/context
 curl -X POST http://localhost:3100/meta/adapt -H 'content-type: application/json' -d '{"dryRun":true}'
@@ -286,8 +357,8 @@ curl -X POST http://localhost:3100/meta/adapt -H 'content-type: application/json
 
 `/meta/adapt` writes deterministic audit artifacts and updates relation multipliers used by analysis ranking.
 
-## 9. Web Query Proxy
-Web route supports either `kind` or `endpoint`, and either `payload` or `params`.
+## 10. Embedded UI Query Proxy
+The embedded Next.js proxy supports either `kind` or `endpoint`, and either `payload` or `params`.
 
 ```bash
 curl -X POST http://localhost:3101/api/query \
@@ -299,15 +370,15 @@ curl -X POST http://localhost:3101/api/query \
   -d '{"endpoint":"perms","params":{"user":"sbingham@shulman-hill.com.uat","object":"litify_pm__Intake__c"}}'
 ```
 
-## 10. Common Troubleshooting
+## 11. Common Troubleshooting
 
-### 10.1 `/perms` returns `unmapped_user`
+### 11.1 `/perms` returns `unmapped_user`
 ```bash
 npm run sf:export-user-map
 ```
 Then retry `/perms`.
 
-### 10.2 Readiness points to fixture path instead of retrieved path
+### 11.2 Readiness points to fixture path instead of retrieved path
 Run live refresh again:
 ```bash
 curl -X POST http://localhost:3100/refresh \
@@ -316,20 +387,20 @@ curl -X POST http://localhost:3100/refresh \
 ```
 If refresh state was produced from a different runtime context, `/ready` now automatically falls back to current runtime path resolution.
 
-### 10.3 Web container unhealthy
-Rebuild and restart:
+### 11.3 Embedded UI runtime unhealthy
+Restart the desktop runtime and re-run:
 ```bash
-docker compose -f docker/docker-compose.yml up -d --build web
+npm run test:web-smoke
 ```
 
-### 10.4 Validate full web flow quickly
+### 11.4 Validate the desktop-backed flow quickly
 ```bash
 npm run test:web-smoke
 # Optional: opt-in to smoke against retrieved org metadata
 WEB_SMOKE_USE_SF_PROJECT=1 npm run test:web-smoke
 ```
 
-## 11. Extended Validation Harness
+## 12. Extended Validation Harness
 ```bash
 npm run phase7:smoke-live
 npm run phase7:snapshot

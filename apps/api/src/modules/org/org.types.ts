@@ -1,7 +1,11 @@
+export type OrgAuthMode = 'sf_cli_keychain';
+
 export interface OrgRetrieveRequest {
+  alias?: string;
   runAuth?: boolean;
   runRetrieve?: boolean;
   autoRefresh?: boolean;
+  selections?: Array<{ type: string; members?: string[] }>;
 }
 
 export interface OrgStepResult {
@@ -17,17 +21,17 @@ export interface OrgRetrieveResponse {
   startedAt: string;
   completedAt: string;
   integrationEnabled: boolean;
-  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: OrgAuthMode;
   alias: string;
   projectPath: string;
-  manifestPath: string;
   parsePath: string;
+  metadataArgs?: string[];
   steps: OrgStepResult[];
 }
 
 export interface OrgStatusResponse {
   integrationEnabled: boolean;
-  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: OrgAuthMode;
   alias: string;
   cci: {
     installed: boolean;
@@ -98,27 +102,66 @@ export interface OrgMetadataRetrieveResponse {
 export interface OrgSessionStatusResponse {
   status: 'connected' | 'disconnected';
   activeAlias: string;
-  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: OrgAuthMode;
   connectedAt?: string;
   disconnectedAt?: string;
   lastError?: string;
+}
+
+export interface OrgAliasSummary {
+  alias: string;
+  username?: string;
+  orgId?: string;
+  instanceUrl?: string;
+  isDefault: boolean;
+  source: 'sf_cli_keychain';
+}
+
+export interface OrgSessionAliasesResponse {
+  authMode: OrgAuthMode;
+  activeAlias: string;
+  aliases: OrgAliasSummary[];
+}
+
+export interface OrgSessionAliasValidationResponse {
+  alias: string;
+  authMode: OrgAuthMode;
+  sessionConnected: boolean;
+  sfAccessible: boolean;
+  cciAvailable: boolean;
+  username?: string;
+  orgId?: string;
+  instanceUrl?: string;
+  issues: OrgPreflightIssue[];
 }
 
 export interface OrgSessionSwitchRequest {
   alias: string;
 }
 
+export interface OrgSessionConnectRequest {
+  alias?: string;
+}
+
+export interface OrgSessionConnectResponse {
+  status: 'connected';
+  activeAlias: string;
+  authMode: OrgAuthMode;
+  connectedAt: string;
+  method: 'sf_cli_keychain';
+}
+
 export interface OrgSessionSwitchResponse {
   status: 'connected';
   activeAlias: string;
-  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: OrgAuthMode;
   switchedAt: string;
 }
 
 export interface OrgSessionDisconnectResponse {
   status: 'disconnected';
   activeAlias: string;
-  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: OrgAuthMode;
   disconnectedAt: string;
 }
 
@@ -132,13 +175,13 @@ export interface OrgPreflightIssue {
 export interface OrgPreflightResponse {
   ok: boolean;
   integrationEnabled: boolean;
-  authMode: 'cci' | 'sfdx_url' | 'jwt' | 'oauth_refresh_token';
+  authMode: OrgAuthMode;
   alias: string;
   checks: {
-    sfInstalled: boolean;
     cciInstalled: boolean;
     cciVersionPinned: boolean;
-    manifestPresent: boolean;
+    cciAliasAvailable: boolean;
+    sfInstalled: boolean;
     parsePathPresent: boolean;
     aliasAuthenticated: boolean;
     sessionConnected: boolean;

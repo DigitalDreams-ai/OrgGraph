@@ -24,8 +24,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
       - name: ShellCheck
-        run: docker run --rm -v "$PWD":/mnt koalaman/shellcheck:stable -x scripts/*.sh
+        run: shellcheck -x scripts/*.sh
 
       - name: Enforce executable bit for directly invoked scripts
         run: |

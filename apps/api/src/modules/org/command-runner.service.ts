@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { spawn } from 'node:child_process';
 
 export interface CommandResult {
@@ -13,15 +15,36 @@ export class CommandRunnerService {
   run(
     command: string,
     args: string[],
-    options: { cwd?: string; timeoutMs?: number; env?: NodeJS.ProcessEnv } = {}
+    options: { cwd?: string; timeoutMs?: number; env?: NodeJS.ProcessEnv; stdin?: string } = {}
   ): Promise<CommandResult> {
     const startedAt = Date.now();
+    const baseEnv = options.env ?? process.env;
+    const env =
+      command === 'sf'
+        ? {
+            ...baseEnv,
+            SF_DISABLE_TELEMETRY: baseEnv.SF_DISABLE_TELEMETRY ?? 'true',
+            SFDX_DISABLE_TELEMETRY: baseEnv.SFDX_DISABLE_TELEMETRY ?? 'true',
+            SF_HIDE_RELEASE_NOTES: baseEnv.SF_HIDE_RELEASE_NOTES ?? 'true'
+          }
+        : baseEnv;
+    const runtimeEnv =
+      process.platform === 'win32'
+        ? {
+            ...env,
+            ComSpec: env.ComSpec || process.env.ComSpec || 'C:\\Windows\\System32\\cmd.exe',
+            SystemRoot: env.SystemRoot || process.env.SystemRoot || 'C:\\Windows',
+            PATH: env.PATH || process.env.PATH || ''
+          }
+        : env;
+    const resolved = this.resolveCommand(command, args, runtimeEnv);
+
     return new Promise((resolve, reject) => {
-      const child = spawn(command, args, {
+      const child = spawn(resolved.command, resolved.args, {
         cwd: options.cwd,
-        env: options.env ?? process.env,
-        shell: false,
-        stdio: ['ignore', 'pipe', 'pipe']
+        env: runtimeEnv,
+        shell: resolved.shell,
+        stdio: ['pipe', 'pipe', 'pipe']
       });
 
       let stdout = '';
@@ -40,6 +63,11 @@ export class CommandRunnerService {
         stderr += String(chunk);
       });
 
+      if (options.stdin !== undefined) {
+        child.stdin.write(options.stdin);
+      }
+      child.stdin.end();
+
       child.on('error', (error) => {
         clearTimeout(timer);
         reject(error);
@@ -55,5 +83,64 @@ export class CommandRunnerService {
         });
       });
     });
+  }
+
+  private resolveCommand(
+    command: string,
+    args: string[],
+    env: NodeJS.ProcessEnv
+  ): { command: string; args: string[]; shell: boolean } {
+    if (process.platform !== 'win32') {
+      return { command, args, shell: false };
+    }
+
+    const resolvedPath = this.resolveWindowsPath(command, env);
+    if (!resolvedPath) {
+      return { command, args, shell: false };
+    }
+
+    const extension = path.extname(resolvedPath).toLowerCase();
+    if (extension === '.cmd' || extension === '.bat') {
+      return {
+        command: resolvedPath,
+        args,
+        shell: true
+      };
+    }
+
+    return {
+      command: resolvedPath,
+      args,
+      shell: false
+    };
+  }
+
+  private resolveWindowsPath(command: string, env: NodeJS.ProcessEnv): string | undefined {
+    if (command.includes('\\') || command.includes('/') || path.extname(command).length > 0) {
+      return command;
+    }
+
+    const pathValue = env.PATH || process.env.PATH || '';
+    const pathEntries = pathValue.split(';').map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+    const pathExts = (env.PATHEXT || process.env.PATHEXT || '.COM;.EXE;.BAT;.CMD')
+      .split(';')
+      .map((entry) => entry.trim().toLowerCase())
+      .filter((entry) => entry.length > 0);
+
+    for (const directory of pathEntries) {
+      for (const extension of pathExts) {
+        const candidate = path.join(directory, `${command}${extension}`);
+        if (existsSync(candidate)) {
+          return candidate;
+        }
+      }
+
+      const directCandidate = path.join(directory, command);
+      if (existsSync(directCandidate)) {
+        return directCandidate;
+      }
+    }
+
+    return undefined;
   }
 }

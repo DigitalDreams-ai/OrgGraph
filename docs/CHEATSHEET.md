@@ -1,10 +1,24 @@
 # Orgumented Cheat Sheet
 
 ## Start / Stop
-```bash
-cd /volume1/data/projects/Orgumented
-docker compose -f docker/docker-compose.yml up -d --build
-docker compose -f docker/docker-compose.yml down
+Desktop development runtime:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+$env:ORGUMENTED_DESKTOP_API_PORT="3200"
+$env:ORGUMENTED_DESKTOP_WEB_PORT="3201"
+node apps/desktop/scripts/dev-runtime.mjs
+```
+
+Optional runtime flags:
+```powershell
+$env:ORGUMENTED_DESKTOP_WEB_MODE="development"
+$env:ORGUMENTED_DESKTOP_WEB_REBUILD="1"
+```
+
+Standalone desktop shell:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:dev
 ```
 
 ## Health
@@ -14,6 +28,8 @@ curl http://localhost:3100/ready
 curl http://localhost:3100/ingest/latest
 curl http://localhost:3101/api/health
 curl http://localhost:3101/api/ready
+curl http://localhost:3100/org/session/aliases
+curl "http://localhost:3100/org/session/validate?alias=orgumented-sandbox"
 ```
 
 ## Local Fixture Refresh
@@ -29,12 +45,21 @@ curl "http://localhost:3100/refresh/diff/<snapshotA>/<snapshotB>"
 
 ## Sandbox Retrieve + Refresh
 ```bash
+sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default
+sf org display --target-org orgumented-sandbox --json
+cci org import orgumented-sandbox <sf-username>
+cci org info orgumented-sandbox
 npm run sf:auth
 curl http://localhost:3100/org/status
 npm run sf:retrieve
 npm run sf:export-user-map
-curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full"}'
+curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full","rebaseline":true}'
+curl http://localhost:3100/ready
 ```
+
+Current attach rule:
+- `sf` keychain auth is sufficient for `org/session/connect`
+- `cci` import failures are warnings, not attach blockers
 
 ## Enable Staged UI Metadata Ingestion
 ```bash
@@ -53,6 +78,9 @@ curl -X POST http://localhost:3100/ask/simulate -H 'content-type: application/js
 curl -X POST http://localhost:3100/ask/simulate/compare -H 'content-type: application/json' -d '{"scenarioA":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"strict","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"}]},"scenarioB":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"exploratory","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"},{"action":"add_automation","object":"Opportunity"}]}}'
 curl -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgConnect","payload":{}}'
 curl http://localhost:3100/org/session
+curl http://localhost:3100/org/session/aliases
+curl "http://localhost:3100/org/session/validate?alias=orgumented-sandbox"
+curl -X POST http://localhost:3100/org/session/connect -H 'content-type: application/json' -d '{"alias":"orgumented-sandbox"}'
 curl -X POST http://localhost:3100/org/session/switch -H 'content-type: application/json' -d '{"alias":"orgumented-sandbox"}'
 curl -X POST http://localhost:3100/org/session/disconnect
 curl "http://localhost:3100/org/metadata/catalog?q=opportunity&limit=50&refresh=true"
@@ -69,7 +97,7 @@ curl http://localhost:3100/ask/metrics/export
 curl http://localhost:3100/ask/trust/dashboard
 ```
 
-## Web Proxy (`/api/query`)
+## Embedded UI Proxy (`/api/query`)
 ```bash
 curl -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"automation","payload":{"object":"Opportunity"}}'
 curl -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"endpoint":"impact","params":{"field":"Opportunity.StageName"}}'
@@ -97,16 +125,17 @@ npm run phase13:metrics-export
 npm run phase14:drift-report -- latest latest artifacts/phase14-drift-report.json
 npm run phase14:drift-gate
 ./scripts/phase17-benchmark.sh
+npm run mcp:project-memory
+pnpm --filter @orgumented/project-memory-mcp test
 ```
 
-## WebUI Tabs
+## Desktop App Workspaces
 - `Connect`: auth path + session/alias actions
 - `Org Browser`: searchable metadata tree + retrieval cart
 - `Refresh`: full/incremental refresh + snapshot diff
 - `Analyze`: permissions/automation/impact workflows
 - `Ask`: deterministic answer + proof envelope + optional elaboration
-- `Simulate`: what-if risk scoring + A/B compare
-- `Prove`: proof lookup/replay + metrics/trust dashboard
+- `Proofs & Metrics`: proof lookup/replay + metrics/trust dashboard
 - `System`: diagnostics, meta-context, action telemetry
 
 ## Fast Fixes
@@ -115,8 +144,33 @@ npm run phase14:drift-gate
 npm run sf:export-user-map
 
 # Re-point runtime to sandbox retrieved metadata
-curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full"}'
+curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full","rebaseline":true}'
 
-# Rebuild web if unhealthy
-docker compose -f docker/docker-compose.yml up -d --build web
+# Restart the standalone desktop shell after UI changes
+pnpm desktop:dev
 ```
+
+## Project Memory MCP
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm --filter @orgumented/project-memory-mcp build
+npm run mcp:project-memory
+```
+
+Optional env:
+```powershell
+$env:ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl"
+$env:ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$env:USERPROFILE\Projects\GitHub\OrgGraph"
+```
+
+Cursor project config is committed at `.cursor/mcp.json`.
+
+Codex registration:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+codex mcp add project-memory --env ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$PWD" --env ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl" -- node "$PWD\packages\project-memory-mcp\dist\index.js"
+```
+
+Orgumented-specific tools:
+- `seed_orgumented_baseline`
+- `summarize_orgumented_waves`

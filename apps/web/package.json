@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "prebuild": "sh ../../scripts/clean-eadir.sh",
-    "build": "next build",
-    "start": "next start",
+    "dev": "pnpm exec next dev",
+    "prebuild": "node ../../scripts/clean-eadir.mjs",
+    "build": "pnpm exec next build",
+    "start": "pnpm exec next start",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

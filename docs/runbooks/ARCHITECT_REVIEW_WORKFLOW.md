@@ -47,7 +47,7 @@ Composite output:
 After parser or ontology changes, rerun:
 
 ```bash
-docker compose -f docker/docker-compose.yml run --rm api sh -lc 'pnpm --filter api test'
+pnpm --filter api test
 ```
 
 If decision output changes unexpectedly for same snapshot, treat as regression.

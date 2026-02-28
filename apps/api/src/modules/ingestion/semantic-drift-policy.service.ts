@@ -6,6 +6,7 @@ export interface SemanticSnapshotRecord {
   snapshotId: string;
   fingerprint: string;
   generatedAt: string;
+  sourcePath?: string;
   nodeCount: number;
   edgeCount: number;
   nodeDigest: string;

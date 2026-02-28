@@ -69,7 +69,7 @@ For semantic runtime changes, also validate:
 
 ## 7) Operational Constraints
 
-- Keep Docker/runtime config explicit and auditable.
+- Keep runtime config explicit and auditable.
 - Prefer config-driven behavior over hardcoded values.
 - Keep `.env`, `.env.sample`, `.env.example`, and config samples aligned.
 - Avoid secret leakage in logs, docs, commits, and test artifacts.
@@ -144,27 +144,25 @@ Environment limitation fallback:
 
 Use available MCP servers as first-class workflow tools:
 
-- `filesystem` MCP
-  - Use first for file discovery, reads, and edits inside allowed paths.
-  - Prefer this over ad-hoc shell file ops when both are viable.
-
-- `docker` MCP
-  - Use for project/container health, logs, compose up/down/restart, and service stats.
-  - Prefer MCP docker actions before raw docker CLI commands for repeatability.
-
-- `postgres` MCP
-  - Use for read-only verification queries and schema/data checks tied to runtime behavior.
-  - Validate DB assumptions with MCP queries before implementing parser/query logic changes.
-
 - `github` MCP
   - Use for PR/issue/review metadata, branch/PR checks, and repository inspection workflows.
   - Prefer MCP when reporting PR status or preparing merge-readiness checks.
 
+- `project-memory` MCP
+  - Use for advisory project continuity only: handoff notes, verification breadcrumbs, subsystem maps, risk tracking, and wave/tasklist summaries.
+  - Seed baseline repo-map records before heavy implementation work when the memory store is empty.
+  - Treat all records as derived working memory, never as canonical requirements or runtime truth.
+  - Do not use project-memory content as input to `/ask`, proof generation, deterministic planner routing, or policy evaluation.
+
+- `postgres` MCP
+  - Use only when the task touches Postgres-backed storage, parity verification, or data-plane debugging.
+  - Validate DB assumptions with MCP queries before implementing parser/query logic changes.
+
 Execution order guidance:
-1. `filesystem` for code/document context.
-2. `docker` for runtime state and service health.
-3. `postgres` for data-plane verification.
-4. `github` for collaboration/PR state.
+1. local workspace access for code/document context.
+2. `project-memory` for active work context, subsystem continuity, and wave summaries.
+3. `github` for collaboration/PR state.
+4. `postgres` for storage/data-plane verification when relevant.
 
 MCP fallback rule:
 - If an MCP is unavailable or unhealthy, state it clearly, use the next best local alternative, and continue.
@@ -172,15 +170,21 @@ MCP fallback rule:
 ## 14) Session Guardrails
 
 - MCP health preflight
-  - At session start, run quick MCP checks for `filesystem`, `docker`, `postgres`, and `github`.
+  - At session start, run quick MCP checks for `project-memory` and `github`.
+  - Check `postgres` only when the task touches Postgres-backed storage or verification.
   - Report pass/fail and known limitations before implementation work.
+  - If `project-memory` is available, use it to inspect prior handoff notes and current wave context before broad repo exploration.
 
 - Secret hygiene hard-stop
   - Never output full secrets (API keys, tokens, OAuth codes, connection credentials).
   - Mask sensitive values in logs, docs, terminal snippets, and test artifacts.
 
 - Runtime change verification gate
-  - For any runtime/config change (`.env*`, compose, config JSON, MCP config), require:
+  - For any runtime/config change (`.env*`, config JSON, MCP config), require:
     1. proper service restart/recreate,
     2. one targeted smoke test,
     3. one concrete proof artifact (log line, endpoint result, or command output summary) showing new config is active.
+
+- Project memory boundary
+  - Project-memory records are advisory and may summarize repo state, but code, docs, tests, proofs, snapshots, and policies remain the only source of truth.
+  - If project-memory content conflicts with the repository, trust the repository and mark the stale memory record accordingly.
