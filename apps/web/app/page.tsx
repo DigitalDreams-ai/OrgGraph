@@ -10,11 +10,9 @@ import {
   getOrgSession,
   getOrgStatus,
   listOrgSessionAliases,
-  runOrgRetrieve,
   runOrgPreflight,
   switchOrgSession
 } from './lib/org-client';
-import { getRefreshDiff, runRefresh } from './lib/refresh-client';
 import { runSecondaryQueryRequest, type SecondaryQueryKind } from './lib/secondary-client';
 import { getApiHealth, getApiReady } from './lib/status-client';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
@@ -31,6 +29,8 @@ import type {
 } from './workspaces/connect/types';
 import { ProofsWorkspace } from './workspaces/proofs/proofs-workspace';
 import { useProofsWorkspace } from './workspaces/proofs/use-proofs-workspace';
+import { RefreshWorkspace } from './workspaces/refresh/refresh-workspace';
+import { useRefreshWorkspace } from './workspaces/refresh/use-refresh-workspace';
 import { SystemWorkspace } from './workspaces/system/system-workspace';
 
 type OrgQueryKind =
@@ -40,10 +40,8 @@ type OrgQueryKind =
   | 'orgPreflight'
   | 'orgSessionSwitch'
   | 'orgSessionDisconnect'
-  | 'orgStatus'
-  | 'orgRetrieve';
+  | 'orgStatus';
 
-type RefreshQueryKind = 'refresh' | 'refreshDiff';
 type QueryKind = SecondaryQueryKind;
 
 type UiTab = 'ask' | 'connect' | 'browser' | 'refresh' | 'analyze' | 'proofs' | 'system';
@@ -120,13 +118,6 @@ export default function Page(): JSX.Element {
   const [orgPreflight, setOrgPreflight] = useState<OrgPreflightPayload | null>(null);
   const [orgAliases, setOrgAliases] = useState<OrgSessionAliasesPayload | null>(null);
 
-  const [refreshMode, setRefreshMode] = useState<'incremental' | 'full'>('incremental');
-  const [fromSnapshot, setFromSnapshot] = useState('');
-  const [toSnapshot, setToSnapshot] = useState('');
-  const [orgRunAuth, setOrgRunAuth] = useState(true);
-  const [orgRunRetrieve, setOrgRunRetrieve] = useState(true);
-  const [orgAutoRefresh, setOrgAutoRefresh] = useState(true);
-
   const [user, setUser] = useState('sbingham@shulman-hill.com.uat');
   const [objectName, setObjectName] = useState('Opportunity');
   const [fieldName, setFieldName] = useState('Opportunity.StageName');
@@ -153,6 +144,14 @@ export default function Page(): JSX.Element {
     setErrorText
   });
   const browserWorkspace = useBrowserWorkspace({
+    presentResponse,
+    resolveErrorMessage,
+    setLoading,
+    setCopied,
+    setErrorText
+  });
+  const refreshWorkspace = useRefreshWorkspace({
+    orgAlias,
     presentResponse,
     resolveErrorMessage,
     setLoading,
@@ -255,13 +254,6 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
         });
       } else if (kind === 'orgSessionDisconnect') {
         parsed = await disconnectOrgSession();
-      } else if (kind === 'orgRetrieve') {
-        parsed = await runOrgRetrieve({
-          alias: typeof payload.alias === 'string' ? payload.alias : undefined,
-          runAuth: typeof payload.runAuth === 'boolean' ? payload.runAuth : undefined,
-          runRetrieve: typeof payload.runRetrieve === 'boolean' ? payload.runRetrieve : undefined,
-          autoRefresh: typeof payload.autoRefresh === 'boolean' ? payload.autoRefresh : undefined
-        });
       } else if (kind === 'orgConnect') {
         parsed = await connectOrgSession({
           alias: typeof payload.alias === 'string' ? payload.alias : undefined
@@ -291,40 +283,6 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
       return parsed;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected org query failure';
-      const fallback: QueryResponse = { ok: false, error: { message } };
-      presentResponse(fallback);
-      setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function runRefreshQuery(kind: RefreshQueryKind, payload: Record<string, unknown> = {}): Promise<QueryResponse | null> {
-    setLoading(true);
-    setCopied(false);
-    setErrorText('');
-
-    try {
-      const parsed =
-        kind === 'refresh'
-          ? await runRefresh({
-              mode: payload.mode === 'full' || payload.mode === 'incremental' ? payload.mode : undefined
-            })
-          : await getRefreshDiff(
-              typeof payload.fromSnapshot === 'string' ? payload.fromSnapshot : '',
-              typeof payload.toSnapshot === 'string' ? payload.toSnapshot : ''
-            );
-
-      presentResponse(parsed);
-
-      if (parsed.ok === false) {
-        setErrorText(resolveErrorMessage(parsed));
-      }
-
-      return parsed;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected refresh query failure';
       const fallback: QueryResponse = { ok: false, error: { message } };
       presentResponse(fallback);
       setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.');
@@ -541,73 +499,24 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
           )}
 
           {uiTab === 'refresh' && (
-            <>
-              <h2>Refresh &amp; Build</h2>
-              <p className="section-lead">Rebuild semantic state and compare snapshot drift with deterministic outputs.</p>
-
-              <label htmlFor="refreshMode">Refresh Mode</label>
-              <select id="refreshMode" value={refreshMode} onChange={(e) => setRefreshMode(e.target.value as 'incremental' | 'full')}>
-                <option value="incremental">incremental</option>
-                <option value="full">full</option>
-              </select>
-
-              <div className="action-row">
-                <button type="button" onClick={() => void runRefreshQuery('refresh', { mode: refreshMode })} disabled={loading}>Run Refresh</button>
-              </div>
-
-              <div className="field-grid">
-                <div>
-                  <label htmlFor="fromSnapshot">From Snapshot ID</label>
-                  <input id="fromSnapshot" value={fromSnapshot} onChange={(e) => setFromSnapshot(e.target.value)} />
-                </div>
-                <div>
-                  <label htmlFor="toSnapshot">To Snapshot ID</label>
-                  <input id="toSnapshot" value={toSnapshot} onChange={(e) => setToSnapshot(e.target.value)} />
-                </div>
-              </div>
-
-              <div className="action-row">
-                <button
-                  type="button"
-                  onClick={() => void runRefreshQuery('refreshDiff', { fromSnapshot, toSnapshot })}
-                  disabled={loading}
-                >
-                  Run Diff
-                </button>
-              </div>
-
-              <h3>Org Retrieve Pipeline</h3>
-              <div className="field-grid">
-                <label className="check-row" htmlFor="orgRunAuth">
-                  <input id="orgRunAuth" type="checkbox" checked={orgRunAuth} onChange={(e) => setOrgRunAuth(e.target.checked)} />
-                  Run Auth
-                </label>
-                <label className="check-row" htmlFor="orgRunRetrieve">
-                  <input id="orgRunRetrieve" type="checkbox" checked={orgRunRetrieve} onChange={(e) => setOrgRunRetrieve(e.target.checked)} />
-                  Run Retrieve
-                </label>
-                <label className="check-row" htmlFor="orgAutoRefresh">
-                  <input id="orgAutoRefresh" type="checkbox" checked={orgAutoRefresh} onChange={(e) => setOrgAutoRefresh(e.target.checked)} />
-                  Auto Refresh
-                </label>
-              </div>
-              <div className="action-row">
-                <button
-                  type="button"
-                  onClick={() =>
-                    void runOrgQuery('orgRetrieve', {
-                      alias: orgAlias,
-                      runAuth: orgRunAuth,
-                      runRetrieve: orgRunRetrieve,
-                      autoRefresh: orgAutoRefresh
-                    })
-                  }
-                  disabled={loading}
-                >
-                  Run Org Retrieve
-                </button>
-              </div>
-            </>
+            <RefreshWorkspace
+              refreshMode={refreshWorkspace.refreshMode}
+              setRefreshMode={refreshWorkspace.setRefreshMode}
+              fromSnapshot={refreshWorkspace.fromSnapshot}
+              setFromSnapshot={refreshWorkspace.setFromSnapshot}
+              toSnapshot={refreshWorkspace.toSnapshot}
+              setToSnapshot={refreshWorkspace.setToSnapshot}
+              orgRunAuth={refreshWorkspace.orgRunAuth}
+              setOrgRunAuth={refreshWorkspace.setOrgRunAuth}
+              orgRunRetrieve={refreshWorkspace.orgRunRetrieve}
+              setOrgRunRetrieve={refreshWorkspace.setOrgRunRetrieve}
+              orgAutoRefresh={refreshWorkspace.orgAutoRefresh}
+              setOrgAutoRefresh={refreshWorkspace.setOrgAutoRefresh}
+              loading={loading}
+              onRunRefresh={() => void refreshWorkspace.runRefreshNow()}
+              onRunDiff={() => void refreshWorkspace.runDiff()}
+              onRunOrgRetrieve={() => void refreshWorkspace.runOrgRetrieveNow()}
+            />
           )}
 
           {uiTab === 'analyze' && (

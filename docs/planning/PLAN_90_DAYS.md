@@ -191,6 +191,9 @@ Progress note:
 - Slice 3 completed:
   - Browser metadata search, selection, member loading, and retrieve state/actions moved out of `apps/web/app/page.tsx`
   - Browser orchestration now lives in `apps/web/app/workspaces/browser/use-browser-workspace.ts`
+- Slice 4 completed:
+  - `Refresh & Build` rendering moved out of `apps/web/app/page.tsx`
+  - refresh/diff and org-retrieve workflow state/actions now live in `apps/web/app/workspaces/refresh/`
 - Next narrow step:
   - move remaining System state or shared shell orchestration out of `apps/web/app/page.tsx`
   - then reassess whether the remaining page shell is small enough to pivot back to deeper runtime or org-session proof work
@@ -281,6 +284,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: reduce the remaining System and shared shell page orchestration now that Browser state is modular and packaged smoke covers shell launch, readiness, Ask proof, and org status.
+- Preferred next step: reduce the remaining System and shared shell page orchestration now that Browser and Refresh state are modular and packaged smoke covers shell launch, readiness, Ask proof, and org status.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

@@ -614,3 +614,42 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns Browser metadata state or Browser action orchestration directly.
 - The remaining page shell is increasingly limited to shared shell state and the System/operator rail.
 - The next narrow slice is extracting the remaining System or shared shell orchestration out of `apps/web/app/page.tsx`.
+
+## Entry 18: Phase 5 Refresh Workspace Extraction
+
+### Change
+- Extracted `Refresh & Build` rendering out of `apps/web/app/page.tsx`.
+- Added:
+  - `apps/web/app/workspaces/refresh/refresh-workspace.tsx`
+  - `apps/web/app/workspaces/refresh/use-refresh-workspace.ts`
+- Moved the following into the Refresh workspace hook:
+  - refresh mode state
+  - snapshot diff state
+  - org-retrieve pipeline checkbox state
+  - refresh execution
+  - refresh diff execution
+  - org retrieve execution from the Refresh workspace
+- Removed the stale `orgRetrieve` path from the page-level org query dispatcher once Refresh owned that flow.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - typed refresh and org routes remained present for:
+    - `/api/refresh`
+    - `/api/refresh/diff/[snapshotA]/[snapshotB]`
+    - `/api/org/retrieve`
+
+3. Page-shell reduction proof
+- Result: passed
+- Proof:
+  - `apps/web/app/page.tsx` line count dropped from `690` to `610`
+
+### Outcome
+- `page.tsx` no longer owns the `Refresh & Build` render tree or refresh/retrieve workflow state directly.
+- The remaining page shell is now concentrated around shared shell state, top-bar/status actions, and the operator rail.
+- The next narrow slice is extracting the remaining System or shared shell orchestration out of `apps/web/app/page.tsx`.
