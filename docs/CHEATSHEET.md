@@ -143,7 +143,11 @@ Codex config snippet:
 {
   "mcpServers": {
     "project-memory": {
-      "command": "/volume1/data/projects/OrgGraph/scripts/project-memory-mcp.sh"
+      "command": "/usr/local/bin/node",
+      "args": [
+        "/volume1/data/projects/OrgGraph/packages/project-memory-mcp/dist/index.js"
+      ],
+      "cwd": "/volume1/data/projects/OrgGraph"
     }
   }
 }
