@@ -653,3 +653,45 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns the `Refresh & Build` render tree or refresh/retrieve workflow state directly.
 - The remaining page shell is now concentrated around shared shell state, top-bar/status actions, and the operator rail.
 - The next narrow slice is extracting the remaining System or shared shell orchestration out of `apps/web/app/page.tsx`.
+
+## Entry 19: Phase 5 Connect State Extraction
+
+### Change
+- Extracted org session and org-status orchestration out of `apps/web/app/page.tsx`.
+- Added `apps/web/app/workspaces/connect/use-connect-workspace.ts`.
+- Moved the following into the Connect workspace hook:
+  - org alias state
+  - session state
+  - tool status state
+  - preflight state
+  - alias inventory state
+  - alias inspect/connect/switch/disconnect actions
+  - session and tool-status loading actions
+- Updated the top bar, Connect workspace, System workspace, and operator rail to consume the shared Connect workspace hook instead of page-local org transport.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - typed org routes remained present for:
+    - `/api/org/status`
+    - `/api/org/session`
+    - `/api/org/session/aliases`
+    - `/api/org/session/connect`
+    - `/api/org/session/switch`
+    - `/api/org/session/disconnect`
+    - `/api/org/preflight`
+
+3. Page-shell reduction proof
+- Result: passed
+- Proof:
+  - `apps/web/app/page.tsx` line count dropped from `610` to `533`
+
+### Outcome
+- `page.tsx` no longer owns org session/status/preflight/alias lifecycle state directly.
+- Shared org-side desktop state now has a single UI hook boundary instead of being duplicated across top bar, Connect, System, and operator rail consumers.
+- The next narrow slice is extracting the remaining System or shared shell orchestration out of `apps/web/app/page.tsx`.

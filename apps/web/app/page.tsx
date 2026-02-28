@@ -4,15 +4,6 @@ import { useEffect, useState } from 'react';
 import {
   type QueryResponse
 } from './lib/ask-client';
-import {
-  connectOrgSession,
-  disconnectOrgSession,
-  getOrgSession,
-  getOrgStatus,
-  listOrgSessionAliases,
-  runOrgPreflight,
-  switchOrgSession
-} from './lib/org-client';
 import { runSecondaryQueryRequest, type SecondaryQueryKind } from './lib/secondary-client';
 import { getApiHealth, getApiReady } from './lib/status-client';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
@@ -21,26 +12,12 @@ import { AnalyzeWorkspace, type AnalyzeMode } from './workspaces/analyze/analyze
 import { BrowserWorkspace } from './workspaces/browser/browser-workspace';
 import { useBrowserWorkspace } from './workspaces/browser/use-browser-workspace';
 import { ConnectWorkspace } from './workspaces/connect/connect-workspace';
-import type {
-  OrgPreflightPayload,
-  OrgSessionAliasesPayload,
-  OrgSessionPayload,
-  OrgStatusPayload
-} from './workspaces/connect/types';
+import { useConnectWorkspace } from './workspaces/connect/use-connect-workspace';
 import { ProofsWorkspace } from './workspaces/proofs/proofs-workspace';
 import { useProofsWorkspace } from './workspaces/proofs/use-proofs-workspace';
 import { RefreshWorkspace } from './workspaces/refresh/refresh-workspace';
 import { useRefreshWorkspace } from './workspaces/refresh/use-refresh-workspace';
 import { SystemWorkspace } from './workspaces/system/system-workspace';
-
-type OrgQueryKind =
-  | 'orgConnect'
-  | 'orgSessionAliases'
-  | 'orgSession'
-  | 'orgPreflight'
-  | 'orgSessionSwitch'
-  | 'orgSessionDisconnect'
-  | 'orgStatus';
 
 type QueryKind = SecondaryQueryKind;
 
@@ -112,12 +89,6 @@ export default function Page(): JSX.Element {
   const [readyStatus, setReadyStatus] = useState('unknown');
   const [readyDetails, setReadyDetails] = useState('');
 
-  const [orgAlias, setOrgAlias] = useState('orgumented-sandbox');
-  const [orgSession, setOrgSession] = useState<OrgSessionPayload | null>(null);
-  const [orgStatus, setOrgStatus] = useState<OrgStatusPayload | null>(null);
-  const [orgPreflight, setOrgPreflight] = useState<OrgPreflightPayload | null>(null);
-  const [orgAliases, setOrgAliases] = useState<OrgSessionAliasesPayload | null>(null);
-
   const [user, setUser] = useState('sbingham@shulman-hill.com.uat');
   const [objectName, setObjectName] = useState('Opportunity');
   const [fieldName, setFieldName] = useState('Opportunity.StageName');
@@ -150,8 +121,15 @@ export default function Page(): JSX.Element {
     setCopied,
     setErrorText
   });
+  const connectWorkspace = useConnectWorkspace({
+    presentResponse,
+    resolveErrorMessage,
+    setLoading,
+    setCopied,
+    setErrorText
+  });
   const refreshWorkspace = useRefreshWorkspace({
-    orgAlias,
+    orgAlias: connectWorkspace.orgAlias,
     presentResponse,
     resolveErrorMessage,
     setLoading,
@@ -159,15 +137,12 @@ export default function Page(): JSX.Element {
     setErrorText
   });
 
-  const activeAlias = orgSession?.activeAlias || orgStatus?.session?.activeAlias || orgStatus?.alias || orgAlias;
-  const sessionStatus = orgSession?.status || orgStatus?.session?.status || 'unknown';
-
   useEffect(() => {
     try {
       const savedTab = localStorage.getItem('orgumented.newui.tab') as UiTab | null;
       if (savedTab) setUiTab(savedTab);
       const savedAlias = localStorage.getItem('orgumented.newui.alias');
-      if (savedAlias) setOrgAlias(savedAlias);
+      if (savedAlias) connectWorkspace.setOrgAlias(savedAlias);
       const savedAsk = localStorage.getItem('orgumented.newui.ask');
       if (savedAsk) askWorkspace.setAskQuery(savedAsk);
     } catch {
@@ -179,12 +154,12 @@ export default function Page(): JSX.Element {
   useEffect(() => {
     try {
       localStorage.setItem('orgumented.newui.tab', uiTab);
-      localStorage.setItem('orgumented.newui.alias', orgAlias);
+      localStorage.setItem('orgumented.newui.alias', connectWorkspace.orgAlias);
       localStorage.setItem('orgumented.newui.ask', askWorkspace.askQuery);
     } catch {
       // ignore
     }
-  }, [uiTab, orgAlias, askWorkspace.askQuery]);
+  }, [uiTab, connectWorkspace.orgAlias, askWorkspace.askQuery]);
 
   useEffect(() => {
     proofsWorkspace.syncFromAsk(askWorkspace.askProofId, askWorkspace.askReplayToken);
@@ -210,7 +185,7 @@ export default function Page(): JSX.Element {
     }
   }
 
-async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}): Promise<QueryResponse | null> {
+  async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}): Promise<QueryResponse | null> {
     setLoading(true);
     setCopied(false);
     setErrorText('');
@@ -226,63 +201,6 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
       return parsed;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected query failure';
-      const fallback: QueryResponse = { ok: false, error: { message } };
-      presentResponse(fallback);
-      setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function runOrgQuery(kind: OrgQueryKind, payload: Record<string, unknown> = {}): Promise<QueryResponse | null> {
-    setLoading(true);
-    setCopied(false);
-    setErrorText('');
-
-    try {
-      let parsed: QueryResponse;
-      if (kind === 'orgSessionAliases') {
-        parsed = await listOrgSessionAliases();
-      } else if (kind === 'orgSession') {
-        parsed = await getOrgSession();
-      } else if (kind === 'orgPreflight') {
-        parsed = await runOrgPreflight(typeof payload.alias === 'string' ? payload.alias : undefined);
-      } else if (kind === 'orgSessionSwitch') {
-        parsed = await switchOrgSession({
-          alias: typeof payload.alias === 'string' ? payload.alias : undefined
-        });
-      } else if (kind === 'orgSessionDisconnect') {
-        parsed = await disconnectOrgSession();
-      } else if (kind === 'orgConnect') {
-        parsed = await connectOrgSession({
-          alias: typeof payload.alias === 'string' ? payload.alias : undefined
-        });
-      } else {
-        parsed = await getOrgStatus();
-      }
-
-      presentResponse(parsed);
-
-      if (parsed.ok === false) {
-        setErrorText(resolveErrorMessage(parsed));
-      }
-      if ((kind === 'orgSession' || kind === 'orgSessionSwitch' || kind === 'orgSessionDisconnect') && parsed.payload) {
-        setOrgSession(parsed.payload as OrgSessionPayload);
-      }
-      if (kind === 'orgSessionAliases' && parsed.payload) {
-        setOrgAliases(parsed.payload as OrgSessionAliasesPayload);
-      }
-      if (kind === 'orgStatus' && parsed.payload) {
-        setOrgStatus(parsed.payload as OrgStatusPayload);
-      }
-      if (kind === 'orgPreflight' && parsed.payload) {
-        setOrgPreflight(parsed.payload as OrgPreflightPayload);
-      }
-
-      return parsed;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected org query failure';
       const fallback: QueryResponse = { ok: false, error: { message } };
       presentResponse(fallback);
       setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.');
@@ -347,8 +265,8 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
         </div>
         <div className="topbar-actions">
           <button type="button" onClick={() => void refreshStatuses()} disabled={loading}>Refresh Status</button>
-          <button type="button" onClick={() => void runOrgQuery('orgPreflight', { alias: orgAlias })} disabled={loading}>Preflight</button>
-          <button type="button" onClick={() => void runOrgQuery('orgConnect', { alias: orgAlias })} disabled={loading}>Connect Org</button>
+          <button type="button" onClick={() => void connectWorkspace.runPreflight()} disabled={loading}>Preflight</button>
+          <button type="button" onClick={() => void connectWorkspace.connectExistingAlias()} disabled={loading}>Connect Org</button>
         </div>
       </header>
 
@@ -361,9 +279,9 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
           <span>API Ready</span>
           <strong>{readyStatus}</strong>
         </article>
-        <article className={`status-pill ${statusTone(sessionStatus)}`}>
+        <article className={`status-pill ${statusTone(connectWorkspace.sessionStatus)}`}>
           <span>Org Session</span>
-          <strong>{sessionStatus}</strong>
+          <strong>{connectWorkspace.sessionStatus}</strong>
         </article>
         <article className={`status-pill ${trustTone(askWorkspace.askTrust)}`}>
           <span>Ask Trust</span>
@@ -401,8 +319,8 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
         <section className="center-work panel">
           {uiTab === 'ask' && (
             <AskWorkspace
-              activeAlias={activeAlias}
-              sessionStatus={sessionStatus}
+              activeAlias={connectWorkspace.activeAlias}
+              sessionStatus={connectWorkspace.sessionStatus}
               buildVersion={BUILD_VERSION}
               askQuery={askWorkspace.askQuery}
               setAskQuery={askWorkspace.setAskQuery}
@@ -424,7 +342,7 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
               onRunAsk={() => void askWorkspace.runAsk(parseOptionalInt(askWorkspace.maxCitationsRaw) ?? 5)}
               onRunAskElaboration={() => void askWorkspace.runAskElaboration(parseOptionalInt(askWorkspace.maxCitationsRaw) ?? 5)}
               onOpenConnect={() => setUiTab('connect')}
-              onRefreshAliases={() => void runOrgQuery('orgSessionAliases')}
+              onRefreshAliases={() => void connectWorkspace.loadAliases()}
               onOpenBrowser={() => setUiTab('browser')}
               onOpenRefresh={() => setUiTab('refresh')}
               onInspectAutomation={() => {
@@ -448,24 +366,21 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
 
           {uiTab === 'connect' && (
             <ConnectWorkspace
-              orgAlias={orgAlias}
-              setOrgAlias={setOrgAlias}
-              orgStatus={orgStatus}
-              orgPreflight={orgPreflight}
-              orgAliases={orgAliases}
-              orgSession={orgSession}
+              orgAlias={connectWorkspace.orgAlias}
+              setOrgAlias={connectWorkspace.setOrgAlias}
+              orgStatus={connectWorkspace.orgStatus}
+              orgPreflight={connectWorkspace.orgPreflight}
+              orgAliases={connectWorkspace.orgAliases}
+              orgSession={connectWorkspace.orgSession}
               loading={loading}
-              onLoadAliases={() => void runOrgQuery('orgSessionAliases')}
-              onCheckSession={() => void runOrgQuery('orgSession')}
-              onCheckToolStatus={() => void runOrgQuery('orgStatus')}
-              onPreflight={() => void runOrgQuery('orgPreflight', { alias: orgAlias })}
-              onSwitchAlias={() => void runOrgQuery('orgSessionSwitch', { alias: orgAlias })}
-              onConnectExistingAlias={() => void runOrgQuery('orgConnect', { alias: orgAlias })}
-              onDisconnect={() => void runOrgQuery('orgSessionDisconnect')}
-              onInspectAlias={(alias) => {
-                setOrgAlias(alias);
-                void runOrgQuery('orgPreflight', { alias });
-              }}
+              onLoadAliases={() => void connectWorkspace.loadAliases()}
+              onCheckSession={() => void connectWorkspace.checkSession()}
+              onCheckToolStatus={() => void connectWorkspace.loadToolStatus()}
+              onPreflight={() => void connectWorkspace.runPreflight()}
+              onSwitchAlias={() => void connectWorkspace.switchAlias()}
+              onConnectExistingAlias={() => void connectWorkspace.connectExistingAlias()}
+              onDisconnect={() => void connectWorkspace.disconnect()}
+              onInspectAlias={(alias) => void connectWorkspace.inspectAlias(alias)}
             />
           )}
 
@@ -599,7 +514,7 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
               loading={loading}
               onLoadMetaContext={() => void runQuery('metaContext')}
               onRunMetaAdapt={() => void runQuery('metaAdapt', { dryRun: metaDryRun })}
-              onLoadOrgStatus={() => void runOrgQuery('orgStatus')}
+              onLoadOrgStatus={() => void connectWorkspace.loadToolStatus()}
             />
           )}
         </section>
@@ -628,18 +543,18 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
 
           <div className="sub-card">
             <h3>Connection</h3>
-            <p><strong>Session:</strong> {sessionStatus}</p>
-            <p><strong>Alias:</strong> {activeAlias}</p>
-            <p><strong>Auth Mode:</strong> {orgSession?.authMode || orgStatus?.authMode || 'sf_cli_keychain'}</p>
-            <p><strong>sf Installed:</strong> {orgStatus?.sf?.installed ? 'yes' : 'no'}</p>
-            <p><strong>CCI Installed:</strong> {orgStatus?.cci?.installed ? 'yes' : 'no'}</p>
+            <p><strong>Session:</strong> {connectWorkspace.sessionStatus}</p>
+            <p><strong>Alias:</strong> {connectWorkspace.activeAlias}</p>
+            <p><strong>Auth Mode:</strong> {connectWorkspace.orgSession?.authMode || connectWorkspace.orgStatus?.authMode || 'sf_cli_keychain'}</p>
+            <p><strong>sf Installed:</strong> {connectWorkspace.orgStatus?.sf?.installed ? 'yes' : 'no'}</p>
+            <p><strong>CCI Installed:</strong> {connectWorkspace.orgStatus?.cci?.installed ? 'yes' : 'no'}</p>
           </div>
 
-          {orgPreflight?.issues && orgPreflight.issues.length > 0 ? (
+          {connectWorkspace.orgPreflight?.issues && connectWorkspace.orgPreflight.issues.length > 0 ? (
             <div className="sub-card warn">
               <h3>Preflight Issues</h3>
               <ul>
-                {orgPreflight.issues.slice(0, 5).map((issue, idx) => (
+                {connectWorkspace.orgPreflight.issues.slice(0, 5).map((issue, idx) => (
                   <li key={`${issue.code || 'issue'}-${idx}`}>
                     <strong>{issue.severity?.toUpperCase() || 'INFO'}:</strong> {issue.message}
                   </li>
