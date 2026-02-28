@@ -149,7 +149,7 @@ pnpm --filter @orgumented/project-memory-mcp test
 
 ## Desktop App Workspaces
 - `Ask`: deterministic answer packet and follow-up actions
-- `Org Sessions`: auth path plus alias discovery, attach, and switching
+- `Org Sessions`: overview refresh, alias readiness, attach, and switching
 - `Org Browser`: searchable metadata tree and retrieval cart
 - `Refresh & Build`: retrieval, refresh, drift, and rebuild status
 - `Explain & Analyze`: permissions, automation, and impact workflows

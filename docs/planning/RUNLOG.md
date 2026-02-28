@@ -1317,3 +1317,50 @@ Branch: `dna-foundation`
   - replay parity verification
   - trust-history review
 - The next higher-value product slice is improving `Org Sessions` and retrieval handoff rather than doing more low-value page-shell cleanup.
+
+## Entry 39: Productize Org Sessions Workspace
+
+### Change
+- Expanded `apps/web/app/workspaces/connect/` from a thin command surface into a structured desktop operator workflow.
+- Updated `apps/web/app/workspaces/connect/use-connect-workspace.ts` so session actions now:
+  - keep local session state in sync after connect, switch, and disconnect
+  - support a full overview refresh across:
+    - tool status
+    - session status
+    - alias inventory
+    - preflight
+  - expose selected alias details, readiness state, and preflight issues as structured workspace state
+- Updated `apps/web/app/workspaces/connect/connect-workspace.tsx` so the desktop UI now surfaces:
+  - current desktop auth state
+  - toolchain readiness
+  - selected-alias readiness
+  - alias inventory with direct select, inspect, connect, and switch actions
+  - preflight blockers and remediation
+- Added workspace styling in `apps/web/app/globals.css`.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - Next build completed successfully after the Org Sessions productization
+  - typed org route family remained intact:
+    - `/api/org/status`
+    - `/api/org/session`
+    - `/api/org/session/aliases`
+    - `/api/org/session/connect`
+    - `/api/org/session/switch`
+    - `/api/org/preflight`
+
+3. `pnpm desktop:build`
+- Result: passed
+- Proof:
+  - `Built application at: ...\\apps\\desktop\\src-tauri\\target\\release\\orgumented-desktop.exe`
+  - `Finished 2 bundles`
+
+### Outcome
+- `Org Sessions` now matches the desktop operator model better:
+  - alias attach, switch, and readiness are visible as workflow state, not just raw payloads
+  - the next higher-value product gap is retrieval handoff after alias selection

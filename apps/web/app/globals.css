@@ -542,6 +542,50 @@ button.ghost {
   color: var(--ink-soft);
 }
 
+.ops-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.ops-list,
+.issue-list {
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+}
+
+.ops-list-item,
+.issue-list li {
+  border: 1px solid #dbe5f3;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.65rem 0.7rem;
+}
+
+.ops-list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: flex-start;
+}
+
+.ops-list-item p,
+.issue-list li p {
+  margin: 0.3rem 0 0;
+  color: var(--ink-soft);
+}
+
+.ops-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
 pre {
   margin: 0;
   background: #0f172a;
@@ -705,8 +749,17 @@ details summary {
     grid-template-columns: 1fr;
   }
 
+  .ops-grid,
   .proofs-grid,
   .proof-metric-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ops-list-item {
+    flex-direction: column;
+  }
+
+  .ops-list-actions {
+    justify-content: flex-start;
   }
 }

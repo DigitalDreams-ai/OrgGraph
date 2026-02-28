@@ -1,6 +1,8 @@
 'use client';
 
 import type {
+  OrgAliasSummary,
+  OrgPreflightIssue,
   OrgPreflightPayload,
   OrgSessionAliasesPayload,
   OrgSessionPayload,
@@ -10,19 +12,41 @@ import type {
 interface ConnectWorkspaceProps {
   orgAlias: string;
   setOrgAlias: (value: string) => void;
+  activeAlias: string;
+  sessionStatus: string;
   orgStatus: OrgStatusPayload | null;
   orgPreflight: OrgPreflightPayload | null;
   orgAliases: OrgSessionAliasesPayload | null;
   orgSession: OrgSessionPayload | null;
+  aliasInventory: OrgAliasSummary[];
+  selectedAlias: OrgAliasSummary | null;
+  preflightIssues: OrgPreflightIssue[];
+  toolingReady: boolean;
+  selectedAliasReady: boolean;
   loading: boolean;
+  onRefreshOverview: () => void;
   onLoadAliases: () => void;
   onCheckSession: () => void;
   onCheckToolStatus: () => void;
   onPreflight: () => void;
-  onSwitchAlias: () => void;
-  onConnectExistingAlias: () => void;
+  onSwitchAlias: (alias?: string) => void;
+  onConnectExistingAlias: (alias?: string) => void;
   onDisconnect: () => void;
+  onSelectAlias: (alias: string) => void;
   onInspectAlias: (alias: string) => void;
+}
+
+function formatTimestamp(value?: string): string {
+  if (!value) {
+    return 'n/a';
+  }
+
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) {
+    return value;
+  }
+
+  return new Date(parsed).toLocaleString();
 }
 
 export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
@@ -30,71 +54,172 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
     <>
       <h2>Org Sessions</h2>
       <p className="section-lead">
-        Login uses Salesforce CLI keychain first, then CCI registry import for deterministic org tooling.
+        Manage the active Salesforce alias as an operator workflow: toolchain health, alias readiness, and session state should be visible
+        before you retrieve or ask.
       </p>
 
-      <div className="sub-card">
-        <h3>Runtime Commands</h3>
-        <pre>{`# 1) Authenticate in sf keychain
+      <label htmlFor="orgAlias">Selected Alias</label>
+      <input id="orgAlias" value={props.orgAlias} onChange={(e) => props.setOrgAlias(e.target.value)} />
+
+      <div className="ops-grid">
+        <article className="sub-card">
+          <p className="panel-caption">Current session</p>
+          <h3>Desktop auth state</h3>
+          <div className="decision-meta">
+            <span className={`decision-badge ${props.sessionStatus === 'connected' ? 'good' : 'bad'}`}>
+              Session: {props.sessionStatus}
+            </span>
+            <span className="decision-badge muted">Active: {props.activeAlias || 'n/a'}</span>
+          </div>
+          <p><strong>Connected:</strong> {formatTimestamp(props.orgSession?.connectedAt || props.orgStatus?.session?.connectedAt)}</p>
+          <p><strong>Last switch:</strong> {formatTimestamp(props.orgSession?.switchedAt)}</p>
+          <p><strong>Disconnected:</strong> {formatTimestamp(props.orgSession?.disconnectedAt || props.orgStatus?.session?.disconnectedAt)}</p>
+          <p><strong>Auth mode:</strong> {props.orgSession?.authMode || props.orgStatus?.authMode || 'n/a'}</p>
+          <p><strong>Attach method:</strong> {props.orgSession?.method || 'sf_cli_keychain'}</p>
+        </article>
+
+        <article className="sub-card">
+          <p className="panel-caption">Toolchain health</p>
+          <h3>Local operator dependencies</h3>
+          <div className="decision-meta">
+            <span className={`decision-badge ${props.toolingReady ? 'good' : 'bad'}`}>
+              Tooling ready: {String(props.toolingReady)}
+            </span>
+            <span className={`decision-badge ${props.orgStatus?.cci?.versionPinned ? 'good' : 'muted'}`}>
+              CCI pinned: {String(props.orgStatus?.cci?.versionPinned ?? false)}
+            </span>
+          </div>
+          <p><strong>sf CLI:</strong> {props.orgStatus?.sf?.installed ? 'installed' : 'missing'}</p>
+          <p>{props.orgStatus?.sf?.message || 'Refresh the overview to validate local sf access.'}</p>
+          <p><strong>CCI:</strong> {props.orgStatus?.cci?.installed ? 'installed' : 'missing'}</p>
+          <p><strong>Version:</strong> {props.orgStatus?.cci?.version || 'n/a'}</p>
+          <p>{props.orgStatus?.cci?.message || 'Refresh the overview to validate local cci access.'}</p>
+        </article>
+
+        <article className="sub-card">
+          <p className="panel-caption">Selected alias</p>
+          <h3>Readiness for attach</h3>
+          <div className="decision-meta">
+            <span className={`decision-badge ${props.selectedAliasReady ? 'good' : 'muted'}`}>
+              Ready: {String(props.selectedAliasReady)}
+            </span>
+            <span className={`decision-badge ${props.orgPreflight?.checks?.sessionConnected ? 'good' : 'muted'}`}>
+              Session connected: {String(props.orgPreflight?.checks?.sessionConnected ?? false)}
+            </span>
+          </div>
+          <p><strong>Alias:</strong> {props.selectedAlias?.alias || props.orgPreflight?.alias || props.orgAlias}</p>
+          <p><strong>Username:</strong> {props.selectedAlias?.username || 'n/a'}</p>
+          <p><strong>Org ID:</strong> {props.selectedAlias?.orgId || 'n/a'}</p>
+          <p><strong>Instance URL:</strong> {props.selectedAlias?.instanceUrl || 'n/a'}</p>
+          <p><strong>Authenticated in sf:</strong> {props.orgPreflight?.checks?.aliasAuthenticated ? 'yes' : 'no'}</p>
+          <p><strong>CCI alias available:</strong> {props.orgPreflight?.checks?.cciAliasAvailable ? 'yes' : 'no'}</p>
+          <p><strong>Parse path present:</strong> {props.orgPreflight?.checks?.parsePathPresent ? 'yes' : 'no'}</p>
+        </article>
+
+        <article className="sub-card">
+          <p className="panel-caption">Alias inventory</p>
+          <h3>Known org sessions</h3>
+          <div className="decision-meta">
+            <span className="decision-badge muted">Loaded: {props.aliasInventory.length}</span>
+            <span className="decision-badge muted">Default: {props.aliasInventory.find((entry) => entry.isDefault)?.alias || 'n/a'}</span>
+          </div>
+          <p><strong>Active alias:</strong> {props.orgAliases?.activeAlias || props.activeAlias || 'n/a'}</p>
+          <p><strong>Selected alias:</strong> {props.orgAlias}</p>
+          <p><strong>Inventory source:</strong> sf CLI keychain</p>
+          <p className="muted">Use Refresh Overview to re-sync status, aliases, and preflight in one pass.</p>
+        </article>
+      </div>
+
+      <div className="action-row">
+        <button type="button" onClick={props.onRefreshOverview} disabled={props.loading}>Refresh Overview</button>
+        <button type="button" onClick={() => props.onConnectExistingAlias()} disabled={props.loading}>Connect Selected</button>
+        <button type="button" onClick={() => props.onSwitchAlias()} disabled={props.loading}>Switch Selected</button>
+        <button type="button" className="ghost" onClick={props.onDisconnect} disabled={props.loading}>Disconnect</button>
+      </div>
+
+      <div className="action-row">
+        <button type="button" className="ghost" onClick={props.onLoadAliases} disabled={props.loading}>Load Aliases</button>
+        <button type="button" className="ghost" onClick={props.onCheckSession} disabled={props.loading}>Check Session</button>
+        <button type="button" className="ghost" onClick={props.onCheckToolStatus} disabled={props.loading}>Check Tool Status</button>
+        <button type="button" className="ghost" onClick={props.onPreflight} disabled={props.loading}>Preflight Selected</button>
+      </div>
+
+      <div className="ops-grid">
+        <article className="sub-card">
+          <p className="panel-caption">Preflight issues</p>
+          <h3>Readiness blockers and warnings</h3>
+          {props.preflightIssues.length > 0 ? (
+            <ul className="issue-list">
+              {props.preflightIssues.map((issue) => (
+                <li key={`${issue.code || 'issue'}-${issue.message || 'message'}`}>
+                  <div className="decision-meta">
+                    <span className={`decision-badge ${issue.severity === 'error' ? 'bad' : 'muted'}`}>
+                      {issue.severity || 'warning'}
+                    </span>
+                    <span className="decision-badge muted">{issue.code || 'issue'}</span>
+                  </div>
+                  <p><strong>{issue.message || 'Unknown issue'}</strong></p>
+                  <p>{issue.remediation || 'No remediation provided.'}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">No current preflight issues for the selected alias.</p>
+          )}
+        </article>
+
+        <article className="sub-card">
+          <p className="panel-caption">Operator commands</p>
+          <h3>Manual auth bridge</h3>
+          <p className="muted">Use these only when the selected alias still needs to be authenticated or bridged into CCI.</p>
+          <pre>{`# 1) Authenticate in sf keychain
 sf org login web --alias ${props.orgAlias} --instance-url https://test.salesforce.com --set-default
 
 # 2) Bridge alias into CCI registry
 cci org import ${props.orgAlias} <sf-username>`}</pre>
+        </article>
       </div>
 
-      <label htmlFor="orgAlias">Org Alias</label>
-      <input id="orgAlias" value={props.orgAlias} onChange={(e) => props.setOrgAlias(e.target.value)} />
-
-      <div className="field-grid">
+      {props.aliasInventory.length > 0 ? (
         <div className="sub-card">
-          <h3>sf CLI</h3>
-          <p><strong>Installed:</strong> {props.orgStatus?.sf?.installed ? 'yes' : 'no'}</p>
-          <p>{props.orgStatus?.sf?.message || 'Run Check Tool Status'}</p>
-        </div>
-        <div className="sub-card">
-          <h3>CCI</h3>
-          <p><strong>Installed:</strong> {props.orgStatus?.cci?.installed ? 'yes' : 'no'}</p>
-          <p><strong>Version:</strong> {props.orgStatus?.cci?.version || 'n/a'}</p>
-          <p>{props.orgStatus?.cci?.message || 'Run Check Tool Status'}</p>
-        </div>
-        <div className="sub-card">
-          <h3>Preflight</h3>
-          <p><strong>Alias Authenticated:</strong> {props.orgPreflight?.checks?.aliasAuthenticated ? 'yes' : 'no'}</p>
-          <p><strong>CCI Alias Available:</strong> {props.orgPreflight?.checks?.cciAliasAvailable ? 'yes' : 'no'}</p>
-        </div>
-        <div className="sub-card">
-          <h3>Alias Inventory</h3>
-          <p><strong>Loaded:</strong> {props.orgAliases?.aliases?.length ?? 0}</p>
-          <p><strong>Active:</strong> {props.orgAliases?.activeAlias || props.orgSession?.activeAlias || props.orgAlias}</p>
-        </div>
-      </div>
-
-      <div className="action-row">
-        <button type="button" onClick={props.onLoadAliases} disabled={props.loading}>Load Aliases</button>
-        <button type="button" onClick={props.onCheckSession} disabled={props.loading}>Check Session</button>
-        <button type="button" onClick={props.onCheckToolStatus} disabled={props.loading}>Check Tool Status</button>
-        <button type="button" onClick={props.onPreflight} disabled={props.loading}>Preflight</button>
-        <button type="button" onClick={props.onSwitchAlias} disabled={props.loading}>Switch Alias</button>
-        <button type="button" onClick={props.onConnectExistingAlias} disabled={props.loading}>Connect Existing Alias</button>
-        <button type="button" className="ghost" onClick={props.onDisconnect} disabled={props.loading}>Disconnect</button>
-      </div>
-
-      {props.orgAliases?.aliases && props.orgAliases.aliases.length > 0 ? (
-        <div className="sub-card">
-          <h3>Discovered Aliases</h3>
-          <ul className="member-list">
-            {props.orgAliases.aliases.map((entry) => (
-              <li key={entry.alias}>
-                <span>
-                  <strong>{entry.alias}</strong>
-                  {entry.isDefault ? ' default' : ''}
-                  {entry.username ? ` | ${entry.username}` : ''}
-                </span>
-                <button type="button" className="ghost" onClick={() => props.onInspectAlias(entry.alias)}>
-                  Inspect
-                </button>
-              </li>
-            ))}
+          <p className="panel-caption">Discovered aliases</p>
+          <h3>Known sf keychain sessions</h3>
+          <ul className="ops-list">
+            {props.aliasInventory.map((entry) => {
+              const isSelected = entry.alias === props.orgAlias;
+              const isActive = entry.alias === props.activeAlias;
+              return (
+                <li key={entry.alias} className="ops-list-item">
+                  <div>
+                    <div className="decision-meta">
+                      <span className={`decision-badge ${isActive ? 'good' : 'muted'}`}>
+                        {isActive ? 'active' : 'available'}
+                      </span>
+                      {entry.isDefault ? <span className="decision-badge muted">default</span> : null}
+                      {isSelected ? <span className="decision-badge muted">selected</span> : null}
+                    </div>
+                    <p><strong>{entry.alias}</strong></p>
+                    <p><strong>Username:</strong> {entry.username || 'n/a'}</p>
+                    <p><strong>Org ID:</strong> {entry.orgId || 'n/a'}</p>
+                    <p><strong>Instance URL:</strong> {entry.instanceUrl || 'n/a'}</p>
+                  </div>
+                  <div className="ops-list-actions">
+                    <button type="button" className="ghost" onClick={() => props.onSelectAlias(entry.alias)}>
+                      Use
+                    </button>
+                    <button type="button" className="ghost" onClick={() => props.onInspectAlias(entry.alias)}>
+                      Inspect
+                    </button>
+                    <button type="button" onClick={() => props.onConnectExistingAlias(entry.alias)}>
+                      Connect
+                    </button>
+                    <button type="button" className="ghost" onClick={() => props.onSwitchAlias(entry.alias)}>
+                      Switch
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       ) : null}

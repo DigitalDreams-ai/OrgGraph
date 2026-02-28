@@ -3,7 +3,9 @@ export type OrgSessionPayload = {
   activeAlias?: string;
   authMode?: string;
   connectedAt?: string;
+  switchedAt?: string;
   disconnectedAt?: string;
+  method?: string;
   lastError?: string;
 };
 
@@ -37,8 +39,18 @@ export type OrgStatusPayload = {
   session?: OrgSessionPayload;
 };
 
+export type OrgPreflightIssue = {
+  code?: string;
+  severity?: string;
+  message?: string;
+  remediation?: string;
+};
+
 export type OrgPreflightPayload = {
   ok?: boolean;
+  integrationEnabled?: boolean;
+  alias?: string;
+  authMode?: string;
   checks?: {
     cciInstalled?: boolean;
     cciVersionPinned?: boolean;
@@ -48,5 +60,6 @@ export type OrgPreflightPayload = {
     aliasAuthenticated?: boolean;
     sessionConnected?: boolean;
   };
-  issues?: Array<{ code?: string; severity?: string; message?: string; remediation?: string }>;
+  issues?: OrgPreflightIssue[];
+  session?: OrgSessionPayload;
 };

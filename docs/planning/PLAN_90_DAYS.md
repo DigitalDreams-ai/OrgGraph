@@ -284,8 +284,13 @@ Progress note:
 - Slice 12 completed:
   - `Proofs & History` now surfaces structured recent-proof history, selected proof artifacts, replay parity badges, and metrics summaries
   - operators can reuse recent proofs directly instead of treating proof and replay identifiers as a raw copy/paste workflow
+- Slice 13 completed:
+  - `Org Sessions` now behaves more like a desktop operator workflow than a thin transport form
+  - overview refresh now re-syncs session, aliases, toolchain health, and preflight in one pass
+  - alias inventory now supports direct select, inspect, connect, and switch actions
+  - selected alias readiness and remediation now surface directly in the desktop UI
 - Next narrow step:
-  - productize `Org Sessions` and related retrieval workflows as operator-first desktop surfaces
+  - productize retrieval handoff between `Org Sessions`, `Org Browser`, and `Refresh & Build`
   - only return for more UI cleanup if the remaining page shell still blocks architectural clarity
 
 ## Determinism and Replay Harness Plan
@@ -374,6 +379,6 @@ Progress note:
 
 ## Current Next Step
 - Continue from the reduced shell into higher-value product/runtime slices.
-- Preferred next step: improve `Org Sessions` and retrieval handoff so the desktop operator flow is as structured as the new `Proofs & History` surface.
+- Preferred next step: improve retrieval handoff between `Org Sessions`, `Org Browser`, and `Refresh & Build` so the desktop operator flow stays structured after alias attach.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

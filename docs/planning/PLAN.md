@@ -346,3 +346,12 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
 - The next architectural priority should stay product/runtime focused:
   - improve `Org Sessions` and related retrieval workflows as operator-first desktop surfaces
   - do not return to low-value page-shell shaving unless a real boundary concentration reappears
+- `Org Sessions` is now moving from a thin transport form toward an operator console:
+  - overview refresh now re-syncs session, aliases, toolchain health, and preflight in one workflow
+  - selected alias readiness and remediation now surface directly in the desktop UI
+  - alias inventory now supports:
+    - select
+    - inspect
+    - connect
+    - switch
+  - the next product/runtime gap is the retrieval handoff between `Org Sessions`, `Org Browser`, and `Refresh & Build`

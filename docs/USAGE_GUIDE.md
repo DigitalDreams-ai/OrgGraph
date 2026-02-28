@@ -110,7 +110,7 @@ The desktop product centers on these workspaces:
 
 Expected operator flow:
 1. Open on `Ask` and confirm current session status.
-2. Use `Org Sessions` to connect or switch the active alias.
+2. Use `Org Sessions` to refresh overview, inspect alias readiness, and connect or switch the active alias.
 3. Use `Org Browser` and `Refresh & Build` to retrieve and ingest metadata.
 4. Return to `Ask` or `Explain & Analyze` for decision work.
 5. Use `Proofs & History` for replay and prior decision lookup.
@@ -129,6 +129,16 @@ Current `Proofs & History` behavior:
   - `corePayloadMatched`
   - `metricsMatched`
 - metrics export shows summary counts by snapshot and provider
+
+Current `Org Sessions` behavior:
+- `Refresh Overview` re-syncs tool status, session state, alias inventory, and preflight in one pass
+- the selected alias shows readiness state directly in the workspace
+- preflight blockers and remediation are listed directly in the desktop UI
+- discovered aliases support:
+  - select
+  - inspect
+  - connect
+  - switch
 
 ## 6. Connect a Sandbox Org
 Auth is delegated to Salesforce CLI keychain sessions.
