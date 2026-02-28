@@ -212,9 +212,16 @@ Progress note:
   - provenance verification passed with:
     - `proofLookupMatched=true`
     - `recentProofsMatched=true`
+- Slice 15 completed:
+  - remaining shared secondary-query shell state moved out of `apps/web/app/page.tsx` into `apps/web/app/shell/use-secondary-query-runner.ts`
+  - `page.tsx` no longer owns:
+    - `loading`
+    - `limitRaw`
+    - the generic secondary request dispatcher
+  - `page.tsx` is now about `341` lines after web verification
 - Next narrow step:
-  - reassess whether any additional packaged-runtime pruning still buys enough to justify another slice
-  - stop if the remaining potential wins are mostly cosmetic rather than architectural
+  - continue Phase 5 shell reduction from the current `page.tsx` composition surface
+  - stop only if the remaining page-level state is no longer a meaningful boundary concentration
 
 ## Phase 5: Modular UI Reconstruction
 
@@ -352,7 +359,7 @@ Progress note:
 4. If Windows packaging regresses for two consecutive attempts, stop feature work and stabilize desktop runtime ownership first.
 
 ## Current Next Step
-- Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: decide whether runtime hardening should stop here and return focus to product/runtime behavior work.
+- Continue Phase 5 modular UI reconstruction from the reduced page shell.
+- Preferred next step: extract the remaining page-level composition helpers or shared shell state only where that state still creates a real UI-engine boundary concentration.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

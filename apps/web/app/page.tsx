@@ -1,12 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  type QueryResponse
-} from './lib/ask-client';
-import { runSecondaryQueryRequest, type SecondaryQueryKind } from './lib/secondary-client';
 import { OperatorRail } from './shell/operator-rail';
 import { useShellPreferences } from './shell/use-shell-preferences';
+import { useSecondaryQueryRunner } from './shell/use-secondary-query-runner';
 import { resolveQueryErrorMessage, useResponseInspector } from './shell/use-response-inspector';
 import { ShellTopbar } from './shell/shell-topbar';
 import { StatusStrip } from './shell/status-strip';
@@ -25,8 +22,6 @@ import { RefreshWorkspace } from './workspaces/refresh/refresh-workspace';
 import { useRefreshWorkspace } from './workspaces/refresh/use-refresh-workspace';
 import { SystemWorkspace } from './workspaces/system/system-workspace';
 import { useSystemWorkspace } from './workspaces/system/use-system-workspace';
-
-type QueryKind = SecondaryQueryKind;
 
 type UiTab = 'ask' | 'connect' | 'browser' | 'refresh' | 'analyze' | 'proofs' | 'system';
 
@@ -55,35 +50,37 @@ function parseOptionalInt(raw: string): number | undefined {
 export default function Page(): JSX.Element {
   const [uiTab, setUiTab] = useState<UiTab>('ask');
 
-  const [loading, setLoading] = useState(false);
-  const [limitRaw, setLimitRaw] = useState('25');
-
   const responseInspector = useResponseInspector();
+  const secondaryQueryRunner = useSecondaryQueryRunner({
+    presentResponse: responseInspector.presentResponse,
+    setCopied: responseInspector.setCopied,
+    setErrorText: responseInspector.setErrorText
+  });
   const askWorkspace = useAskWorkspace({
     presentResponse: responseInspector.presentResponse,
     resolveErrorMessage: resolveQueryErrorMessage,
-    setLoading,
+    setLoading: secondaryQueryRunner.setLoading,
     setCopied: responseInspector.setCopied,
     setErrorText: responseInspector.setErrorText
   });
   const proofsWorkspace = useProofsWorkspace({
     presentResponse: responseInspector.presentResponse,
     resolveErrorMessage: resolveQueryErrorMessage,
-    setLoading,
+    setLoading: secondaryQueryRunner.setLoading,
     setCopied: responseInspector.setCopied,
     setErrorText: responseInspector.setErrorText
   });
   const browserWorkspace = useBrowserWorkspace({
     presentResponse: responseInspector.presentResponse,
     resolveErrorMessage: resolveQueryErrorMessage,
-    setLoading,
+    setLoading: secondaryQueryRunner.setLoading,
     setCopied: responseInspector.setCopied,
     setErrorText: responseInspector.setErrorText
   });
   const connectWorkspace = useConnectWorkspace({
     presentResponse: responseInspector.presentResponse,
     resolveErrorMessage: resolveQueryErrorMessage,
-    setLoading,
+    setLoading: secondaryQueryRunner.setLoading,
     setCopied: responseInspector.setCopied,
     setErrorText: responseInspector.setErrorText
   });
@@ -91,19 +88,19 @@ export default function Page(): JSX.Element {
     orgAlias: connectWorkspace.orgAlias,
     presentResponse: responseInspector.presentResponse,
     resolveErrorMessage: resolveQueryErrorMessage,
-    setLoading,
+    setLoading: secondaryQueryRunner.setLoading,
     setCopied: responseInspector.setCopied,
     setErrorText: responseInspector.setErrorText
   });
   const shellRuntime = useShellRuntime();
   const analyzeWorkspace = useAnalyzeWorkspace({
-    runQuery,
+    runQuery: secondaryQueryRunner.runQuery,
     parseOptionalInt,
-    limitRaw,
+    limitRaw: secondaryQueryRunner.limitRaw,
     includeLowConfidence: askWorkspace.includeLowConfidence
   });
   const systemWorkspace = useSystemWorkspace({
-    runQuery,
+    runQuery: secondaryQueryRunner.runQuery,
     loadOrgStatus: () => connectWorkspace.loadToolStatus()
   });
 
@@ -121,35 +118,10 @@ export default function Page(): JSX.Element {
     proofsWorkspace.syncFromAsk(askWorkspace.askProofId, askWorkspace.askReplayToken);
   }, [askWorkspace.askProofId, askWorkspace.askReplayToken]);
 
-  async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}): Promise<QueryResponse | null> {
-    setLoading(true);
-    responseInspector.setCopied(false);
-    responseInspector.setErrorText('');
-
-    try {
-      const parsed = await runSecondaryQueryRequest(kind, payload);
-
-      responseInspector.presentResponse(parsed);
-
-      if (parsed.ok === false) {
-        responseInspector.setErrorText(resolveQueryErrorMessage(parsed));
-      }
-      return parsed;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected query failure';
-      const fallback: QueryResponse = { ok: false, error: { message } };
-      responseInspector.presentResponse(fallback);
-      responseInspector.setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <main className="og-shell">
       <ShellTopbar
-        loading={loading}
+        loading={secondaryQueryRunner.loading}
         onRefreshStatus={() => void shellRuntime.refreshStatuses()}
         onRunPreflight={() => void connectWorkspace.runPreflight()}
         onConnectOrg={() => void connectWorkspace.connectExistingAlias()}
@@ -210,7 +182,7 @@ export default function Page(): JSX.Element {
               askProofId={askWorkspace.askProofId}
               askReplayToken={askWorkspace.askReplayToken}
               askCitations={askWorkspace.askCitations}
-              loading={loading}
+              loading={secondaryQueryRunner.loading}
               trustTone={(trustLevel) => {
                 if (trustLevel === 'trusted') return 'good';
                 if (trustLevel === 'conditional' || trustLevel === 'waiting') return 'muted';
@@ -249,7 +221,7 @@ export default function Page(): JSX.Element {
               orgPreflight={connectWorkspace.orgPreflight}
               orgAliases={connectWorkspace.orgAliases}
               orgSession={connectWorkspace.orgSession}
-              loading={loading}
+              loading={secondaryQueryRunner.loading}
               onLoadAliases={() => void connectWorkspace.loadAliases()}
               onCheckSession={() => void connectWorkspace.checkSession()}
               onCheckToolStatus={() => void connectWorkspace.loadToolStatus()}
@@ -278,7 +250,7 @@ export default function Page(): JSX.Element {
               metadataLoadingType={browserWorkspace.metadataLoadingType}
               metadataSelectionsRaw={browserWorkspace.metadataSelectionsRaw}
               setMetadataSelectionsRaw={browserWorkspace.setMetadataSelectionsRaw}
-              loading={loading}
+              loading={secondaryQueryRunner.loading}
               onRefreshTypes={() => void browserWorkspace.refreshTypes()}
               onClearFilters={browserWorkspace.clearFilters}
               onLoadMembers={(type) => void browserWorkspace.loadMembers(type)}
@@ -304,7 +276,7 @@ export default function Page(): JSX.Element {
               setOrgRunRetrieve={refreshWorkspace.setOrgRunRetrieve}
               orgAutoRefresh={refreshWorkspace.orgAutoRefresh}
               setOrgAutoRefresh={refreshWorkspace.setOrgAutoRefresh}
-              loading={loading}
+              loading={secondaryQueryRunner.loading}
               onRunRefresh={() => void refreshWorkspace.runRefreshNow()}
               onRunDiff={() => void refreshWorkspace.runDiff()}
               onRunOrgRetrieve={() => void refreshWorkspace.runOrgRetrieveNow()}
@@ -323,15 +295,15 @@ export default function Page(): JSX.Element {
               setFieldName={analyzeWorkspace.setFieldName}
               systemPermission={analyzeWorkspace.systemPermission}
               setSystemPermission={analyzeWorkspace.setSystemPermission}
-              limitRaw={limitRaw}
-              setLimitRaw={setLimitRaw}
+              limitRaw={secondaryQueryRunner.limitRaw}
+              setLimitRaw={secondaryQueryRunner.setLimitRaw}
               strictMode={analyzeWorkspace.strictMode}
               setStrictMode={analyzeWorkspace.setStrictMode}
               explainMode={analyzeWorkspace.explainMode}
               setExplainMode={analyzeWorkspace.setExplainMode}
               debugMode={analyzeWorkspace.debugMode}
               setDebugMode={analyzeWorkspace.setDebugMode}
-              loading={loading}
+              loading={secondaryQueryRunner.loading}
               onRunPermissions={() => void analyzeWorkspace.runPermissions()}
               onDiagnoseUserMapping={() => void analyzeWorkspace.diagnoseUserMapping()}
               onRunAutomation={() => void analyzeWorkspace.runAutomationAnalysis()}
@@ -346,8 +318,8 @@ export default function Page(): JSX.Element {
               setProofId={proofsWorkspace.setProofId}
               replayToken={proofsWorkspace.replayToken}
               setReplayToken={proofsWorkspace.setReplayToken}
-              loading={loading}
-              onListRecent={() => void proofsWorkspace.runProofsRecent(parseOptionalInt(limitRaw) ?? 20)}
+              loading={secondaryQueryRunner.loading}
+              onListRecent={() => void proofsWorkspace.runProofsRecent(parseOptionalInt(secondaryQueryRunner.limitRaw) ?? 20)}
               onGetProof={() => void proofsWorkspace.runProofLookup()}
               onReplay={() => void proofsWorkspace.runReplay()}
               onExportMetrics={() => void proofsWorkspace.runMetricsExport()}
@@ -358,7 +330,7 @@ export default function Page(): JSX.Element {
             <SystemWorkspace
               metaDryRun={systemWorkspace.metaDryRun}
               setMetaDryRun={systemWorkspace.setMetaDryRun}
-              loading={loading}
+              loading={secondaryQueryRunner.loading}
               onLoadMetaContext={() => void systemWorkspace.loadMetaContext()}
               onRunMetaAdapt={() => void systemWorkspace.runMetaAdapt()}
               onLoadOrgStatus={() => void systemWorkspace.loadOrgStatus()}

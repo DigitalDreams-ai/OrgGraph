@@ -1208,3 +1208,27 @@ Branch: `dna-foundation`
 ### Outcome
 - The packaged desktop proof path now covers provenance lookup in addition to determinism and replay parity.
 - Phase 4 verification now exercises the core Ask proof chain end-to-end inside the packaged runtime.
+
+## Entry 35: Extract Shared Secondary Query Shell State
+
+### Change
+- Added `apps/web/app/shell/use-secondary-query-runner.ts`.
+- Moved the remaining shared secondary-query shell state out of `apps/web/app/page.tsx`:
+  - `loading`
+  - `limitRaw`
+  - the generic secondary request dispatcher
+- `page.tsx` now composes the extracted shell runner rather than owning that state directly.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - Next build completed successfully after the shell-runner extraction
+  - `apps/web/app/page.tsx` measured about `341` lines after the slice
+
+### Outcome
+- Phase 4 packaged runtime hardening is strong enough that the branch focus has shifted back to Phase 5 UI boundary cleanup.
+- The remaining page shell is smaller and more composition-focused than before this slice.

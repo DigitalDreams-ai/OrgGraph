@@ -314,7 +314,14 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - response presentation and copy/error handling now live under `apps/web/app/shell/use-response-inspector.ts`
   - Local tab/alias/ask persistence is no longer owned directly by `apps/web/app/page.tsx`
   - shell preference hydration/persistence now lives under `apps/web/app/shell/use-shell-preferences.ts`
-- The next live architectural priority is to reduce packaged runtime complexity further without widening scope:
-  - reassess whether any more packaged-runtime pruning is worth the churn now that the API bundle is explicit, smoke-stable, and down to executable artifacts plus native dependencies
-  - if not, stop runtime hardening here and avoid churn for cosmetic payload wins
-  - avoid resuming page-shell extraction unless the remaining shared helpers become a measured blocker again
+  - shared secondary-query shell state is no longer owned directly by `apps/web/app/page.tsx`
+  - `loading`, `limitRaw`, and the generic secondary request dispatcher now live in `apps/web/app/shell/use-secondary-query-runner.ts`
+  - `apps/web/app/page.tsx` is now down to about `341` lines
+- The next live architectural priority is back in the UI boundary layer:
+  - packaged runtime hardening is complete enough for now because the packaged shell now proves:
+    - deterministic Ask identity
+    - replay parity
+    - proof provenance lookup
+    - live org attach/switch/restore
+  - continue shrinking the remaining page-shell composition surface only where shared state is still concentrated
+  - avoid returning to packaging churn unless a new runtime gap or proof failure appears
