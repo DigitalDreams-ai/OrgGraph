@@ -11,7 +11,16 @@ Orgumented builds a deterministic graph from Salesforce metadata and answers:
 - API: `http://localhost:3100`
 - Web UI: `http://localhost:3101`
 
-## 3. Start the Stack
+## 3. Start the Runtime
+Preferred desktop-transition runtime:
+```bash
+cd /volume1/data/projects/Orgumented
+ORGUMENTED_DESKTOP_API_PORT=3200 \
+ORGUMENTED_DESKTOP_WEB_PORT=3201 \
+node apps/desktop/scripts/dev-runtime.mjs
+```
+
+Legacy Docker scaffold:
 ```bash
 cd /volume1/data/projects/Orgumented
 docker compose -f docker/docker-compose.yml up -d --build
@@ -52,14 +61,19 @@ curl "http://localhost:3100/refresh/diff/<snapshotA>/<snapshotB>"
 Auth is delegated to Salesforce CLI keychain sessions.
 
 1. Configure `.env` with org settings (`SF_ALIAS`, `SF_BASE_URL`, etc.).
-2. Authenticate in the API runtime:
+2. Authenticate locally in the same operator environment that runs Orgumented:
 ```bash
-docker exec -it orgumented-api sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default
+sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default
+sf org display --target-org orgumented-sandbox --json
+cci org import orgumented-sandbox <sf-username>
+cci org info orgumented-sandbox
 ```
 3. Validate alias session:
 ```bash
 curl http://localhost:3100/org/preflight
 curl http://localhost:3100/org/session
+curl http://localhost:3100/org/session/aliases
+curl "http://localhost:3100/org/session/validate?alias=orgumented-sandbox"
 ```
 4. Run:
 ```bash
@@ -287,8 +301,8 @@ Record types supported:
 - `runtime_observation`
 
 Orgumented-specific helpers:
-- `seed_orgumented_baseline`: seed repo-map records for API runtime, web UI, ontology, and planning.
-- `summarize_orgumented_waves`: read `docs/planning/WAVE_A_TASKLIST.md` through `WAVE_E_TASKLIST.md` and return deterministic task/exit-gate counts.
+- `seed_orgumented_baseline`: seed repo-map records for API runtime, operator surfaces, desktop transition architecture, ontology, and planning.
+- `summarize_orgumented_waves`: read `docs/planning/WAVE_A_TASKLIST.md` through `WAVE_G_TASKLIST.md` and return deterministic task/exit-gate counts.
 
 See `docs/runbooks/PROJECT_MEMORY_MCP.md` for operating rules and guardrails.
 Export now includes:
@@ -371,7 +385,7 @@ curl -X POST http://localhost:3100/refresh \
 If refresh state was produced from a different runtime context, `/ready` now automatically falls back to current runtime path resolution.
 
 ### 10.3 Web container unhealthy
-Rebuild and restart:
+Legacy Docker scaffold only:
 ```bash
 docker compose -f docker/docker-compose.yml up -d --build web
 ```

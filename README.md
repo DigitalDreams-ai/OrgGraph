@@ -2,9 +2,28 @@
 
 A Salesforce operational reasoning engine — ontology-first knowledge graph for your org. Graph = Truth, LLM = Interpreter, Vectors = Evidence.
 
-**Runs entirely on Synology NAS.**
+Current repo reality:
+- target product runtime is desktop-native
+- the older Docker stack still exists as migration/dev scaffolding
+- Docker is not the future-state operator runtime
 
 ---
+
+## Runtime Modes
+
+### Desktop Transition Runtime
+
+This is the active product direction.
+
+- shell: Tauri
+- UI: Next.js
+- engine: NestJS
+- auth: local Salesforce CLI keychain + local `cci`
+- runbook: [docs/runbooks/DESKTOP_DEV_RUNTIME.md](./docs/runbooks/DESKTOP_DEV_RUNTIME.md)
+
+### Legacy NAS / Docker Stack
+
+This still exists for migration and verification work, but it is not the target product runtime.
 
 ## NAS Deployment
 
@@ -16,13 +35,13 @@ A Salesforce operational reasoning engine — ontology-first knowledge graph for
 | Project Path | `/volume1/data/projects/Orgumented` |
 | Auth | SSH key (no password) |
 
-### Prerequisites (Synology)
+### Prerequisites (Synology / Legacy Stack)
 
-- **Docker** — Already installed (Container Manager)
+- **Docker** — optional legacy stack runtime only
 - **SSH** — Enable in Control Panel → Terminal & SNMP
 - **Postgres** — Runs in container
 
-All Orgumented services run under the Docker project **orgumented** for isolation and organization.
+The Docker project **orgumented** is now treated as migration/dev scaffolding, not the future-state product runtime.
 
 ### SSH Setup
 
@@ -61,9 +80,24 @@ npm exec --yes pnpm@9.12.3 -- --filter api build
 
 User-to-principal resolution is read from `fixtures/permissions/user-profile-map.json` (or exported org mapping in runtime workflows).
 
-### Running the Stack
+### Desktop Dev Runtime (Preferred Direction)
 
-All Orgumented services run via Docker Compose under the project **orgumented**:
+```bash
+cd /volume1/data/projects/Orgumented
+. "$HOME/.cargo/env"
+pnpm desktop:info
+
+# Run local engine + web runtime without Docker
+ORGUMENTED_DESKTOP_API_PORT=3200 \
+ORGUMENTED_DESKTOP_WEB_PORT=3201 \
+node apps/desktop/scripts/dev-runtime.mjs
+```
+
+See [DESKTOP_DEV_RUNTIME.md](./docs/runbooks/DESKTOP_DEV_RUNTIME.md).
+
+### Legacy Docker Stack
+
+Legacy services still run via Docker Compose under the project **orgumented**:
 
 ```bash
 cd /volume1/data/projects/Orgumented
@@ -110,7 +144,7 @@ Sandbox-first org retrieval and refresh with Salesforce CLI keychain baseline.
 
 ### Prerequisites
 
-1. Install Salesforce CLI (`sf`) and CumulusCI (`cci`) in runtime image/host.
+1. Install Salesforce CLI (`sf`) and CumulusCI (`cci`) locally.
 2. Create secrets directory:
 `mkdir -p /volume1/data/projects/Orgumented/.secrets`
 3. Ensure env file exists at repo root:
@@ -118,11 +152,11 @@ Sandbox-first org retrieval and refresh with Salesforce CLI keychain baseline.
 4. Set runtime alias/base URL in `.env`:
 - `SF_ALIAS=orgumented-sandbox`
 - `SF_BASE_URL=https://test.salesforce.com`
-5. Authenticate alias once in Salesforce CLI keychain:
+5. Authenticate alias once in the local Salesforce CLI keychain:
 `sf org login web --alias <alias> --instance-url <url> --set-default`
 6. Verify authenticated alias:
 `sf org display --target-org <alias> --json`
-7. Import alias into CCI registry:
+7. Import alias into the local CCI registry:
 `cci org import <alias> <sf-username>`
 8. Verify CCI alias:
 `cci org info <alias>`
@@ -160,7 +194,7 @@ curl -X POST http://localhost:3100/org/retrieve \
   -d '{"runAuth":true,"runRetrieve":true,"autoRefresh":true}'
 ```
 
-See [ORG_INTEGRATION.md](./docs/runbooks/ORG_INTEGRATION.md) and [SANDBOX_CONNECT_CHECKLIST.md](./docs/runbooks/SANDBOX_CONNECT_CHECKLIST.md).
+See [ORG_INTEGRATION.md](./docs/runbooks/ORG_INTEGRATION.md), [DESKTOP_DEV_RUNTIME.md](./docs/runbooks/DESKTOP_DEV_RUNTIME.md), and [SANDBOX_CONNECT_CHECKLIST.md](./docs/runbooks/SANDBOX_CONNECT_CHECKLIST.md).
 
 ## Operator Docs
 
@@ -223,7 +257,7 @@ DATABASE_URL=postgres://orgumented:orgumented@postgres:5432/orgumented
 2. Web readiness: `curl http://localhost:3101/api/ready`
 3. Metrics snapshot: `curl http://localhost:3100/metrics`
 4. If web builds fail on Synology due `@eaDir` artifacts, run `./scripts/clean-eadir.sh`
-5. Rebuild stack after updates: `docker compose -f docker/docker-compose.yml up -d --build`
+5. Legacy stack rebuild only: `docker compose -f docker/docker-compose.yml up -d --build`
 6. For Dozzle-friendly request logs, ensure `ORGUMENTED_HTTP_LOG_ENABLED=true` (api) and `ORGUMENTED_WEB_LOG_ENABLED=true` (web)
 
 ## LLM Ask Mode
@@ -241,7 +275,7 @@ curl -X POST http://localhost:3100/ask \
 
 ## Plan
 
-- Active execution model: **Wave A-E**.
+- Active execution model: **Wave A-G**.
 - See [Blue Ocean Phase Roadmap](./docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md) for dependency-ordered wave sequencing.
 - Current active tracking files:
   - [WAVE_A_TASKLIST.md](./docs/planning/WAVE_A_TASKLIST.md)
@@ -249,4 +283,6 @@ curl -X POST http://localhost:3100/ask \
   - [WAVE_C_TASKLIST.md](./docs/planning/WAVE_C_TASKLIST.md)
   - [WAVE_D_TASKLIST.md](./docs/planning/WAVE_D_TASKLIST.md)
   - [WAVE_E_TASKLIST.md](./docs/planning/WAVE_E_TASKLIST.md)
+  - [WAVE_F_TASKLIST.md](./docs/planning/WAVE_F_TASKLIST.md)
+  - [WAVE_G_TASKLIST.md](./docs/planning/WAVE_G_TASKLIST.md)
 - Historical phase artifacts are preserved in [docs/planning/archive](./docs/planning/archive/).

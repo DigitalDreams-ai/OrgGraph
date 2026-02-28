@@ -12,24 +12,24 @@ Objective: move Orgumented onto a desktop-native runtime foundation before furth
 ## Tasks
 - [x] Add a desktop transition section to all primary planning references.
 - [x] Stand up Tauri shell scaffold for Orgumented desktop.
-- [ ] Define local process lifecycle for launching and stopping the NestJS engine.
+- [x] Define local process lifecycle for launching and stopping the NestJS engine.
 - [x] Define local app data root and storage paths for graph, evidence, proofs, logs, and history.
 - [x] Create a single tool-adapter boundary around `sf` and `cci`.
 - [x] Implement local alias discovery from `sf org list --json`.
 - [x] Implement local alias validation from `sf org display --target-org <alias> --json`.
 - [x] Implement attach/switch/disconnect session flows without Docker/runtime indirection.
-- [ ] Remove browser-broker, VNC, and other headless browser auth experiments from the target design and active runtime plan.
-- [ ] Remove remaining primary-doc instructions that treat Docker as required product runtime.
+- [x] Remove browser-broker, VNC, and other headless browser auth experiments from the target design and active runtime plan.
+- [x] Remove remaining primary-doc instructions that treat Docker as required product runtime.
 - [x] Define operator diagnostics for missing `sf`, missing `cci`, invalid alias, and disconnected session states.
-- [ ] Define local dev/test strategy after Docker product-runtime deprecation.
+- [x] Define local dev/test strategy after Docker product-runtime deprecation.
 
 ## Exit Gates
 - [ ] Desktop shell launches successfully.
-- [ ] Local NestJS engine runs under desktop-managed lifecycle.
+- [x] Local NestJS engine runs under desktop-managed lifecycle.
 - [ ] Operator can discover at least one locally authenticated alias through Orgumented desktop.
 - [ ] Operator can attach an existing alias without using Docker, browser brokers, or legacy auth paths.
-- [ ] Local app data, logs, and proof paths are explicit and functioning.
-- [ ] Docker is documented as migration/dev scaffolding only, not target runtime.
+- [x] Local app data, logs, and proof paths are explicit and functioning.
+- [x] Docker is documented as migration/dev scaffolding only, not target runtime.
 
 ## Dependencies
 - `docs/planning/DESKTOP_ARCHITECTURE.md`

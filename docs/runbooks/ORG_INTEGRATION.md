@@ -3,6 +3,11 @@
 ## Purpose
 Connect Orgumented to a Salesforce org using Salesforce CLI keychain sessions only.
 
+Primary direction:
+- use local CLI state
+- use local alias/session attach flows
+- do not treat Docker as the required runtime for org auth
+
 ## Auth Model
 - Single supported auth model: `sf_cli_keychain`
 - UI/API session connect validates an existing `sf` keychain alias and bridges to `cci`.
@@ -15,16 +20,20 @@ Connect Orgumented to a Salesforce org using Salesforce CLI keychain sessions on
 - `SF_PARSE_PATH=data/sf-project/force-app/main/default`
 
 ## One-Time Runtime Setup
-1. Ensure API runtime has `sf` CLI and `cci` installed.
-2. Ensure keychain paths are persisted in docker compose (`/root/.sf`, `/root/.sfdx`).
-3. Authenticate in the same runtime where API executes:
-   - `docker exec -it orgumented-api sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default`
-4. Bridge sf alias into CCI org registry:
-   - `docker exec orgumented-api cci org import orgumented-sandbox <sf-username>`
+1. Ensure the local runtime has `sf` CLI and `cci` installed.
+2. Authenticate locally in the same operator environment where Orgumented desktop/runtime will run:
+   - `sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default`
+3. Bridge the `sf` alias into the local CCI org registry:
+   - `cci org import orgumented-sandbox <sf-username>`
+4. Validate both tools locally:
+   - `sf org display --target-org orgumented-sandbox --json`
+   - `cci org info orgumented-sandbox`
 
 ## Execution Flow
 1. Validate session:
    - `curl http://localhost:3100/org/session`
+   - `curl http://localhost:3100/org/session/aliases`
+   - `curl "http://localhost:3100/org/session/validate?alias=orgumented-sandbox"`
    - `curl http://localhost:3100/org/preflight`
    - Confirm `cciInstalled=true` and `cciAliasAvailable=true`
 2. Retrieve metadata using selectors:
@@ -59,9 +68,5 @@ After retrieve + refresh:
 5. `GET /impact?field=<known-object.field>`
 6. `POST /ask` with known query
 
-## LLM Provider Switch (No Rebuild)
-1. Update provider in `config/api.docker.json` (`openai` or `anthropic`).
-2. Keep keys in `.env`.
-3. Recreate API only:
-   - `docker compose -f docker/docker-compose.yml up -d --no-deps --force-recreate api`
-4. Verify `/ask` returns expected provider in `llm.provider`.
+## Legacy Docker Note
+If you are still using the legacy Docker stack during migration, keep Docker-specific keychain persistence and restart instructions isolated to that stack. They are no longer the primary product-runtime path.

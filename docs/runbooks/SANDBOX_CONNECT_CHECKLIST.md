@@ -1,29 +1,31 @@
 # Sandbox Connection Checklist (Salesforce CLI Keychain)
 
-## 1) Runtime prerequisites
-- [ ] `sf` CLI available in API runtime (`docker exec orgumented-api sf --version`)
-- [ ] `cci` available in API runtime (`docker exec orgumented-api cci version`)
-- [ ] API container running and healthy
-- [ ] keychain volumes mounted (`/root/.sf`, `/root/.sfdx`)
+## 1) Local runtime prerequisites
+- [ ] `sf` CLI available locally (`sf --version`)
+- [ ] `cci` available locally (`cci version`)
+- [ ] local API runtime running and healthy
+- [ ] alias can be displayed locally (`sf org display --target-org <alias> --json`)
 
 ## 2) Environment baseline
 - [ ] `SF_INTEGRATION_ENABLED=true`
 - [ ] `SF_ALIAS=orgumented-sandbox` (or target alias)
 - [ ] `SF_BASE_URL=https://test.salesforce.com` (or org login URL)
 
-## 3) Authenticate alias in runtime
+## 3) Authenticate alias locally
 - [ ] Run:
-  - `docker exec -it orgumented-api sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default`
+  - `sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default`
 - [ ] Verify:
-  - `docker exec orgumented-api sf org display --target-org orgumented-sandbox --json`
+  - `sf org display --target-org orgumented-sandbox --json`
 - [ ] Import alias into cci:
-  - `docker exec orgumented-api cci org import orgumented-sandbox <sf-username>`
+  - `cci org import orgumented-sandbox <sf-username>`
 - [ ] Verify cci alias:
-  - `docker exec orgumented-api cci org info orgumented-sandbox`
+  - `cci org info orgumented-sandbox`
 
 ## 4) Validate Orgumented session
 - [ ] `curl http://localhost:3100/org/preflight`
 - [ ] `curl http://localhost:3100/org/session`
+- [ ] `curl http://localhost:3100/org/session/aliases`
+- [ ] `curl "http://localhost:3100/org/session/validate?alias=orgumented-sandbox"`
 - [ ] Confirm `aliasAuthenticated=true`, `cciAliasAvailable=true`, and session `connected`
 
 ## 5) Retrieve + refresh
@@ -37,3 +39,7 @@
 - [ ] `/automation` known-positive validation
 - [ ] `/impact` known-positive validation
 - [ ] `/ask` known-positive validation
+
+## 7) Legacy note
+- [ ] If you still use Docker during migration, treat it as scaffolding only.
+- [ ] Do not use Docker-only auth instructions as the primary operator workflow.
