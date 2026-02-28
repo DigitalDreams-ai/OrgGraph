@@ -3,18 +3,21 @@
 Date: February 28, 2026
 Branch: `dna-foundation`
 
-## Risk 1: Core output contract is not fully deterministic
+## Risk 1: Core output contract could regress back to non-deterministic result identity
 - Evidence:
   - `apps/api/src/modules/ask/ask.service.ts`
+  - `apps/api/test/phase12-replay-runtime.ts`
+  - `apps/api/test/integration.ts`
 - Current signal:
-  - `proofId` is generated with a timestamp during normal ask execution.
+  - Phase 1 removed timestamp-based `proofId` generation.
+  - Residual risk is regression if future boundary work reintroduces non-deterministic response identity.
 - Impact:
-  - same snapshot + query + policy may not produce identical external result identity.
+  - same snapshot + query + policy could again stop producing identical external result identity.
 - Mitigation:
-  - stabilize proof identity from deterministic inputs only,
-  - add regression tests for repeated identical ask calls.
+  - keep proof identity derived from deterministic inputs only,
+  - keep repeated-identical-ask regression tests mandatory.
 - Pivot trigger:
-  - if stable identity cannot be achieved without breaking replay, stop and redesign proof identity semantics.
+  - if repeated-identical-ask assertions fail, stop boundary work and restore deterministic output identity first.
 
 ## Risk 2: UI continues to act as an application command layer
 - Evidence:

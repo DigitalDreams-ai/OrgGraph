@@ -179,7 +179,13 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
    - dedicated typed Next route adapters,
    - Tauri IPC,
    - or a thin typed local client over the Nest engine.
-3. Whether proof identity should be stable for repeated identical asks or remain event-identity-based.
-   - Current implementation suggests a contract violation here.
-4. Whether proof and metrics stores should deduplicate stable proof identities or preserve repeated events separately.
-5. Whether Postgres parity should remain in the engine now or be postponed until the desktop boundary is clean.
+3. Whether proof and metrics stores should deduplicate stable proof identities or preserve repeated events separately.
+   - Phase 1 stabilized proof identity. Store semantics are the remaining open follow-up.
+4. Whether Postgres parity should remain in the engine now or be postponed until the desktop boundary is clean.
+
+## Review Update
+- Phase 1 is now complete on `dna-foundation`.
+- `apps/api/src/modules/ask/ask.service.ts` no longer salts `proofId` with wall-clock time for repeated identical asks.
+- The next live architectural priority is the Ask boundary:
+  - `apps/web/app/page.tsx`
+  - `apps/web/app/api/query/route.ts`

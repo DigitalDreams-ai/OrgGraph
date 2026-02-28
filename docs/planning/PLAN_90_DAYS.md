@@ -21,6 +21,8 @@ Harden Orgumented around its real product DNA:
 
 ## Phase 1: Contract Hardening
 
+Status: completed on February 28, 2026
+
 ### Scope
 - Fix any core output-contract violations where identical inputs can still emit different result identities.
 - Add deterministic ask regression tests for:
@@ -43,6 +45,11 @@ Harden Orgumented around its real product DNA:
   - `trustLevel`
 - `/ask/replay` still matches.
 - Existing replay and integration tests remain green.
+
+Completion note:
+- Implemented in `apps/api/src/modules/ask/ask.service.ts`.
+- Verified in `apps/api/test/phase12-replay-runtime.ts` and `apps/api/test/integration.ts`.
+- Full results are recorded in `docs/planning/RUNLOG.md`.
 
 ## Phase 2: Ask Boundary Cleanup
 
@@ -165,6 +172,7 @@ Harden Orgumented around its real product DNA:
 
 ### Day 0-14
 - Complete Phase 1 contract hardening.
+- Status: done
 
 ### Day 15-35
 - Complete Ask boundary cleanup.
@@ -180,3 +188,10 @@ Harden Orgumented around its real product DNA:
 2. If replay parity fails at any point, stop and fix before continuing.
 3. If a boundary cleanup requires engine logic to move into the UI, stop and redesign the boundary instead.
 4. If Windows packaging regresses for two consecutive attempts, stop feature work and stabilize desktop runtime ownership first.
+
+## Current Next Step
+- Proceed to Phase 2 Ask boundary cleanup only after reviewing:
+  - `docs/planning/PLAN.md`
+  - `docs/planning/DECISION_REPORT.md`
+  - `docs/planning/RISK_REGISTER.md`
+  - `docs/planning/RUNLOG.md`

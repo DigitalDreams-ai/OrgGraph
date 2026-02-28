@@ -20,7 +20,7 @@ Options:
 | Item | A | B | C | Evidence / Numeric Justification |
 |---|---:|---:|---:|---|
 | 1.1 Determinism enforceability | 4 | 4 | 2 | Current engine already sorts payloads and hashes snapshots in `apps/api/src/modules/ingestion/ingestion.service.ts`, uses deterministic planner routing in `apps/api/src/modules/planner/planner.service.ts`, and tests semantic determinism in `apps/api/test/semantic-runtime.ts`. Refactor and module rebuild preserve that. Full rebuild would discard the proven engine and retake this risk. |
-| 1.2 Proof & replay integrity | 3 | 4 | 2 | Replay parity is explicitly enforced in `apps/api/src/modules/ask/ask.service.ts` and tested in `apps/api/test/phase12-replay-runtime.ts` plus `apps/api/test/integration.ts`. Score is not `5` because `proofId` currently includes a timestamp in `apps/api/src/modules/ask/ask.service.ts`, weakening stable identity under identical asks. |
+| 1.2 Proof & replay integrity | 3 | 4 | 2 | Replay parity is explicitly enforced in `apps/api/src/modules/ask/ask.service.ts` and tested in `apps/api/test/phase12-replay-runtime.ts` plus `apps/api/test/integration.ts`. This score was assigned during the pre-implementation review because `proofId` still included a timestamp then. Phase 1 on `dna-foundation` has since removed that timestamp and strengthened this area. |
 | 1.3 Constraint-first / fail-closed enforcement | 4 | 4 | 2 | Refresh rejects ontology violations and drift-budget failures in `apps/api/src/modules/ingestion/ingestion.service.ts`, with constraint logic in `apps/api/src/modules/ingestion/ontology-constraints.service.ts` and drift policy in `apps/api/src/modules/ingestion/semantic-drift-policy.service.ts`. Rebuild would need all of this rebuilt and revalidated. |
 | 1.4 Provenance traceability | 4 | 4 | 2 | Ask builds derivation edges, proof artifacts, policy IDs, and replay tokens in `apps/api/src/modules/ask/ask.service.ts`. Storage paths are explicit in `apps/api/src/config/runtime-paths.service.ts` and `apps/api/src/common/path.ts`. Full rebuild would throw away most of the existing traceability implementation. |
 | 2.1 Tauri owns lifecycle cleanly | 2 | 4 | 4 | Tauri is currently thin in `apps/desktop/src-tauri/src/lib.rs`, while process ownership lives in `apps/desktop/scripts/dev-runtime.mjs` and `apps/desktop/src-tauri/tauri.conf.json`. Module-level rebuild or full rebuild can address runtime ownership. Refactor is possible but currently incomplete. |
@@ -60,6 +60,16 @@ Options:
 | A) Targeted Refactor | 66.41 |
 | B) Module-Level Rebuild | 77.82 |
 | C) Full Rebuild | 47.41 |
+
+## Review Update
+
+- This report remains the pre-implementation decision baseline for `dna-foundation`.
+- Phase 1 has already closed the deterministic proof-identity gap that lowered item `1.2`.
+- That does not change the branch-level recommendation.
+- The decisive weak areas are still:
+  - Tauri runtime ownership
+  - UI presentation/boundary discipline
+  - browser-era request multiplexing in `apps/web/app/api/query/route.ts`
 
 ## Lowest-Scoring Categories
 
