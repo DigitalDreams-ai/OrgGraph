@@ -9,6 +9,8 @@ $healthArtifact = Join-Path $logsDir 'desktop-release-smoke-health.json'
 $readyArtifact = Join-Path $logsDir 'desktop-release-smoke-ready.json'
 $askArtifact = Join-Path $logsDir 'desktop-release-smoke-ask.json'
 $askRepeatArtifact = Join-Path $logsDir 'desktop-release-smoke-ask-repeat.json'
+$proofArtifact = Join-Path $logsDir 'desktop-release-smoke-proof.json'
+$recentProofsArtifact = Join-Path $logsDir 'desktop-release-smoke-recent-proofs.json'
 $replayArtifact = Join-Path $logsDir 'desktop-release-smoke-replay.json'
 $orgStatusArtifact = Join-Path $logsDir 'desktop-release-smoke-org-status.json'
 $sessionBeforeArtifact = Join-Path $logsDir 'desktop-release-smoke-session-before.json'
@@ -173,7 +175,7 @@ if (-not (Test-Path $exePath)) {
 }
 
 New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
-Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $replayArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $resultArtifact -ErrorAction SilentlyContinue
+Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $proofArtifact, $recentProofsArtifact, $replayArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $resultArtifact -ErrorAction SilentlyContinue
 
 $desktopProcess = $null
 $sessionBefore = $null
@@ -240,6 +242,20 @@ try {
   }
   if ($replay.replayToken -ne $ask.proof.replayToken) {
     throw "Ask replay token $($replay.replayToken) did not match original $($ask.proof.replayToken)"
+  }
+  $proofLookup = Invoke-JsonGet -Url "http://127.0.0.1:3100/ask/proof/$($ask.proof.proofId)" -ArtifactPath $proofArtifact
+  if ($proofLookup.status -ne 'implemented') {
+    throw 'Ask proof lookup did not return status=implemented'
+  }
+  if ($proofLookup.proof.proofId -ne $ask.proof.proofId -or $proofLookup.proof.replayToken -ne $ask.proof.replayToken) {
+    throw 'Ask proof lookup did not return the expected proof identifiers'
+  }
+  $recentProofs = Invoke-JsonGet -Url 'http://127.0.0.1:3100/ask/proofs/recent?limit=10' -ArtifactPath $recentProofsArtifact
+  if ($recentProofs.status -ne 'implemented' -or $recentProofs.total -lt 1) {
+    throw 'Recent proofs lookup did not return implemented status with at least one proof'
+  }
+  if ($recentProofs.proofs[0].proofId -ne $ask.proof.proofId) {
+    throw "Recent proofs did not return the latest proof first (expected $($ask.proof.proofId))"
   }
 
   $orgStatus = Invoke-JsonGet -Url 'http://127.0.0.1:3100/org/status' -ArtifactPath $orgStatusArtifact
@@ -310,6 +326,8 @@ try {
     'logs/desktop-release-smoke-ready.json'
     'logs/desktop-release-smoke-ask.json'
     'logs/desktop-release-smoke-ask-repeat.json'
+    'logs/desktop-release-smoke-proof.json'
+    'logs/desktop-release-smoke-recent-proofs.json'
     'logs/desktop-release-smoke-replay.json'
     'logs/desktop-release-smoke-org-status.json'
     'logs/desktop-release-smoke-session-before.json'
@@ -338,6 +356,8 @@ try {
     replayMatched = $replay.matched
     replayCorePayloadMatched = $replay.corePayloadMatched
     replayMetricsMatched = $replay.metricsMatched
+    proofLookupMatched = $proofLookup.proof.proofId -eq $ask.proof.proofId -and $proofLookup.proof.replayToken -eq $ask.proof.replayToken
+    recentProofsMatched = $recentProofs.proofs[0].proofId -eq $ask.proof.proofId
     sessionConnectStatus = $sessionConnectStatus
     sessionConnectAlias = $sessionConnectAlias
     sessionSwitchStatus = $sessionSwitchStatus

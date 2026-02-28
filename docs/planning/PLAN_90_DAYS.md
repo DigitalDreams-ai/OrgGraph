@@ -205,6 +205,13 @@ Progress note:
     - `matched=true`
     - `corePayloadMatched=true`
     - `metricsMatched=true`
+- Slice 14 completed:
+  - packaged smoke now verifies proof artifact lookup and recent-proof history through:
+    - `GET /ask/proof/:proofId`
+    - `GET /ask/proofs/recent?limit=10`
+  - provenance verification passed with:
+    - `proofLookupMatched=true`
+    - `recentProofsMatched=true`
 - Next narrow step:
   - reassess whether any additional packaged-runtime pruning still buys enough to justify another slice
   - stop if the remaining potential wins are mostly cosmetic rather than architectural

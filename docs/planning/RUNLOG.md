@@ -1184,3 +1184,27 @@ Branch: `dna-foundation`
 ### Outcome
 - The packaged desktop proof path now exercises both determinism and replay parity, not just service readiness.
 - Additional Phase 4 work should now be driven by real runtime gaps rather than by missing proof coverage.
+
+## Entry 34: Assert Packaged Proof Provenance Lookup
+
+### Change
+- Updated `scripts/desktop-release-smoke.ps1` so packaged smoke now:
+  - fetches `GET /ask/proof/:proofId` for the packaged Ask proof
+  - fetches `GET /ask/proofs/recent?limit=10`
+  - fails if proof lookup or recent-proof history do not agree with the packaged Ask identifiers
+- The packaged smoke result now records:
+  - `proofLookupMatched`
+  - `recentProofsMatched`
+
+### Verification
+1. `$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH='1'; pnpm desktop:smoke:release`
+- Result: passed
+- Proof:
+  - `status=passed`
+  - `proofLookupMatched=true`
+  - `recentProofsMatched=true`
+  - `logs/desktop-release-smoke-proof.json` and `logs/desktop-release-smoke-recent-proofs.json` were written
+
+### Outcome
+- The packaged desktop proof path now covers provenance lookup in addition to determinism and replay parity.
+- Phase 4 verification now exercises the core Ask proof chain end-to-end inside the packaged runtime.

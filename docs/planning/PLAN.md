@@ -262,6 +262,14 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
     - `corePayloadMatched=true`
     - `metricsMatched=true`
   - the current packaged replay proof matched the original Ask artifact on all three signals
+- Packaged proof provenance lookup now exists:
+  - `scripts/desktop-release-smoke.ps1` now fetches:
+    - `GET /ask/proof/:proofId`
+    - `GET /ask/proofs/recent?limit=10`
+  - the packaged smoke now fails if the stored proof artifact or recent-proof list disagree with the packaged Ask proof identifiers
+  - current packaged proof retrieval remained aligned with the live Ask artifact:
+    - `proofLookupMatched=true`
+    - `recentProofsMatched=true`
 - Packaged API payload hardening now exists:
   - `apps/desktop/scripts/prepare-packaged-runtime.mjs` now prunes build-only baggage from `apps/desktop/src-tauri/runtime/api`
   - staged payload dropped from about `24.09 MB` to about `13.93 MB`

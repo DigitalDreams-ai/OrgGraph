@@ -118,6 +118,8 @@ Smoke artifacts:
 - `logs/desktop-release-smoke-ready.json`
 - `logs/desktop-release-smoke-ask.json`
 - `logs/desktop-release-smoke-ask-repeat.json`
+- `logs/desktop-release-smoke-proof.json`
+- `logs/desktop-release-smoke-recent-proofs.json`
 - `logs/desktop-release-smoke-replay.json`
 - `logs/desktop-release-smoke-org-status.json`
 - `logs/desktop-release-smoke-session-before.json`
@@ -138,6 +140,9 @@ Current packaged smoke proof:
   - `matched=true`
   - `corePayloadMatched=true`
   - `metricsMatched=true`
+- stored proof lookup and recent-proof history matched the packaged Ask artifact:
+  - `proofLookupMatched=true`
+  - `recentProofsMatched=true`
 - alias inventory is captured from `/org/session/aliases`
 - when local aliases are available, the smoke verifies `POST /org/session/connect` and restores the original session state before shutdown
 - cleanup now retries until packaged `orgumented-desktop.exe` and bundled `node.exe` are actually gone
