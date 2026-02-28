@@ -853,3 +853,37 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns shared response presentation or copy/error mechanics directly.
 - The remaining page shell is now concentrated around local persistence, `limitRaw`, the generic secondary-query helper, and tab composition.
 - The next narrow slice is extracting the remaining local persistence shell orchestration or deciding that the shell is now small enough to pivot back to runtime work.
+
+## Entry 25: Phase 5 Shell Preference Extraction
+
+### Change
+- Extracted local shell persistence out of `apps/web/app/page.tsx`.
+- Added `apps/web/app/shell/use-shell-preferences.ts`.
+- Moved the following into the shell-preferences hook:
+  - initial tab restore
+  - initial org alias restore
+  - initial Ask query restore
+  - ongoing tab persistence
+  - ongoing alias persistence
+  - ongoing Ask query persistence
+- Kept shell status refresh as an `onHydrated` callback so startup behavior stayed unchanged.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - typed desktop boundary routes remained present after the shell-preferences extraction
+
+3. Page-shell reduction proof
+- Result: passed
+- Proof:
+  - `apps/web/app/page.tsx` line count dropped from `375` to `363`
+
+### Outcome
+- `page.tsx` no longer owns local tab/alias/Ask persistence mechanics directly.
+- The page shell is now small enough that the next best step is runtime proof work, not more UI extraction.
+- The next narrow slice is growing the packaged desktop smoke toward authenticated org-session attach/switch verification.

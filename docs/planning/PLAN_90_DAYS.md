@@ -212,9 +212,12 @@ Progress note:
 - Slice 10 completed:
   - shared response presentation, copy state, and error presentation moved out of `apps/web/app/page.tsx`
   - response inspector orchestration now lives in `apps/web/app/shell/use-response-inspector.ts`
+- Slice 11 completed:
+  - local tab/alias/ask persistence moved out of `apps/web/app/page.tsx`
+  - shell preference hydration/persistence now lives in `apps/web/app/shell/use-shell-preferences.ts`
 - Next narrow step:
-  - move remaining local persistence shell orchestration out of `apps/web/app/page.tsx`
-  - then reassess whether the remaining page shell is small enough to pivot back to deeper runtime or org-session proof work
+  - pivot back to deeper runtime and packaged org-session proof work
+  - only return for more UI cleanup if the remaining page shell still blocks architectural clarity
 
 ## Determinism and Replay Harness Plan
 
@@ -302,6 +305,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: reduce the remaining local persistence shell orchestration now that Browser, Refresh, Connect, Analyze, System, shell runtime status, operator rail rendering, and shared response handling are modular and packaged smoke covers shell launch, readiness, Ask proof, and org status.
+- Preferred next step: grow packaged smoke toward authenticated org-session attach/switch verification now that Browser, Refresh, Connect, Analyze, System, shell runtime status, operator rail rendering, shared response handling, and local shell persistence are modular.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

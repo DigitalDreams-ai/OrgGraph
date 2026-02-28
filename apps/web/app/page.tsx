@@ -6,6 +6,7 @@ import {
 } from './lib/ask-client';
 import { runSecondaryQueryRequest, type SecondaryQueryKind } from './lib/secondary-client';
 import { OperatorRail } from './shell/operator-rail';
+import { useShellPreferences } from './shell/use-shell-preferences';
 import { resolveQueryErrorMessage, useResponseInspector } from './shell/use-response-inspector';
 import { ShellTopbar } from './shell/shell-topbar';
 import { StatusStrip } from './shell/status-strip';
@@ -106,29 +107,15 @@ export default function Page(): JSX.Element {
     loadOrgStatus: () => connectWorkspace.loadToolStatus()
   });
 
-  useEffect(() => {
-    try {
-      const savedTab = localStorage.getItem('orgumented.newui.tab') as UiTab | null;
-      if (savedTab) setUiTab(savedTab);
-      const savedAlias = localStorage.getItem('orgumented.newui.alias');
-      if (savedAlias) connectWorkspace.setOrgAlias(savedAlias);
-      const savedAsk = localStorage.getItem('orgumented.newui.ask');
-      if (savedAsk) askWorkspace.setAskQuery(savedAsk);
-    } catch {
-      // ignore
-    }
-    void shellRuntime.refreshStatuses();
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('orgumented.newui.tab', uiTab);
-      localStorage.setItem('orgumented.newui.alias', connectWorkspace.orgAlias);
-      localStorage.setItem('orgumented.newui.ask', askWorkspace.askQuery);
-    } catch {
-      // ignore
-    }
-  }, [uiTab, connectWorkspace.orgAlias, askWorkspace.askQuery]);
+  useShellPreferences<UiTab>({
+    uiTab,
+    setUiTab,
+    orgAlias: connectWorkspace.orgAlias,
+    setOrgAlias: connectWorkspace.setOrgAlias,
+    askQuery: askWorkspace.askQuery,
+    setAskQuery: askWorkspace.setAskQuery,
+    onHydrated: () => void shellRuntime.refreshStatuses()
+  });
 
   useEffect(() => {
     proofsWorkspace.syncFromAsk(askWorkspace.askProofId, askWorkspace.askReplayToken);

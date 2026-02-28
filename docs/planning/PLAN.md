@@ -257,6 +257,8 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - System state and action handlers now live under `apps/web/app/workspaces/system/use-system-workspace.ts`
   - Shared response inspector state and copy/error handling are no longer owned directly by `apps/web/app/page.tsx`
   - response presentation and copy/error handling now live under `apps/web/app/shell/use-response-inspector.ts`
+  - Local tab/alias/ask persistence is no longer owned directly by `apps/web/app/page.tsx`
+  - shell preference hydration/persistence now lives under `apps/web/app/shell/use-shell-preferences.ts`
 - The next live architectural priority is to keep moving runtime expectations into the shell:
-  - move remaining local persistence orchestration out of `apps/web/app/page.tsx`
-  - then decide whether packaged smoke should grow into an authenticated org-session attach workflow
+  - grow packaged smoke into an authenticated org-session attach workflow
+  - then reassess whether any remaining shared page-shell helpers still justify extraction
