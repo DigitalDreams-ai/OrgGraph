@@ -10,15 +10,15 @@ Purpose: track the remaining browser-era and dev-server-era carryover that still
 - Orgumented is still partly implemented as a local web/server stack wrapped by Tauri, rather than a fully self-owned desktop runtime.
 
 ## 1. Runtime Ownership
-- [ ] Make the packaged desktop shell explicitly own API process startup and shutdown.
+- [x] Make the packaged desktop shell explicitly own API process startup and shutdown.
 - [ ] Make the packaged desktop shell explicitly own embedded UI runtime startup and shutdown.
-- [ ] Prove the packaged desktop app can start required local services without relying on dev-only orchestration.
-- [ ] Remove primary-runtime dependence on the standalone Next server path in `apps/web/.next/standalone/apps/web/server.js`.
+- [x] Prove the packaged desktop app can start required local services without relying on dev-only orchestration.
+- [x] Remove primary-runtime dependence on the standalone Next server path in `apps/web/.next/standalone/apps/web/server.js`.
 - [ ] Replace environment assumptions that treat `http://localhost:3100` and `http://127.0.0.1:3001` as the permanent desktop runtime contract.
 
 ## 2. Desktop Data Boundary
-- [ ] Replace the browser-style `/api/query` Next proxy with a desktop-native request boundary.
-- [ ] Remove the large route multiplexer in `apps/web/app/api/query/route.ts` from the primary product path.
+- [x] Replace the browser-style `/api/query` Next proxy with a desktop-native request boundary.
+- [x] Remove the large route multiplexer in `apps/web/app/api/query/route.ts` from the primary product path.
 - [ ] Reduce or remove `NEXT_PUBLIC_API_BASE` dependence for the primary desktop runtime.
 - [ ] Decide whether health/readiness checks should be exposed through a desktop-native bridge instead of a browser-style proxy.
 
@@ -36,13 +36,14 @@ Purpose: track the remaining browser-era and dev-server-era carryover that still
 
 ## 5. Documentation Cleanup
 - [ ] Remove outdated browser-proof references from operator docs.
-- [ ] Remove stale `/api/query` examples from user-facing guidance once the desktop-native boundary replaces them.
+- [x] Remove stale `/api/query` examples from user-facing guidance once the desktop-native boundary replaces them.
 - [ ] Keep docs explicit about what is product runtime versus verification-only tooling.
 
 ## 6. Current Carryover Reference Points
 - `apps/desktop/src-tauri/tauri.conf.json`
 - `apps/desktop/scripts/dev-runtime.mjs`
-- `apps/web/app/api/query/route.ts`
+- `apps/web/app/api/health/route.ts`
+- `apps/web/app/api/ready/route.ts`
 - `apps/web/app/page.tsx`
 - `scripts/web-smoke.sh`
 - `scripts/ui-smoke-playwright.sh`

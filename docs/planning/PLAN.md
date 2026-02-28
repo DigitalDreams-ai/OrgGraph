@@ -73,8 +73,7 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - endpoint selection,
   - payload construction,
   - request dispatch.
-- `apps/web/app/api/query/route.ts` is a generic command multiplexer that maps UI "kind" values to many Nest endpoints.
-- Typed clients under `apps/web/app/lib/` now bypass the generic multiplexer for Ask, Org, Refresh, and packaged-shell secondary flows when the UI runs from the Tauri bundled static shell.
+- Typed clients under `apps/web/app/lib/` now own Ask, Org, Refresh, permissions, automation, impact, and meta transport instead of a single browser-era command multiplexer.
 - Health and readiness proxy routes exist separately in `apps/web/app/api/health/route.ts` and `apps/web/app/api/ready/route.ts`.
 
 ### NestJS engine layer
@@ -119,9 +118,9 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
 - The UI defines a large `QueryKind` union, builds request payloads for engine operations, and directly controls operational dispatch.
 - This is not presentation-only behavior. It is an application command layer living in the UI.
 
-2. `apps/web/app/api/query/route.ts`
-- The route is a browser-era adapter layer that translates UI-specific request kinds into many engine endpoints.
-- It acts as a shadow application service boundary outside the engine.
+2. `apps/web/app/page.tsx`
+- Analysis, browser, and system surfaces still shape request payloads in the page shell even though their transport no longer depends on a generic multiplexer.
+- The remaining UI boundary problem is page-level orchestration, not a query-route adapter.
 
 3. `apps/desktop/scripts/dev-runtime.mjs`
 - Runtime orchestration is still external to Tauri proper.
@@ -167,7 +166,6 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
 ## Current Weaknesses
 - The desktop shell is still too thin.
 - The UI boundary is not presentation-only.
-- The generic `/api/query` route keeps browser-era command multiplexing alive.
 - Very large files indicate concentrated complexity:
   - `apps/web/app/page.tsx`
   - `apps/api/src/modules/ask/ask.service.ts`
@@ -225,6 +223,13 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - `apps/desktop/src-tauri/target/release/orgumented-desktop.exe` started the bundled API runtime
   - `http://127.0.0.1:3100/ready` returned HTTP `200`
   - proof log: `logs/desktop-phase4-release.log`
+- The generic `/api/query` adapter is now removed:
+  - typed route families now own:
+    - permissions
+    - automation
+    - impact
+    - meta context/adapt
+  - build output no longer emits `/api/query`
 - The next live architectural priority is to keep moving runtime expectations into the shell:
-  - shrink or replace the remaining generic analysis/meta seam
-  - then tighten packaged-shell workflow proof beyond readiness-only smoke
+  - reduce the remaining browser-style health/readiness proxy assumptions
+  - then shrink the page shell further so Browser and System stop shaping engine requests inline

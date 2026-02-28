@@ -151,8 +151,12 @@ Progress note:
     - bundled Node runtime
   - packaged-shell clients now talk directly to the local Nest engine for Ask, Org, Refresh, and secondary analysis/meta flows
   - packaged release smoke showed `orgumented-desktop.exe` starting the bundled API runtime and `/ready` returning HTTP `200`
+- Slice 3 completed:
+  - the generic `/api/query` adapter is removed
+  - typed route families now own permissions, automation, impact, and meta transport in dev
+  - packaged and dev desktop paths now use the same explicit capability routing model
 - Next narrow step:
-  - decide whether to remove the remaining dev-only Next adapter seam entirely
+  - decide whether health/readiness should keep browser-style proxy routes
   - then expand packaged-shell verification beyond readiness smoke into live Ask and org-session proof
 
 ## Phase 5: Modular UI Reconstruction
@@ -190,15 +194,16 @@ Progress note:
 
 ### Current state
 - UI owns command dispatch and payload shaping.
-- Next route owns a large engine command translation layer.
+- Next route families are now typed by capability, but health/readiness and some page-shell orchestration still reflect browser-era assumptions.
 - Tauri dev lifecycle depends on external runtime orchestration.
 
 ### Cleanup order
 1. Stabilize the core ask output contract.
 2. Remove generic Ask command routing from the UI.
 3. Remove generic org-session command routing from the UI.
-4. Move runtime ownership closer to the shell.
-5. Break monolithic UI into workspace modules.
+4. Remove generic analysis/meta command routing from the UI.
+5. Move runtime ownership closer to the shell.
+6. Break monolithic UI into workspace modules.
 
 ## Packaging and Release Checkpoints
 
@@ -251,6 +256,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: reduce or remove the remaining generic analysis/meta adapter seam now that packaged-shell direct API mode exists.
+- Preferred next step: remove or narrow the remaining browser-style health/readiness proxies now that the main query multiplexer is gone.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

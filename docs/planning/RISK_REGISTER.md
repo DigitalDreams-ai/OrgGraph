@@ -22,7 +22,6 @@ Branch: `dna-foundation`
 ## Risk 2: UI continues to act as an application command layer
 - Evidence:
   - `apps/web/app/page.tsx`
-  - `apps/web/app/api/query/route.ts`
 - Impact:
   - boundary drift,
   - policy leakage risk,
@@ -85,16 +84,16 @@ Branch: `dna-foundation`
 
 ## Risk 6: Browser-era transport assumptions may keep reappearing
 - Evidence:
-  - `apps/web/app/api/query/route.ts`
-  - `apps/web/app/api/ready/route.ts`
   - `apps/web/app/api/health/route.ts`
+  - `apps/web/app/api/ready/route.ts`
+  - `apps/web/app/page.tsx`
 - Impact:
   - product behaves like a wrapped web console instead of a coherent desktop app.
 - Current signal:
-  - Ask, Org, Refresh, and packaged-shell secondary flows now have direct typed or direct-engine boundaries,
-  - residual browser-era seam is mainly the remaining dev-only Next adapter layer.
+  - Ask, Org, Refresh, permissions, automation, impact, and meta flows now have explicit typed or direct-engine boundaries,
+  - residual browser-era seams are mainly health/readiness proxy routes and remaining page-shell request shaping.
 - Mitigation:
-  - delete generic browser-era routes incrementally as typed boundaries replace them.
+  - delete remaining browser-era routes incrementally as typed boundaries and shell-owned checks replace them.
 - Pivot trigger:
   - if new work adds more generic route multiplexing, reject it and return to boundary cleanup.
 

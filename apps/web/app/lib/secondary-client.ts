@@ -44,24 +44,28 @@ function appendParam(params: URLSearchParams, key: string, value: unknown): void
   }
 }
 
-function buildDirectRequest(kind: SecondaryQueryKind, payload: Record<string, unknown>): { url: string; init: RequestInit } {
+function resolveBoundaryPath(path: string): string {
+  return isDesktopDirectApiMode() ? resolveDesktopApiUrl(path) : `/api${path}`;
+}
+
+function buildBoundaryRequest(kind: SecondaryQueryKind, payload: Record<string, unknown>): { url: string; init: RequestInit } {
   const params = new URLSearchParams();
   if (kind === 'perms') {
     appendParam(params, 'user', payload.user);
     appendParam(params, 'object', payload.object);
     appendParam(params, 'field', payload.field);
     appendParam(params, 'limit', payload.limit);
-    return { url: resolveDesktopApiUrl(`/perms?${params.toString()}`), init: { method: 'GET' } };
+    return { url: resolveBoundaryPath(`/perms?${params.toString()}`), init: { method: 'GET' } };
   }
   if (kind === 'permsDiagnose') {
     appendParam(params, 'user', payload.user);
-    return { url: resolveDesktopApiUrl(`/perms/diagnose?${params.toString()}`), init: { method: 'GET' } };
+    return { url: resolveBoundaryPath(`/perms/diagnose?${params.toString()}`), init: { method: 'GET' } };
   }
   if (kind === 'permsSystem') {
     appendParam(params, 'user', payload.user);
     appendParam(params, 'permission', payload.permission);
     appendParam(params, 'limit', payload.limit);
-    return { url: resolveDesktopApiUrl(`/perms/system?${params.toString()}`), init: { method: 'GET' } };
+    return { url: resolveBoundaryPath(`/perms/system?${params.toString()}`), init: { method: 'GET' } };
   }
   if (kind === 'automation') {
     appendParam(params, 'object', payload.object);
@@ -69,7 +73,7 @@ function buildDirectRequest(kind: SecondaryQueryKind, payload: Record<string, un
     appendParam(params, 'strict', payload.strict);
     appendParam(params, 'explain', payload.explain);
     appendParam(params, 'includeLowConfidence', payload.includeLowConfidence);
-    return { url: resolveDesktopApiUrl(`/automation?${params.toString()}`), init: { method: 'GET' } };
+    return { url: resolveBoundaryPath(`/automation?${params.toString()}`), init: { method: 'GET' } };
   }
   if (kind === 'impact') {
     appendParam(params, 'field', payload.field);
@@ -78,13 +82,13 @@ function buildDirectRequest(kind: SecondaryQueryKind, payload: Record<string, un
     appendParam(params, 'debug', payload.debug);
     appendParam(params, 'explain', payload.explain);
     appendParam(params, 'includeLowConfidence', payload.includeLowConfidence);
-    return { url: resolveDesktopApiUrl(`/impact?${params.toString()}`), init: { method: 'GET' } };
+    return { url: resolveBoundaryPath(`/impact?${params.toString()}`), init: { method: 'GET' } };
   }
   if (kind === 'metaContext') {
-    return { url: resolveDesktopApiUrl('/meta/context'), init: { method: 'GET' } };
+    return { url: resolveBoundaryPath('/meta/context'), init: { method: 'GET' } };
   }
   return {
-    url: resolveDesktopApiUrl('/meta/adapt'),
+    url: resolveBoundaryPath('/meta/adapt'),
     init: {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -99,16 +103,7 @@ export async function runSecondaryQueryRequest(
   kind: SecondaryQueryKind,
   payload: Record<string, unknown> = {}
 ): Promise<QueryResponse> {
-  if (!isDesktopDirectApiMode()) {
-    const response = await fetch('/api/query', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ kind, payload })
-    });
-    return parseBoundaryResponse(response);
-  }
-
-  const direct = buildDirectRequest(kind, payload);
-  const response = await fetch(direct.url, direct.init);
+  const request = buildBoundaryRequest(kind, payload);
+  const response = await fetch(request.url, request.init);
   return parseBoundaryResponse(response);
 }

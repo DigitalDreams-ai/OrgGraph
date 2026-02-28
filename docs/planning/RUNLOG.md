@@ -426,3 +426,47 @@ Branch: `dna-foundation`
 - Packaged desktop builds no longer depend on a live Next server or externally managed API runtime.
 - The packaged shell now has a concrete local-runtime ownership story that matches the desktop product boundary better than the old browser-style adapter model.
 - The next highest-value move is to reduce or remove the remaining dev-only Next adapter seam and then prove a real packaged Ask or org-session workflow.
+
+## Entry 12: Phase 4 Typed Analysis and Meta Boundary Slice
+
+### Change
+- Removed the generic `apps/web/app/api/query/route.ts` multiplexer entirely.
+- Added explicit typed Next route families for:
+  - `apps/web/app/api/perms/route.ts`
+  - `apps/web/app/api/perms/diagnose/route.ts`
+  - `apps/web/app/api/perms/system/route.ts`
+  - `apps/web/app/api/automation/route.ts`
+  - `apps/web/app/api/impact/route.ts`
+  - `apps/web/app/api/meta/context/route.ts`
+  - `apps/web/app/api/meta/adapt/route.ts`
+- Updated `apps/web/app/lib/secondary-client.ts` so both desktop-direct and dev-mode flows use explicit capability routes instead of a command multiplexer.
+
+### Verification
+1. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+2. `pnpm --filter web typecheck`
+- Result: passed
+
+3. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - build output emitted:
+    - `/api/perms`
+    - `/api/perms/diagnose`
+    - `/api/perms/system`
+    - `/api/automation`
+    - `/api/impact`
+    - `/api/meta/context`
+    - `/api/meta/adapt`
+  - build output no longer emitted `/api/query`
+
+### Outcome
+- The browser-era generic query seam is gone from the desktop UI boundary.
+- Dev and packaged desktop paths now share the same explicit capability routing model.
+- The next architectural decision is whether health/readiness should stay as Next proxy routes or move into a shell-owned check path.
