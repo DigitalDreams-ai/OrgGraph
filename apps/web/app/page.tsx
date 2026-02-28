@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import {
-  exportAskMetrics,
-  getAskProof,
-  listAskProofsRecent,
-  replayAskProof,
   type QueryResponse
 } from './lib/ask-client';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
 import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
+import { ProofsWorkspace } from './workspaces/proofs/proofs-workspace';
+import { useProofsWorkspace } from './workspaces/proofs/use-proofs-workspace';
 
 type QueryKind =
   | 'refresh'
@@ -208,11 +206,16 @@ export default function Page(): JSX.Element {
   const [explainMode, setExplainMode] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
 
-  const [proofId, setProofId] = useState('');
-  const [replayToken, setReplayToken] = useState('');
   const [metaDryRun, setMetaDryRun] = useState(true);
 
   const askWorkspace = useAskWorkspace({
+    presentResponse,
+    resolveErrorMessage,
+    setLoading,
+    setCopied,
+    setErrorText
+  });
+  const proofsWorkspace = useProofsWorkspace({
     presentResponse,
     resolveErrorMessage,
     setLoading,
@@ -248,12 +251,7 @@ export default function Page(): JSX.Element {
   }, [uiTab, orgAlias, askWorkspace.askQuery]);
 
   useEffect(() => {
-    if (askWorkspace.askProofId) {
-      setProofId(askWorkspace.askProofId);
-    }
-    if (askWorkspace.askReplayToken) {
-      setReplayToken(askWorkspace.askReplayToken);
-    }
+    proofsWorkspace.syncFromAsk(askWorkspace.askProofId, askWorkspace.askReplayToken);
   }, [askWorkspace.askProofId, askWorkspace.askReplayToken]);
 
   useEffect(() => {
@@ -421,97 +419,6 @@ export default function Page(): JSX.Element {
     setErrorText('Copy failed in this browser context. Select JSON from Raw JSON and copy manually.');
   }
 
-  async function runAskProofsRecent(): Promise<void> {
-    setLoading(true);
-    setCopied(false);
-    setErrorText('');
-
-    try {
-      const result = await listAskProofsRecent(parseOptionalInt(limitRaw) ?? 20);
-      presentResponse(result);
-      if (result.ok === false) {
-        setErrorText(resolveErrorMessage(result));
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected recent proofs failure';
-      const fallback: QueryResponse = { ok: false, error: { message } };
-      presentResponse(fallback);
-      setErrorText('Proof history request failed. Check API readiness and local runtime health.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function runAskProofLookup(): Promise<void> {
-    if (!proofId.trim()) return;
-
-    setLoading(true);
-    setCopied(false);
-    setErrorText('');
-
-    try {
-      const result = await getAskProof(proofId.trim());
-      presentResponse(result);
-      if (result.ok === false) {
-        setErrorText(resolveErrorMessage(result));
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected proof lookup failure';
-      const fallback: QueryResponse = { ok: false, error: { message } };
-      presentResponse(fallback);
-      setErrorText('Proof lookup failed. Check API readiness and local runtime health.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function runAskReplay(): Promise<void> {
-    if (!proofId.trim() && !replayToken.trim()) return;
-
-    setLoading(true);
-    setCopied(false);
-    setErrorText('');
-
-    try {
-      const result = await replayAskProof({
-        replayToken: replayToken.trim() || undefined,
-        proofId: proofId.trim() || undefined
-      });
-      presentResponse(result);
-      if (result.ok === false) {
-        setErrorText(resolveErrorMessage(result));
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected replay failure';
-      const fallback: QueryResponse = { ok: false, error: { message } };
-      presentResponse(fallback);
-      setErrorText('Replay failed. Check API readiness and local runtime health.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function runAskMetricsExport(): Promise<void> {
-    setLoading(true);
-    setCopied(false);
-    setErrorText('');
-
-    try {
-      const result = await exportAskMetrics();
-      presentResponse(result);
-      if (result.ok === false) {
-        setErrorText(resolveErrorMessage(result));
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected metrics export failure';
-      const fallback: QueryResponse = { ok: false, error: { message } };
-      presentResponse(fallback);
-      setErrorText('Metrics export failed. Check API readiness and local runtime health.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
   const statusTone = (status: string): string => {
     if (status === 'ok' || status === 'ready' || status === 'connected') return 'good';
     if (status === 'unknown') return 'muted';
@@ -623,13 +530,11 @@ export default function Page(): JSX.Element {
                 setUiTab('analyze');
               }}
               onOpenProof={() => {
-                if (askWorkspace.askProofId) setProofId(askWorkspace.askProofId);
-                if (askWorkspace.askReplayToken) setReplayToken(askWorkspace.askReplayToken);
+                proofsWorkspace.syncFromAsk(askWorkspace.askProofId, askWorkspace.askReplayToken);
                 setUiTab('proofs');
               }}
               onSaveToHistory={() => {
-                if (askWorkspace.askReplayToken) setReplayToken(askWorkspace.askReplayToken);
-                if (askWorkspace.askProofId) setProofId(askWorkspace.askProofId);
+                proofsWorkspace.syncFromAsk(askWorkspace.askProofId, askWorkspace.askReplayToken);
                 setUiTab('proofs');
               }}
             />
@@ -1036,28 +941,17 @@ cci org import ${orgAlias} <sf-username>`}</pre>
           )}
 
           {uiTab === 'proofs' && (
-            <>
-              <h2>Proofs &amp; History</h2>
-              <p className="section-lead">Inspect deterministic proof artifacts, replay tokens, and history exports without managing raw tokens as the primary workflow.</p>
-
-              <div className="field-grid">
-                <div>
-                  <label htmlFor="proofId">Proof ID</label>
-                  <input id="proofId" value={proofId} onChange={(e) => setProofId(e.target.value)} />
-                </div>
-                <div>
-                  <label htmlFor="replayToken">Replay Token</label>
-                  <input id="replayToken" value={replayToken} onChange={(e) => setReplayToken(e.target.value)} />
-                </div>
-              </div>
-
-              <div className="action-row">
-                <button type="button" onClick={() => void runAskProofsRecent()} disabled={loading}>List Recent Proofs</button>
-                <button type="button" onClick={() => void runAskProofLookup()} disabled={loading || !proofId.trim()}>Get Proof</button>
-                <button type="button" onClick={() => void runAskReplay()} disabled={loading || (!proofId.trim() && !replayToken.trim())}>Replay Proof</button>
-                <button type="button" onClick={() => void runAskMetricsExport()} disabled={loading}>Export Metrics</button>
-              </div>
-            </>
+            <ProofsWorkspace
+              proofId={proofsWorkspace.proofId}
+              setProofId={proofsWorkspace.setProofId}
+              replayToken={proofsWorkspace.replayToken}
+              setReplayToken={proofsWorkspace.setReplayToken}
+              loading={loading}
+              onListRecent={() => void proofsWorkspace.runProofsRecent(parseOptionalInt(limitRaw) ?? 20)}
+              onGetProof={() => void proofsWorkspace.runProofLookup()}
+              onReplay={() => void proofsWorkspace.runReplay()}
+              onExportMetrics={() => void proofsWorkspace.runMetricsExport()}
+            />
           )}
 
           {uiTab === 'system' && (

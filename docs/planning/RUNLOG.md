@@ -124,3 +124,35 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns the Ask workspace rendering tree or the Ask request lifecycle.
 - Ask is now a real module boundary in the UI layer rather than a large inline section inside the desktop shell page.
 - The next cleanup target is the Proofs/History slice or the remaining generic page-level wiring around non-Ask workspaces.
+
+## Entry 4: Phase 2 Proofs/History Workspace Extraction
+
+### Change
+- Extracted the Proofs/History workspace from `apps/web/app/page.tsx` into:
+  - `apps/web/app/workspaces/proofs/proofs-workspace.tsx`
+  - `apps/web/app/workspaces/proofs/use-proofs-workspace.ts`
+- Moved proof lookup, replay, recent-proof listing, and metrics export state/actions behind a dedicated Proofs workspace hook.
+- Kept the page shell responsible only for composition and tab switching.
+- Preserved Ask-to-Proofs handoff by syncing the latest Ask `proofId` and `replayToken` into the Proofs workspace state.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - Ask route boundary remained intact in the app build output
+
+3. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+### Outcome
+- `page.tsx` no longer owns the Proofs/History workspace rendering or proof-history action lifecycle.
+- Both Ask and Proofs are now isolated modules inside the embedded desktop UI layer.
+- The next cleanup target is the remaining page-level coupling for Connect or Analyze.
