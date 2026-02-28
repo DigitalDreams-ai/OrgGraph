@@ -236,6 +236,19 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
     - deterministic Ask proof ID `proof_dd7bcb4c6e249d0ebae058a6`
     - live org status with `session.status=connected` and `activeAlias=shulman-dev2`
   - proof artifacts live under `logs/desktop-release-smoke-*.json`
+- Packaged auth/runtime proof now exists:
+  - packaged runtime stages `runtime/config.json` from non-secret Salesforce config in `.env` and build-shell overrides
+  - bundled Tauri shell now passes `ORGUMENTED_CONFIG_PATH` to the packaged API child
+  - `pnpm desktop:smoke:release` with `ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH=1` captured:
+    - `integrationEnabled=true`
+    - `sessionConnectStatus=verified`
+    - `sessionSwitchStatus=verified`
+    - `sessionRestoreStatus=restored-alias`
+  - proof artifacts now also include:
+    - `logs/desktop-release-smoke-session-connect.json`
+    - `logs/desktop-release-smoke-session-switch.json`
+    - `logs/desktop-release-smoke-session-restore.json`
+  - packaged smoke cleanup now tears down the bundled `node.exe` child correctly on Windows
 - Phase 5 modular UI reconstruction is now moving again:
   - `Org Browser` rendering is no longer inlined inside `apps/web/app/page.tsx`
   - browser types and rendering now live under `apps/web/app/workspaces/browser/`
@@ -259,6 +272,7 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - response presentation and copy/error handling now live under `apps/web/app/shell/use-response-inspector.ts`
   - Local tab/alias/ask persistence is no longer owned directly by `apps/web/app/page.tsx`
   - shell preference hydration/persistence now lives under `apps/web/app/shell/use-shell-preferences.ts`
-- The next live architectural priority is to keep moving runtime expectations into the shell:
-  - grow packaged smoke into an authenticated org-session attach workflow
+- The next live architectural priority is to harden the packaged runtime payload itself:
+  - trim unnecessary packaged API files from `apps/desktop/src-tauri/runtime/api`
+  - reduce bundle surface and the chances of Windows native-module lock churn during repeated builds
   - then reassess whether any remaining shared page-shell helpers still justify extraction

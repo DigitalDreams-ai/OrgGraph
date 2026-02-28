@@ -887,3 +887,58 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns local tab/alias/Ask persistence mechanics directly.
 - The page shell is now small enough that the next best step is runtime proof work, not more UI extraction.
 - The next narrow slice is growing the packaged desktop smoke toward authenticated org-session attach/switch verification.
+
+## Entry 26: Packaged Auth Proof and Config Snapshot
+
+### Change
+- Added packaged Salesforce config staging in `apps/desktop/scripts/prepare-packaged-runtime.mjs`.
+- The packaged runtime now writes `apps/desktop/src-tauri/runtime/config.json` from non-secret Salesforce config found in:
+  - `.env`
+  - `.env.local`
+  - build-shell overrides
+- Updated `apps/desktop/src-tauri/src/lib.rs` so the bundled API child receives `ORGUMENTED_CONFIG_PATH` in packaged mode.
+- Added `runtime/config.json` to `apps/desktop/src-tauri/tauri.conf.json` resource bundling.
+- Hardened `scripts/desktop-release-smoke.ps1` so packaged smoke now:
+  - captures alias inventory and session artifacts
+  - verifies session attach when aliases exist
+  - verifies alias switch when `ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH=1`
+  - restores the original session alias or disconnected state before exit
+  - tears down the bundled packaged `node.exe` child reliably on Windows
+- Updated `.env.example` and `.env.sample` so the desktop org path explicitly includes `SF_INTEGRATION_ENABLED=true`.
+
+### Verification
+1. `pnpm desktop:build`
+- Result: passed
+- Proof:
+  - `Built application at: ...\\apps\\desktop\\src-tauri\\target\\release\\orgumented-desktop.exe`
+  - `Finished 2 bundles`
+
+2. `$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH='1'; pnpm desktop:smoke:release`
+- Result: passed
+- Proof:
+  - `logs/desktop-release-smoke-result.json` recorded:
+    - `sessionConnectStatus=verified`
+    - `sessionSwitchStatus=verified`
+    - `sessionRestoreStatus=restored-alias`
+    - `sessionConnectAlias=shulman-dev2`
+    - `sessionSwitchAlias=shulman`
+  - `logs/desktop-release-smoke-org-status.json` recorded:
+    - `integrationEnabled=true`
+    - `session.activeAlias=shulman-dev2`
+  - session artifacts were emitted for:
+    - connect
+    - switch
+    - restore
+
+3. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `org service test passed`
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+### Outcome
+- Packaged desktop auth behavior now matches the desktop operator model instead of silently falling back to `SF_INTEGRATION_ENABLED=false`.
+- Packaged smoke now proves authenticated attach/switch/restore behavior from the bundled shell, not just health/readiness.
+- The next narrow step is to trim unnecessary packaged API payload and reduce bundle/lock surface in `apps/desktop/src-tauri/runtime/api`.

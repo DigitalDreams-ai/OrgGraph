@@ -164,9 +164,17 @@ Progress note:
     - bundled API readiness
     - deterministic Ask proof generation
     - live org status retrieval
+- Slice 6 completed:
+  - packaged build now stages `runtime/config.json` from non-secret Salesforce config in `.env` and build-shell overrides
+  - bundled Tauri shell now passes `ORGUMENTED_CONFIG_PATH` to the packaged API child
+  - packaged smoke with `ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH=1` now proves:
+    - authenticated session attach
+    - alias switch
+    - original session restoration before shutdown
+  - packaged smoke cleanup now reliably tears down the bundled `node.exe` child on Windows
 - Next narrow step:
-  - continue shrinking remaining page-shell orchestration in Browser and System
-  - then decide whether packaged smoke should include authenticated org-session attach/switch checks
+  - trim unnecessary packaged API files from `apps/desktop/src-tauri/runtime/api`
+  - reduce bundle surface and repeated-build lock risk before returning to UI cleanup
 
 ## Phase 5: Modular UI Reconstruction
 
@@ -305,6 +313,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: grow packaged smoke toward authenticated org-session attach/switch verification now that Browser, Refresh, Connect, Analyze, System, shell runtime status, operator rail rendering, shared response handling, and local shell persistence are modular.
+- Preferred next step: trim the packaged API payload now that packaged attach/switch/restore proof is green, then reassess whether any remaining page-shell orchestration still justifies extraction.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.
