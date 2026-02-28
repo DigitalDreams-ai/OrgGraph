@@ -1,5 +1,6 @@
 import path from 'node:path';
 import fs from 'node:fs';
+import os from 'node:os';
 
 function findWorkspaceRoot(startDir: string): string {
   let current = path.resolve(startDir);
@@ -21,11 +22,38 @@ export function resolveWorkspaceRoot(startDir = process.cwd()): string {
   return findWorkspaceRoot(startDir);
 }
 
+type AppDataResolutionOptions = {
+  platform?: NodeJS.Platform;
+  appDataEnv?: string;
+  homeDir?: string;
+};
+
+function resolveWindowsAppDataRoot(options: AppDataResolutionOptions = {}): string {
+  const appDataEnv = options.appDataEnv?.trim();
+  if (appDataEnv) {
+    return path.win32.resolve(appDataEnv, 'Orgumented');
+  }
+
+  const homeDir = options.homeDir?.trim() || os.homedir();
+  return path.win32.resolve(homeDir, 'AppData', 'Roaming', 'Orgumented');
+}
+
 export function resolveOrgumentedAppDataRoot(
   appDataRoot?: string,
-  workspaceRoot = resolveWorkspaceRoot()
+  workspaceRoot = resolveWorkspaceRoot(),
+  options: AppDataResolutionOptions = {}
 ): string {
-  const raw = appDataRoot?.trim() || 'data';
+  const explicit = appDataRoot?.trim();
+  if (explicit) {
+    return path.resolve(workspaceRoot, explicit);
+  }
+
+  const platform = options.platform || process.platform;
+  if (platform === 'win32') {
+    return resolveWindowsAppDataRoot(options);
+  }
+
+  const raw = 'data';
   return path.resolve(workspaceRoot, raw);
 }
 
