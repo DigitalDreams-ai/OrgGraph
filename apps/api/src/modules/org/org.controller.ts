@@ -8,6 +8,8 @@ import type {
   OrgPreflightResponse,
   OrgRetrieveRequest,
   OrgRetrieveResponse,
+  OrgSessionAliasValidationResponse,
+  OrgSessionAliasesResponse,
   OrgSessionConnectRequest,
   OrgSessionConnectResponse,
   OrgSessionDisconnectResponse,
@@ -47,6 +49,19 @@ export class OrgController {
   @Get('/org/session')
   async sessionStatus(): Promise<OrgSessionStatusResponse> {
     return this.orgService.sessionStatus();
+  }
+
+  @Get('/org/session/aliases')
+  async sessionAliases(): Promise<OrgSessionAliasesResponse> {
+    return this.orgService.listSessionAliases();
+  }
+
+  @Get('/org/session/validate')
+  async sessionValidate(@Query('alias') alias?: string): Promise<OrgSessionAliasValidationResponse> {
+    if (!alias || alias.trim().length === 0) {
+      throw new BadRequestException('alias is required');
+    }
+    return this.orgService.validateSessionAlias(alias.trim());
   }
 
   @Post('/org/session/connect')

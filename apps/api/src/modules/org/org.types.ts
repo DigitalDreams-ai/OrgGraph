@@ -108,6 +108,33 @@ export interface OrgSessionStatusResponse {
   lastError?: string;
 }
 
+export interface OrgAliasSummary {
+  alias: string;
+  username?: string;
+  orgId?: string;
+  instanceUrl?: string;
+  isDefault: boolean;
+  source: 'sf_cli_keychain';
+}
+
+export interface OrgSessionAliasesResponse {
+  authMode: OrgAuthMode;
+  activeAlias: string;
+  aliases: OrgAliasSummary[];
+}
+
+export interface OrgSessionAliasValidationResponse {
+  alias: string;
+  authMode: OrgAuthMode;
+  sessionConnected: boolean;
+  sfAccessible: boolean;
+  cciAvailable: boolean;
+  username?: string;
+  orgId?: string;
+  instanceUrl?: string;
+  issues: OrgPreflightIssue[];
+}
+
 export interface OrgSessionSwitchRequest {
   alias: string;
 }

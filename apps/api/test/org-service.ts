@@ -32,7 +32,26 @@ class StubToolAdapter {
   async displayOrg(alias: string, cwd: string) {
     const args = ['org', 'display', '--target-org', alias, '--json'];
     this.calls.push({ command: 'sf', args, cwd });
-    return this.ok('{"result":{"username":"user@example.com"}}');
+    return this.ok('{"result":{"username":"user@example.com","id":"00Dxx0000000001","instanceUrl":"https://example.my.salesforce.com"}}');
+  }
+
+  async listAliases(cwd: string) {
+    this.calls.push({ command: 'sf', args: ['org', 'list', '--json'], cwd });
+    return this.ok(
+      JSON.stringify({
+        result: {
+          nonScratchOrgs: [
+            {
+              alias: 'orgumented-sandbox',
+              username: 'user@example.com',
+              orgId: '00Dxx0000000001',
+              instanceUrl: 'https://example.my.salesforce.com',
+              isDefaultUsername: true
+            }
+          ]
+        }
+      })
+    );
   }
 
   async cciOrgInfo(alias: string, cwd: string) {
@@ -61,6 +80,26 @@ class StubToolAdapter {
 
   extractCciVersion(stdout: string) {
     return stdout.match(/(\d+\.\d+\.\d+)/)?.[1];
+  }
+
+  parseDisplayedOrg(stdout: string) {
+    const parsed = JSON.parse(stdout).result;
+    return {
+      username: parsed.username,
+      orgId: parsed.id,
+      instanceUrl: parsed.instanceUrl
+    };
+  }
+
+  parseAliasList(stdout: string) {
+    return JSON.parse(stdout).result.nonScratchOrgs.map((org: Record<string, unknown>) => ({
+      alias: org.alias,
+      username: org.username,
+      orgId: org.orgId,
+      instanceUrl: org.instanceUrl,
+      isDefault: Boolean(org.isDefaultUsername),
+      source: 'sf_cli_keychain' as const
+    }));
   }
 
   toActionableBadRequest() {
@@ -127,6 +166,17 @@ async function run(): Promise<void> {
     assert.equal(preflight.integrationEnabled, true);
     assert.equal(preflight.checks.sfInstalled, true);
     assert.equal(preflight.checks.aliasAuthenticated, true);
+
+    const aliases = await service.listSessionAliases();
+    assert.equal(aliases.aliases.length, 1);
+    assert.equal(aliases.aliases[0].alias, 'orgumented-sandbox');
+    assert.equal(aliases.aliases[0].isDefault, true);
+
+    const aliasValidation = await service.validateSessionAlias('orgumented-sandbox');
+    assert.equal(aliasValidation.sfAccessible, true);
+    assert.equal(aliasValidation.cciAvailable, true);
+    assert.equal(aliasValidation.username, 'user@example.com');
+    assert.equal(aliasValidation.orgId, '00Dxx0000000001');
 
     const result = await service.retrieveAndRefresh({
       selections: [{ type: 'CustomObject', members: ['Account'] }]

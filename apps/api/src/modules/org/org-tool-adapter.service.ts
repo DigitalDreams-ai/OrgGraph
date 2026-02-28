@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { AppConfigService } from '../../config/app-config.service';
 import { CommandRunnerService, type CommandResult } from './command-runner.service';
+import type { OrgAliasSummary } from './org.types';
 
 @Injectable()
 export class OrgToolAdapterService {
@@ -39,6 +40,13 @@ export class OrgToolAdapterService {
 
   async displayOrg(alias: string, cwd: string): Promise<CommandResult> {
     return this.commandRunner.run('sf', ['org', 'display', '--target-org', alias, '--json'], {
+      cwd,
+      timeoutMs: 30_000
+    });
+  }
+
+  async listAliases(cwd: string): Promise<CommandResult> {
+    return this.commandRunner.run('sf', ['org', 'list', '--json'], {
       cwd,
       timeoutMs: 30_000
     });
@@ -93,12 +101,62 @@ export class OrgToolAdapterService {
   }
 
   extractSfUsername(stdout: string): string | undefined {
+    return this.parseDisplayedOrg(stdout)?.username;
+  }
+
+  parseDisplayedOrg(stdout: string): { username?: string; orgId?: string; instanceUrl?: string } | undefined {
     try {
       const parsed = JSON.parse(stdout) as { result?: { username?: string } };
-      const username = parsed?.result?.username?.trim();
-      return username && username.length > 0 ? username : undefined;
+      const result = parsed?.result;
+      if (!result || typeof result !== 'object') {
+        return undefined;
+      }
+      const username = typeof result.username === 'string' ? result.username.trim() : undefined;
+      const orgId = typeof (result as { id?: string }).id === 'string' ? (result as { id?: string }).id?.trim() : undefined;
+      const instanceUrl =
+        typeof (result as { instanceUrl?: string }).instanceUrl === 'string'
+          ? (result as { instanceUrl?: string }).instanceUrl?.trim()
+          : undefined;
+      return {
+        username: username && username.length > 0 ? username : undefined,
+        orgId: orgId && orgId.length > 0 ? orgId : undefined,
+        instanceUrl: instanceUrl && instanceUrl.length > 0 ? instanceUrl : undefined
+      };
     } catch {
       return undefined;
+    }
+  }
+
+  parseAliasList(stdout: string): OrgAliasSummary[] {
+    try {
+      const parsed = JSON.parse(stdout) as {
+        result?: {
+          nonScratchOrgs?: Array<Record<string, unknown>>;
+          scratchOrgs?: Array<Record<string, unknown>>;
+        };
+      };
+      const orgs = [
+        ...(Array.isArray(parsed?.result?.nonScratchOrgs) ? parsed.result.nonScratchOrgs : []),
+        ...(Array.isArray(parsed?.result?.scratchOrgs) ? parsed.result.scratchOrgs : [])
+      ];
+      const deduped = new Map<string, OrgAliasSummary>();
+      for (const org of orgs) {
+        const alias = typeof org.alias === 'string' ? org.alias.trim() : '';
+        if (!alias) {
+          continue;
+        }
+        deduped.set(alias, {
+          alias,
+          username: typeof org.username === 'string' ? org.username.trim() || undefined : undefined,
+          orgId: typeof org.orgId === 'string' ? org.orgId.trim() || undefined : undefined,
+          instanceUrl: typeof org.instanceUrl === 'string' ? org.instanceUrl.trim() || undefined : undefined,
+          isDefault: Boolean(org.isDefaultUsername) || Boolean(org.isDefaultDevHubUsername),
+          source: 'sf_cli_keychain'
+        });
+      }
+      return Array.from(deduped.values()).sort((left, right) => left.alias.localeCompare(right.alias));
+    } catch {
+      return [];
     }
   }
 

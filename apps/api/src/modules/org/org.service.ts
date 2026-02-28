@@ -13,6 +13,8 @@ import type {
   OrgPreflightResponse,
   OrgRetrieveRequest,
   OrgRetrieveResponse,
+  OrgSessionAliasValidationResponse,
+  OrgSessionAliasesResponse,
   OrgSessionDisconnectResponse,
   OrgSessionConnectRequest,
   OrgSessionConnectResponse,
@@ -177,6 +179,109 @@ export class OrgService {
       },
       issues,
       session
+    };
+  }
+
+  async listSessionAliases(): Promise<OrgSessionAliasesResponse> {
+    const authMode = this.configService.sfAuthMode();
+    const projectPath = this.runtimePaths.sfProjectPath();
+    const activeAlias = this.resolveActiveAlias();
+    const sfProbe = await this.orgToolAdapter.probeSf(projectPath);
+    if (sfProbe.exitCode !== 0) {
+      return {
+        authMode,
+        activeAlias,
+        aliases: []
+      };
+    }
+
+    const listResult = await this.orgToolAdapter.listAliases(projectPath);
+    return {
+      authMode,
+      activeAlias,
+      aliases: listResult.exitCode === 0 ? this.orgToolAdapter.parseAliasList(listResult.stdout) : []
+    };
+  }
+
+  async validateSessionAlias(aliasRaw: string): Promise<OrgSessionAliasValidationResponse> {
+    const authMode = this.configService.sfAuthMode();
+    const alias = aliasRaw.trim();
+    const projectPath = this.runtimePaths.sfProjectPath();
+    const session = this.sessionStatus();
+    const issues: OrgSessionAliasValidationResponse['issues'] = [];
+
+    const sfProbe = await this.orgToolAdapter.probeSf(projectPath);
+    const cciProbe = await this.orgToolAdapter.probeCci(projectPath);
+
+    let sfAccessible = false;
+    let cciAvailable = false;
+    let username: string | undefined;
+    let orgId: string | undefined;
+    let instanceUrl: string | undefined;
+
+    if (sfProbe.exitCode !== 0) {
+      issues.push({
+        code: 'SF_CLI_MISSING',
+        severity: 'error',
+        message: 'sf CLI is not available in local runtime.',
+        remediation: 'Install sf CLI locally and retry.'
+      });
+    } else {
+      const orgDisplay = await this.orgToolAdapter.displayOrg(alias, projectPath);
+      sfAccessible = orgDisplay.exitCode === 0;
+      const parsed = this.orgToolAdapter.parseDisplayedOrg(orgDisplay.stdout);
+      username = parsed?.username;
+      orgId = parsed?.orgId;
+      instanceUrl = parsed?.instanceUrl;
+      if (!sfAccessible) {
+        issues.push({
+          code: 'ALIAS_NOT_AUTHENTICATED',
+          severity: 'error',
+          message: `No authenticated org for alias ${alias}.`,
+          remediation: `Run 'sf org login web --alias ${alias} --instance-url ${this.configService.sfBaseUrl()} --set-default' locally, then retry.`
+        });
+      }
+    }
+
+    if (cciProbe.exitCode !== 0) {
+      issues.push({
+        code: 'CCI_MISSING',
+        severity: 'warning',
+        message: 'cci is not available in local runtime.',
+        remediation: 'Install cci locally to enable alias import and validation.'
+      });
+    } else {
+      const cciInfo = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
+      cciAvailable = cciInfo.exitCode === 0;
+      if (sfAccessible && !cciAvailable) {
+        issues.push({
+          code: 'CCI_ALIAS_NOT_CONNECTED',
+          severity: 'warning',
+          message: `Alias ${alias} is not present in the cci org registry.`,
+          remediation: `Run 'cci org import ${alias} <sf-username>' locally after sf login.`
+        });
+      }
+    }
+
+    if (session.status !== 'connected' || session.activeAlias !== alias) {
+      issues.push({
+        code: 'SESSION_DISCONNECTED',
+        severity: 'warning',
+        message: `Orgumented session is not currently attached to alias ${alias}.`,
+        remediation: 'Use the session attach flow after validating the alias.'
+      });
+    }
+
+    return {
+      alias,
+      authMode,
+      sessionConnected: session.status === 'connected' && session.activeAlias === alias,
+      sfAccessible,
+      cciAvailable,
+      username,
+      orgId,
+      instanceUrl,
+      issues
     };
   }
 
