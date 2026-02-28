@@ -18,14 +18,14 @@ assert_html_token() {
   fi
 }
 
-assert_html_token "Mission Control" "Mission Control"
-assert_html_token "Connect" "Connect"
+assert_html_token "Orgumented" "Orgumented"
+assert_html_token "Org Sessions" "Org Sessions"
 assert_html_token "Org Browser" "Org Browser"
 assert_html_token "Refresh & Build" "Refresh (&amp;|&) Build"
-assert_html_token "Analyze" "Analyze"
+assert_html_token "Explain & Analyze" "Explain (&amp;|&) Analyze"
 assert_html_token "Ask" "Ask"
-assert_html_token "Proofs & Metrics" "Proofs (&amp;|&) Metrics"
-assert_html_token "System" "System"
+assert_html_token "Proofs & History" "Proofs (&amp;|&) History"
+assert_html_token "Settings & Diagnostics" "Settings (&amp;|&) Diagnostics"
 
 # browser-level screenshot proof via local Playwright
 SCREENSHOT_FILE="ui-smoke-playwright.png"

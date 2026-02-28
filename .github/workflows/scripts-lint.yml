@@ -8,7 +8,8 @@ on:
   push:
     branches:
       - main
-      - 'phase*'
+      - 'dna-*'
+      - 'wave-*'
     paths:
       - 'scripts/**'
       - '.github/workflows/scripts-lint.yml'
