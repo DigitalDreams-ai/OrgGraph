@@ -219,6 +219,14 @@ Progress note:
     - `limitRaw`
     - the generic secondary request dispatcher
   - `page.tsx` is now about `341` lines after web verification
+- Slice 16 completed:
+  - Ask cross-workspace shell actions moved out of `apps/web/app/page.tsx` into `apps/web/app/workspaces/ask/use-ask-shell-actions.ts`
+  - page-level Ask wiring no longer owns inline handlers for:
+    - Connect
+    - Browser
+    - Refresh
+    - Analyze
+    - Proofs handoff
 - Next narrow step:
   - continue Phase 5 shell reduction from the current `page.tsx` composition surface
   - stop only if the remaining page-level state is no longer a meaningful boundary concentration

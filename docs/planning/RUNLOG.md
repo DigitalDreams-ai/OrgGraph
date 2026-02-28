@@ -1232,3 +1232,28 @@ Branch: `dna-foundation`
 ### Outcome
 - Phase 4 packaged runtime hardening is strong enough that the branch focus has shifted back to Phase 5 UI boundary cleanup.
 - The remaining page shell is smaller and more composition-focused than before this slice.
+
+## Entry 36: Extract Ask Cross-Workspace Shell Actions
+
+### Change
+- Added `apps/web/app/workspaces/ask/use-ask-shell-actions.ts`.
+- Moved Ask cross-workspace shell orchestration out of `apps/web/app/page.tsx`, including:
+  - Ask run and elaboration dispatch
+  - Connect handoff
+  - Browser and Refresh navigation
+  - Analyze navigation for automation and permissions
+  - Proofs handoff and history-save routing
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - Next build completed successfully after the Ask shell-action extraction
+  - `apps/web/app/page.tsx` measured about `342` lines after the slice
+
+### Outcome
+- More of the remaining page shell is now composition wiring rather than inline cross-workspace logic.
+- The next Phase 5 slices should keep targeting the remaining page-level orchestration hotspots rather than revisiting packaging work.

@@ -9,6 +9,7 @@ import { ShellTopbar } from './shell/shell-topbar';
 import { StatusStrip } from './shell/status-strip';
 import { useShellRuntime } from './shell/use-shell-runtime';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
+import { useAskShellActions } from './workspaces/ask/use-ask-shell-actions';
 import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
 import { AnalyzeWorkspace } from './workspaces/analyze/analyze-workspace';
 import { useAnalyzeWorkspace } from './workspaces/analyze/use-analyze-workspace';
@@ -99,6 +100,18 @@ export default function Page(): JSX.Element {
     limitRaw: secondaryQueryRunner.limitRaw,
     includeLowConfidence: askWorkspace.includeLowConfidence
   });
+  const askShellActions = useAskShellActions({
+    askProofId: askWorkspace.askProofId,
+    askReplayToken: askWorkspace.askReplayToken,
+    maxCitationsRaw: askWorkspace.maxCitationsRaw,
+    parseOptionalInt,
+    runAsk: askWorkspace.runAsk,
+    runAskElaboration: askWorkspace.runAskElaboration,
+    loadAliases: connectWorkspace.loadAliases,
+    setAnalyzeMode: analyzeWorkspace.setAnalyzeMode,
+    syncProofs: proofsWorkspace.syncFromAsk,
+    setUiTab
+  });
   const systemWorkspace = useSystemWorkspace({
     runQuery: secondaryQueryRunner.runQuery,
     loadOrgStatus: () => connectWorkspace.loadToolStatus()
@@ -188,28 +201,16 @@ export default function Page(): JSX.Element {
                 if (trustLevel === 'conditional' || trustLevel === 'waiting') return 'muted';
                 return 'bad';
               }}
-              onRunAsk={() => void askWorkspace.runAsk(parseOptionalInt(askWorkspace.maxCitationsRaw) ?? 5)}
-              onRunAskElaboration={() => void askWorkspace.runAskElaboration(parseOptionalInt(askWorkspace.maxCitationsRaw) ?? 5)}
-              onOpenConnect={() => setUiTab('connect')}
-              onRefreshAliases={() => void connectWorkspace.loadAliases()}
-              onOpenBrowser={() => setUiTab('browser')}
-              onOpenRefresh={() => setUiTab('refresh')}
-              onInspectAutomation={() => {
-                analyzeWorkspace.setAnalyzeMode('automation');
-                setUiTab('analyze');
-              }}
-              onInspectPermissions={() => {
-                analyzeWorkspace.setAnalyzeMode('perms');
-                setUiTab('analyze');
-              }}
-              onOpenProof={() => {
-                proofsWorkspace.syncFromAsk(askWorkspace.askProofId, askWorkspace.askReplayToken);
-                setUiTab('proofs');
-              }}
-              onSaveToHistory={() => {
-                proofsWorkspace.syncFromAsk(askWorkspace.askProofId, askWorkspace.askReplayToken);
-                setUiTab('proofs');
-              }}
+              onRunAsk={() => void askShellActions.runAsk()}
+              onRunAskElaboration={() => void askShellActions.runAskElaboration()}
+              onOpenConnect={askShellActions.openConnect}
+              onRefreshAliases={() => void askShellActions.refreshAliases()}
+              onOpenBrowser={askShellActions.openBrowser}
+              onOpenRefresh={askShellActions.openRefresh}
+              onInspectAutomation={askShellActions.inspectAutomation}
+              onInspectPermissions={askShellActions.inspectPermissions}
+              onOpenProof={askShellActions.openProof}
+              onSaveToHistory={askShellActions.openProof}
             />
           )}
 

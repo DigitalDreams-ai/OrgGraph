@@ -316,12 +316,14 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - shell preference hydration/persistence now lives under `apps/web/app/shell/use-shell-preferences.ts`
   - shared secondary-query shell state is no longer owned directly by `apps/web/app/page.tsx`
   - `loading`, `limitRaw`, and the generic secondary request dispatcher now live in `apps/web/app/shell/use-secondary-query-runner.ts`
-  - `apps/web/app/page.tsx` is now down to about `341` lines
+  - Ask cross-workspace shell actions are no longer owned directly by `apps/web/app/page.tsx`
+  - Ask-to-Connect/Analyze/Proofs navigation and action wiring now live in `apps/web/app/workspaces/ask/use-ask-shell-actions.ts`
+  - `apps/web/app/page.tsx` remains near `342` lines, but more of it is now shell composition rather than inline orchestration
 - The next live architectural priority is back in the UI boundary layer:
   - packaged runtime hardening is complete enough for now because the packaged shell now proves:
     - deterministic Ask identity
     - replay parity
     - proof provenance lookup
     - live org attach/switch/restore
-  - continue shrinking the remaining page-shell composition surface only where shared state is still concentrated
+  - continue shrinking the remaining page-shell composition surface only where shared state or cross-workspace orchestration is still concentrated
   - avoid returning to packaging churn unless a new runtime gap or proof failure appears
