@@ -5,6 +5,7 @@ import {
   type QueryResponse
 } from './lib/ask-client';
 import { runSecondaryQueryRequest, type SecondaryQueryKind } from './lib/secondary-client';
+import { OperatorRail } from './shell/operator-rail';
 import { ShellTopbar } from './shell/shell-topbar';
 import { StatusStrip } from './shell/status-strip';
 import { useShellRuntime } from './shell/use-shell-runtime';
@@ -470,62 +471,23 @@ export default function Page(): JSX.Element {
           )}
         </section>
 
-        <aside className="right-rail panel">
-          <div className="rail-head">
-            <h2>Operator Rail</h2>
-            <button type="button" onClick={() => void copyJson()} disabled={!responseText}>{copied ? 'Copied' : 'Copy Response'}</button>
-          </div>
-
-          {errorText ? <p className="error-text">{errorText}</p> : null}
-
-          <div className="sub-card">
-            <h3>Ask Snapshot</h3>
-            <p>{askWorkspace.askSummary}</p>
-          </div>
-
-          <div className="sub-card">
-            <h3>Trust Envelope</h3>
-            <p><strong>Trust:</strong> {askWorkspace.askTrust}</p>
-            <p><strong>Confidence:</strong> {typeof askWorkspace.askResult?.confidence === 'number' ? askWorkspace.askResult.confidence : 'n/a'}</p>
-            <p><strong>Policy ID:</strong> {askWorkspace.askResult?.policy?.policyId || 'n/a'}</p>
-            <p><strong>Proof ID:</strong> {askWorkspace.askProofId || 'n/a'}</p>
-            <p><strong>Replay Token:</strong> {askWorkspace.askReplayToken || 'n/a'}</p>
-          </div>
-
-          <div className="sub-card">
-            <h3>Connection</h3>
-            <p><strong>Session:</strong> {connectWorkspace.sessionStatus}</p>
-            <p><strong>Alias:</strong> {connectWorkspace.activeAlias}</p>
-            <p><strong>Auth Mode:</strong> {connectWorkspace.orgSession?.authMode || connectWorkspace.orgStatus?.authMode || 'sf_cli_keychain'}</p>
-            <p><strong>sf Installed:</strong> {connectWorkspace.orgStatus?.sf?.installed ? 'yes' : 'no'}</p>
-            <p><strong>CCI Installed:</strong> {connectWorkspace.orgStatus?.cci?.installed ? 'yes' : 'no'}</p>
-          </div>
-
-          {connectWorkspace.orgPreflight?.issues && connectWorkspace.orgPreflight.issues.length > 0 ? (
-            <div className="sub-card warn">
-              <h3>Preflight Issues</h3>
-              <ul>
-                {connectWorkspace.orgPreflight.issues.slice(0, 5).map((issue, idx) => (
-                  <li key={`${issue.code || 'issue'}-${idx}`}>
-                    <strong>{issue.severity?.toUpperCase() || 'INFO'}:</strong> {issue.message}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          <details>
-            <summary>Raw JSON Inspector</summary>
-            <pre>{responseText || '{\n  "hint": "Run an action to view response"\n}'}</pre>
-          </details>
-
-          {shellRuntime.readyDetails ? (
-            <details>
-              <summary>Ready Details</summary>
-              <pre>{shellRuntime.readyDetails}</pre>
-            </details>
-          ) : null}
-        </aside>
+        <OperatorRail
+          copied={copied}
+          responseText={responseText}
+          errorText={errorText}
+          readyDetails={shellRuntime.readyDetails}
+          askSummary={askWorkspace.askSummary}
+          askTrust={askWorkspace.askTrust}
+          askResult={askWorkspace.askResult}
+          askProofId={askWorkspace.askProofId}
+          askReplayToken={askWorkspace.askReplayToken}
+          sessionStatus={connectWorkspace.sessionStatus}
+          activeAlias={connectWorkspace.activeAlias}
+          orgSession={connectWorkspace.orgSession}
+          orgStatus={connectWorkspace.orgStatus}
+          orgPreflight={connectWorkspace.orgPreflight}
+          onCopy={() => void copyJson()}
+        />
       </section>
     </main>
   );

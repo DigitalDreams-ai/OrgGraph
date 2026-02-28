@@ -200,6 +200,9 @@ Progress note:
 - Slice 6 completed:
   - shell health/ready state and refresh action moved out of `apps/web/app/page.tsx`
   - top bar and status strip rendering now live under `apps/web/app/shell/`
+- Slice 7 completed:
+  - operator rail rendering moved out of `apps/web/app/page.tsx`
+  - operator rail now lives in `apps/web/app/shell/operator-rail.tsx`
 - Next narrow step:
   - move remaining System state or shared shell orchestration out of `apps/web/app/page.tsx`
   - then reassess whether the remaining page shell is small enough to pivot back to deeper runtime or org-session proof work
@@ -290,6 +293,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: reduce the remaining System and shared shell page orchestration now that Browser, Refresh, Connect, and shell runtime status are modular and packaged smoke covers shell launch, readiness, Ask proof, and org status.
+- Preferred next step: reduce the remaining System and shared shell page orchestration now that Browser, Refresh, Connect, shell runtime status, and operator rail rendering are modular and packaged smoke covers shell launch, readiness, Ask proof, and org status.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

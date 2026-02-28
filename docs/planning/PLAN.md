@@ -249,6 +249,8 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - Connect state and actions now live under `apps/web/app/workspaces/connect/use-connect-workspace.ts`
   - Shell health/ready orchestration is no longer owned directly by `apps/web/app/page.tsx`
   - shell runtime state and top-level status rendering now live under `apps/web/app/shell/`
+  - Operator rail rendering is no longer owned directly by `apps/web/app/page.tsx`
+  - rail rendering now lives under `apps/web/app/shell/operator-rail.tsx`
 - The next live architectural priority is to keep moving runtime expectations into the shell:
   - move remaining System/shared shell orchestration out of `apps/web/app/page.tsx`
   - then decide whether packaged smoke should grow into an authenticated org-session attach workflow

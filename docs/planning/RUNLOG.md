@@ -732,3 +732,33 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns shell health/ready orchestration or the top-level status render tree.
 - The remaining page shell is now concentrated around shared operator state, local persistence, and the operator rail.
 - The next narrow slice is extracting the operator rail or remaining System/shared shell state out of `apps/web/app/page.tsx`.
+
+## Entry 21: Phase 5 Operator Rail Extraction
+
+### Change
+- Extracted the operator rail render tree out of `apps/web/app/page.tsx`.
+- Added `apps/web/app/shell/operator-rail.tsx`.
+- Kept the slice deliberately structural:
+  - copied/raw JSON state contract stayed unchanged
+  - Ask/Connect/System data still flows through existing workspace hooks
+  - only the rail presentation moved
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - typed desktop boundary routes remained present after the rail extraction
+
+3. Page-shell reduction proof
+- Result: passed
+- Proof:
+  - `apps/web/app/page.tsx` line count dropped from `489` to `458`
+
+### Outcome
+- `page.tsx` no longer owns the operator rail render tree inline.
+- The remaining page shell is now mostly local persistence, a small amount of shared action state, and Analyze/System state not yet lifted into dedicated hooks.
+- The next narrow slice is extracting the remaining System/shared shell orchestration or reassessing whether the page shell is now small enough to pivot back to deeper runtime work.
