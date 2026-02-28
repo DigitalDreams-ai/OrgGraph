@@ -186,6 +186,9 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
 ## Review Update
 - Phase 1 is now complete on `dna-foundation`.
 - `apps/api/src/modules/ask/ask.service.ts` no longer salts `proofId` with wall-clock time for repeated identical asks.
-- The next live architectural priority is the Ask boundary:
+- Phase 2 Ask boundary work is now in progress:
+  - Ask transport is no longer owned by the generic `/api/query` multiplexer.
+  - Ask rendering/state is no longer inlined entirely inside `apps/web/app/page.tsx`.
+- Proofs/History is also no longer inlined entirely inside `apps/web/app/page.tsx`.
+- The next live architectural priority is the next remaining page-level workspace slice inside:
   - `apps/web/app/page.tsx`
-  - `apps/web/app/api/query/route.ts`

@@ -53,6 +53,8 @@ Completion note:
 
 ## Phase 2: Ask Boundary Cleanup
 
+Status: in progress on February 28, 2026
+
 ### Scope
 - Extract Ask workflow transport from the giant UI page.
 - Remove generic command-style handling for Ask/proof/replay flows.
@@ -68,6 +70,19 @@ Completion note:
 - UI is presentation/workflow state only for the Ask slice.
 - Engine-side policy and proof logic remain exclusively in Nest.
 - Determinism/replay tests are unchanged or stronger.
+
+Progress note:
+- Slice 1 completed:
+  - dedicated Ask/proof/replay/metrics routes
+  - dedicated Ask client boundary
+  - generic `/api/query` no longer owns Ask transport
+- Slice 2 completed:
+  - Ask workspace rendering and Ask-specific state moved out of `apps/web/app/page.tsx`
+- Slice 3 completed:
+  - Proofs/History workspace rendering and proof-history state moved out of `apps/web/app/page.tsx`
+- Next narrow step:
+  - move the next page-level workspace slice out of `apps/web/app/page.tsx`
+  - preferred next candidates: Connect or Analyze
 
 ## Phase 3: Org Session Boundary Cleanup
 
@@ -190,8 +205,7 @@ Completion note:
 4. If Windows packaging regresses for two consecutive attempts, stop feature work and stabilize desktop runtime ownership first.
 
 ## Current Next Step
-- Proceed to Phase 2 Ask boundary cleanup only after reviewing:
-  - `docs/planning/PLAN.md`
-  - `docs/planning/DECISION_REPORT.md`
-  - `docs/planning/RISK_REGISTER.md`
-  - `docs/planning/RUNLOG.md`
+- Continue Phase 2 by extracting the next non-Ask workspace from `apps/web/app/page.tsx`.
+- Preferred next slice: Connect, because it still owns substantial operator workflow and state.
+- Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
+- Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.
