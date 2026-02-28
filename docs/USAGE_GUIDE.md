@@ -9,7 +9,7 @@ Orgumented builds a deterministic graph from Salesforce metadata and answers:
 
 ## 2. Runtime Shape
 - Product shell: Tauri desktop application
-- Embedded UI dev server: `http://localhost:3101`
+- Embedded UI runtime: production-backed local Next server
 - Local engine API: `http://localhost:3100`
 
 ## 3. Start the Desktop Runtime
@@ -20,6 +20,11 @@ $env:ORGUMENTED_DESKTOP_API_PORT="3200"
 $env:ORGUMENTED_DESKTOP_WEB_PORT="3201"
 node apps/desktop/scripts/dev-runtime.mjs
 ```
+
+Default behavior:
+- the runtime uses the last verified web build instead of `next dev`
+- set `ORGUMENTED_DESKTOP_WEB_MODE=development` only when you explicitly want the dev server
+- set `ORGUMENTED_DESKTOP_WEB_REBUILD=1` to force a fresh embedded UI build before launch
 
 Standalone desktop shell:
 ```powershell
@@ -69,12 +74,15 @@ sf org display --target-org orgumented-sandbox --json
 cci org import orgumented-sandbox <sf-username>
 cci org info orgumented-sandbox
 ```
+`sf` keychain auth is the required attach path.
+`cci` remains optional support tooling for org tasks and diagnostics; failed `cci org import` no longer blocks desktop session attach.
 3. Validate alias session:
 ```bash
 curl http://localhost:3100/org/preflight
 curl http://localhost:3100/org/session
 curl http://localhost:3100/org/session/aliases
 curl "http://localhost:3100/org/session/validate?alias=orgumented-sandbox"
+curl -X POST http://localhost:3100/org/session/connect -H 'content-type: application/json' -d '{"alias":"orgumented-sandbox"}'
 ```
 4. Run:
 ```bash

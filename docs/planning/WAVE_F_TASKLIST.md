@@ -27,8 +27,8 @@ Objective: move Orgumented onto a desktop-native runtime foundation before furth
 ## Exit Gates
 - [x] Desktop shell launches successfully on Windows.
 - [x] Local NestJS engine runs under desktop-managed lifecycle.
-- [ ] Operator can discover at least one locally authenticated alias through Orgumented desktop on Windows.
-- [ ] Operator can attach an existing alias without using Docker, browser brokers, or legacy auth paths on Windows.
+- [x] Operator can discover at least one locally authenticated alias through Orgumented desktop on Windows.
+- [x] Operator can attach an existing alias without using Docker, browser brokers, or legacy auth paths on Windows.
 - [x] Local app data, logs, and proof paths are explicit and functioning.
 - [x] Active docs treat the standalone Windows desktop app as the only product runtime.
 
@@ -50,5 +50,7 @@ Objective: move Orgumented onto a desktop-native runtime foundation before furth
 
 ## Proof Notes
 - Windows shell proof captured on February 27, 2026 via `pnpm desktop:dev`, with Tauri launching `apps/desktop/src-tauri/target/debug/orgumented-desktop.exe` and a visible `Orgumented` window title.
-- Windows local runtime proof captured on February 27, 2026 via `node apps/desktop/scripts/dev-runtime.mjs`, with `http://127.0.0.1:3001` and `http://127.0.0.1:3100/ready` both returning `200`.
-- Remaining Wave F product gates are now the two org-session UX proofs: alias discovery and alias attach through the desktop shell.
+- Windows local runtime proof refreshed on February 28, 2026 via `node apps/desktop/scripts/dev-runtime.mjs`, with the production-backed embedded UI returning `200` and the local API returning `ready`.
+- Alias discovery proof captured on February 28, 2026 via `GET /org/session/aliases`, returning real local aliases including `shulman-dev2`, `shulman-uat`, and `shulman`.
+- Alias attach proof captured on February 28, 2026 via `POST /org/session/connect {"alias":"shulman-dev2"}`, returning `status=connected` and a subsequent `/org/session` response with `activeAlias=shulman-dev2`.
+- The Wave F desktop foundation gates are now complete; follow-on work belongs in Wave G.

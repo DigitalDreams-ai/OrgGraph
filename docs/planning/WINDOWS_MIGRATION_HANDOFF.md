@@ -19,19 +19,20 @@ Last updated: February 28, 2026.
 
 ### Repo and planning alignment
 - `BLUE_OCEAN_EXECUTION_PLAN.md` and `BLUE_OCEAN_PHASE_ROADMAP.md` both point to a Windows-only desktop target for Waves F-G.
-- `WAVE_F_TASKLIST.md` now shows two open product gates:
-  1. alias discovery through Orgumented desktop on Windows
-  2. alias attach through Orgumented desktop on Windows
+- `WAVE_F_TASKLIST.md` now shows the desktop-foundation gates complete.
 
 ### Already completed in Wave F
 - Tauri shell scaffold exists under `apps/desktop`.
 - Desktop dev runtime orchestrator exists under `apps/desktop/scripts/dev-runtime.mjs`.
 - Windows desktop packaging now succeeds via `pnpm desktop:build`.
 - Windows-aware runtime path defaults are in place.
+- Desktop runtime now defaults to a production-backed embedded UI instead of `next dev`.
+- Desktop runtime now seeds standard Windows CLI paths so local `sf`, `cci`, and Rust tools resolve in the app-managed lifecycle.
 - Single `sf` / `cci` tool-adapter boundary exists in the API.
 - Alias discovery, validation, attach, switch, and disconnect session flows exist in the API.
 - Operator diagnostics cover missing `sf`, missing `cci`, invalid alias, and disconnected session states.
 - Primary planning/docs now treat desktop and local CLI runtime as the preferred path.
+- `sf` keychain auth is now sufficient for desktop session attach; `cci` import is best-effort only.
 
 ### Verified previously on the NAS
 - `pnpm --filter api test:validation`
@@ -85,6 +86,7 @@ Rationale:
 
 ### Verified in this Windows session
 ```powershell
+pnpm install --force
 pnpm --filter web build
 pnpm --filter api test
 pnpm --filter @orgumented/project-memory-mcp test
@@ -94,6 +96,7 @@ pnpm desktop:dev
 ```
 
 Observed proof:
+- repo install is stabilized on Windows with `.npmrc` set to `package-import-method=copy` and `node-linker=hoisted`
 - embedded UI production build passes
 - API validation, parser, and integration suites pass
 - `project-memory` MCP tests pass
@@ -103,6 +106,11 @@ Observed proof:
 - direct desktop runtime proof succeeded with:
   - `http://127.0.0.1:3001` returning `200`
   - `http://127.0.0.1:3100/ready` returning `200`
+- refreshed runtime proof on February 28, 2026 succeeded with:
+  - `http://127.0.0.1:3800/org/status` reporting `sf` and `cci` available
+  - `http://127.0.0.1:3800/org/session/aliases` returning real local aliases including `shulman-dev2`
+  - `http://127.0.0.1:3800/org/session/connect` returning `status=connected` for `shulman-dev2`
+  - `http://127.0.0.1:3800/org/session` returning `activeAlias=shulman-dev2`
 - Tauri shell proof succeeded with:
   - `tauri dev` reaching `Running target\\debug\\orgumented-desktop.exe`
   - Windows process `orgumented-desktop.exe`
@@ -155,8 +163,9 @@ pnpm desktop:dev
 ```
 
 Status:
-- shell launch is now proven on Windows
-- the remaining Wave F product-runtime work is org-session UX proof inside the shell
+- shell launch is proven on Windows
+- runtime alias discovery and attach are proven on Windows
+- the Wave F desktop handoff objective is complete
 
 ### 5. Verify Windows MCPs
 ```powershell
@@ -172,13 +181,10 @@ Expected Windows MCP state:
 - `project-memory`: enabled in Codex and available in Cursor via `.cursor/mcp.json`
 - `github`: enabled in Codex and Cursor without a plaintext token in config files
 
-## Immediate Next Implementation Slice After Environment Is Stable
-1. Surface alias inventory directly in the desktop shell UX.
-2. Prove alias discovery through the shell against a real local alias.
-3. Prove alias attach through the shell.
-4. Record those org-session proof artifacts and close the remaining Wave F exit gates.
-
-Do not start the major Wave G UX migration before those proofs exist.
+## Immediate Next Implementation Slice
+1. Merge the Wave F desktop-foundation branch after review.
+2. Branch `wave-g` from the updated base.
+3. Start the desktop UX migration on top of the now-stable Windows runtime.
 
 ## Important References
 - `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
@@ -195,10 +201,10 @@ Do not start the major Wave G UX migration before those proofs exist.
 - Do not re-introduce legacy auth paths.
 - Do not treat Docker as a first-class runtime or default MCP dependency again.
 - Do not keep GitHub tokens in plaintext MCP config files.
-- Do not begin the large desktop UX overhaul before alias discovery and attach are proven through the Windows shell.
+- Do not regress the production-backed desktop runtime back to `next dev` as the default Windows proof path.
 
 ## Resume Objective
-Resume from Wave F on Windows with this objective:
-- prove the desktop shell and real local org session lifecycle on the target platform
-- prove the Windows MCP/tooling baseline is stable
-- then continue into the Ask-first desktop UX work
+Resume from Wave G on Windows with this objective:
+- preserve the stable desktop shell plus local org session lifecycle
+- preserve the Windows MCP/tooling baseline
+- continue into the Ask-first desktop UX work

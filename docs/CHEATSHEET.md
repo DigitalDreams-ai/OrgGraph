@@ -9,6 +9,12 @@ $env:ORGUMENTED_DESKTOP_WEB_PORT="3201"
 node apps/desktop/scripts/dev-runtime.mjs
 ```
 
+Optional runtime flags:
+```powershell
+$env:ORGUMENTED_DESKTOP_WEB_MODE="development"
+$env:ORGUMENTED_DESKTOP_WEB_REBUILD="1"
+```
+
 Standalone desktop shell:
 ```powershell
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
@@ -50,6 +56,10 @@ npm run sf:export-user-map
 curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full","rebaseline":true}'
 curl http://localhost:3100/ready
 ```
+
+Current attach rule:
+- `sf` keychain auth is sufficient for `org/session/connect`
+- `cci` import failures are warnings, not attach blockers
 
 ## Enable Staged UI Metadata Ingestion
 ```bash

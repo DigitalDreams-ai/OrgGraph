@@ -38,7 +38,7 @@ Expected target reality on Windows:
 
 This starts:
 - NestJS engine on a local port
-- Next.js UI on a local port
+- production-backed embedded UI on a local port
 
 ```powershell
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
@@ -49,8 +49,15 @@ node apps/desktop/scripts/dev-runtime.mjs
 
 Observed proof in current repo state:
 - API builds, then starts from `dist/main.js`
-- Web starts with `next dev`
+- Web starts from the last verified production build
+- On Windows, the runtime seeds standard local CLI paths for `sf`, `cci`, and Rust tooling
 - both processes shut down cleanly on `SIGTERM`
+
+Default runtime behavior:
+- production mode is the default for desktop verification
+- `apps/web` is built ahead of time and served by the standalone Next server artifact
+- set `ORGUMENTED_DESKTOP_WEB_MODE=development` only when you intentionally need `next dev`
+- set `ORGUMENTED_DESKTOP_WEB_REBUILD=1` when you want the runtime to force a fresh UI build before launch
 
 ## Run Tauri Dev Shell
 
@@ -64,7 +71,8 @@ pnpm desktop:dev
 Observed proof in current repo state:
 - `tauri dev` launches `target\debug\orgumented-desktop.exe`
 - Windows shows an `Orgumented` desktop window
-- Tauri now launches the local runtime through `node ./scripts/dev-runtime.mjs` instead of recursively invoking `pnpm` inside `pnpm`
+- Tauri now launches the local runtime through `node ./scripts/dev-runtime.mjs`
+- the embedded UI no longer depends on `next dev` for the primary Windows proof path
 
 ## Local Org Auth
 
@@ -77,6 +85,10 @@ cci org import orgumented-sandbox <sf-username>
 cci org info orgumented-sandbox
 ```
 
+Current operator rule:
+- `sf` keychain auth is the attach requirement
+- `cci` remains a supported local tool, but a failed `cci org import` does not block desktop session attach
+
 ## Local Session Validation Endpoints
 
 With the API running locally:
@@ -87,6 +99,11 @@ curl http://127.0.0.1:3200/org/session/aliases
 curl "http://127.0.0.1:3200/org/session/validate?alias=orgumented-sandbox"
 curl http://127.0.0.1:3200/org/preflight
 ```
+
+Wave F proof captured on February 28, 2026:
+- local runtime on Windows resolved real aliases from `sf org list --json`
+- attach succeeded for alias `shulman-dev2`
+- session state returned `connected` with `activeAlias=shulman-dev2`
 
 ## Non-Target Environments
 
