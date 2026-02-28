@@ -1,190 +1,281 @@
-# AGENTS.md
+# AGENTS.md — Orgumented Agent Operating Constitution
 
-This file defines how coding agents should operate in this repository.
+This file defines how coding agents must operate in this repository.
+It is authoritative for workflow discipline and architectural enforcement.
 
-## 1) Mission
+---
+
+# 1) Mission
 
 Orgumented is a deterministic semantic runtime for Salesforce architecture decisions.
 
-Priority order:
+Priority order (non-negotiable):
+
 1. Determinism
 2. Provenance
-3. Constraint safety
-4. Reproducibility
-5. Performance
+3. Constraint safety (fail-closed)
+4. Reproducibility (proof + replay)
+5. Architectural coherence
+6. Performance (only after the above are satisfied)
 
-Do not optimize for novelty without measurable lift.
+Never optimize for novelty, abstraction elegance, or performance
+without measurable improvement in the top four priorities.
 
-## 2) Source of Truth
+---
 
-Use these docs as primary direction:
+# 2) Architectural Ground Truth
+
+Runtime Model:
+- Windows-native desktop app
+- Tauri shell owns lifecycle
+- Embedded Next.js UI (presentation layer only)
+- Local NestJS execution engine (not a deployable web product)
+- No Docker in runtime, release, or operator workflow
+
+Architectural Laws:
+
+- Same snapshot + query + policy → identical output.
+- Every `/ask` response must be derivation-traceable.
+- Proof artifacts must be persistable and replay-verifiable.
+- Violations must fail closed (never silently degrade).
+- No hidden fallback from constrained to unconstrained mode.
+- No LLM-driven routing outside declared policies.
+- UI must not contain business or policy logic.
+
+If implementation conflicts with these laws, the implementation is wrong.
+
+---
+
+# 3) Source of Truth
+
+Primary direction:
+
 - `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
 - `docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md`
 - `docs/planning/ORGUMENTED_LEXICON.md`
 - Active phase tasklist (`docs/planning/PHASE*_TASKLIST.md`)
 
-If docs conflict, prefer the latest active phase and blue-ocean execution plan.
+Conflict resolution order:
+1. Active phase tasklist
+2. BLUE_OCEAN_EXECUTION_PLAN
+3. Runtime laws above
 
-## 3) Engineering Rules
+Never treat project-memory or external summaries as canonical truth.
 
-- Keep behavior deterministic for same snapshot + query + policy.
-- Every claim from `/ask` must be evidence-backed and derivation-traceable.
-- Fail closed when constraints/grounding are insufficient.
-- No hidden fallback from constrained mode to unconstrained mode.
-- Do not introduce ambiguous naming; use canonical lexicon terms.
+---
 
-## 4) Implementation Workflow
+# 4) Mandatory Decision Discipline (Major Changes)
+
+For non-trivial architecture changes:
+
+1. Produce PLAN.md before coding.
+2. If structural change is proposed:
+   - Apply Orgumented_Decision_Matrix.md.
+   - Produce DECISION_REPORT.md.
+   - Justify Refactor vs Module-Rebuild vs Full Rebuild numerically.
+3. Do not perform large refactors without measurable acceptance gates.
+4. Prefer smallest viable change that restores contract compliance.
+
+Rewrite is last resort, not default.
+
+---
+
+# 5) Implementation Workflow
 
 For each task:
+
 1. Read active phase requirements and acceptance criteria.
-2. Implement smallest coherent slice.
-3. Add/update tests first-class (unit + integration + smoke where relevant).
-4. Run validation commands locally.
-5. Update docs/tasklists to reflect progress.
-6. Commit in logical groups with clear messages.
+2. Start in Architect mode for boundary or schema changes.
+3. Implement smallest coherent slice.
+4. Add/update tests first-class (unit + integration + replay where relevant).
+5. Run validation commands locally.
+6. Update docs/tasklists.
+7. Commit logically grouped changes.
 
-## 5) Commit Discipline
+No implementation without test alignment.
 
-- Group commits by concern (e.g., parser, API, docs, tests, infra).
+---
+
+# 6) Commit Discipline
+
+- Group commits by concern (parser, API, storage, docs, tests, infra).
 - Avoid mixed-purpose commits.
-- Commit message style:
-  - `feat(scope): ...`
-  - `fix(scope): ...`
-  - `refactor(scope): ...`
-  - `test(scope): ...`
-  - `docs(scope): ...`
-  - `chore(scope): ...`
+- Do not combine refactor + feature unless inseparable.
 
-## 6) Testing Expectations
+Commit style:
 
-At minimum before finalizing work:
+- feat(scope):
+- fix(scope):
+- refactor(scope):
+- test(scope):
+- docs(scope):
+- chore(scope):
+
+Every non-trivial commit must preserve deterministic replay.
+
+---
+
+# 7) Determinism & Replay Enforcement
+
+For semantic runtime changes, validate:
+
+- Deterministic replay parity
+- Snapshot hash stability
+- Proof artifact integrity
+- Constraint gate enforcement
+- No nondeterministic timestamps in decision logic
+
+If replay parity fails → stop and fix before proceeding.
+
+---
+
+# 8) Testing Expectations
+
+Minimum before finalizing work:
+
 - Relevant package tests
 - Build checks for touched apps
-- API and web smoke flows if runtime behavior changed
+- API + UI smoke flows if runtime behavior changed
 
-For semantic runtime changes, also validate:
+For runtime changes also validate:
+
 - deterministic replay behavior
 - derivation integrity
-- metric/constraint gate behavior
+- constraint violation handling
+- failure mode clarity (no silent fallback)
 
-## 7) Operational Constraints
+Prefer property tests for invariants where applicable.
 
-- Keep runtime config explicit and auditable.
+---
+
+# 9) UI ↔ Engine Boundary Rules
+
+Strict separation:
+
+UI (Next.js):
+- Presentation
+- User workflow state
+- Display logic only
+
+Engine (NestJS):
+- Parsing
+- Normalization
+- Policy routing
+- Decision logic
+- Constraint evaluation
+- Proof generation
+
+No policy logic in UI.
+No UI state assumptions in engine.
+
+If boundary blur occurs → refactor immediately.
+
+---
+
+# 10) Operational Constraints
+
+- Runtime config must be explicit and auditable.
 - Prefer config-driven behavior over hardcoded values.
-- Keep `.env`, `.env.sample`, `.env.example`, and config samples aligned.
-- Avoid secret leakage in logs, docs, commits, and test artifacts.
+- Keep `.env`, `.env.sample`, `.env.example`, aligned.
+- No secret leakage in logs, docs, commits, or tests.
+- Mask sensitive output.
 
-## 8) Salesforce-Specific Rules
+Runtime/config change gate:
+1. Restart services
+2. Run targeted smoke test
+3. Capture proof artifact of new config activation
 
-- Treat metadata retrieval, parse output, and graph rebuild as separate verified stages.
-- Preserve compatibility with sandbox-driven workflows.
-- Do not assume fixture behavior represents real org behavior; test both.
+---
 
-## 9) Documentation Requirements
+# 11) Salesforce-Specific Rules
 
-When behavior changes, update:
-- `docs/USAGE_GUIDE.md` (user-facing behavior)
-- `docs/CHEATSHEET.md` (operator quick commands)
-- relevant runbooks in `docs/runbooks/`
-- active phase tasklist status
+- Treat metadata retrieval, parse, graph rebuild as separate verified stages.
+- Preserve sandbox compatibility.
+- Do not assume fixture parity equals real org behavior.
+- Validate both where possible.
 
-If terminology changes, update `docs/planning/ORGUMENTED_LEXICON.md`.
+---
 
-## 10) Anti-Patterns to Avoid
+# 12) Agent Mode Routing
 
-- "Yes-man" implementation without critical validation.
-- Non-deterministic heuristics in core decision paths.
-- Shipping features without proof artifacts or test coverage.
-- Large refactors without phase alignment and measurable acceptance gates.
+Modes:
 
-## 11) Definition of Good Output
+Architect mode:
+- Phase planning
+- Schema changes
+- Contract changes
+- Policy thresholds
+Output: constraints, tradeoffs, acceptance gates.
 
-A completed change should be:
-- deterministic,
-- test-verified,
-- traceable,
-- documented,
-- logically committed.
+Builder mode:
+- Code edits
+- Storage changes
+- API updates
+Output: small slices with tests.
 
-## 12) Task Routing and Agent Modes
+Verifier mode:
+- Typecheck
+- Integration
+- Replay/determinism tests
+Output: pass/fail summary + failure cause.
 
-Use different execution styles by task type:
+Docs mode:
+- Usage guides
+- Runbooks
+- Phase updates
+Output: behavior-aligned updates.
 
-- `Architect mode` (planning/ontology/runtime contracts)
-  - Use for: phase planning, schema changes, operator semantics, policy thresholds.
-  - Output: explicit constraints, tradeoffs, acceptance gates.
+Routing:
+1. Architect for non-trivial change
+2. Builder for implementation
+3. Verifier before commit
+4. Docs if behavior changed
 
-- `Builder mode` (implementation)
-  - Use for: API, parser, graph, storage, config, and migration changes.
-  - Output: small coherent slices with tests in same cycle.
+If multi-mode agents unavailable, emulate with disciplined sequencing.
 
-- `Verifier mode` (testing and regression checks)
-  - Use for: typecheck, integration, parity, replay/determinism, smoke.
-  - Output: concise pass/fail summary and concrete failure cause.
+---
 
-- `Docs mode` (runbooks, usage, phase tracking)
-  - Use for: user docs, lifecycle docs, release notes, tasklist updates.
-  - Output: behavior-focused updates with exact commands/paths.
+# 13) MCP-First Workflow
 
-Routing rules:
-1. Start in `Architect mode` for non-trivial feature changes.
-2. Move to `Builder mode` for code edits.
-3. Move to `Verifier mode` before each commit.
-4. End in `Docs mode` if behavior changed.
-5. Commit by logical group per mode transition when practical.
+Execution order:
 
-Environment limitation fallback:
-- If runtime/model agent switching is not available, emulate mode switching via workflow discipline:
-  - limit output verbosity during verification,
-  - run targeted tests first,
-  - avoid broad test sweeps unless needed,
-  - summarize only actionable findings.
+1. Local workspace inspection
+2. project-memory (context continuity only)
+3. github (PR/status checks)
+4. postgres (data-plane verification if relevant)
 
-## 13) MCP-First Workflow
+Project-memory is advisory only.
+Repository state is canonical.
 
-Use available MCP servers as first-class workflow tools:
+If MCP unavailable → state limitation → continue locally.
 
-- `github` MCP
-  - Use for PR/issue/review metadata, branch/PR checks, and repository inspection workflows.
-  - Prefer MCP when reporting PR status or preparing merge-readiness checks.
+---
 
-- `project-memory` MCP
-  - Use for advisory project continuity only: handoff notes, verification breadcrumbs, subsystem maps, risk tracking, and wave/tasklist summaries.
-  - Seed baseline repo-map records before heavy implementation work when the memory store is empty.
-  - Treat all records as derived working memory, never as canonical requirements or runtime truth.
-  - Do not use project-memory content as input to `/ask`, proof generation, deterministic planner routing, or policy evaluation.
+# 14) Anti-Patterns (Hard Stops)
 
-- `postgres` MCP
-  - Use only when the task touches Postgres-backed storage, parity verification, or data-plane debugging.
-  - Validate DB assumptions with MCP queries before implementing parser/query logic changes.
+- Non-deterministic heuristics in decision paths
+- Silent fallback from constrained mode
+- UI-driven policy branching
+- Replay instability ignored
+- Large refactors without measurable acceptance gates
+- Feature shipping without proof artifacts
+- Overengineering without deterministic benefit
 
-Execution order guidance:
-1. local workspace access for code/document context.
-2. `project-memory` for active work context, subsystem continuity, and wave summaries.
-3. `github` for collaboration/PR state.
-4. `postgres` for storage/data-plane verification when relevant.
+If detected → pause and correct.
 
-MCP fallback rule:
-- If an MCP is unavailable or unhealthy, state it clearly, use the next best local alternative, and continue.
+---
 
-## 14) Session Guardrails
+# 15) Definition of Good Output
 
-- MCP health preflight
-  - At session start, run quick MCP checks for `project-memory` and `github`.
-  - Check `postgres` only when the task touches Postgres-backed storage or verification.
-  - Report pass/fail and known limitations before implementation work.
-  - If `project-memory` is available, use it to inspect prior handoff notes and current wave context before broad repo exploration.
+A completed change must be:
 
-- Secret hygiene hard-stop
-  - Never output full secrets (API keys, tokens, OAuth codes, connection credentials).
-  - Mask sensitive values in logs, docs, terminal snippets, and test artifacts.
+- Deterministic
+- Replay-verifiable
+- Constraint-safe (fail-closed)
+- Provenance-traceable
+- Test-covered
+- Boundary-clean
+- Documented
+- Logically committed
 
-- Runtime change verification gate
-  - For any runtime/config change (`.env*`, config JSON, MCP config), require:
-    1. proper service restart/recreate,
-    2. one targeted smoke test,
-    3. one concrete proof artifact (log line, endpoint result, or command output summary) showing new config is active.
-
-- Project memory boundary
-  - Project-memory records are advisory and may summarize repo state, but code, docs, tests, proofs, snapshots, and policies remain the only source of truth.
-  - If project-memory content conflicts with the repository, trust the repository and mark the stale memory record accordingly.
+If any condition fails, the task is incomplete.
