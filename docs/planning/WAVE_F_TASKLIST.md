@@ -11,7 +11,7 @@ Objective: move Orgumented onto a desktop-native runtime foundation before furth
 
 ## Tasks
 - [x] Add a desktop transition section to all primary planning references.
-- [ ] Stand up Tauri shell scaffold for Orgumented desktop.
+- [x] Stand up Tauri shell scaffold for Orgumented desktop.
 - [ ] Define local process lifecycle for launching and stopping the NestJS engine.
 - [x] Define local app data root and storage paths for graph, evidence, proofs, logs, and history.
 - [x] Create a single tool-adapter boundary around `sf` and `cci`.
