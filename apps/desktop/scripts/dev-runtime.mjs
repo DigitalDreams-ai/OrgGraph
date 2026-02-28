@@ -92,4 +92,4 @@ startChild('api', pnpmCommand, ['--filter', 'api', 'start'], {
   PORT: apiPort
 });
 
-startChild('web', pnpmCommand, ['--filter', 'web', 'dev', '--', '--hostname', hostname, '--port', webPort], {});
+startChild('web', pnpmCommand, ['--filter', 'web', 'dev', '--hostname', hostname, '--port', webPort], {});

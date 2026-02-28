@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.orgumented.desktop",
   "build": {
-    "beforeDevCommand": "powershell -NoProfile -Command \"Set-Location (Resolve-Path '../..'); pnpm --filter desktop dev:runtime\"",
+    "beforeDevCommand": "node ./scripts/dev-runtime.mjs",
     "devUrl": "http://127.0.0.1:3001",
     "beforeBuildCommand": "powershell -NoProfile -Command \"Set-Location (Resolve-Path '../..'); pnpm --filter web build\"",
     "frontendDist": "../../web/.next"
