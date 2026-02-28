@@ -192,6 +192,17 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
 - Proofs/History is also no longer inlined entirely inside `apps/web/app/page.tsx`.
 - Connect is also no longer inlined entirely inside `apps/web/app/page.tsx`.
 - Analyze is also no longer inlined entirely inside `apps/web/app/page.tsx`.
-- The next live architectural priority is the next remaining page-level workspace slice inside:
-  - `apps/web/app/page.tsx`
-  - preferred next step: reassess whether the remaining page shell should keep shrinking through Browser/Refresh extraction or whether the cleaner pivot is Phase 3 org-session boundary cleanup
+- Phase 3 org-session boundary cleanup is now in progress:
+  - Connect and top-bar org actions no longer rely on the generic `/api/query` multiplexer.
+  - Dedicated typed org boundary routes now own:
+    - status
+    - session
+    - session aliases
+    - session connect
+    - session switch
+    - session disconnect
+    - preflight
+- The next live architectural priority is to continue the same cleanup for:
+  - org retrieve
+  - metadata catalog/members/retrieve
+  - then reassess whether Refresh should stay on the generic seam or receive its own typed boundary

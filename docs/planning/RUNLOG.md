@@ -219,3 +219,48 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns the Analyze workspace rendering tree or action layout.
 - Ask, Proofs, Connect, and Analyze are now isolated modules inside the desktop shell page.
 - The next architectural decision is whether to keep shrinking `page.tsx` through Browser/Refresh extraction or pivot into Phase 3 org-session boundary cleanup.
+
+## Entry 7: Phase 3 Org Session Boundary Slice 1
+
+### Change
+- Removed org-session traffic from the generic `/api/query` multiplexer for:
+  - status
+  - session
+  - session aliases
+  - session connect
+  - session switch
+  - session disconnect
+  - preflight
+- Added dedicated typed org boundary routes under `apps/web/app/api/org/` and a typed org client in `apps/web/app/lib/org-client.ts`.
+- Updated `apps/web/app/page.tsx` so Connect and the top-bar org actions now use the typed org client rather than issuing generic query kinds.
+- Left `orgRetrieve` and metadata flows on the existing query seam so the slice stays limited to org-session cleanup.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - dedicated org routes were emitted for:
+    - `/api/org/status`
+    - `/api/org/session`
+    - `/api/org/session/aliases`
+    - `/api/org/session/connect`
+    - `/api/org/session/switch`
+    - `/api/org/session/disconnect`
+    - `/api/org/preflight`
+
+3. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `org service test passed`
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+### Outcome
+- The browser-era multiplexer no longer owns Connect or top-bar org-session actions.
+- Org-session boundary cleanup is now underway without widening into metadata/retrieve behavior yet.
+- The next cleanup target is the remaining org retrieve and metadata flows that still use `/api/query`.

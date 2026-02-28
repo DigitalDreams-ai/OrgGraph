@@ -91,6 +91,8 @@ Progress note:
 
 ## Phase 3: Org Session Boundary Cleanup
 
+Status: in progress on February 28, 2026
+
 ### Scope
 - Apply the same boundary cleanup to org-session and metadata retrieval flows.
 - Isolate session/retrieve request contracts from the monolithic page.
@@ -104,6 +106,15 @@ Progress note:
 - No generic command multiplexer required for org session and metadata flows.
 - Session attach/switch/retrieve behavior remains Windows-safe.
 - Existing org tests remain green.
+
+Progress note:
+- Slice 1 completed:
+  - dedicated org boundary routes now own status, session, aliases, connect, switch, disconnect, and preflight
+  - Connect and top-bar org actions no longer use the generic `/api/query` multiplexer
+  - `page.tsx` still owns org-session state and typed org transport orchestration for now
+- Next narrow step:
+  - move `orgRetrieve` and metadata catalog/member/retrieve flows onto the same typed org boundary
+  - then reassess whether Refresh should stay on the generic seam or receive its own typed boundary
 
 ## Phase 4: Desktop Runtime Ownership
 
@@ -211,8 +222,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 2 by extracting the next non-Ask workspace from `apps/web/app/page.tsx`.
-- Preferred next step: reassess the remaining page-shell coupling and choose between:
-  - Browser/Refresh extraction if composition shrinkage is still the highest-value move,
-  - or Phase 3 org-session boundary cleanup if the current shell is now thin enough.
+- Preferred next step: continue Phase 3 by moving `orgRetrieve` and metadata catalog/member/retrieve off the generic `/api/query` seam.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

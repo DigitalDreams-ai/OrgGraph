@@ -4,6 +4,15 @@ import { useEffect, useState } from 'react';
 import {
   type QueryResponse
 } from './lib/ask-client';
+import {
+  connectOrgSession,
+  disconnectOrgSession,
+  getOrgSession,
+  getOrgStatus,
+  listOrgSessionAliases,
+  runOrgPreflight,
+  switchOrgSession
+} from './lib/org-client';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
 import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
 import { AnalyzeWorkspace, type AnalyzeMode } from './workspaces/analyze/analyze-workspace';
@@ -19,18 +28,11 @@ import { useProofsWorkspace } from './workspaces/proofs/use-proofs-workspace';
 
 type QueryKind =
   | 'refresh'
-  | 'orgConnect'
-  | 'orgSessionAliases'
-  | 'orgSession'
-  | 'orgPreflight'
-  | 'orgSessionSwitch'
-  | 'orgSessionDisconnect'
   | 'perms'
   | 'permsDiagnose'
   | 'permsSystem'
   | 'automation'
   | 'impact'
-  | 'orgStatus'
   | 'orgRetrieve'
   | 'metadataCatalog'
   | 'metadataMembers'
@@ -38,6 +40,15 @@ type QueryKind =
   | 'refreshDiff'
   | 'metaContext'
   | 'metaAdapt';
+
+type OrgQueryKind =
+  | 'orgConnect'
+  | 'orgSessionAliases'
+  | 'orgSession'
+  | 'orgPreflight'
+  | 'orgSessionSwitch'
+  | 'orgSessionDisconnect'
+  | 'orgStatus';
 
 type UiTab = 'ask' | 'connect' | 'browser' | 'refresh' | 'analyze' | 'proofs' | 'system';
 
@@ -256,18 +267,6 @@ export default function Page(): JSX.Element {
       if (!res.ok || parsed.ok === false) {
         setErrorText(resolveErrorMessage(parsed));
       }
-      if ((kind === 'orgSession' || kind === 'orgSessionSwitch' || kind === 'orgSessionDisconnect') && parsed.payload) {
-        setOrgSession(parsed.payload as OrgSessionPayload);
-      }
-      if (kind === 'orgSessionAliases' && parsed.payload) {
-        setOrgAliases(parsed.payload as OrgSessionAliasesPayload);
-      }
-      if (kind === 'orgStatus' && parsed.payload) {
-        setOrgStatus(parsed.payload as OrgStatusPayload);
-      }
-      if (kind === 'orgPreflight' && parsed.payload) {
-        setOrgPreflight(parsed.payload as OrgPreflightPayload);
-      }
       if (kind === 'metadataCatalog' && parsed.payload) {
         setMetadataCatalog(parsed.payload as MetadataCatalogPayload);
       }
@@ -282,6 +281,63 @@ export default function Page(): JSX.Element {
       return parsed;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected query failure';
+      const fallback: QueryResponse = { ok: false, error: { message } };
+      presentResponse(fallback);
+      setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function runOrgQuery(kind: OrgQueryKind, payload: Record<string, unknown> = {}): Promise<QueryResponse | null> {
+    setLoading(true);
+    setCopied(false);
+    setErrorText('');
+
+    try {
+      let parsed: QueryResponse;
+      if (kind === 'orgSessionAliases') {
+        parsed = await listOrgSessionAliases();
+      } else if (kind === 'orgSession') {
+        parsed = await getOrgSession();
+      } else if (kind === 'orgPreflight') {
+        parsed = await runOrgPreflight(typeof payload.alias === 'string' ? payload.alias : undefined);
+      } else if (kind === 'orgSessionSwitch') {
+        parsed = await switchOrgSession({
+          alias: typeof payload.alias === 'string' ? payload.alias : undefined
+        });
+      } else if (kind === 'orgSessionDisconnect') {
+        parsed = await disconnectOrgSession();
+      } else if (kind === 'orgConnect') {
+        parsed = await connectOrgSession({
+          alias: typeof payload.alias === 'string' ? payload.alias : undefined
+        });
+      } else {
+        parsed = await getOrgStatus();
+      }
+
+      presentResponse(parsed);
+
+      if (parsed.ok === false) {
+        setErrorText(resolveErrorMessage(parsed));
+      }
+      if ((kind === 'orgSession' || kind === 'orgSessionSwitch' || kind === 'orgSessionDisconnect') && parsed.payload) {
+        setOrgSession(parsed.payload as OrgSessionPayload);
+      }
+      if (kind === 'orgSessionAliases' && parsed.payload) {
+        setOrgAliases(parsed.payload as OrgSessionAliasesPayload);
+      }
+      if (kind === 'orgStatus' && parsed.payload) {
+        setOrgStatus(parsed.payload as OrgStatusPayload);
+      }
+      if (kind === 'orgPreflight' && parsed.payload) {
+        setOrgPreflight(parsed.payload as OrgPreflightPayload);
+      }
+
+      return parsed;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected org query failure';
       const fallback: QueryResponse = { ok: false, error: { message } };
       presentResponse(fallback);
       setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.');
@@ -395,8 +451,8 @@ export default function Page(): JSX.Element {
         </div>
         <div className="topbar-actions">
           <button type="button" onClick={() => void refreshStatuses()} disabled={loading}>Refresh Status</button>
-          <button type="button" onClick={() => void runQuery('orgPreflight', { alias: orgAlias })} disabled={loading}>Preflight</button>
-          <button type="button" onClick={() => void runQuery('orgConnect', { alias: orgAlias })} disabled={loading}>Connect Org</button>
+          <button type="button" onClick={() => void runOrgQuery('orgPreflight', { alias: orgAlias })} disabled={loading}>Preflight</button>
+          <button type="button" onClick={() => void runOrgQuery('orgConnect', { alias: orgAlias })} disabled={loading}>Connect Org</button>
         </div>
       </header>
 
@@ -472,7 +528,7 @@ export default function Page(): JSX.Element {
               onRunAsk={() => void askWorkspace.runAsk(parseOptionalInt(askWorkspace.maxCitationsRaw) ?? 5)}
               onRunAskElaboration={() => void askWorkspace.runAskElaboration(parseOptionalInt(askWorkspace.maxCitationsRaw) ?? 5)}
               onOpenConnect={() => setUiTab('connect')}
-              onRefreshAliases={() => void runQuery('orgSessionAliases')}
+              onRefreshAliases={() => void runOrgQuery('orgSessionAliases')}
               onOpenBrowser={() => setUiTab('browser')}
               onOpenRefresh={() => setUiTab('refresh')}
               onInspectAutomation={() => {
@@ -503,16 +559,16 @@ export default function Page(): JSX.Element {
               orgAliases={orgAliases}
               orgSession={orgSession}
               loading={loading}
-              onLoadAliases={() => void runQuery('orgSessionAliases')}
-              onCheckSession={() => void runQuery('orgSession')}
-              onCheckToolStatus={() => void runQuery('orgStatus')}
-              onPreflight={() => void runQuery('orgPreflight', { alias: orgAlias })}
-              onSwitchAlias={() => void runQuery('orgSessionSwitch', { alias: orgAlias })}
-              onConnectExistingAlias={() => void runQuery('orgConnect', { alias: orgAlias })}
-              onDisconnect={() => void runQuery('orgSessionDisconnect')}
+              onLoadAliases={() => void runOrgQuery('orgSessionAliases')}
+              onCheckSession={() => void runOrgQuery('orgSession')}
+              onCheckToolStatus={() => void runOrgQuery('orgStatus')}
+              onPreflight={() => void runOrgQuery('orgPreflight', { alias: orgAlias })}
+              onSwitchAlias={() => void runOrgQuery('orgSessionSwitch', { alias: orgAlias })}
+              onConnectExistingAlias={() => void runOrgQuery('orgConnect', { alias: orgAlias })}
+              onDisconnect={() => void runOrgQuery('orgSessionDisconnect')}
               onInspectAlias={(alias) => {
                 setOrgAlias(alias);
-                void runQuery('orgPreflight', { alias });
+                void runOrgQuery('orgPreflight', { alias });
               }}
             />
           )}
@@ -793,7 +849,7 @@ export default function Page(): JSX.Element {
               <div className="action-row">
                 <button type="button" onClick={() => void runQuery('metaContext')} disabled={loading}>Meta Context</button>
                 <button type="button" onClick={() => void runQuery('metaAdapt', { dryRun: metaDryRun })} disabled={loading}>Meta Adapt (Dry Run)</button>
-                <button type="button" onClick={() => void runQuery('orgStatus')} disabled={loading}>Org Status</button>
+                <button type="button" onClick={() => void runOrgQuery('orgStatus')} disabled={loading}>Org Status</button>
               </div>
             </>
           )}

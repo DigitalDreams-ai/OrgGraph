@@ -3,18 +3,11 @@ import { API_BASE, fetchWithRetry, upstreamErrorResponse } from '../_lib/upstrea
 
 type QueryKind =
   | 'refresh'
-  | 'orgConnect'
-  | 'orgSessionAliases'
-  | 'orgSession'
-  | 'orgPreflight'
-  | 'orgSessionSwitch'
-  | 'orgSessionDisconnect'
   | 'perms'
   | 'permsDiagnose'
   | 'permsSystem'
   | 'automation'
   | 'impact'
-  | 'orgStatus'
   | 'orgRetrieve'
   | 'metadataCatalog'
   | 'metadataMembers'
@@ -119,45 +112,6 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
         body: JSON.stringify({ ...body, summaryOnly: true })
       }
     };
-  }
-  if (request.kind === 'orgConnect') {
-    return {
-      url: `${API_BASE}/org/session/connect`,
-      init: {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          alias: typeof body.alias === 'string' ? body.alias : undefined
-        })
-      }
-    };
-  }
-  if (request.kind === 'orgSessionAliases') {
-    return { url: `${API_BASE}/org/session/aliases`, init: { method: 'GET' } };
-  }
-  if (request.kind === 'orgSession') {
-    return { url: `${API_BASE}/org/session`, init: { method: 'GET' } };
-  }
-  if (request.kind === 'orgPreflight') {
-    const params = new URLSearchParams();
-    appendParam(params, 'alias', body.alias);
-    return { url: `${API_BASE}/org/preflight?${params.toString()}`, init: { method: 'GET' } };
-  }
-  if (request.kind === 'orgSessionSwitch') {
-    return {
-      url: `${API_BASE}/org/session/switch`,
-      init: {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ alias: body.alias })
-      }
-    };
-  }
-  if (request.kind === 'orgSessionDisconnect') {
-    return { url: `${API_BASE}/org/session/disconnect`, init: { method: 'POST' } };
-  }
-  if (request.kind === 'orgStatus') {
-    return { url: `${API_BASE}/org/status`, init: { method: 'GET' } };
   }
 
   if (request.kind === 'orgRetrieve') {
@@ -337,18 +291,11 @@ export async function POST(req: Request): Promise<NextResponse> {
     if (
       ![
         'refresh',
-        'orgConnect',
-        'orgSessionAliases',
-        'orgSession',
-        'orgPreflight',
-        'orgSessionSwitch',
-        'orgSessionDisconnect',
         'perms',
         'permsDiagnose',
         'permsSystem',
         'automation',
         'impact',
-        'orgStatus',
         'orgRetrieve',
         'metadataCatalog',
         'metadataMembers',
