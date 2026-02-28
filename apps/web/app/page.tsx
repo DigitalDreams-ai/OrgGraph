@@ -17,6 +17,7 @@ import {
   runOrgPreflight,
   switchOrgSession
 } from './lib/org-client';
+import { getRefreshDiff, runRefresh } from './lib/refresh-client';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
 import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
 import { AnalyzeWorkspace, type AnalyzeMode } from './workspaces/analyze/analyze-workspace';
@@ -31,13 +32,11 @@ import { ProofsWorkspace } from './workspaces/proofs/proofs-workspace';
 import { useProofsWorkspace } from './workspaces/proofs/use-proofs-workspace';
 
 type QueryKind =
-  | 'refresh'
   | 'perms'
   | 'permsDiagnose'
   | 'permsSystem'
   | 'automation'
   | 'impact'
-  | 'refreshDiff'
   | 'metaContext'
   | 'metaAdapt';
 
@@ -53,6 +52,8 @@ type OrgQueryKind =
   | 'metadataCatalog'
   | 'metadataMembers'
   | 'metadataRetrieve';
+
+type RefreshQueryKind = 'refresh' | 'refreshDiff';
 
 type UiTab = 'ask' | 'connect' | 'browser' | 'refresh' | 'analyze' | 'proofs' | 'system';
 
@@ -368,6 +369,40 @@ export default function Page(): JSX.Element {
       return parsed;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected org query failure';
+      const fallback: QueryResponse = { ok: false, error: { message } };
+      presentResponse(fallback);
+      setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function runRefreshQuery(kind: RefreshQueryKind, payload: Record<string, unknown> = {}): Promise<QueryResponse | null> {
+    setLoading(true);
+    setCopied(false);
+    setErrorText('');
+
+    try {
+      const parsed =
+        kind === 'refresh'
+          ? await runRefresh({
+              mode: payload.mode === 'full' || payload.mode === 'incremental' ? payload.mode : undefined
+            })
+          : await getRefreshDiff(
+              typeof payload.fromSnapshot === 'string' ? payload.fromSnapshot : '',
+              typeof payload.toSnapshot === 'string' ? payload.toSnapshot : ''
+            );
+
+      presentResponse(parsed);
+
+      if (parsed.ok === false) {
+        setErrorText(resolveErrorMessage(parsed));
+      }
+
+      return parsed;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected refresh query failure';
       const fallback: QueryResponse = { ok: false, error: { message } };
       presentResponse(fallback);
       setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.');
@@ -737,7 +772,7 @@ export default function Page(): JSX.Element {
               </select>
 
               <div className="action-row">
-                <button type="button" onClick={() => void runQuery('refresh', { mode: refreshMode })} disabled={loading}>Run Refresh</button>
+                <button type="button" onClick={() => void runRefreshQuery('refresh', { mode: refreshMode })} disabled={loading}>Run Refresh</button>
               </div>
 
               <div className="field-grid">
@@ -754,7 +789,7 @@ export default function Page(): JSX.Element {
               <div className="action-row">
                 <button
                   type="button"
-                  onClick={() => void runQuery('refreshDiff', { fromSnapshot, toSnapshot })}
+                  onClick={() => void runRefreshQuery('refreshDiff', { fromSnapshot, toSnapshot })}
                   disabled={loading}
                 >
                   Run Diff

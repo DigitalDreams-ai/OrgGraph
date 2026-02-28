@@ -116,10 +116,12 @@ Progress note:
   - dedicated org boundary routes now own `orgRetrieve` and metadata catalog/member/retrieve
   - Org Browser and Org Retrieve actions no longer use the generic `/api/query` multiplexer
 - Next narrow step:
-  - reassess whether Refresh should receive the next typed boundary
-  - or whether runtime ownership in Tauri is now the higher-value move
+  - complete a typed Refresh boundary for the semantic rebuild path
+  - then pivot into Phase 4 runtime ownership hardening
 
 ## Phase 4: Desktop Runtime Ownership
+
+Status: next priority after the typed Ask, Org, and Refresh boundaries
 
 ### Scope
 - Move runtime ownership closer to the Tauri shell.
@@ -224,7 +226,7 @@ Progress note:
 4. If Windows packaging regresses for two consecutive attempts, stop feature work and stabilize desktop runtime ownership first.
 
 ## Current Next Step
-- Continue Phase 2 by extracting the next non-Ask workspace from `apps/web/app/page.tsx`.
-- Preferred next step: choose between a typed Refresh boundary and Phase 4 runtime ownership hardening, based on which reduces the remaining desktop-specific architectural risk fastest.
+- Start Phase 4 runtime ownership hardening now that Ask, Org, and Refresh no longer rely on the generic query multiplexer.
+- Preferred next step: reduce dependence on script-managed runtime orchestration and move lifecycle ownership closer to the Tauri shell.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

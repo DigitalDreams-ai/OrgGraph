@@ -307,3 +307,37 @@ Branch: `dna-foundation`
 - The generic query multiplexer no longer owns the org operator surface.
 - Phase 3 now covers org session, org retrieve, and metadata catalog/member/retrieve flows.
 - The next architectural decision is whether to give Refresh its own typed boundary or pivot into desktop runtime ownership hardening.
+
+## Entry 9: Typed Refresh Boundary Slice
+
+### Change
+- Removed `refresh` and `refreshDiff` traffic from the generic `/api/query` multiplexer.
+- Added a dedicated typed refresh client in `apps/web/app/lib/refresh-client.ts`.
+- Added dedicated refresh boundary routes for:
+  - `/api/refresh`
+  - `/api/refresh/diff/[snapshotA]/[snapshotB]`
+- Updated `apps/web/app/page.tsx` so the Refresh workspace now uses the typed refresh boundary while leaving analysis/meta flows on the generic seam.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - dedicated refresh routes were emitted for:
+    - `/api/refresh`
+    - `/api/refresh/diff/[snapshotA]/[snapshotB]`
+
+3. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+### Outcome
+- The semantic rebuild path no longer depends on the generic query multiplexer.
+- Ask, Org, and Refresh now all use typed boundary routes in the embedded desktop UI layer.
+- The next highest-value move is Phase 4 runtime ownership hardening in Tauri.

@@ -208,6 +208,6 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - org session
   - org retrieve
   - metadata catalog/members/retrieve
-- The next live architectural priority is to narrow the remaining generic seam further by deciding whether:
-  - Refresh receives the next typed boundary,
-  - or runtime ownership in Tauri is now the higher-value move
+- Refresh now also has a dedicated typed boundary and no longer relies on the generic `/api/query` multiplexer.
+- The next live architectural priority is runtime ownership in Tauri.
+  - The remaining generic seam is now narrowed to secondary analysis/meta flows rather than core Ask, Org, or Refresh paths.
