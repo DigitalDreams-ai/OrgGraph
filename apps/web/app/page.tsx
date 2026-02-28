@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 type QueryKind =
   | 'refresh'
   | 'orgConnect'
+  | 'orgSessionAliases'
   | 'orgSession'
   | 'orgPreflight'
   | 'orgSessionSwitch'
@@ -68,6 +69,21 @@ type OrgSessionPayload = {
   connectedAt?: string;
   disconnectedAt?: string;
   lastError?: string;
+};
+
+type OrgAliasSummary = {
+  alias: string;
+  username?: string;
+  orgId?: string;
+  instanceUrl?: string;
+  isDefault: boolean;
+  source: 'sf_cli_keychain';
+};
+
+type OrgSessionAliasesPayload = {
+  authMode?: string;
+  activeAlias?: string;
+  aliases?: OrgAliasSummary[];
 };
 
 type OrgStatusPayload = {
@@ -168,6 +184,7 @@ export default function Page(): JSX.Element {
   const [orgSession, setOrgSession] = useState<OrgSessionPayload | null>(null);
   const [orgStatus, setOrgStatus] = useState<OrgStatusPayload | null>(null);
   const [orgPreflight, setOrgPreflight] = useState<OrgPreflightPayload | null>(null);
+  const [orgAliases, setOrgAliases] = useState<OrgSessionAliasesPayload | null>(null);
 
   const [metadataSearch, setMetadataSearch] = useState('');
   const [metadataMemberSearch, setMetadataMemberSearch] = useState('');
@@ -284,6 +301,9 @@ export default function Page(): JSX.Element {
       }
       if ((kind === 'orgSession' || kind === 'orgSessionSwitch' || kind === 'orgSessionDisconnect') && parsed.payload) {
         setOrgSession(parsed.payload as OrgSessionPayload);
+      }
+      if (kind === 'orgSessionAliases' && parsed.payload) {
+        setOrgAliases(parsed.payload as OrgSessionAliasesPayload);
       }
       if (kind === 'orgStatus' && parsed.payload) {
         setOrgStatus(parsed.payload as OrgStatusPayload);
@@ -582,9 +602,15 @@ cci org import ${orgAlias} <sf-username>`}</pre>
                   <p><strong>Alias Authenticated:</strong> {orgPreflight?.checks?.aliasAuthenticated ? 'yes' : 'no'}</p>
                   <p><strong>CCI Alias Available:</strong> {orgPreflight?.checks?.cciAliasAvailable ? 'yes' : 'no'}</p>
                 </div>
+                <div className="sub-card">
+                  <h3>Alias Inventory</h3>
+                  <p><strong>Loaded:</strong> {orgAliases?.aliases?.length ?? 0}</p>
+                  <p><strong>Active:</strong> {orgAliases?.activeAlias || orgSession?.activeAlias || orgAlias}</p>
+                </div>
               </div>
 
               <div className="action-row">
+                <button type="button" onClick={() => void runQuery('orgSessionAliases')} disabled={loading}>Load Aliases</button>
                 <button type="button" onClick={() => void runQuery('orgSession')} disabled={loading}>Check Session</button>
                 <button type="button" onClick={() => void runQuery('orgStatus')} disabled={loading}>Check Tool Status</button>
                 <button type="button" onClick={() => void runQuery('orgPreflight', { alias: orgAlias })} disabled={loading}>Preflight</button>
@@ -592,6 +618,33 @@ cci org import ${orgAlias} <sf-username>`}</pre>
                 <button type="button" onClick={() => void runQuery('orgConnect', { alias: orgAlias })} disabled={loading}>Connect Existing Alias</button>
                 <button type="button" className="ghost" onClick={() => void runQuery('orgSessionDisconnect')} disabled={loading}>Disconnect</button>
               </div>
+
+              {orgAliases?.aliases && orgAliases.aliases.length > 0 ? (
+                <div className="sub-card">
+                  <h3>Discovered Aliases</h3>
+                  <ul className="member-list">
+                    {orgAliases.aliases.map((entry) => (
+                      <li key={entry.alias}>
+                        <span>
+                          <strong>{entry.alias}</strong>
+                          {entry.isDefault ? ' default' : ''}
+                          {entry.username ? ` | ${entry.username}` : ''}
+                        </span>
+                        <button
+                          type="button"
+                          className="ghost"
+                          onClick={() => {
+                            setOrgAlias(entry.alias);
+                            void runQuery('orgPreflight', { alias: entry.alias });
+                          }}
+                        >
+                          Inspect
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </>
           )}
 

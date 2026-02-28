@@ -6,6 +6,7 @@ const WEB_LOG_ENABLED = (process.env.ORGUMENTED_WEB_LOG_ENABLED || 'false').trim
 type QueryKind =
   | 'refresh'
   | 'orgConnect'
+  | 'orgSessionAliases'
   | 'orgSession'
   | 'orgPreflight'
   | 'orgSessionSwitch'
@@ -166,6 +167,9 @@ function buildUpstream(request: QueryRequest): { url: string; init: RequestInit 
         })
       }
     };
+  }
+  if (request.kind === 'orgSessionAliases') {
+    return { url: `${API_BASE}/org/session/aliases`, init: { method: 'GET' } };
   }
   if (request.kind === 'orgSession') {
     return { url: `${API_BASE}/org/session`, init: { method: 'GET' } };
@@ -412,6 +416,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       ![
         'refresh',
         'orgConnect',
+        'orgSessionAliases',
         'orgSession',
         'orgPreflight',
         'orgSessionSwitch',
