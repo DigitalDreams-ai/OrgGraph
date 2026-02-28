@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.orgumented.desktop",
   "build": {
-    "beforeDevCommand": "pnpm --filter web dev -- --hostname 127.0.0.1 --port 3001",
+    "beforeDevCommand": "pnpm --filter desktop dev:runtime",
     "devUrl": "http://127.0.0.1:3001",
     "beforeBuildCommand": "pnpm --filter web build",
     "frontendDist": "../web/.next"
