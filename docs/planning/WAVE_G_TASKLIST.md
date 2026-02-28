@@ -13,6 +13,10 @@ Objective: deliver the fresh desktop-native Orgumented experience with Ask as th
 - [x] Make Ask the default landing workspace.
 - [x] Render deterministic answer summary, explanation, trust envelope, proof context, and follow-up actions as the primary Ask response.
 - [x] Keep raw JSON as a secondary inspector only.
+- [ ] Make the packaged desktop shell own local runtime startup and supervision.
+- [ ] Replace the browser-style `/api/query` proxy path with a desktop-native request boundary.
+- [ ] Replace browser-era UI smoke and screenshot verification with desktop-shell verification.
+- [ ] Break inherited monolithic desktop UI code into workspace modules.
 - [ ] Implement desktop Org Sessions workspace.
 - [ ] Implement desktop Org Browser workspace with org-wide selective retrieve.
 - [ ] Implement desktop Refresh and Build workspace.
@@ -33,6 +37,7 @@ Objective: deliver the fresh desktop-native Orgumented experience with Ask as th
 ## Dependencies
 - Wave F exit gates passed
 - `docs/planning/DESKTOP_UX_BLUEPRINT.md`
+- `docs/planning/DESKTOP_RUNTIME_HARDENING_TODO.md`
 
 ## Evidence Required
 - desktop workflow screenshots or walkthrough
@@ -44,3 +49,8 @@ Objective: deliver the fresh desktop-native Orgumented experience with Ask as th
 - First Wave G slice landed on February 28, 2026 with blueprint-aligned desktop navigation, Ask as the default workspace, decision-packet rendering in the primary content area, and raw JSON moved behind the secondary inspector.
 - Verified with `pnpm --filter web build`.
 - Verified with `pnpm desktop:build`.
+
+## Remaining Architecture Debt
+- Docker is no longer an active product dependency.
+- Remaining cleanup debt is primarily browser-era carryover in runtime ownership, request routing, verification, and UI structure.
+- Use `docs/planning/DESKTOP_RUNTIME_HARDENING_TODO.md` as the concrete cleanup checklist while Wave G continues.

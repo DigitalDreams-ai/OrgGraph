@@ -1,6 +1,6 @@
 # Architect Review Workflow
 
-This runbook defines how to use the Phase 15 architecture decision engines with deterministic replay.
+This runbook defines how to use the architecture decision engines with deterministic replay.
 
 ## 1) Prerequisites
 

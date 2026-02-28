@@ -140,6 +140,7 @@ ORGUMENTED_WEB_LOG_ENABLED=true
 
 - Active execution model: **Wave A-G**
 - See [Blue Ocean Phase Roadmap](./docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md) for dependency-ordered wave sequencing
+- See [Blue Ocean Execution Plan](./docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md) for the canonical product/runtime contract
 - Current active tracking files:
   - [WAVE_A_TASKLIST.md](./docs/planning/WAVE_A_TASKLIST.md)
   - [WAVE_B_TASKLIST.md](./docs/planning/WAVE_B_TASKLIST.md)
@@ -148,4 +149,3 @@ ORGUMENTED_WEB_LOG_ENABLED=true
   - [WAVE_E_TASKLIST.md](./docs/planning/WAVE_E_TASKLIST.md)
   - [WAVE_F_TASKLIST.md](./docs/planning/WAVE_F_TASKLIST.md)
   - [WAVE_G_TASKLIST.md](./docs/planning/WAVE_G_TASKLIST.md)
-- Historical phase artifacts remain in [docs/planning/archive](./docs/planning/archive/)

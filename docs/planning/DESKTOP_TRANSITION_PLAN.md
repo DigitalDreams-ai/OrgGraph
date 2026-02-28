@@ -156,6 +156,7 @@ Replace:
 3. `LEGACY_REMOVAL_REGISTER.md`
 4. `REUSE_REFACTOR_DELETE_MATRIX.md`
 5. roadmap update mapping future waves to desktop transition work
+6. `DESKTOP_RUNTIME_HARDENING_TODO.md`
 
 ## 12. Completion Criteria
 Desktop transition is complete when:
