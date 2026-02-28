@@ -10,11 +10,11 @@ Objective: move Orgumented onto a desktop-native runtime foundation before furth
 - Define local app data, logging, and diagnostic boundaries.
 
 ## Tasks
-- [ ] Add a desktop transition section to all primary planning references.
+- [x] Add a desktop transition section to all primary planning references.
 - [ ] Stand up Tauri shell scaffold for Orgumented desktop.
 - [ ] Define local process lifecycle for launching and stopping the NestJS engine.
-- [ ] Define local app data root and storage paths for graph, evidence, proofs, logs, and history.
-- [ ] Create a single tool-adapter boundary around `sf` and `cci`.
+- [x] Define local app data root and storage paths for graph, evidence, proofs, logs, and history.
+- [x] Create a single tool-adapter boundary around `sf` and `cci`.
 - [ ] Implement local alias discovery from `sf org list --json`.
 - [ ] Implement local alias validation from `sf org display --target-org <alias> --json`.
 - [ ] Implement attach/switch/disconnect session flows without Docker/runtime indirection.

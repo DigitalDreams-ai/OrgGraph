@@ -4,16 +4,67 @@ import os from 'node:os';
 import path from 'node:path';
 import { OrgService } from '../src/modules/org/org.service';
 
-class StubRunner {
+class StubToolAdapter {
   calls: Array<{ command: string; args: string[]; cwd?: string }> = [];
 
-  async run(
-    command: string,
-    args: string[],
-    options: { cwd?: string; timeoutMs?: number } = {}
-  ): Promise<{ exitCode: number; stdout: string; stderr: string; elapsedMs: number }> {
-    this.calls.push({ command, args, cwd: options.cwd });
-    return { exitCode: 0, stdout: '{"status":"ok"}', stderr: '', elapsedMs: 12 };
+  private ok(stdout = '{"status":"ok"}') {
+    return { exitCode: 0, stdout, stderr: '', elapsedMs: 12 };
+  }
+
+  async probeSf(cwd: string) {
+    this.calls.push({ command: 'sf', args: ['--version'], cwd });
+    return this.ok('sf 2.0.0');
+  }
+
+  async probeCci(cwd: string) {
+    this.calls.push({ command: 'cci', args: ['version'], cwd });
+    return this.ok('3.78.0');
+  }
+
+  async ensureSfInstalled(cwd: string) {
+    this.calls.push({ command: 'sf', args: ['--version'], cwd });
+  }
+
+  async ensureCciInstalled(cwd: string) {
+    this.calls.push({ command: 'cci', args: ['version'], cwd });
+  }
+
+  async displayOrg(alias: string, cwd: string) {
+    const args = ['org', 'display', '--target-org', alias, '--json'];
+    this.calls.push({ command: 'sf', args, cwd });
+    return this.ok('{"result":{"username":"user@example.com"}}');
+  }
+
+  async cciOrgInfo(alias: string, cwd: string) {
+    const args = ['org', 'info', alias];
+    this.calls.push({ command: 'cci', args, cwd });
+    return this.ok();
+  }
+
+  async importAliasIntoCci(alias: string, username: string, cwd: string) {
+    const args = ['org', 'import', alias, username];
+    this.calls.push({ command: 'cci', args, cwd });
+    return this.ok();
+  }
+
+  async retrieveMetadata(alias: string, metadataArgs: string[], cwd: string) {
+    const args = ['project', 'retrieve', 'start', '--target-org', alias, '--wait', '1', '--json'];
+    for (const metadataArg of metadataArgs) {
+      args.push('--metadata', metadataArg);
+    }
+    this.calls.push({ command: 'sf', args, cwd });
+  }
+
+  extractSfUsername(stdout: string) {
+    return JSON.parse(stdout).result.username;
+  }
+
+  extractCciVersion(stdout: string) {
+    return stdout.match(/(\d+\.\d+\.\d+)/)?.[1];
+  }
+
+  toActionableBadRequest() {
+    return undefined;
   }
 }
 
@@ -46,6 +97,14 @@ async function run(): Promise<void> {
     sfBaseUrl: () => 'https://test.salesforce.com'
   };
 
+  const fakePaths = {
+    sfProjectPath: () => sfProjectDir,
+    sfParsePath: () => parsePath,
+    orgSessionStatePath: () => path.join(root, 'data', 'org', 'session-state.json'),
+    orgAuthAuditPath: () => path.join(root, 'data', 'org', 'auth-session-audit.log'),
+    orgRetrieveAuditPath: () => path.join(root, 'data', 'org', 'sf-retrieve-audit.log')
+  };
+
   const fakeIngestion = {
     refresh: () => ({
       mode: 'full',
@@ -60,8 +119,8 @@ async function run(): Promise<void> {
     })
   };
 
-  const runner = new StubRunner();
-  const service = new OrgService(fakeConfig as never, fakeIngestion as never, runner as never);
+  const toolAdapter = new StubToolAdapter();
+  const service = new OrgService(fakeConfig as never, fakePaths as never, fakeIngestion as never, toolAdapter as never);
 
   try {
     const preflight = await service.preflight();
@@ -77,8 +136,8 @@ async function run(): Promise<void> {
     assert.ok(result.steps.some((step) => step.step === 'retrieve' && step.status === 'completed'));
     assert.ok(result.steps.some((step) => step.step === 'refresh' && step.status === 'completed'));
     assert.deepEqual(result.metadataArgs, ['CustomObject:Account']);
-    assert.ok(runner.calls.length >= 2, 'expected auth and retrieve sf commands');
-    const retrieveCall = runner.calls.find(
+    assert.ok(toolAdapter.calls.length >= 2, 'expected auth and retrieve sf commands');
+    const retrieveCall = toolAdapter.calls.find(
       (call) => call.command === 'sf' && call.args.includes('project') && call.args.includes('retrieve')
     );
     assert.ok(retrieveCall, 'expected retrieve sf command');

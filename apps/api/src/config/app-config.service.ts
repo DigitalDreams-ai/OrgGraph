@@ -8,6 +8,7 @@ export class AppConfigService {
     this.applyConfigFileDefaults();
 
     this.validateOptionalString('ORGUMENTED_CONFIG_PATH');
+    this.validateOptionalString('ORGUMENTED_APP_DATA_ROOT');
     this.validateOptionalString('DATABASE_URL');
     this.validateOptionalString('GRAPH_BACKEND');
     this.validateOptionalString('PERMISSIONS_FIXTURES_PATH');
@@ -83,6 +84,10 @@ export class AppConfigService {
 
   databaseUrl(): string | undefined {
     return process.env.DATABASE_URL;
+  }
+
+  orgumentedAppDataRoot(): string | undefined {
+    return process.env.ORGUMENTED_APP_DATA_ROOT;
   }
 
   graphBackend(): 'sqlite' | 'postgres' {
