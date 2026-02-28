@@ -52,6 +52,7 @@ Packaged build behavior:
   - static UI assets
   - deployed API runtime
   - bundled `node.exe`
+  - `config.json` with non-secret Salesforce runtime config snapshot from `.env` plus build-shell overrides
 - emits:
   - `apps/desktop/src-tauri/target/release/orgumented-desktop.exe`
   - `apps/desktop/src-tauri/target/release/bundle/msi/Orgumented_0.1.0_x64_en-US.msi`
@@ -69,6 +70,24 @@ The packaged smoke validates:
 - bundled API health and readiness
 - deterministic Ask proof generation
 - live org status retrieval
+- alias inventory capture
+- session attach proof when local aliases are available
+
+Optional deeper packaged auth proof:
+
+```powershell
+$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH="1"
+$env:ORGUMENTED_DESKTOP_SMOKE_ALIAS="orgumented-sandbox"
+$env:ORGUMENTED_DESKTOP_SMOKE_SWITCH_ALIAS="orgumented-uat"
+pnpm desktop:smoke:release
+```
+
+Rules:
+- `ORGUMENTED_DESKTOP_SMOKE_ALIAS` forces the alias used for packaged attach proof
+- `ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH=1` enables packaged alias-switch verification
+- `ORGUMENTED_DESKTOP_SMOKE_SWITCH_ALIAS` picks the switch target instead of auto-selecting another discovered alias
+- the smoke restores the original session alias or disconnected state before exit
+- packaged auth proof requires `SF_INTEGRATION_ENABLED=true` in `.env`, `.env.local`, or the build shell used for `desktop:build`
 
 ## 4. Health and Readiness
 ```bash
@@ -104,7 +123,7 @@ Current Ask-first behavior:
 ## 6. Connect a Sandbox Org
 Auth is delegated to Salesforce CLI keychain sessions.
 
-1. Configure `.env` with org settings such as `SF_ALIAS` and `SF_BASE_URL`.
+1. Configure `.env` with org settings such as `SF_INTEGRATION_ENABLED=true`, `SF_ALIAS`, and `SF_BASE_URL`.
 2. Authenticate locally in the same operator environment that runs Orgumented:
 
 ```bash

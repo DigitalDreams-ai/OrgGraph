@@ -30,6 +30,7 @@
     "targets": "all",
     "resources": [
       "runtime/api",
+      "runtime/config.json",
       "runtime/node/node.exe",
       "runtime/manifest.json"
     ],

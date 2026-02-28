@@ -103,6 +103,7 @@ fn spawn_packaged_api_child(app: &tauri::AppHandle) -> std::io::Result<Child> {
         &format!("runtime/node/{}", bundled_node_binary_name()),
     )?;
     let api_root = resolve_resource_path(app, "runtime/api")?;
+    let config_path = resolve_resource_path(app, "runtime/config.json")?;
     let api_entry = api_root.join("dist").join("main.js");
     if !api_entry.exists() {
         return Err(Error::new(
@@ -110,11 +111,18 @@ fn spawn_packaged_api_child(app: &tauri::AppHandle) -> std::io::Result<Child> {
             format!("packaged api entry missing at {}", api_entry.display()),
         ));
     }
+    if !config_path.exists() {
+        return Err(Error::new(
+            ErrorKind::NotFound,
+            format!("packaged api config missing at {}", config_path.display()),
+        ));
+    }
 
     let mut command = Command::new(node_path);
     command
         .arg(api_entry)
         .current_dir(api_root)
+        .env("ORGUMENTED_CONFIG_PATH", config_path)
         .env("PORT", desktop_api_port())
         .stdin(Stdio::null())
         .stdout(Stdio::inherit())

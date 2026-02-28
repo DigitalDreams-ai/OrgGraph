@@ -87,6 +87,7 @@ Current packaged build behavior:
   - static web entry assets
   - deployed API runtime
   - bundled `node.exe`
+  - `config.json` with non-secret Salesforce runtime config snapshot from `.env` and current shell overrides
 - the package build emits:
   - `apps/desktop/src-tauri/target/release/orgumented-desktop.exe`
   - `apps/desktop/src-tauri/target/release/bundle/msi/Orgumented_0.1.0_x64_en-US.msi`
@@ -112,13 +113,37 @@ Smoke artifacts:
 - `logs/desktop-release-smoke-ready.json`
 - `logs/desktop-release-smoke-ask.json`
 - `logs/desktop-release-smoke-org-status.json`
+- `logs/desktop-release-smoke-session-before.json`
+- `logs/desktop-release-smoke-session-aliases.json`
+- `logs/desktop-release-smoke-session-connect.json`
+- `logs/desktop-release-smoke-session-after-connect.json`
+- `logs/desktop-release-smoke-session-restore.json`
 - `logs/desktop-release-smoke-result.json`
 
 Current packaged smoke proof:
 - shell launch succeeded
 - `healthStatus=ok`
 - `readyStatus=ready`
-- Ask returned deterministic proof ID `proof_dd7bcb4c6e249d0ebae058a6`
+- Ask returned a deterministic proof ID
+- alias inventory is captured from `/org/session/aliases`
+- when local aliases are available, the smoke verifies `POST /org/session/connect` and restores the original session state before shutdown
+
+Optional deeper packaged auth proof:
+
+```powershell
+$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH="1"
+$env:ORGUMENTED_DESKTOP_SMOKE_ALIAS="orgumented-sandbox"
+$env:ORGUMENTED_DESKTOP_SMOKE_SWITCH_ALIAS="orgumented-uat"
+pnpm desktop:smoke:release
+```
+
+Rules:
+- `ORGUMENTED_DESKTOP_SMOKE_ALIAS` chooses the alias used for attach proof
+- if not set, the smoke prefers the current active alias, then the runtime active alias, then the first discovered alias
+- `ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH=1` asks the smoke to verify alias switching as well
+- `ORGUMENTED_DESKTOP_SMOKE_SWITCH_ALIAS` chooses the switch target explicitly
+- when switch verification is requested, the smoke restores the original session alias or disconnected state before exit
+- packaged runtime auth proof depends on `SF_INTEGRATION_ENABLED=true` in `.env`, `.env.local`, or the build shell
 
 ## Local Org Auth
 

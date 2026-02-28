@@ -33,9 +33,20 @@ Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:smoke:release
 ```
 
+Optional packaged auth proof:
+```powershell
+$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH="1"
+$env:ORGUMENTED_DESKTOP_SMOKE_ALIAS="orgumented-sandbox"
+$env:ORGUMENTED_DESKTOP_SMOKE_SWITCH_ALIAS="orgumented-uat"
+pnpm desktop:smoke:release
+```
+
 Packaged runtime expectation:
 - `desktop:build` stages a bundled runtime under `apps/desktop/src-tauri/runtime/`
 - release shell launches with bundled static UI assets and bundled API runtime
+- release build snapshots non-secret Salesforce runtime config into `apps/desktop/src-tauri/runtime/config.json`
+- smoke captures alias inventory and verifies session attach when aliases are available
+- smoke restores the original session state after attach/switch proof
 
 Desktop launch expectation:
 - app opens on `Ask`
