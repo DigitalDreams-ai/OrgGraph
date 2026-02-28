@@ -54,7 +54,8 @@ run_query() {
   fi
 }
 
-run_query refresh "{\"mode\":\"$WEB_SMOKE_REFRESH_MODE\",\"fixturesPath\":\"$WEB_SMOKE_FIXTURES_PATH\",\"rebaseline\":$( [ \"$WEB_SMOKE_REFRESH_REBASELINE\" = \"1\" ] && printf true || printf false )}"
+rebaseline_flag="$( [ "$WEB_SMOKE_REFRESH_REBASELINE" = "1" ] && printf true || printf false )"
+run_query refresh "{\"mode\":\"$WEB_SMOKE_REFRESH_MODE\",\"fixturesPath\":\"$WEB_SMOKE_FIXTURES_PATH\",\"rebaseline\":$rebaseline_flag}"
 if [ "$WEB_SMOKE_ENFORCE_NON_FIXTURE" = "1" ]; then
   node -e '
     const fs = require("fs");

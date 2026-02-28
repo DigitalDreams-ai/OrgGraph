@@ -41,6 +41,10 @@ jobs:
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install Salesforce CLI
+        shell: bash
+        run: npm install --global @salesforce/cli
+
       - name: Install pinned CumulusCI
         shell: bash
         run: |
@@ -106,6 +110,10 @@ jobs:
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Salesforce CLI
+        shell: bash
+        run: npm install --global @salesforce/cli
 
       - name: Install pinned CumulusCI
         shell: bash
