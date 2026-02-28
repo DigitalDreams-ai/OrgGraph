@@ -16,7 +16,7 @@ async function run() {
   fs.writeFileSync(sourceFile, '# smoke\n', 'utf8');
   const baselineTime = new Date('2026-02-28T00:00:00.000Z');
   fs.utimesSync(sourceFile, baselineTime, baselineTime);
-  for (const wave of ['A', 'B', 'C', 'D', 'E']) {
+  for (const wave of ['A', 'B', 'C', 'D', 'E', 'F', 'G']) {
     const tasklist = path.join(workspaceRoot, 'docs', 'planning', `WAVE_${wave}_TASKLIST.md`);
     fs.writeFileSync(
       tasklist,
@@ -101,14 +101,14 @@ async function run() {
       }
     });
     assert.ok(!seeded.isError);
-    assert.equal(seeded.structuredContent.total, 4);
+    assert.equal(seeded.structuredContent.total, 5);
 
     const waves = await client.callTool({
       name: 'summarize_orgumented_waves',
       arguments: {}
     });
     assert.ok(!waves.isError);
-    assert.equal(waves.structuredContent.total, 5);
+    assert.equal(waves.structuredContent.total, 7);
   } finally {
     await client.close();
     fs.rmSync(root, { recursive: true, force: true });

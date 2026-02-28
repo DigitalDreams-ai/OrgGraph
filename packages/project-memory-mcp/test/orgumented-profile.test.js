@@ -30,6 +30,8 @@ function run() {
   writeWaveTasklist(root, 'C', 0, 4, 0, 2);
   writeWaveTasklist(root, 'D', 3, 0, 1, 1);
   writeWaveTasklist(root, 'E', 2, 2, 2, 0);
+  writeWaveTasklist(root, 'F', 4, 1, 2, 1);
+  writeWaveTasklist(root, 'G', 1, 3, 0, 4);
 
   const {
     createOrgumentedBaselineRecords,
@@ -39,16 +41,20 @@ function run() {
   const seeded = createOrgumentedBaselineRecords('codex', '2026-02-28T00:00:00.000Z', (type, title, timestamp) =>
     `${type}:${title}:${timestamp}`
   );
-  assert.equal(seeded.length, 4);
+  assert.equal(seeded.length, 5);
   assert.equal(seeded[0].recordType, 'repo_map');
   assert.equal(seeded[0].scope.area, 'api-runtime');
+  assert.equal(seeded[1].title, 'Operator surfaces');
+  assert.equal(seeded[2].subsystem, 'desktop-transition');
 
   const waves = summarizeOrgumentedWaves(root);
-  assert.equal(waves.length, 5);
+  assert.equal(waves.length, 7);
   assert.equal(waves[0].taskCounts.completed, 2);
   assert.equal(waves[0].taskCounts.pending, 1);
   assert.equal(waves[4].exitGateCounts.completed, 2);
   assert.equal(waves[4].exitGateCounts.pending, 0);
+  assert.equal(waves[5].taskCounts.completed, 4);
+  assert.equal(waves[6].exitGateCounts.pending, 4);
 
   fs.rmSync(root, { recursive: true, force: true });
   console.log('orgumented profile test passed');

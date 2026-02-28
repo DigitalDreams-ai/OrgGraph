@@ -79,8 +79,9 @@ Example MCP config:
 - Record verification runs with command, result, and artifact references.
 - Keep handoff notes short and linked to concrete files, commits, or docs.
 - Use `summarize_scope` before resuming a subsystem after a long gap.
-- Use `seed_orgumented_baseline` once to create repo-map records for API, web, ontology, and planning.
-- Use `summarize_orgumented_waves` to read Wave A-E tasklist completion counts directly from `docs/planning`.
+- Use `seed_orgumented_baseline` to create or refresh repo-map records for API runtime, operator surfaces, desktop transition architecture, ontology, and planning governance.
+- Use `summarize_orgumented_waves` to read Wave A-G tasklist completion counts directly from `docs/planning`.
+- After changing the MCP package code, rebuild/restart the MCP session before expecting tool output to reflect new seed definitions or wave coverage.
 
 ## Anti-Patterns
 

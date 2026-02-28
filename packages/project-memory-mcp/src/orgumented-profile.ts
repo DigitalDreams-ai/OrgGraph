@@ -51,20 +51,44 @@ const ORGUMENTED_SEED_DEFINITIONS: RepoSeedDefinition[] = [
     docRefs: ['docs/USAGE_GUIDE.md', 'docs/planning/WAVE_B_TASKLIST.md']
   },
   {
-    title: 'Web workflow UI',
-    summary: 'Next.js workflow UI for connect, refresh, ask, proofs, and system workflows.',
-    subsystem: 'web-ui',
+    title: 'Operator surfaces',
+    summary: 'Next.js operator surfaces today and the fresh desktop-facing UX transition path for Ask, org sessions, retrieval, proofs, and diagnostics.',
+    subsystem: 'operator-surfaces',
     scopePaths: ['apps/web'],
-    tags: ['web', 'nextjs', 'workflow'],
+    tags: ['web', 'nextjs', 'operator-ui', 'desktop-transition'],
     sourceRefs: [
       { kind: 'file', ref: 'apps/web/app/page.tsx' },
-      { kind: 'doc', ref: 'docs/runbooks/UI_WORKFLOW_TOUR.md' }
+      { kind: 'doc', ref: 'docs/planning/DESKTOP_UX_BLUEPRINT.md' }
     ],
     entryPoints: ['apps/web/app/page.tsx', 'apps/web/app/layout.tsx'],
-    keyPaths: ['apps/web/app', 'scripts/ui-smoke-playwright.sh'],
-    dependencies: ['apps/api', 'docs/planning/WAVE_D_TASKLIST.md'],
+    keyPaths: ['apps/web/app', 'docs/planning/WAVE_G_TASKLIST.md', 'docs/planning/DESKTOP_UX_BLUEPRINT.md'],
+    dependencies: ['apps/api', 'docs/planning/WAVE_G_TASKLIST.md', 'docs/planning/DESKTOP_TRANSITION_PLAN.md'],
     verificationCommands: ['npm run test:ui-smoke'],
-    docRefs: ['docs/planning/WAVE_D_TASKLIST.md', 'docs/runbooks/UI_WORKFLOW_TOUR.md']
+    docRefs: ['docs/planning/WAVE_G_TASKLIST.md', 'docs/planning/DESKTOP_UX_BLUEPRINT.md']
+  },
+  {
+    title: 'Desktop transition architecture',
+    summary: 'Desktop-native target architecture, local runtime boundaries, legacy removal, and migration sequencing for Tauri + Next.js + NestJS.',
+    subsystem: 'desktop-transition',
+    scopePaths: ['docs/planning'],
+    tags: ['desktop', 'tauri', 'migration', 'runtime'],
+    sourceRefs: [
+      { kind: 'doc', ref: 'docs/planning/DESKTOP_ARCHITECTURE.md' },
+      { kind: 'doc', ref: 'docs/planning/DESKTOP_TRANSITION_PLAN.md' }
+    ],
+    entryPoints: ['docs/planning/DESKTOP_ARCHITECTURE.md', 'docs/planning/DESKTOP_TRANSITION_PLAN.md'],
+    keyPaths: [
+      'docs/planning/LEGACY_REMOVAL_REGISTER.md',
+      'docs/planning/REUSE_REFACTOR_DELETE_MATRIX.md',
+      'docs/planning/WAVE_F_TASKLIST.md'
+    ],
+    dependencies: ['docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md', 'docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md'],
+    verificationCommands: ['git diff -- docs/planning'],
+    docRefs: [
+      'docs/planning/DESKTOP_ARCHITECTURE.md',
+      'docs/planning/DESKTOP_TRANSITION_PLAN.md',
+      'docs/planning/WAVE_F_TASKLIST.md'
+    ]
   },
   {
     title: 'Ontology package',
@@ -96,10 +120,21 @@ const ORGUMENTED_SEED_DEFINITIONS: RepoSeedDefinition[] = [
       { kind: 'doc', ref: 'docs/planning/WAVE_A_TASKLIST.md' }
     ],
     entryPoints: ['docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md', 'docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md'],
-    keyPaths: ['docs/planning/WAVE_A_TASKLIST.md', 'docs/planning/WAVE_B_TASKLIST.md', 'docs/planning/WAVE_C_TASKLIST.md'],
-    dependencies: ['docs/planning/ORGUMENTED_LEXICON.md'],
+    keyPaths: [
+      'docs/planning/WAVE_A_TASKLIST.md',
+      'docs/planning/WAVE_B_TASKLIST.md',
+      'docs/planning/WAVE_C_TASKLIST.md',
+      'docs/planning/WAVE_F_TASKLIST.md',
+      'docs/planning/WAVE_G_TASKLIST.md'
+    ],
+    dependencies: ['docs/planning/ORGUMENTED_LEXICON.md', 'docs/planning/DESKTOP_TRANSITION_PLAN.md'],
     verificationCommands: ['git diff -- docs/planning'],
-    docRefs: ['docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md', 'docs/planning/WAVE_B_TASKLIST.md']
+    docRefs: [
+      'docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md',
+      'docs/planning/WAVE_B_TASKLIST.md',
+      'docs/planning/WAVE_F_TASKLIST.md',
+      'docs/planning/WAVE_G_TASKLIST.md'
+    ]
   }
 ];
 
@@ -135,7 +170,7 @@ export function createOrgumentedBaselineRecords(
 }
 
 export function summarizeOrgumentedWaves(workspaceRoot: string): WaveSummary[] {
-  return ['A', 'B', 'C', 'D', 'E'].map((wave) => {
+  return ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((wave) => {
     const relativePath = `docs/planning/WAVE_${wave}_TASKLIST.md`;
     const absolutePath = path.join(workspaceRoot, relativePath);
     const raw = fs.readFileSync(absolutePath, 'utf8');
