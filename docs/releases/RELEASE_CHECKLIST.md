@@ -7,7 +7,8 @@ Operational checklist for routine Orgumented upgrades and safe promotion.
 - [ ] `pnpm install` completed without unresolved lockfile drift
 - [ ] API tests pass: `pnpm --filter api test`
 - [ ] Web typecheck passes: `pnpm --filter web typecheck`
-- [ ] Docker images rebuild cleanly: `docker compose -f docker/docker-compose.yml build`
+- [ ] Desktop readiness passes: `pnpm desktop:info`
+- [ ] Desktop shell build passes: `pnpm desktop:build`
 
 ## 2. Runtime Validation
 - [ ] Readiness check: `curl http://localhost:3100/ready`
@@ -23,7 +24,7 @@ Operational checklist for routine Orgumented upgrades and safe promotion.
 
 ## 4. Security/Config
 - [ ] Salesforce CLI keychain alias is authenticated in runtime (`sf org display --target-org <alias> --json`)
-- [ ] Keychain persistence paths are mounted and writable (`/root/.sf`, `/root/.sfdx`)
+- [ ] Local Salesforce CLI keychain is readable from the operator environment
 - [ ] No secrets committed (`git status`, secret scan if available)
 
 ## 5. Post-Release

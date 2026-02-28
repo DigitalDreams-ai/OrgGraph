@@ -5,7 +5,7 @@ This document describes how Orgumented works end-to-end, from startup through re
 ## 1. Startup and Configuration
 - API loads environment configuration (`GRAPH_BACKEND`, data paths, Salesforce auth settings, logging flags).
 - API initializes graph backend (`sqlite` or `postgres`) and ensures schema/tables exist.
-- Web starts as an operator UI/proxy over API.
+- Embedded UI starts as a local operator UI/proxy over API.
 - Health and readiness endpoints come online.
 
 ## 2. Metadata Source Setup
@@ -102,9 +102,9 @@ This document describes how Orgumented works end-to-end, from startup through re
 ## 13. Observability and Operations
 - Metrics interceptor records route status and latency.
 - `/metrics` exposes request metrics and DB backend.
-- Logging supports detailed Dozzle visibility with reduced readiness-noise filtering.
+- Logging supports detailed local runtime visibility with reduced readiness-noise filtering.
 - `/ready` reports the active fixtures path for the current runtime context and ignores stale cross-runtime state paths.
-- Docker healthchecks keep services supervised.
+- Desktop runtime health is verified through local readiness probes and shell-managed process supervision.
 
 ## 14. Iteration Loop
 - Retrieve latest metadata.
@@ -170,7 +170,7 @@ flowchart TD
     U --> W
     V --> W
 
-    S --> X["/metrics + logs + Dozzle"]
+    S --> X["/metrics + local runtime logs"]
 ```
 
 ## Visual: Runtime Components
@@ -194,5 +194,5 @@ graph LR
     Query --> Evidence
 
     API --> Metrics[Metrics + Logs]
-    Metrics --> Dozzle[Dozzle / Docker Logs]
+    Metrics --> Logs[Local Runtime Logs]
 ```

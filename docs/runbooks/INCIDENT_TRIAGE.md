@@ -9,8 +9,8 @@ Use this when Orgumented returns unexpected 4xx/5xx responses, stale trust metri
    - `curl -s http://localhost:3100/ready`
    - `curl -s http://localhost:3101/api/ready`
 2. Check recent logs:
-   - `docker logs --tail 120 orgumented-api`
-   - `docker logs --tail 120 orgumented-web`
+   - active terminal output from `node apps/desktop/scripts/dev-runtime.mjs`
+   - Tauri dev shell output from `pnpm desktop:dev`
 3. Validate org integration status:
    - `curl -s http://localhost:3100/org/status`
    - `curl -s http://localhost:3100/org/session`
@@ -25,7 +25,7 @@ Use this when Orgumented returns unexpected 4xx/5xx responses, stale trust metri
 - `none`: no major failure class assigned.
 
 ## Recovery
-1. Restore runtime health (container restart/recreate if needed).
+1. Restore runtime health by restarting the local desktop runtime.
 2. Rebuild graph from latest retrieved metadata.
 3. Re-run known-good smoke set (`scripts/web-smoke.sh`).
 4. Verify trust dashboard trends normalize.

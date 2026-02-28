@@ -7,18 +7,17 @@ Purpose: define the desktop-native architecture for Orgumented after retiring Do
 ## 1. Architectural Decision
 - Product runtime: desktop-native application
 - Supported desktop platform: Windows only
-- UI framework: Next.js
+- UI framework: Next.js embedded inside the desktop shell
 - backend framework: NestJS
 - desktop shell: Tauri
 - Salesforce auth source of truth: Salesforce CLI keychain
 - supported local tooling: `sf` and `cci`
-- Docker status: development-only migration scaffold, not product architecture
 
 ## 2. Product Principles
 - Ask is the flagship surface.
 - Every answer must remain deterministic, replayable, and proof-backed.
 - Orgumented does not invent a proprietary auth system.
-- Local operator workflows are primary; browser-hosted/server-hosted assumptions are secondary.
+- Local operator workflows are primary; standalone dev-server access is secondary verification only.
 - Desktop UX must hide transport/runtime complexity from operators.
 
 ## 3. Top-Level Runtime Shape
@@ -46,7 +45,7 @@ Orgumented desktop consists of five cooperating layers:
 Platform scope:
 - Windows is the only supported desktop operating system.
 - Linux and macOS desktop builds are out of scope.
-- NAS/Linux environments may still be used for repo development, test scaffolding, and migration work, but not as target desktop product environments.
+- NAS/Linux environments may still be used for repo development and source-level verification, but not as target desktop product environments.
 
 ## 4. System Context
 ```mermaid
@@ -64,8 +63,9 @@ flowchart LR
 ```
 
 ## 5. UI Architecture
-Next.js remains the UI framework, but the product model changes:
+Next.js remains the UI framework, but the product model is a standalone desktop app:
 - no endpoint-console layout
+- no hosted web-app framing
 - no "browser app pretending to be desktop"
 - feature modules organized by operator workflow
 
@@ -204,7 +204,7 @@ Each job needs:
 ## 13. Non-Goals
 - preserving Docker as a first-class runtime
 - preserving legacy auth paths
-- preserving the current endpoint-console WebUI
+- preserving the current endpoint-console operator surface
 - supporting macOS desktop runtime
 - supporting Linux desktop runtime
 - building a hosted multi-tenant SaaS before local operator workflows are solved
@@ -214,4 +214,4 @@ This architecture is considered active only when:
 1. operator connects an org through local CLI-backed alias workflows
 2. retrieve, refresh, and Ask all run without Docker assumptions
 3. current flagship workflows execute inside the desktop shell
-4. no core operator workflow requires the legacy browser-hosted WebUI
+4. no core operator workflow requires standalone dev-server usage outside the desktop shell

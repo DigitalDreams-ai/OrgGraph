@@ -211,7 +211,7 @@ Architecture decisions:
 
 Hard rules:
 - Docker is not the target product runtime.
-- Docker may exist temporarily for migration scaffolding or dev/test, but must not shape future-state architecture.
+- Docker is removed from the active runtime and should not be restored as part of the desktop product path.
 - No further investment should expand browser-broker, VNC, or container-auth workarounds.
 - No standard operator workflow should assume container-local paths, mounted keychains, or compose-managed sessions.
 
@@ -258,8 +258,8 @@ Orgumented becomes the system where Salesforce architects do not ask:
 They ask:
 "What is the replayable semantic proof for this architectural decision, under this snapshot and policy?"
 
-## WebUI-First Operating Constraints
-- WebUI is the primary operator surface for auth, retrieval, refresh, analysis, and proof inspection.
+## Desktop-First Operating Constraints
+- The standalone desktop app is the primary operator surface for auth, retrieval, refresh, analysis, and proof inspection.
 - Authentication path should be Salesforce CLI keychain-driven in primary UX (local CLI-backed alias discovery/attach flow, alias/session contract).
 - Metadata retrieval UX should be org-wide and selective (VS Code Org Browser style), not package.xml-all by default.
 - Legacy manifest-driven retrieval is a removal target, not a long-term path:
@@ -269,10 +269,10 @@ They ask:
 - Ask UX should layer outputs:
   - deterministic evidence summary first
   - optional conversational elaboration second
-- WebUI implementation rule: build a fresh operator experience; do not inherit prior endpoint-console layout/components as the base UI.
+- Embedded UI implementation rule: build a fresh operator experience; do not inherit prior endpoint-console layout/components as the base UI.
 - Ask flagship requirement: Ask panel is primary surface and must return a decision packet, not raw JSON as default presentation.
 
-## Next.js Web Architecture Standard
+## Next.js Embedded UI Architecture Standard
 Current state:
 - Web app runs on Next.js App Router, but implementation patterns are mixed and not consistently feature-segmented.
 
@@ -301,8 +301,10 @@ Execution is now dependency-first via waves (see `BLUE_OCEAN_PHASE_ROADMAP.md`):
 1. Wave A: Operator baseline and legacy removal
 2. Wave B: Ask deterministic core
 3. Wave C: Proof productization
-4. Wave D: Fresh Next.js Ask-first UX
+4. Wave D: Fresh Ask-first UX capability target
 5. Wave E: Simulation/risk/commercialization
+6. Wave F: Desktop foundation and runtime cutover
+7. Wave G: Desktop Ask-first product UX
 
 Planning rule:
 - Legacy phase files are delivery history.

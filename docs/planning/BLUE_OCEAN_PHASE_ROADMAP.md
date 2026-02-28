@@ -45,7 +45,7 @@ Entry prerequisites:
 - test environment able to run real org smoke commands
 
 Exit gates:
-- WebUI connect success rate >= 95% on benchmark runs
+- operator connect success rate >= 95% on benchmark runs
 - selective metadata retrieve works without package.xml requirement
 - refresh uses non-fixture source path and succeeds
 - actionable errors for auth/session/retrieve failure classes
@@ -124,8 +124,8 @@ Exit gates:
 Scope:
 - establish Tauri as the desktop shell
 - support Windows only as the desktop platform
-- preserve Next.js for UI and NestJS for semantic engine
-- remove Docker as a product-runtime assumption
+- preserve Next.js for the embedded UI and NestJS for the semantic engine
+- keep Docker removed from the product runtime
 - replace auth/session model with local CLI-backed alias discovery and attach flows
 - define local app data, logging, diagnostics, and process lifecycle
 

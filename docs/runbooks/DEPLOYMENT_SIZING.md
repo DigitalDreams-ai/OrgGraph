@@ -1,24 +1,26 @@
 # Deployment Sizing Guide
 
 ## Baseline Topology
-- `web`: Next.js operator console
-- `api`: NestJS runtime + parsers + trust engine
-- `postgres`: persistence for production mode
+- `desktop shell`: Tauri window plus WebView2
+- `embedded UI`: Next.js operator layer
+- `local engine`: NestJS runtime + parsers + trust engine
+- `storage`: SQLite local-first by default, Postgres only when a later storage wave explicitly requires it
 
 ## Small Team (1-3 operators)
-- API: 1 vCPU / 2 GB RAM
-- Web: 0.5 vCPU / 1 GB RAM
-- Postgres: 1 vCPU / 2 GB RAM / SSD
+- Windows desktop: 4 logical cores / 8 GB RAM
+- Local engine working set: 1 vCPU equivalent / 2 GB RAM
+- Embedded UI working set: 0.5 vCPU equivalent / 1 GB RAM
 
 ## Medium Team (4-15 operators)
-- API: 2 vCPU / 4 GB RAM
-- Web: 1 vCPU / 2 GB RAM
-- Postgres: 2 vCPU / 4 GB RAM / SSD
+- Windows desktop: 6 logical cores / 16 GB RAM
+- Local engine working set: 2 vCPU equivalent / 4 GB RAM
+- Embedded UI working set: 1 vCPU equivalent / 2 GB RAM
 
 ## Heavy Analysis (large org + simulation)
-- API: 4 vCPU / 8 GB RAM
-- Web: 1-2 vCPU / 2 GB RAM
-- Postgres: 4 vCPU / 8 GB RAM / SSD with tuned shared buffers
+- Windows desktop: 8 logical cores / 32 GB RAM
+- Local engine working set: 4 vCPU equivalent / 8 GB RAM
+- Embedded UI working set: 1-2 vCPU equivalent / 2 GB RAM
+- Optional external storage sizing should be defined only when a Postgres-backed wave is active
 
 ## Operational SLO Targets
 - `/ready` 99.9% uptime

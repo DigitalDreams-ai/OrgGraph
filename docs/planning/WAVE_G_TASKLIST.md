@@ -20,7 +20,7 @@ Objective: deliver the fresh desktop-native Orgumented experience with Ask as th
 - [ ] Implement desktop Proofs and History workspace.
 - [ ] Implement desktop Settings and Diagnostics workspace.
 - [ ] Add operator history model so proofs/replays are accessed by labeled history, not token bookkeeping.
-- [ ] Remove dependency on the legacy browser-hosted operator UI for primary workflows.
+- [ ] Remove dependency on the legacy embedded dev-server workflow for primary operator usage.
 
 ## Exit Gates
 - [ ] Ask-first desktop experience is the default product interaction.
@@ -28,7 +28,7 @@ Objective: deliver the fresh desktop-native Orgumented experience with Ask as th
 - [ ] Decision packets, not raw JSON, are the default Ask output.
 - [ ] Proof/history access works without manual tracking of opaque IDs/tokens.
 - [ ] Org Browser supports org-wide selection and retrieve workflows in the desktop UX.
-- [ ] Legacy browser-hosted operator UI is no longer required for primary usage.
+- [ ] Desktop shell is the required primary usage path; standalone dev-server access is secondary verification only.
 
 ## Dependencies
 - Wave F exit gates passed

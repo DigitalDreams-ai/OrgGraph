@@ -15,38 +15,50 @@ Purpose: provide advisory coordination memory for large repo work without changi
 - Event log: `data/project-memory/events.jsonl`
 - Workspace root detection: repo root via `pnpm-workspace.yaml`
 
-Optional overrides:
+Optional overrides in PowerShell:
 
-```bash
-export ORGUMENTED_PROJECT_MEMORY_PATH=data/project-memory/events.jsonl
-export ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT=/volume1/data/projects/OrgGraph
+```powershell
+$env:ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl"
+$env:ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$env:USERPROFILE\Projects\GitHub\OrgGraph"
 ```
 
 ## Start The MCP
 
-```bash
-cd /volume1/data/projects/OrgGraph
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm --filter @orgumented/project-memory-mcp build
 npm run mcp:project-memory
 ```
 
 This starts a stdio MCP server backed by `packages/project-memory-mcp`.
+The launcher is now cross-platform and works on Windows without a shell-specific wrapper.
 
-## Register In Codex
+## Register In Cursor
 
-Example MCP config:
+This repo now includes a committed project config at `.cursor/mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "project-memory": {
-      "command": "/usr/local/bin/node",
+      "command": "node",
       "args": [
-        "/volume1/data/projects/OrgGraph/packages/project-memory-mcp/dist/index.js"
+        "${workspaceFolder}/packages/project-memory-mcp/dist/index.js"
       ],
-      "cwd": "/volume1/data/projects/OrgGraph"
+      "env": {
+        "ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT": "${workspaceFolder}",
+        "ORGUMENTED_PROJECT_MEMORY_PATH": "data/project-memory/events.jsonl"
+      }
     }
   }
 }
+```
+
+## Register In Codex
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+codex mcp add project-memory --env ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$PWD" --env ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl" -- node "$PWD\packages\project-memory-mcp\dist\index.js"
 ```
 
 ## Tools
@@ -81,7 +93,7 @@ Example MCP config:
 - Use `summarize_scope` before resuming a subsystem after a long gap.
 - Use `seed_orgumented_baseline` to create or refresh repo-map records for API runtime, operator surfaces, desktop transition architecture, ontology, and planning governance.
 - Use `summarize_orgumented_waves` to read Wave A-G tasklist completion counts directly from `docs/planning`.
-- After changing the MCP package code, rebuild/restart the MCP session before expecting tool output to reflect new seed definitions or wave coverage.
+- After changing the MCP package code, rebuild and restart the MCP session before expecting tool output to reflect new seed definitions or wave coverage.
 
 ## Anti-Patterns
 
@@ -92,10 +104,13 @@ Example MCP config:
 
 ## Verification
 
-```bash
-npm exec --yes pnpm@9.12.3 -- --filter @orgumented/project-memory-mcp test
+```powershell
+pnpm --filter @orgumented/project-memory-mcp test
+codex mcp get project-memory
 ```
 
 Expected proof:
 - store test passes
 - stdio MCP smoke test passes
+- Codex reports the `project-memory` MCP as enabled
+- standalone desktop MCP baseline remains limited to `github` and `project-memory`

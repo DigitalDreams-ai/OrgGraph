@@ -26,12 +26,10 @@ Define the go/no-go process for promoting Orgumented from sandbox metadata to pr
 `ORGUMENTED_OPERATOR=<name> npm run phase8:promotion-log -- promoted`
 
 ## Rollback Procedure
-1. Stop stack:
-`docker compose -f docker/docker-compose.yml down`
+1. Stop the local desktop runtime.
 2. Restore known-good snapshot:
 `npm run phase8:restore-point:apply -- <restore-point-stamp>`
-3. Start stack with previous image tag or previous commit:
-`docker compose -f docker/docker-compose.yml up -d`
+3. Restart the desktop runtime from the previous known-good commit.
 4. Verify:
 - `GET /ready`
 - `GET /perms` known-positive check

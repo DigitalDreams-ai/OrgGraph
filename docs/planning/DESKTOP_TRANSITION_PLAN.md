@@ -2,7 +2,7 @@
 
 Status: migration plan
 
-Purpose: define how Orgumented moves from the current web/Docker-oriented implementation to a desktop-native product built on Next.js + NestJS.
+Purpose: define how Orgumented moves from the prior browser-hosted and Docker-oriented implementation to a desktop-native product built on Next.js + NestJS.
 
 ## 1. Migration Goal
 Move Orgumented to a desktop-native runtime where:
@@ -21,8 +21,8 @@ Move Orgumented to a desktop-native runtime where:
 - Existing semantic logic should be reused where it provides real lift.
 
 ## 3. Current State
-- current operator surface is browser-hosted
-- runtime still carries Docker assumptions
+- current operator surface is still implemented as an embedded Next.js app that can also be exercised through local dev servers
+- runtime still carries cleanup debt from prior Docker assumptions
 - auth/session logic has accumulated legacy paths and failed experiments
 - semantic engine contains substantial reusable value
 - UI does not yet represent the desired product quality
@@ -128,7 +128,7 @@ Replace:
 ## 8. Cutover Rules
 - New desktop workflows must reach parity before legacy operator claims are made.
 - No "operator-ready" claim until connect, retrieve, refresh, Ask, and proof replay succeed in desktop runtime.
-- Legacy web operator flows may exist temporarily only as migration scaffolding.
+- Legacy browser-hosted operator flows are removal debt and must not be treated as supported product paths.
 
 ## 9. Risks
 1. Maintaining two first-class runtimes too long

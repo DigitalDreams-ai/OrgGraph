@@ -50,7 +50,7 @@ prisma/migrations/**/migration_lock.toml
 # pnpm
 .pnpm-store/
 
-# Docker
+# Local tooling artifacts
 .docker/
 
 # Salesforce (pulled metadata - optional: remove if you want to track)

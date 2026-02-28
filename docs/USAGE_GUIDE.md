@@ -7,23 +7,24 @@ Orgumented builds a deterministic graph from Salesforce metadata and answers:
 - What might be impacted by a field change (`/impact`)
 - Natural-language queries with evidence (`/ask`)
 
-## 2. Core Services
-- API: `http://localhost:3100`
-- Web UI: `http://localhost:3101`
+## 2. Runtime Shape
+- Product shell: Tauri desktop application
+- Embedded UI dev server: `http://localhost:3101`
+- Local engine API: `http://localhost:3100`
 
-## 3. Start the Runtime
-Preferred desktop-transition runtime:
-```bash
-cd /volume1/data/projects/Orgumented
-ORGUMENTED_DESKTOP_API_PORT=3200 \
-ORGUMENTED_DESKTOP_WEB_PORT=3201 \
+## 3. Start the Desktop Runtime
+Development runtime:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+$env:ORGUMENTED_DESKTOP_API_PORT="3200"
+$env:ORGUMENTED_DESKTOP_WEB_PORT="3201"
 node apps/desktop/scripts/dev-runtime.mjs
 ```
 
-Legacy Docker scaffold:
-```bash
-cd /volume1/data/projects/Orgumented
-docker compose -f docker/docker-compose.yml up -d --build
+Standalone desktop shell:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:dev
 ```
 
 ## 4. Health and Readiness
@@ -136,8 +137,8 @@ curl -X POST http://localhost:3100/org/session/disconnect
 
 ## 8. Query Orgumented
 
-### 8.0 WebUI Product Workflow
-WebUI is now organized into task-first tabs:
+### 8.0 Desktop Product Workflow
+The Tauri desktop app uses an embedded workflow-first UI:
 - `Connect`
 - `Org Browser`
 - `Refresh & Build`
@@ -153,10 +154,10 @@ Operator flow:
 4. Run deterministic checks in `Analyze` and `Ask`.
 5. Inspect replay/proof/metrics in `Proofs & Metrics`.
 
-UI quality gates in this phase include:
+Desktop UI quality gates in this phase include:
 - desktop browser screenshot proof: `artifacts/phase25-workflow-ui.png`
 - mobile browser screenshot proof: `artifacts/phase25-mobile-ui.png`
-- browser smoke script: `npm run test:ui-smoke`
+- embedded UI smoke script: `npm run test:ui-smoke`
 
 ### 8.1 Permissions
 ```bash
@@ -253,30 +254,24 @@ Use this when Codex needs advisory project continuity across many files and movi
 It does not participate in `/ask`, proof generation, or runtime truth.
 
 Start the MCP:
-```bash
-cd /volume1/data/projects/OrgGraph
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm --filter @orgumented/project-memory-mcp build
 npm run mcp:project-memory
 ```
 
 Optional overrides:
-```bash
-export ORGUMENTED_PROJECT_MEMORY_PATH=data/project-memory/events.jsonl
-export ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT=/volume1/data/projects/OrgGraph
+```powershell
+$env:ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl"
+$env:ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$env:USERPROFILE\Projects\GitHub\OrgGraph"
 ```
 
+Register it in Cursor with the committed `.cursor/mcp.json`.
+
 Register it in Codex with:
-```json
-{
-  "mcpServers": {
-    "project-memory": {
-      "command": "/usr/local/bin/node",
-      "args": [
-        "/volume1/data/projects/OrgGraph/packages/project-memory-mcp/dist/index.js"
-      ],
-      "cwd": "/volume1/data/projects/OrgGraph"
-    }
-  }
-}
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+codex mcp add project-memory --env ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$PWD" --env ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl" -- node "$PWD\packages\project-memory-mcp\dist\index.js"
 ```
 
 Available tools:
@@ -354,8 +349,8 @@ curl -X POST http://localhost:3100/meta/adapt -H 'content-type: application/json
 
 `/meta/adapt` writes deterministic audit artifacts and updates relation multipliers used by analysis ranking.
 
-## 9. Web Query Proxy
-Web route supports either `kind` or `endpoint`, and either `payload` or `params`.
+## 10. Embedded UI Query Proxy
+The embedded Next.js proxy supports either `kind` or `endpoint`, and either `payload` or `params`.
 
 ```bash
 curl -X POST http://localhost:3101/api/query \
@@ -367,15 +362,15 @@ curl -X POST http://localhost:3101/api/query \
   -d '{"endpoint":"perms","params":{"user":"sbingham@shulman-hill.com.uat","object":"litify_pm__Intake__c"}}'
 ```
 
-## 10. Common Troubleshooting
+## 11. Common Troubleshooting
 
-### 10.1 `/perms` returns `unmapped_user`
+### 11.1 `/perms` returns `unmapped_user`
 ```bash
 npm run sf:export-user-map
 ```
 Then retry `/perms`.
 
-### 10.2 Readiness points to fixture path instead of retrieved path
+### 11.2 Readiness points to fixture path instead of retrieved path
 Run live refresh again:
 ```bash
 curl -X POST http://localhost:3100/refresh \
@@ -384,20 +379,20 @@ curl -X POST http://localhost:3100/refresh \
 ```
 If refresh state was produced from a different runtime context, `/ready` now automatically falls back to current runtime path resolution.
 
-### 10.3 Web container unhealthy
-Legacy Docker scaffold only:
+### 11.3 Embedded UI runtime unhealthy
+Restart the desktop runtime and re-run:
 ```bash
-docker compose -f docker/docker-compose.yml up -d --build web
+npm run test:web-smoke
 ```
 
-### 10.4 Validate full web flow quickly
+### 11.4 Validate the desktop-backed flow quickly
 ```bash
 npm run test:web-smoke
 # Optional: opt-in to smoke against retrieved org metadata
 WEB_SMOKE_USE_SF_PROJECT=1 npm run test:web-smoke
 ```
 
-## 11. Extended Validation Harness
+## 12. Extended Validation Harness
 ```bash
 npm run phase7:smoke-live
 npm run phase7:snapshot

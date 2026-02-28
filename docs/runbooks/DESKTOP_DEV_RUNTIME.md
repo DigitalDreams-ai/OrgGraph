@@ -1,6 +1,6 @@
 # Desktop Dev Runtime
 
-Purpose: run Orgumented in the desktop-transition model without treating Docker as the primary product runtime.
+Purpose: run Orgumented in the standalone Windows desktop-transition model.
 
 ## Current Direction
 - Product target: desktop-native
@@ -9,7 +9,6 @@ Purpose: run Orgumented in the desktop-transition model without treating Docker 
 - engine: NestJS
 - shell: Tauri
 - auth source of truth: local Salesforce CLI keychain
-- Docker status: migration/dev scaffold only
 
 ## Windows Prerequisites
 1. `pnpm`
@@ -25,9 +24,8 @@ Non-goal for product support:
 
 ## Check Desktop Shell Readiness
 
-```bash
-cd /volume1/data/projects/OrgGraph
-. "$HOME/.cargo/env"
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:info
 ```
 
@@ -42,10 +40,10 @@ This starts:
 - NestJS engine on a local port
 - Next.js UI on a local port
 
-```bash
-cd /volume1/data/projects/OrgGraph
-ORGUMENTED_DESKTOP_API_PORT=3200 \
-ORGUMENTED_DESKTOP_WEB_PORT=3201 \
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+$env:ORGUMENTED_DESKTOP_API_PORT="3200"
+$env:ORGUMENTED_DESKTOP_WEB_PORT="3201"
 node apps/desktop/scripts/dev-runtime.mjs
 ```
 
@@ -58,9 +56,8 @@ Observed proof in current repo state:
 
 On the supported Windows desktop runtime:
 
-```bash
-cd /volume1/data/projects/OrgGraph
-. "$HOME/.cargo/env"
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:dev
 ```
 
@@ -68,7 +65,7 @@ pnpm desktop:dev
 
 Authenticate locally, not in Docker:
 
-```bash
+```powershell
 sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default
 sf org display --target-org orgumented-sandbox --json
 cci org import orgumented-sandbox <sf-username>
@@ -79,19 +76,14 @@ cci org info orgumented-sandbox
 
 With the API running locally:
 
-```bash
+```powershell
 curl http://127.0.0.1:3200/org/session
 curl http://127.0.0.1:3200/org/session/aliases
 curl "http://127.0.0.1:3200/org/session/validate?alias=orgumented-sandbox"
 curl http://127.0.0.1:3200/org/preflight
 ```
 
-## NAS Note
+## Non-Target Environments
 
-This NAS can still be used for:
-- repo development
-- planning work
-- backend/runtime scaffolding
-- local engine smoke checks
-
-It is not the target desktop runtime. Linux-specific Tauri launch blockers on the NAS do not block the Windows desktop product path.
+Repo development and planning can happen outside Windows, but the supported product runtime is the Windows desktop shell only.
+Linux-specific Tauri launch blockers do not block the product path unless they also reproduce on Windows.

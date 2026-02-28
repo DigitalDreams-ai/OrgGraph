@@ -67,6 +67,3 @@ After retrieve + refresh:
 4. `GET /automation?object=<known-object>`
 5. `GET /impact?field=<known-object.field>`
 6. `POST /ask` with known query
-
-## Legacy Docker Note
-If you are still using the legacy Docker stack during migration, keep Docker-specific keychain persistence and restart instructions isolated to that stack. They are no longer the primary product-runtime path.

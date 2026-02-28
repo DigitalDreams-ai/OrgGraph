@@ -1,19 +1,18 @@
 # Orgumented Cheat Sheet
 
 ## Start / Stop
-Preferred desktop-transition runtime:
-```bash
-cd /volume1/data/projects/OrgGraph
-ORGUMENTED_DESKTOP_API_PORT=3200 \
-ORGUMENTED_DESKTOP_WEB_PORT=3201 \
+Desktop development runtime:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+$env:ORGUMENTED_DESKTOP_API_PORT="3200"
+$env:ORGUMENTED_DESKTOP_WEB_PORT="3201"
 node apps/desktop/scripts/dev-runtime.mjs
 ```
 
-Legacy Docker scaffold:
-```bash
-cd /volume1/data/projects/Orgumented
-docker compose -f docker/docker-compose.yml up -d --build
-docker compose -f docker/docker-compose.yml down
+Standalone desktop shell:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:dev
 ```
 
 ## Health
@@ -88,7 +87,7 @@ curl http://localhost:3100/ask/metrics/export
 curl http://localhost:3100/ask/trust/dashboard
 ```
 
-## Web Proxy (`/api/query`)
+## Embedded UI Proxy (`/api/query`)
 ```bash
 curl -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"automation","payload":{"object":"Opportunity"}}'
 curl -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"endpoint":"impact","params":{"field":"Opportunity.StageName"}}'
@@ -117,17 +116,16 @@ npm run phase14:drift-report -- latest latest artifacts/phase14-drift-report.jso
 npm run phase14:drift-gate
 ./scripts/phase17-benchmark.sh
 npm run mcp:project-memory
-npm exec --yes pnpm@9.12.3 -- --filter @orgumented/project-memory-mcp test
+pnpm --filter @orgumented/project-memory-mcp test
 ```
 
-## WebUI Tabs
+## Desktop App Workspaces
 - `Connect`: auth path + session/alias actions
 - `Org Browser`: searchable metadata tree + retrieval cart
 - `Refresh`: full/incremental refresh + snapshot diff
 - `Analyze`: permissions/automation/impact workflows
 - `Ask`: deterministic answer + proof envelope + optional elaboration
-- `Simulate`: what-if risk scoring + A/B compare
-- `Prove`: proof lookup/replay + metrics/trust dashboard
+- `Proofs & Metrics`: proof lookup/replay + metrics/trust dashboard
 - `System`: diagnostics, meta-context, action telemetry
 
 ## Fast Fixes
@@ -138,35 +136,29 @@ npm run sf:export-user-map
 # Re-point runtime to sandbox retrieved metadata
 curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -d '{"fixturesPath":"data/sf-project/force-app/main/default","mode":"full","rebaseline":true}'
 
-# Legacy-only: rebuild Docker web service if unhealthy
-docker compose -f docker/docker-compose.yml up -d --build web
+# Restart the standalone desktop shell after UI changes
+pnpm desktop:dev
 ```
 
 ## Project Memory MCP
-```bash
-cd /volume1/data/projects/OrgGraph
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm --filter @orgumented/project-memory-mcp build
 npm run mcp:project-memory
 ```
 
 Optional env:
-```bash
-export ORGUMENTED_PROJECT_MEMORY_PATH=data/project-memory/events.jsonl
-export ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT=/volume1/data/projects/OrgGraph
+```powershell
+$env:ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl"
+$env:ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$env:USERPROFILE\Projects\GitHub\OrgGraph"
 ```
 
-Codex config snippet:
-```json
-{
-  "mcpServers": {
-    "project-memory": {
-      "command": "/usr/local/bin/node",
-      "args": [
-        "/volume1/data/projects/OrgGraph/packages/project-memory-mcp/dist/index.js"
-      ],
-      "cwd": "/volume1/data/projects/OrgGraph"
-    }
-  }
-}
+Cursor project config is committed at `.cursor/mcp.json`.
+
+Codex registration:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+codex mcp add project-memory --env ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$PWD" --env ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl" -- node "$PWD\packages\project-memory-mcp\dist\index.js"
 ```
 
 Orgumented-specific tools:

@@ -1,6 +1,6 @@
-# UI Workflow Tour (Phase 25)
+# Embedded UI Workflow Tour (Phase 25)
 
-This runbook is the fastest path through the new Orgumented WebUI.
+This runbook is the fastest path through the embedded Orgumented desktop UI.
 
 ## Tabs and Purpose
 - `Connect`: establish or switch active org session and verify tooling readiness.
@@ -35,6 +35,6 @@ npm run test:web-smoke
 npm run test:ui-smoke
 ```
 
-Artifacts produced by UI smoke:
+Artifacts produced by embedded UI smoke:
 - `artifacts/ui-smoke-playwright.png`
 - `artifacts/ui-smoke-page.html`
