@@ -34,6 +34,7 @@ const packagedConfigKeys = [
 const packagedApiPruneTargets = [
   'apps',
   'dist',
+  'package.json',
   'src',
   'test',
   'nest-cli.json',

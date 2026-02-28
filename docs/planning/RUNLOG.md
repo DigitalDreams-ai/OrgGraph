@@ -1066,3 +1066,43 @@ Branch: `dna-foundation`
 - The packaged shell now launches a single bundled API entry instead of a deployed `dist/` tree.
 - The packaged runtime is materially smaller and simpler while preserving the current deterministic proof and desktop auth behavior.
 - The next step is to decide whether any more runtime packaging churn is justified, or whether the higher-value work has shifted back to core product behavior.
+
+## Entry 30: Remove Packaged API Root Metadata
+
+### Change
+- Updated `apps/desktop/scripts/prepare-packaged-runtime.mjs` so packaged staging now removes `apps/desktop/src-tauri/runtime/api/package.json`.
+- The packaged API root is now reduced to:
+  - `main.cjs`
+  - native runtime dependencies under `node_modules/`
+
+### Verification
+1. `pnpm desktop:build`
+- Result: passed
+- Proof:
+  - `src-tauri\\runtime\\api\\main.cjs  4.5mb`
+  - `Built application at: ...\\apps\\desktop\\src-tauri\\target\\release\\orgumented-desktop.exe`
+  - `Finished 2 bundles`
+
+2. `Get-ChildItem apps/desktop/src-tauri/runtime/api -Force`
+- Result: passed
+- Proof:
+  - staged packaged API root contained only:
+    - `main.cjs`
+    - `node_modules`
+
+3. `$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH='1'; pnpm desktop:smoke:release`
+- Result: passed
+- Proof:
+  - packaged smoke succeeded with the reduced API root
+  - the transient `EADDRINUSE` seen on the first rerun did not reproduce on the clean verification rerun
+
+4. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+### Outcome
+- The packaged API payload is now down to the actual bundled runtime artifact plus native dependencies.
+- Further packaged-runtime pruning should now be treated as optional, not a standing architectural requirement.

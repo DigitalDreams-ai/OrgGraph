@@ -187,8 +187,12 @@ Progress note:
   - packaged runtime keeps only the native `better-sqlite3` dependency set under `runtime/api/node_modules`
   - staged packaged API footprint dropped again from about `13.93 MB` to about `7.33 MB`
   - packaged build, packaged release smoke, and the full API suite all remained green after the bundle swap
+- Slice 10 completed:
+  - packaged API staging no longer keeps `runtime/api/package.json`
+  - the packaged API root now contains only `main.cjs` plus native runtime dependencies
+  - packaged build, packaged release smoke, and the full API suite remained green after that removal
 - Next narrow step:
-  - measure whether any additional packaged-runtime pruning still buys enough to justify another slice
+  - reassess whether any additional packaged-runtime pruning still buys enough to justify another slice
   - stop if the remaining potential wins are mostly cosmetic rather than architectural
 
 ## Phase 5: Modular UI Reconstruction
@@ -328,6 +332,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: reassess whether runtime hardening has reached the point of diminishing returns before making more desktop packaging changes.
+- Preferred next step: decide whether runtime hardening should stop here and return focus to product/runtime behavior work.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

@@ -268,6 +268,7 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
     - remaining `runtime/api/node_modules` is about `2.82 MB`
   - the packaged runtime keeps only the native `better-sqlite3` dependency set (`better-sqlite3`, `bindings`, `file-uri-to-path`)
   - packaged build, packaged release smoke, and the full API suite stayed green after switching away from the deployed `dist/` tree
+  - `runtime/api/package.json` is no longer staged; the packaged API root now contains only `main.cjs` plus native runtime dependencies
 - Phase 5 modular UI reconstruction is now moving again:
   - `Org Browser` rendering is no longer inlined inside `apps/web/app/page.tsx`
   - browser types and rendering now live under `apps/web/app/workspaces/browser/`
@@ -292,6 +293,6 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - Local tab/alias/ask persistence is no longer owned directly by `apps/web/app/page.tsx`
   - shell preference hydration/persistence now lives under `apps/web/app/shell/use-shell-preferences.ts`
 - The next live architectural priority is to reduce packaged runtime complexity further without widening scope:
-  - measure whether any additional packaged-runtime pruning is still worth it now that the API bundle is explicit and release-smoke stable
+  - reassess whether any more packaged-runtime pruning is worth the churn now that the API bundle is explicit, smoke-stable, and down to executable artifacts plus native dependencies
   - if not, stop runtime hardening here and avoid churn for cosmetic payload wins
   - avoid resuming page-shell extraction unless the remaining shared helpers become a measured blocker again

@@ -92,6 +92,7 @@ Current packaged build behavior:
 - packaged build preflight stops stale packaged desktop processes before restaging on Windows
 - build-only API baggage is pruned from the staged runtime before Tauri bundles it
 - only the native `better-sqlite3` dependency set remains under `runtime/api/node_modules`
+- `runtime/api` no longer carries a staged `package.json`
 - the package build emits:
   - `apps/desktop/src-tauri/target/release/orgumented-desktop.exe`
   - `apps/desktop/src-tauri/target/release/bundle/msi/Orgumented_0.1.0_x64_en-US.msi`
