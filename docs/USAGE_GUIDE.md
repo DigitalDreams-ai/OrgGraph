@@ -15,6 +15,7 @@ Orgumented is a deterministic semantic runtime for Salesforce architecture work.
 - Support tooling: local `cci`
 
 The product is desktop-native. Local `localhost` ports exist for process composition and verification, not as a hosted browser product model.
+Packaged desktop builds now stage a static embedded UI and a bundled local API runtime instead of depending on a live Next route layer at release time.
 
 ## 3. Start the Desktop Runtime
 Start the managed desktop runtime:
@@ -37,6 +38,24 @@ Run the Tauri shell:
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:dev
 ```
+
+Build the packaged desktop app:
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:build
+```
+
+Packaged build behavior:
+- stages runtime assets under `apps/desktop/src-tauri/runtime/`
+- bundles:
+  - static UI assets
+  - deployed API runtime
+  - bundled `node.exe`
+- emits:
+  - `apps/desktop/src-tauri/target/release/orgumented-desktop.exe`
+  - `apps/desktop/src-tauri/target/release/bundle/msi/Orgumented_0.1.0_x64_en-US.msi`
+  - `apps/desktop/src-tauri/target/release/bundle/nsis/Orgumented_0.1.0_x64-setup.exe`
 
 ## 4. Health and Readiness
 ```bash
@@ -293,6 +312,13 @@ curl -X POST http://localhost:3100/refresh \
 pnpm --filter web build
 pnpm desktop:build
 pnpm desktop:dev
+```
+
+### 11.4 Packaged desktop runtime verification
+```bash
+pnpm desktop:build
+apps/desktop/src-tauri/target/release/orgumented-desktop.exe
+curl http://localhost:3100/ready
 ```
 
 ## 12. Storage and Drift Operations

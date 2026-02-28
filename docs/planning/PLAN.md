@@ -62,9 +62,9 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
 ## Architecture Map
 
 ### Tauri shell layer
-- Tauri is currently a thin shell. `apps/desktop/src-tauri/src/lib.rs` only builds the default app and runs the generated context.
+- Tauri started as a thin shell, but `apps/desktop/src-tauri/src/lib.rs` now owns API child-process lifecycle in dev and packaged release modes.
 - Runtime ownership is pushed into `apps/desktop/scripts/dev-runtime.mjs`, which starts the API and the embedded web server before Tauri dev launch.
-- `apps/desktop/src-tauri/tauri.conf.json` still binds the shell to a local web URL in dev (`devUrl`) and a built Next output in package mode (`frontendDist`).
+- `apps/desktop/src-tauri/tauri.conf.json` still binds the shell to a local web URL in dev (`devUrl`), but package mode now stages a static web bundle plus bundled API runtime under `apps/desktop/src-tauri/runtime/`.
 
 ### Next.js UI layer
 - `apps/web/app/page.tsx` is the main desktop UI surface and currently mixes:
@@ -74,6 +74,7 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - payload construction,
   - request dispatch.
 - `apps/web/app/api/query/route.ts` is a generic command multiplexer that maps UI "kind" values to many Nest endpoints.
+- Typed clients under `apps/web/app/lib/` now bypass the generic multiplexer for Ask, Org, Refresh, and packaged-shell secondary flows when the UI runs from the Tauri bundled static shell.
 - Health and readiness proxy routes exist separately in `apps/web/app/api/health/route.ts` and `apps/web/app/api/ready/route.ts`.
 
 ### NestJS engine layer
@@ -212,6 +213,18 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
 - Phase 4 runtime ownership hardening is now in progress.
   - In desktop dev, the Tauri shell now owns the API child process lifecycle.
   - `apps/desktop/scripts/dev-runtime.mjs` now prepares the API build and starts only the web runtime.
+- Phase 4 packaged-runtime ownership slice is now in progress:
+  - `pnpm desktop:build` now stages a packaged runtime under `apps/desktop/src-tauri/runtime/`
+  - the staged runtime includes:
+    - static web entry assets
+    - deployed API runtime
+    - bundled Node runtime
+  - packaged shell clients now call the local Nest engine directly instead of depending on Next route handlers inside the packaged app
+  - Nest now enables explicit desktop-safe CORS for Tauri and local loopback origins
+- Packaged release proof now exists:
+  - `apps/desktop/src-tauri/target/release/orgumented-desktop.exe` started the bundled API runtime
+  - `http://127.0.0.1:3100/ready` returned HTTP `200`
+  - proof log: `logs/desktop-phase4-release.log`
 - The next live architectural priority is to keep moving runtime expectations into the shell:
-  - clarify packaged-runtime ownership beyond dev
-  - then reassess whether the remaining generic analysis/meta seam or the remaining page-shell modules should move next
+  - shrink or replace the remaining generic analysis/meta seam
+  - then tighten packaged-shell workflow proof beyond readiness-only smoke

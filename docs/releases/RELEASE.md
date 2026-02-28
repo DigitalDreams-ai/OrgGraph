@@ -1,7 +1,7 @@
 # Release Checklist
 
 ## Scope
-This checklist defines repeatable Windows desktop release steps for Orgumented.
+This release note template defines repeatable Windows desktop release evidence for Orgumented.
 
 ## Versioning
 - Create release tags as `vMAJOR.MINOR.PATCH` (example: `v0.5.0`).
@@ -14,24 +14,21 @@ This checklist defines repeatable Windows desktop release steps for Orgumented.
 4. `pnpm --filter web build`
 5. `pnpm desktop:info`
 6. `pnpm desktop:build`
-7. Run smoke checks: `./scripts/web-smoke.sh`
-8. Confirm `/metrics`, `/health`, `/ready`, `/api/health`, `/api/ready` are healthy.
+7. Launch packaged shell locally: `apps/desktop/src-tauri/target/release/orgumented-desktop.exe`
+8. Confirm packaged API readiness: `curl http://localhost:3100/ready`
+9. Capture one packaged-shell workflow proof and its log artifact.
 
-## Wave A Operator Baseline Evidence
-- Branch baseline: `wave-a`
-- Selector-first retrieve path is active; standard retrieve no longer depends on `package.xml`.
-- Real org-backed refresh baseline verified with:
-  - `WEB_SMOKE_USE_SF_PROJECT=1 ./scripts/web-smoke.sh`
-  - `GET /api/ready`
-- Verified ready payload:
-  - `checks.fixtures.sourcePath=/app/data/sf-project/force-app/main/default`
-  - `checks.db.nodeCount=7024`
-  - `checks.db.edgeCount=51754`
-- Operator failure messages for auth/session now include remediation for:
-  - missing `sf`
-  - missing `cci`
-  - alias not authenticated in `sf`
-  - alias not imported into `cci`
+## Current Runtime Evidence
+- Product boundary: Windows desktop app
+- Packaged runtime now includes:
+  - static embedded UI assets
+  - deployed API runtime
+  - bundled Node runtime
+- Minimum release evidence should include:
+  - `pnpm desktop:build` success
+  - packaged shell startup proof
+  - `/ready` returning `200`
+  - one operator workflow proof from the packaged shell
 
 ## Release Steps
 1. Merge approved PR into `main`.
@@ -45,7 +42,7 @@ This checklist defines repeatable Windows desktop release steps for Orgumented.
 ## Rollback
 1. Identify last known-good tag.
 2. Checkout that tag commit.
-3. Re-run smoke checks.
+3. Re-run packaged desktop verification.
 
 ## Branch Protection Recommendations (`main`)
 - Require PR before merge.

@@ -18,6 +18,7 @@ import {
   switchOrgSession
 } from './lib/org-client';
 import { getRefreshDiff, runRefresh } from './lib/refresh-client';
+import { runSecondaryQueryRequest, type SecondaryQueryKind } from './lib/secondary-client';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
 import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
 import { AnalyzeWorkspace, type AnalyzeMode } from './workspaces/analyze/analyze-workspace';
@@ -30,15 +31,6 @@ import type {
 } from './workspaces/connect/types';
 import { ProofsWorkspace } from './workspaces/proofs/proofs-workspace';
 import { useProofsWorkspace } from './workspaces/proofs/use-proofs-workspace';
-
-type QueryKind =
-  | 'perms'
-  | 'permsDiagnose'
-  | 'permsSystem'
-  | 'automation'
-  | 'impact'
-  | 'metaContext'
-  | 'metaAdapt';
 
 type OrgQueryKind =
   | 'orgConnect'
@@ -54,6 +46,7 @@ type OrgQueryKind =
   | 'metadataRetrieve';
 
 type RefreshQueryKind = 'refresh' | 'refreshDiff';
+type QueryKind = SecondaryQueryKind;
 
 type UiTab = 'ask' | 'connect' | 'browser' | 'refresh' | 'analyze' | 'proofs' | 'system';
 
@@ -247,29 +240,17 @@ export default function Page(): JSX.Element {
     }
   }
 
-  async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}): Promise<QueryResponse | null> {
+async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}): Promise<QueryResponse | null> {
     setLoading(true);
     setCopied(false);
     setErrorText('');
 
     try {
-      const res = await fetch('/api/query', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ kind, payload })
-      });
-
-      const text = await res.text();
-      let parsed: QueryResponse;
-      try {
-        parsed = JSON.parse(text) as QueryResponse;
-      } catch {
-        parsed = { ok: false, statusCode: res.status, error: { message: text } };
-      }
+      const parsed = await runSecondaryQueryRequest(kind, payload);
 
       presentResponse(parsed);
 
-      if (!res.ok || parsed.ok === false) {
+      if (parsed.ok === false) {
         setErrorText(resolveErrorMessage(parsed));
       }
       return parsed;

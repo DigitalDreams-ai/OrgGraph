@@ -13,8 +13,8 @@ Operational checklist for routine Orgumented upgrades and safe promotion.
 ## 2. Runtime Validation
 - [ ] Readiness check: `curl http://localhost:3100/ready`
 - [ ] Ingest summary check: `curl http://localhost:3100/ingest/latest`
-- [ ] Smoke check: `npm run phase7:smoke-live`
-- [ ] Regression check: `npm run phase7:regression`
+- [ ] Packaged shell startup check: `apps/desktop/src-tauri/target/release/orgumented-desktop.exe`
+- [ ] Capture one packaged-shell workflow proof and its log artifact
 
 ## 3. Promotion Safety
 - [ ] Dry-run promotion: `npm run phase8:promotion-dry-run`

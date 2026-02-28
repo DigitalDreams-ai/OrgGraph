@@ -1,4 +1,5 @@
 import type { QueryResponse } from './ask-client';
+import { isDesktopDirectApiMode, resolveDesktopApiUrl } from './runtime-mode';
 
 interface RefreshPayload {
   mode?: 'full' | 'incremental';
@@ -30,16 +31,19 @@ async function requestBoundary(path: string, init: RequestInit): Promise<QueryRe
 }
 
 export function runRefresh(payload: RefreshPayload): Promise<QueryResponse> {
-  return requestBoundary('/api/refresh', {
+  return requestBoundary(
+    isDesktopDirectApiMode() ? resolveDesktopApiUrl('/refresh') : '/api/refresh',
+    {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
-  });
+    }
+  );
 }
 
 export function getRefreshDiff(fromSnapshot: string, toSnapshot: string): Promise<QueryResponse> {
-  return requestBoundary(
-    `/api/refresh/diff/${encodeURIComponent(fromSnapshot)}/${encodeURIComponent(toSnapshot)}`,
-    { method: 'GET' }
-  );
+  const path = isDesktopDirectApiMode()
+    ? resolveDesktopApiUrl(`/refresh/diff/${encodeURIComponent(fromSnapshot)}/${encodeURIComponent(toSnapshot)}`)
+    : `/api/refresh/diff/${encodeURIComponent(fromSnapshot)}/${encodeURIComponent(toSnapshot)}`;
+  return requestBoundary(path, { method: 'GET' });
 }

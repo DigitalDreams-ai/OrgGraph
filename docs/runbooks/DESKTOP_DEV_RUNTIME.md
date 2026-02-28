@@ -74,6 +74,29 @@ Observed proof in current repo state:
 - Tauri now launches the local runtime through `node ./scripts/dev-runtime.mjs`
 - the embedded UI no longer depends on `next dev` for the primary Windows proof path
 
+## Build Packaged Desktop Runtime
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:build
+```
+
+Current packaged build behavior:
+- `beforeBuildCommand` stages a packaged runtime under `apps/desktop/src-tauri/runtime/`
+- the staged runtime includes:
+  - static web entry assets
+  - deployed API runtime
+  - bundled `node.exe`
+- the package build emits:
+  - `apps/desktop/src-tauri/target/release/orgumented-desktop.exe`
+  - `apps/desktop/src-tauri/target/release/bundle/msi/Orgumented_0.1.0_x64_en-US.msi`
+  - `apps/desktop/src-tauri/target/release/bundle/nsis/Orgumented_0.1.0_x64-setup.exe`
+
+Observed packaged proof in current repo state:
+- `orgumented-desktop.exe` started the bundled API runtime
+- `http://127.0.0.1:3100/ready` returned `200`
+- proof log: `logs/desktop-phase4-release.log`
+
 ## Local Org Auth
 
 Authenticate locally, not in Docker:

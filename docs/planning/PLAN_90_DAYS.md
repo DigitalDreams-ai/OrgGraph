@@ -143,9 +143,17 @@ Progress note:
   - in desktop dev, Tauri now owns the API child process lifecycle
   - `apps/desktop/scripts/dev-runtime.mjs` now prepares the API build and starts only the web runtime
   - desktop dev proof showed the Tauri-launched API child reaching `/ready` with HTTP `200`
+- Slice 2 completed:
+  - `pnpm desktop:build` now stages a packaged runtime at `apps/desktop/src-tauri/runtime/`
+  - the packaged runtime bundles:
+    - static web entry assets
+    - deployed API runtime
+    - bundled Node runtime
+  - packaged-shell clients now talk directly to the local Nest engine for Ask, Org, Refresh, and secondary analysis/meta flows
+  - packaged release smoke showed `orgumented-desktop.exe` starting the bundled API runtime and `/ready` returning HTTP `200`
 - Next narrow step:
-  - define how packaged desktop runtime ownership should work beyond dev
-  - then decide whether the next cleanup target is the remaining analysis/meta query seam or the remaining page-shell modules
+  - decide whether to remove the remaining dev-only Next adapter seam entirely
+  - then expand packaged-shell verification beyond readiness smoke into live Ask and org-session proof
 
 ## Phase 5: Modular UI Reconstruction
 
@@ -213,6 +221,13 @@ Progress note:
   - Ask works,
   - proof/replay works
 
+### Checkpoint E
+- packaged release proof on Windows:
+  - `pnpm desktop:build` stages the bundled runtime successfully
+  - `target/release/orgumented-desktop.exe` launches the bundled API runtime
+  - local `/ready` returns `200`
+  - at least one packaged-shell workflow succeeds without Next route handlers
+
 ## Milestones
 
 ### Day 0-14
@@ -236,6 +251,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: define and implement the packaged-runtime ownership story now that dev-time API ownership lives in Rust.
+- Preferred next step: reduce or remove the remaining generic analysis/meta adapter seam now that packaged-shell direct API mode exists.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

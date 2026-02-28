@@ -378,3 +378,51 @@ Branch: `dna-foundation`
 - Tauri now owns one concrete runtime responsibility instead of relying entirely on external script orchestration.
 - The shell-managed API child proved reachable in desktop dev.
 - The next runtime question is how packaged desktop ownership should work beyond dev.
+
+## Entry 11: Phase 4 Packaged Runtime Ownership Slice 2
+
+### Change
+- Added packaged-runtime staging in `apps/desktop/scripts/prepare-packaged-runtime.mjs`.
+- Updated `apps/desktop/src-tauri/tauri.conf.json` so `pnpm desktop:build` now:
+  - stages a static web entry under `apps/desktop/src-tauri/runtime/web`
+  - deploys the API runtime under `apps/desktop/src-tauri/runtime/api`
+  - bundles a local Node runtime under `apps/desktop/src-tauri/runtime/node`
+- Extended `apps/desktop/src-tauri/src/lib.rs` so packaged Tauri builds start the bundled API runtime instead of assuming an external service.
+- Added desktop direct-mode clients under `apps/web/app/lib/` so the packaged shell calls the local Nest engine directly for:
+  - Ask
+  - Org
+  - Refresh
+  - remaining secondary analysis/meta requests
+- Enabled explicit desktop-safe CORS in `apps/api/src/main.ts` for Tauri and local loopback origins.
+- Kept the runtime manifest deterministic by recording Node version instead of a wall-clock timestamp.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+3. `pnpm desktop:build`
+- Result: passed
+- Proof:
+  - `Running beforeBuildCommand node ./scripts/prepare-packaged-runtime.mjs`
+  - staged runtime present under `apps/desktop/src-tauri/runtime/`
+  - `Finished 2 bundles`
+
+4. packaged release smoke with log capture
+- Result: passed
+- Proof:
+  - `logs/desktop-phase4-release.log` captured bundled Nest startup
+  - `Nest application successfully started`
+  - `http://127.0.0.1:3100/ready` returned `200`
+  - `orgumented-desktop.exe` and bundled `node.exe` were both observed and then shut down cleanly
+
+### Outcome
+- Packaged desktop builds no longer depend on a live Next server or externally managed API runtime.
+- The packaged shell now has a concrete local-runtime ownership story that matches the desktop product boundary better than the old browser-style adapter model.
+- The next highest-value move is to reduce or remove the remaining dev-only Next adapter seam and then prove a real packaged Ask or org-session workflow.

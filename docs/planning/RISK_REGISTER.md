@@ -43,6 +43,10 @@ Branch: `dna-foundation`
 - Impact:
   - desktop app may remain a thin wrapper over externally managed services,
   - packaging confidence stays lower than desired.
+- Current signal:
+  - dev-time API ownership is now shell-owned,
+  - packaged builds now stage a bundled API runtime and bundled Node runtime,
+  - residual risk is that packaged workflow proof is still narrower than full operator coverage.
 - Mitigation:
   - explicitly plan runtime ownership work after contract hardening,
   - keep Windows packaging verification mandatory.
@@ -86,6 +90,9 @@ Branch: `dna-foundation`
   - `apps/web/app/api/health/route.ts`
 - Impact:
   - product behaves like a wrapped web console instead of a coherent desktop app.
+- Current signal:
+  - Ask, Org, Refresh, and packaged-shell secondary flows now have direct typed or direct-engine boundaries,
+  - residual browser-era seam is mainly the remaining dev-only Next adapter layer.
 - Mitigation:
   - delete generic browser-era routes incrementally as typed boundaries replace them.
 - Pivot trigger:

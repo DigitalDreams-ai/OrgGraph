@@ -1,3 +1,5 @@
+import { isDesktopDirectApiMode, resolveDesktopApiUrl } from './runtime-mode';
+
 export interface QueryResponse {
   ok?: boolean;
   statusCode?: number;
@@ -44,7 +46,7 @@ async function requestBoundary(path: string, init: RequestInit): Promise<QueryRe
 }
 
 export function runAskRequest(payload: AskRequestPayload): Promise<QueryResponse> {
-  return requestBoundary('/api/ask', {
+  return requestBoundary(isDesktopDirectApiMode() ? resolveDesktopApiUrl('/ask') : '/api/ask', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
@@ -52,19 +54,25 @@ export function runAskRequest(payload: AskRequestPayload): Promise<QueryResponse
 }
 
 export function listAskProofsRecent(limit: number): Promise<QueryResponse> {
-  return requestBoundary(`/api/ask/proofs/recent?limit=${encodeURIComponent(String(limit))}`, {
+  const path = isDesktopDirectApiMode()
+    ? resolveDesktopApiUrl(`/ask/proofs/recent?limit=${encodeURIComponent(String(limit))}`)
+    : `/api/ask/proofs/recent?limit=${encodeURIComponent(String(limit))}`;
+  return requestBoundary(path, {
     method: 'GET'
   });
 }
 
 export function getAskProof(proofId: string): Promise<QueryResponse> {
-  return requestBoundary(`/api/ask/proof/${encodeURIComponent(proofId)}`, {
+  const path = isDesktopDirectApiMode()
+    ? resolveDesktopApiUrl(`/ask/proof/${encodeURIComponent(proofId)}`)
+    : `/api/ask/proof/${encodeURIComponent(proofId)}`;
+  return requestBoundary(path, {
     method: 'GET'
   });
 }
 
 export function replayAskProof(payload: AskReplayPayload): Promise<QueryResponse> {
-  return requestBoundary('/api/ask/replay', {
+  return requestBoundary(isDesktopDirectApiMode() ? resolveDesktopApiUrl('/ask/replay') : '/api/ask/replay', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
@@ -72,7 +80,10 @@ export function replayAskProof(payload: AskReplayPayload): Promise<QueryResponse
 }
 
 export function exportAskMetrics(): Promise<QueryResponse> {
-  return requestBoundary('/api/ask/metrics', {
+  return requestBoundary(
+    isDesktopDirectApiMode() ? resolveDesktopApiUrl('/ask/metrics/export') : '/api/ask/metrics',
+    {
     method: 'GET'
-  });
+    }
+  );
 }

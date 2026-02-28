@@ -66,3 +66,4 @@ docs/planning/archive/
 .cargo/
 apps/desktop/src-tauri/target/
 apps/desktop/src-tauri/gen/
+apps/desktop/src-tauri/runtime/

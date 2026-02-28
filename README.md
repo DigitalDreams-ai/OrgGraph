@@ -46,6 +46,18 @@ Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:dev
 ```
 
+Package the standalone desktop runtime:
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:build
+```
+
+Current packaged build behavior:
+- stages static UI assets under `apps/desktop/src-tauri/runtime/web`
+- stages a deployed API runtime under `apps/desktop/src-tauri/runtime/api`
+- bundles `node.exe` for the packaged shell to supervise locally
+
 See [DESKTOP_DEV_RUNTIME.md](./docs/runbooks/DESKTOP_DEV_RUNTIME.md).
 
 Product boundary:
@@ -132,7 +144,7 @@ ORGUMENTED_WEB_LOG_ENABLED=true
 ## Troubleshooting
 
 1. Health endpoints: `curl http://localhost:3100/health` and `curl http://localhost:3100/ready`
-2. Web readiness: `curl http://localhost:3101/api/ready`
+2. Packaged shell readiness: run `apps/desktop/src-tauri/target/release/orgumented-desktop.exe` and then `curl http://localhost:3100/ready`
 3. Metrics snapshot: `curl http://localhost:3100/metrics`
 4. If Tauri readiness fails, re-run `pnpm desktop:info` and confirm `cargo` and `rustc` resolve in the current shell
 

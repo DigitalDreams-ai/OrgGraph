@@ -21,6 +21,16 @@ Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:dev
 ```
 
+Packaged desktop build:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:build
+```
+
+Packaged runtime expectation:
+- `desktop:build` stages a bundled runtime under `apps/desktop/src-tauri/runtime/`
+- release shell launches with bundled static UI assets and bundled API runtime
+
 Desktop launch expectation:
 - app opens on `Ask`
 - use `Org Sessions` to connect/switch aliases
@@ -138,6 +148,11 @@ curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -
 
 # Restart the standalone desktop shell after UI changes
 pnpm desktop:dev
+
+# Verify packaged shell runtime locally
+pnpm desktop:build
+apps/desktop/src-tauri/target/release/orgumented-desktop.exe
+curl http://localhost:3100/ready
 ```
 
 ## Project Memory MCP
