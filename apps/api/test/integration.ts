@@ -677,6 +677,45 @@ async function run(): Promise<void> {
     assert.equal(typeof askPerms.proof.replayToken, 'string');
     assert.equal(typeof askPerms.proof.snapshotId, 'string');
 
+    const askPermsRepeatRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: 'Can jane@example.com edit object Case?' })
+    });
+    assert.equal(askPermsRepeatRes.status, 201, 'repeat ask perms should return 201');
+    const askPermsRepeat = (await askPermsRepeatRes.json()) as {
+      deterministicAnswer: string;
+      trustLevel: string;
+      policy: { policyId: string };
+      proof: { proofId: string; replayToken: string; snapshotId: string };
+    };
+    assert.equal(
+      askPermsRepeat.deterministicAnswer,
+      askPerms.deterministicAnswer,
+      'repeat ask should preserve deterministic answer'
+    );
+    assert.equal(askPermsRepeat.trustLevel, askPerms.trustLevel, 'repeat ask should preserve trust level');
+    assert.equal(
+      askPermsRepeat.policy.policyId,
+      askPerms.policy.policyId,
+      'repeat ask should preserve policy identity'
+    );
+    assert.equal(
+      askPermsRepeat.proof.snapshotId,
+      askPerms.proof.snapshotId,
+      'repeat ask should preserve snapshot identity'
+    );
+    assert.equal(
+      askPermsRepeat.proof.proofId,
+      askPerms.proof.proofId,
+      'repeat ask should preserve proof identity'
+    );
+    assert.equal(
+      askPermsRepeat.proof.replayToken,
+      askPerms.proof.replayToken,
+      'repeat ask should preserve replay token'
+    );
+
     const askAutomationRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

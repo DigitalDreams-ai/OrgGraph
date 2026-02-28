@@ -53,7 +53,7 @@ export class AskService {
   ) {}
 
   async ask(input: AskRequest): Promise<AskResponse> {
-    const { response, proof } = await this.execute(input, true);
+    const { response, proof } = await this.execute(input);
     this.proofStore.append(proof);
     this.metricsStore.append({
       recordedAt: new Date().toISOString(),
@@ -212,7 +212,7 @@ export class AskService {
       throw new NotFoundException(`proof not found: ${lookupValue}`);
     }
 
-    const replayRun = await this.execute(proof.request, false);
+    const replayRun = await this.execute(proof.request);
     const replayed = replayRun.response;
     const replayedCorePayloadJson = this.buildCorePayloadJson(replayed);
     const corePayloadMatched = replayedCorePayloadJson === proof.responseSummary.corePayloadJson;
@@ -550,7 +550,7 @@ export class AskService {
     return { permission: 0.4, release: 0.4, complexity: 0.2 };
   }
 
-  private async execute(input: AskRequest, includeCreatedAtInProof: boolean): Promise<{
+  private async execute(input: AskRequest): Promise<{
     response: AskResponse;
     proof: AskProofArtifact;
   }> {
@@ -895,7 +895,7 @@ export class AskService {
     ];
 
     const proofSeed = `${snapshotId}|${policy.policyId}|${input.query}|${deterministicAnswer}|${mode}`;
-    const proofId = stableId('proof', proofSeed, includeCreatedAtInProof ? new Date().toISOString() : '');
+    const proofId = stableId('proof', proofSeed);
     const replayToken = stableId('trace', proofId, snapshotId, policy.policyId);
     const corePayloadJson = this.buildCorePayloadJson({
       deterministicAnswer,

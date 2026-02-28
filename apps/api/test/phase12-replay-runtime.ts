@@ -80,12 +80,29 @@ async function run(): Promise<void> {
     });
     assert.equal(fullAskRes.status, 201);
     const fullAskBody = (await fullAskRes.json()) as {
+      deterministicAnswer: string;
       trustLevel: string;
       proof: { proofId: string; replayToken: string; traceLevel: string; rejectedBranches: Array<{ reasonCode: string }> };
     };
     assert.equal(fullAskBody.proof.traceLevel, 'full');
     assert.equal(fullAskBody.trustLevel, 'refused');
     assert.equal(fullAskBody.proof.rejectedBranches.some((branch) => branch.reasonCode === 'NO_DETERMINISTIC_INTENT'), true);
+
+    const repeatedFullAskRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: 'hello world', traceLevel: 'full', mode: 'deterministic' })
+    });
+    assert.equal(repeatedFullAskRes.status, 201);
+    const repeatedFullAskBody = (await repeatedFullAskRes.json()) as {
+      deterministicAnswer: string;
+      trustLevel: string;
+      proof: { proofId: string; replayToken: string };
+    };
+    assert.equal(repeatedFullAskBody.deterministicAnswer, fullAskBody.deterministicAnswer);
+    assert.equal(repeatedFullAskBody.trustLevel, fullAskBody.trustLevel);
+    assert.equal(repeatedFullAskBody.proof.proofId, fullAskBody.proof.proofId);
+    assert.equal(repeatedFullAskBody.proof.replayToken, fullAskBody.proof.replayToken);
 
     const fullProofRes = await fetch(`${base}/ask/proof/${fullAskBody.proof.proofId}`);
     assert.equal(fullProofRes.status, 200);
