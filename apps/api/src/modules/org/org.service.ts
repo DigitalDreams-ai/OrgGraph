@@ -111,16 +111,16 @@ export class OrgService {
       issues.push({
         code: 'SF_CLI_MISSING',
         severity: 'error',
-        message: 'sf CLI is not available in API runtime.',
-        remediation: 'Install sf CLI in API runtime/image and restart.'
+        message: 'sf CLI is not available in local runtime.',
+        remediation: 'Install sf CLI locally and restart Orgumented.'
       });
     }
     if (cciProbe.exitCode !== 0) {
       issues.push({
         code: 'CCI_MISSING',
         severity: 'error',
-        message: 'cci is not available in API runtime.',
-        remediation: 'Install cci in API runtime/image and restart.'
+        message: 'cci is not available in local runtime.',
+        remediation: 'Install cci locally and restart Orgumented.'
       });
     } else if (!cciVersionPinned) {
       issues.push({

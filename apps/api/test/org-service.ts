@@ -177,6 +177,19 @@ async function run(): Promise<void> {
     assert.equal(aliasValidation.cciAvailable, true);
     assert.equal(aliasValidation.username, 'user@example.com');
     assert.equal(aliasValidation.orgId, '00Dxx0000000001');
+    assert.ok(aliasValidation.issues.some((issue) => issue.code === 'SESSION_DISCONNECTED'));
+
+    const connected = await service.connectSession({ alias: 'orgumented-sandbox' });
+    assert.equal(connected.status, 'connected');
+    assert.equal(connected.activeAlias, 'orgumented-sandbox');
+
+    const switched = await service.switchSessionAlias('orgumented-sandbox');
+    assert.equal(switched.status, 'connected');
+    assert.equal(switched.activeAlias, 'orgumented-sandbox');
+
+    const disconnected = service.disconnectSession();
+    assert.equal(disconnected.status, 'disconnected');
+    assert.equal(disconnected.activeAlias, 'orgumented-sandbox');
 
     const result = await service.retrieveAndRefresh({
       selections: [{ type: 'CustomObject', members: ['Account'] }]
