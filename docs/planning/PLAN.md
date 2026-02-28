@@ -209,5 +209,9 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - org retrieve
   - metadata catalog/members/retrieve
 - Refresh now also has a dedicated typed boundary and no longer relies on the generic `/api/query` multiplexer.
-- The next live architectural priority is runtime ownership in Tauri.
-  - The remaining generic seam is now narrowed to secondary analysis/meta flows rather than core Ask, Org, or Refresh paths.
+- Phase 4 runtime ownership hardening is now in progress.
+  - In desktop dev, the Tauri shell now owns the API child process lifecycle.
+  - `apps/desktop/scripts/dev-runtime.mjs` now prepares the API build and starts only the web runtime.
+- The next live architectural priority is to keep moving runtime expectations into the shell:
+  - clarify packaged-runtime ownership beyond dev
+  - then reassess whether the remaining generic analysis/meta seam or the remaining page-shell modules should move next

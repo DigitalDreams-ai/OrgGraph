@@ -341,3 +341,40 @@ Branch: `dna-foundation`
 - The semantic rebuild path no longer depends on the generic query multiplexer.
 - Ask, Org, and Refresh now all use typed boundary routes in the embedded desktop UI layer.
 - The next highest-value move is Phase 4 runtime ownership hardening in Tauri.
+
+## Entry 10: Phase 4 Runtime Ownership Slice 1
+
+### Change
+- Moved desktop dev API process ownership into the Tauri shell in `apps/desktop/src-tauri/src/lib.rs`.
+- Updated `apps/desktop/scripts/dev-runtime.mjs` so it prepares the API build and starts only the web runtime instead of supervising both API and web.
+- Kept the change intentionally narrow:
+  - desktop dev API lifecycle is now shell-owned
+  - packaged-runtime ownership beyond dev remains a follow-up slice
+
+### Verification
+1. `pnpm desktop:build`
+- Result: passed
+- Proof:
+  - `Built application at: ...\\apps\\desktop\\src-tauri\\target\\release\\orgumented-desktop.exe`
+  - `Finished 2 bundles`
+
+2. `pnpm desktop:dev` smoke with log capture
+- Result: passed
+- Proof:
+  - `logs/desktop-phase4-dev.log` captured:
+    - `[desktop-runtime] preparing desktop-managed api on 127.0.0.1:3100 and starting web on 127.0.0.1:3001`
+    - `Running target\\debug\\orgumented-desktop.exe`
+    - `Nest application successfully started`
+  - `http://127.0.0.1:3100/ready` returned `200` during the smoke
+
+3. Existing contract regression suite
+- Commands:
+  - `pnpm --filter web typecheck`
+  - `pnpm --filter web build`
+  - `pnpm --filter api test`
+- Result: passed
+
+### Outcome
+- Tauri now owns one concrete runtime responsibility instead of relying entirely on external script orchestration.
+- The shell-managed API child proved reachable in desktop dev.
+- The next runtime question is how packaged desktop ownership should work beyond dev.

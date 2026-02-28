@@ -125,17 +125,13 @@ process.on('SIGINT', () => shutdown(0));
 process.on('SIGTERM', () => shutdown(0));
 
 process.stdout.write(
-  `[desktop-runtime] starting api on ${hostname}:${apiPort} and web on ${hostname}:${webPort} (mode=${webMode})\n`
+  `[desktop-runtime] preparing desktop-managed api on ${hostname}:${apiPort} and starting web on ${hostname}:${webPort} (mode=${webMode})\n`
 );
 
 runSetupStep('api-build', pnpmCommand, ['--filter', 'api', 'build']);
 if (webMode === 'production' && (rebuildWeb || !existsSync(standaloneWebServer))) {
   runSetupStep('web-build', pnpmCommand, ['--filter', 'web', 'build']);
 }
-
-startChild('api', pnpmCommand, ['--filter', 'api', 'start'], {
-  PORT: apiPort
-});
 
 startChild(
   'web',

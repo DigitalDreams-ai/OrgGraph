@@ -121,7 +121,7 @@ Progress note:
 
 ## Phase 4: Desktop Runtime Ownership
 
-Status: next priority after the typed Ask, Org, and Refresh boundaries
+Status: in progress on February 28, 2026
 
 ### Scope
 - Move runtime ownership closer to the Tauri shell.
@@ -137,6 +137,15 @@ Status: next priority after the typed Ask, Org, and Refresh boundaries
 - Desktop shell owns lifecycle expectations clearly.
 - Packaged desktop flow can start required local services or clearly supervise them.
 - Windows desktop validation remains green.
+
+Progress note:
+- Slice 1 completed:
+  - in desktop dev, Tauri now owns the API child process lifecycle
+  - `apps/desktop/scripts/dev-runtime.mjs` now prepares the API build and starts only the web runtime
+  - desktop dev proof showed the Tauri-launched API child reaching `/ready` with HTTP `200`
+- Next narrow step:
+  - define how packaged desktop runtime ownership should work beyond dev
+  - then decide whether the next cleanup target is the remaining analysis/meta query seam or the remaining page-shell modules
 
 ## Phase 5: Modular UI Reconstruction
 
@@ -226,7 +235,7 @@ Status: next priority after the typed Ask, Org, and Refresh boundaries
 4. If Windows packaging regresses for two consecutive attempts, stop feature work and stabilize desktop runtime ownership first.
 
 ## Current Next Step
-- Start Phase 4 runtime ownership hardening now that Ask, Org, and Refresh no longer rely on the generic query multiplexer.
-- Preferred next step: reduce dependence on script-managed runtime orchestration and move lifecycle ownership closer to the Tauri shell.
+- Continue Phase 4 runtime ownership hardening from the Tauri shell.
+- Preferred next step: define and implement the packaged-runtime ownership story now that dev-time API ownership lives in Rust.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.
