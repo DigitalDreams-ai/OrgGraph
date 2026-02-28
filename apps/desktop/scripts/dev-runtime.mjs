@@ -6,15 +6,33 @@ const workspaceRoot = new URL('../../../', import.meta.url);
 const apiPort = process.env.ORGUMENTED_DESKTOP_API_PORT || '3100';
 const webPort = process.env.ORGUMENTED_DESKTOP_WEB_PORT || '3001';
 const hostname = process.env.ORGUMENTED_DESKTOP_HOST || '127.0.0.1';
+const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+
+function resolveCommand(command, args) {
+  if (process.platform !== 'win32') {
+    return { command, args, shell: false };
+  }
+
+  if (command.toLowerCase().endsWith('.cmd')) {
+    return {
+      command: 'cmd.exe',
+      args: ['/d', '/s', '/c', command, ...args],
+      shell: false
+    };
+  }
+
+  return { command, args, shell: false };
+}
 
 const children = [];
 let shuttingDown = false;
 
 function startChild(name, command, args, env = {}) {
-  const child = spawn(command, args, {
+  const resolved = resolveCommand(command, args);
+  const child = spawn(resolved.command, resolved.args, {
     cwd: workspaceRoot,
     env: { ...process.env, ...env },
-    shell: false,
+    shell: resolved.shell,
     stdio: ['ignore', 'pipe', 'pipe']
   });
 
@@ -31,12 +49,17 @@ function startChild(name, command, args, env = {}) {
 }
 
 function runSetupStep(name, command, args, env = {}) {
-  const result = spawnSync(command, args, {
+  const resolved = resolveCommand(command, args);
+  const result = spawnSync(resolved.command, resolved.args, {
     cwd: workspaceRoot,
     env: { ...process.env, ...env },
-    shell: false,
+    shell: resolved.shell,
     stdio: 'inherit'
   });
+  if (result.error) {
+    process.stderr.write(`[${name}] setup failed before launch: ${result.error.message}\n`);
+    process.exit(result.status ?? 1);
+  }
   if (result.status !== 0) {
     process.stderr.write(`[${name}] setup failed with code=${result.status ?? 1}\n`);
     process.exit(result.status ?? 1);
@@ -63,10 +86,10 @@ process.stdout.write(
   `[desktop-runtime] starting api on ${hostname}:${apiPort} and web on ${hostname}:${webPort}\n`
 );
 
-runSetupStep('api-build', 'pnpm', ['--filter', 'api', 'build']);
+runSetupStep('api-build', pnpmCommand, ['--filter', 'api', 'build']);
 
-startChild('api', 'pnpm', ['--filter', 'api', 'start'], {
+startChild('api', pnpmCommand, ['--filter', 'api', 'start'], {
   PORT: apiPort
 });
 
-startChild('web', 'pnpm', ['--filter', 'web', 'exec', 'next', 'dev', '--hostname', hostname, '--port', webPort], {});
+startChild('web', pnpmCommand, ['--filter', 'web', 'dev', '--', '--hostname', hostname, '--port', webPort], {});
