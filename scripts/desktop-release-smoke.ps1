@@ -21,31 +21,74 @@ $resultArtifact = Join-Path $logsDir 'desktop-release-smoke-result.json'
 function Stop-PackagedProcesses {
   param(
     [int]$Attempts = 6,
-    [int]$DelayMilliseconds = 500
+    [int]$DelayMilliseconds = 500,
+    [int]$RuntimePort = 3100
   )
 
   for ($attempt = 0; $attempt -lt $Attempts; $attempt += 1) {
-    $targets = Get-Process -Name orgumented-desktop,node -ErrorAction SilentlyContinue |
+    $processTargets = Get-Process -Name orgumented-desktop,node -ErrorAction SilentlyContinue |
       Where-Object {
         $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
         $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\runtime*"
       }
-    if (-not $targets) {
+    $portTarget = Get-NetTCPConnection -LocalPort $RuntimePort -State Listen -ErrorAction SilentlyContinue |
+      Select-Object -ExpandProperty OwningProcess -Unique
+    $targetIds = @(
+      $processTargets | Select-Object -ExpandProperty Id
+      $portTarget
+    ) | Where-Object { $null -ne $_ } | Sort-Object -Unique
+
+    if (-not $targetIds) {
       return
     }
 
-    $targets | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
+    foreach ($targetId in $targetIds) {
+      Stop-Process -Id $targetId -Force -ErrorAction SilentlyContinue
+    }
     Start-Sleep -Milliseconds $DelayMilliseconds
   }
 
-  $remaining = Get-Process -Name orgumented-desktop,node -ErrorAction SilentlyContinue |
+  $remainingProcesses = Get-Process -Name orgumented-desktop,node -ErrorAction SilentlyContinue |
     Where-Object {
       $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
       $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\runtime*"
     }
-  if ($remaining) {
+  $remainingPort = Get-NetTCPConnection -LocalPort $RuntimePort -State Listen -ErrorAction SilentlyContinue |
+    Select-Object -First 1
+  if ($remainingProcesses -or $remainingPort) {
     throw "Failed to stop packaged desktop runtime processes before/after smoke."
   }
+}
+
+function Test-ListeningPort {
+  param(
+    [int]$LocalPort
+  )
+
+  return $null -ne (Get-NetTCPConnection -LocalPort $LocalPort -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1)
+}
+
+function Wait-PortReleased {
+  param(
+    [int]$LocalPort,
+    [int]$Attempts = 20,
+    [int]$DelayMilliseconds = 500
+  )
+
+  for ($attempt = 0; $attempt -lt $Attempts; $attempt += 1) {
+    if (-not (Test-ListeningPort -LocalPort $LocalPort)) {
+      return
+    }
+
+    Start-Sleep -Milliseconds $DelayMilliseconds
+  }
+
+  $listener = Get-NetTCPConnection -LocalPort $LocalPort -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+  if ($listener) {
+    throw "Port $LocalPort is still in use before packaged smoke launch (pid=$($listener.OwningProcess))."
+  }
+
+  throw "Port $LocalPort did not release before packaged smoke launch."
 }
 
 function Invoke-JsonGet([string]$Url, [string]$ArtifactPath) {
@@ -140,6 +183,7 @@ $sessionSwitchAlias = $null
 
 try {
   Stop-PackagedProcesses
+  Wait-PortReleased -LocalPort 3100
 
   $desktopProcess = Start-Process -FilePath $exePath -WorkingDirectory (Split-Path $exePath) -RedirectStandardOutput $stdoutLog -RedirectStandardError $stderrLog -PassThru
 

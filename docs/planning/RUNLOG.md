@@ -1106,3 +1106,33 @@ Branch: `dna-foundation`
 ### Outcome
 - The packaged API payload is now down to the actual bundled runtime artifact plus native dependencies.
 - Further packaged-runtime pruning should now be treated as optional, not a standing architectural requirement.
+
+## Entry 31: Harden Packaged Smoke Port Cleanup
+
+### Change
+- Updated `scripts/desktop-release-smoke.ps1` so packaged smoke now:
+  - kills any leftover packaged desktop/runtime processes as before
+  - also kills any process still listening on port `3100`
+  - waits for port `3100` to be free before launching the packaged shell
+- This hardens the packaged verification harness against the transient `EADDRINUSE` condition that appeared during repeated smoke runs.
+
+### Verification
+1. `$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH='1'; pnpm desktop:smoke:release`
+- Result: passed
+- Proof:
+  - `status=passed`
+  - `sessionConnectStatus=verified`
+  - `sessionSwitchStatus=verified`
+  - `sessionRestoreStatus=restored-alias`
+
+2. second consecutive `$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH='1'; pnpm desktop:smoke:release`
+- Result: passed
+- Proof:
+  - `status=passed`
+  - `readyStatus=ready`
+  - deterministic `askProofId=proof_dd7bcb4c6e249d0ebae058a6`
+  - no repeated `EADDRINUSE` failure on the immediate rerun
+
+### Outcome
+- The packaged smoke harness is now more deterministic under repeated local verification on Windows.
+- Further Phase 4 work should be justified by architectural need, not by cleanup gaps in the current packaged proof path.

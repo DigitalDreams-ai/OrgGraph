@@ -191,6 +191,9 @@ Progress note:
   - packaged API staging no longer keeps `runtime/api/package.json`
   - the packaged API root now contains only `main.cjs` plus native runtime dependencies
   - packaged build, packaged release smoke, and the full API suite remained green after that removal
+- Slice 11 completed:
+  - `scripts/desktop-release-smoke.ps1` now kills any leftover listener on port `3100` before launch and waits for the port to release
+  - two consecutive packaged smoke runs passed with attach, switch, and restore verification enabled
 - Next narrow step:
   - reassess whether any additional packaged-runtime pruning still buys enough to justify another slice
   - stop if the remaining potential wins are mostly cosmetic rather than architectural

@@ -133,6 +133,7 @@ Current packaged smoke proof:
 - alias inventory is captured from `/org/session/aliases`
 - when local aliases are available, the smoke verifies `POST /org/session/connect` and restores the original session state before shutdown
 - cleanup now retries until packaged `orgumented-desktop.exe` and bundled `node.exe` are actually gone
+- the smoke also forces port `3100` clear before launch, so repeated packaged verification runs do not fail on a stale listener
 
 Optional deeper packaged auth proof:
 

@@ -269,6 +269,7 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - the packaged runtime keeps only the native `better-sqlite3` dependency set (`better-sqlite3`, `bindings`, `file-uri-to-path`)
   - packaged build, packaged release smoke, and the full API suite stayed green after switching away from the deployed `dist/` tree
   - `runtime/api/package.json` is no longer staged; the packaged API root now contains only `main.cjs` plus native runtime dependencies
+  - `scripts/desktop-release-smoke.ps1` now kills any leftover listener on port `3100` before launch and waits for the port to be free, so repeated packaged smoke runs no longer depend on timing luck
 - Phase 5 modular UI reconstruction is now moving again:
   - `Org Browser` rendering is no longer inlined inside `apps/web/app/page.tsx`
   - browser types and rendering now live under `apps/web/app/workspaces/browser/`
