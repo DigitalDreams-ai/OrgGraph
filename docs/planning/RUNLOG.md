@@ -156,3 +156,66 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns the Proofs/History workspace rendering or proof-history action lifecycle.
 - Both Ask and Proofs are now isolated modules inside the embedded desktop UI layer.
 - The next cleanup target is the remaining page-level coupling for Connect or Analyze.
+
+## Entry 5: Phase 2 Connect Workspace Extraction
+
+### Change
+- Extracted the Connect workspace from `apps/web/app/page.tsx` into:
+  - `apps/web/app/workspaces/connect/connect-workspace.tsx`
+  - `apps/web/app/workspaces/connect/types.ts`
+- Moved Org Session rendering, runtime command guidance, alias inventory, and operator actions behind a dedicated Connect workspace component.
+- Kept the page shell responsible only for org-session state, transport dispatch, and tab composition so the slice stays presentation-only.
+- Reused the existing `runQuery` org/session transport without widening scope into the org boundary cleanup phase.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - typed Ask routes and the narrowed query boundary remained present in the app build output
+
+3. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+### Outcome
+- `page.tsx` no longer owns the Connect workspace rendering tree or the Org Sessions action layout.
+- Ask, Proofs, and Connect are now isolated UI modules inside the desktop shell page.
+- The next cleanup target is Analyze, which still owns substantial page-level workflow state.
+
+## Entry 6: Phase 2 Analyze Workspace Extraction
+
+### Change
+- Extracted the Analyze workspace from `apps/web/app/page.tsx` into:
+  - `apps/web/app/workspaces/analyze/analyze-workspace.tsx`
+- Moved Analyze sub-tab rendering, form controls, and action layout behind a dedicated Analyze workspace component.
+- Kept the page shell responsible only for analysis form state and the existing `runQuery` transport calls so the slice stays presentation-only.
+- Preserved the existing analysis payloads for permissions, automation, impact, and system permission checks without changing engine semantics.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - Ask routes, `/api/query`, and readiness routes remained present in the app build output
+
+3. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+### Outcome
+- `page.tsx` no longer owns the Analyze workspace rendering tree or action layout.
+- Ask, Proofs, Connect, and Analyze are now isolated modules inside the desktop shell page.
+- The next architectural decision is whether to keep shrinking `page.tsx` through Browser/Refresh extraction or pivot into Phase 3 org-session boundary cleanup.

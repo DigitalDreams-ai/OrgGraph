@@ -6,6 +6,14 @@ import {
 } from './lib/ask-client';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
 import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
+import { AnalyzeWorkspace, type AnalyzeMode } from './workspaces/analyze/analyze-workspace';
+import { ConnectWorkspace } from './workspaces/connect/connect-workspace';
+import type {
+  OrgPreflightPayload,
+  OrgSessionAliasesPayload,
+  OrgSessionPayload,
+  OrgStatusPayload
+} from './workspaces/connect/types';
 import { ProofsWorkspace } from './workspaces/proofs/proofs-workspace';
 import { useProofsWorkspace } from './workspaces/proofs/use-proofs-workspace';
 
@@ -32,7 +40,6 @@ type QueryKind =
   | 'metaAdapt';
 
 type UiTab = 'ask' | 'connect' | 'browser' | 'refresh' | 'analyze' | 'proofs' | 'system';
-type AnalyzeMode = 'perms' | 'automation' | 'impact' | 'system';
 
 type MetadataCatalogType = { type: string; memberCount: number };
 type MetadataMember = { name: string };
@@ -52,59 +59,6 @@ type MetadataMembersPayload = {
   totalMembers: number;
   members: MetadataMember[];
   warnings?: string[];
-};
-
-type OrgSessionPayload = {
-  status?: string;
-  activeAlias?: string;
-  authMode?: string;
-  connectedAt?: string;
-  disconnectedAt?: string;
-  lastError?: string;
-};
-
-type OrgAliasSummary = {
-  alias: string;
-  username?: string;
-  orgId?: string;
-  instanceUrl?: string;
-  isDefault: boolean;
-  source: 'sf_cli_keychain';
-};
-
-type OrgSessionAliasesPayload = {
-  authMode?: string;
-  activeAlias?: string;
-  aliases?: OrgAliasSummary[];
-};
-
-type OrgStatusPayload = {
-  integrationEnabled?: boolean;
-  alias?: string;
-  authMode?: string;
-  cci?: {
-    installed?: boolean;
-    version?: string;
-    requiredVersion?: string;
-    versionPinned?: boolean;
-    message?: string;
-  };
-  sf?: { installed?: boolean; message?: string };
-  session?: OrgSessionPayload;
-};
-
-type OrgPreflightPayload = {
-  ok?: boolean;
-  checks?: {
-    cciInstalled?: boolean;
-    cciVersionPinned?: boolean;
-    cciAliasAvailable?: boolean;
-    sfInstalled?: boolean;
-    parsePathPresent?: boolean;
-    aliasAuthenticated?: boolean;
-    sessionConnected?: boolean;
-  };
-  issues?: Array<{ code?: string; severity?: string; message?: string; remediation?: string }>;
 };
 
 const BUILD_VERSION = process.env.NEXT_PUBLIC_BUILD_VERSION || 'dev-local';
@@ -541,85 +495,26 @@ export default function Page(): JSX.Element {
           )}
 
           {uiTab === 'connect' && (
-            <>
-              <h2>Org Sessions</h2>
-              <p className="section-lead">
-                Login uses Salesforce CLI keychain first, then CCI registry import for deterministic org tooling.
-              </p>
-
-              <div className="sub-card">
-                <h3>Runtime Commands</h3>
-                <pre>{`# 1) Authenticate in sf keychain
-sf org login web --alias ${orgAlias} --instance-url https://test.salesforce.com --set-default
-
-# 2) Bridge alias into CCI registry
-cci org import ${orgAlias} <sf-username>`}</pre>
-              </div>
-
-              <label htmlFor="orgAlias">Org Alias</label>
-              <input id="orgAlias" value={orgAlias} onChange={(e) => setOrgAlias(e.target.value)} />
-
-              <div className="field-grid">
-                <div className="sub-card">
-                  <h3>sf CLI</h3>
-                  <p><strong>Installed:</strong> {orgStatus?.sf?.installed ? 'yes' : 'no'}</p>
-                  <p>{orgStatus?.sf?.message || 'Run Check Tool Status'}</p>
-                </div>
-                <div className="sub-card">
-                  <h3>CCI</h3>
-                  <p><strong>Installed:</strong> {orgStatus?.cci?.installed ? 'yes' : 'no'}</p>
-                  <p><strong>Version:</strong> {orgStatus?.cci?.version || 'n/a'}</p>
-                  <p>{orgStatus?.cci?.message || 'Run Check Tool Status'}</p>
-                </div>
-                <div className="sub-card">
-                  <h3>Preflight</h3>
-                  <p><strong>Alias Authenticated:</strong> {orgPreflight?.checks?.aliasAuthenticated ? 'yes' : 'no'}</p>
-                  <p><strong>CCI Alias Available:</strong> {orgPreflight?.checks?.cciAliasAvailable ? 'yes' : 'no'}</p>
-                </div>
-                <div className="sub-card">
-                  <h3>Alias Inventory</h3>
-                  <p><strong>Loaded:</strong> {orgAliases?.aliases?.length ?? 0}</p>
-                  <p><strong>Active:</strong> {orgAliases?.activeAlias || orgSession?.activeAlias || orgAlias}</p>
-                </div>
-              </div>
-
-              <div className="action-row">
-                <button type="button" onClick={() => void runQuery('orgSessionAliases')} disabled={loading}>Load Aliases</button>
-                <button type="button" onClick={() => void runQuery('orgSession')} disabled={loading}>Check Session</button>
-                <button type="button" onClick={() => void runQuery('orgStatus')} disabled={loading}>Check Tool Status</button>
-                <button type="button" onClick={() => void runQuery('orgPreflight', { alias: orgAlias })} disabled={loading}>Preflight</button>
-                <button type="button" onClick={() => void runQuery('orgSessionSwitch', { alias: orgAlias })} disabled={loading}>Switch Alias</button>
-                <button type="button" onClick={() => void runQuery('orgConnect', { alias: orgAlias })} disabled={loading}>Connect Existing Alias</button>
-                <button type="button" className="ghost" onClick={() => void runQuery('orgSessionDisconnect')} disabled={loading}>Disconnect</button>
-              </div>
-
-              {orgAliases?.aliases && orgAliases.aliases.length > 0 ? (
-                <div className="sub-card">
-                  <h3>Discovered Aliases</h3>
-                  <ul className="member-list">
-                    {orgAliases.aliases.map((entry) => (
-                      <li key={entry.alias}>
-                        <span>
-                          <strong>{entry.alias}</strong>
-                          {entry.isDefault ? ' default' : ''}
-                          {entry.username ? ` | ${entry.username}` : ''}
-                        </span>
-                        <button
-                          type="button"
-                          className="ghost"
-                          onClick={() => {
-                            setOrgAlias(entry.alias);
-                            void runQuery('orgPreflight', { alias: entry.alias });
-                          }}
-                        >
-                          Inspect
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-            </>
+            <ConnectWorkspace
+              orgAlias={orgAlias}
+              setOrgAlias={setOrgAlias}
+              orgStatus={orgStatus}
+              orgPreflight={orgPreflight}
+              orgAliases={orgAliases}
+              orgSession={orgSession}
+              loading={loading}
+              onLoadAliases={() => void runQuery('orgSessionAliases')}
+              onCheckSession={() => void runQuery('orgSession')}
+              onCheckToolStatus={() => void runQuery('orgStatus')}
+              onPreflight={() => void runQuery('orgPreflight', { alias: orgAlias })}
+              onSwitchAlias={() => void runQuery('orgSessionSwitch', { alias: orgAlias })}
+              onConnectExistingAlias={() => void runQuery('orgConnect', { alias: orgAlias })}
+              onDisconnect={() => void runQuery('orgSessionDisconnect')}
+              onInspectAlias={(alias) => {
+                setOrgAlias(alias);
+                void runQuery('orgPreflight', { alias });
+              }}
+            />
           )}
 
           {uiTab === 'browser' && (
@@ -815,129 +710,62 @@ cci org import ${orgAlias} <sf-username>`}</pre>
           )}
 
           {uiTab === 'analyze' && (
-            <>
-              <h2>Explain &amp; Analyze</h2>
-              <p className="section-lead">Deterministic permission, automation, and impact analysis with controlled strictness.</p>
-
-              <div className="sub-tab-row" role="tablist" aria-label="Analyze sub tabs">
-                <button type="button" className={analyzeMode === 'perms' ? 'sub-tab active' : 'sub-tab'} onClick={() => setAnalyzeMode('perms')}>Permissions</button>
-                <button type="button" className={analyzeMode === 'automation' ? 'sub-tab active' : 'sub-tab'} onClick={() => setAnalyzeMode('automation')}>Automation</button>
-                <button type="button" className={analyzeMode === 'impact' ? 'sub-tab active' : 'sub-tab'} onClick={() => setAnalyzeMode('impact')}>Impact</button>
-                <button type="button" className={analyzeMode === 'system' ? 'sub-tab active' : 'sub-tab'} onClick={() => setAnalyzeMode('system')}>System Permission</button>
-              </div>
-
-              <div className="field-grid">
-                <div>
-                  <label htmlFor="anUser">User</label>
-                  <input id="anUser" value={user} onChange={(e) => setUser(e.target.value)} />
-                </div>
-                <div>
-                  <label htmlFor="anObject">Object</label>
-                  <input id="anObject" value={objectName} onChange={(e) => setObjectName(e.target.value)} />
-                </div>
-                <div>
-                  <label htmlFor="anField">Field</label>
-                  <input id="anField" value={fieldName} onChange={(e) => setFieldName(e.target.value)} />
-                </div>
-                <div>
-                  <label htmlFor="anSystemPerm">System Permission</label>
-                  <input id="anSystemPerm" value={systemPermission} onChange={(e) => setSystemPermission(e.target.value)} />
-                </div>
-                <div>
-                  <label htmlFor="anLimit">Limit</label>
-                  <input id="anLimit" value={limitRaw} onChange={(e) => setLimitRaw(e.target.value)} />
-                </div>
-                <label className="check-row" htmlFor="strictMode">
-                  <input id="strictMode" type="checkbox" checked={strictMode} onChange={(e) => setStrictMode(e.target.checked)} />
-                  Strict Mode
-                </label>
-                <label className="check-row" htmlFor="explainMode">
-                  <input id="explainMode" type="checkbox" checked={explainMode} onChange={(e) => setExplainMode(e.target.checked)} />
-                  Explain Mode
-                </label>
-                <label className="check-row" htmlFor="debugMode">
-                  <input id="debugMode" type="checkbox" checked={debugMode} onChange={(e) => setDebugMode(e.target.checked)} />
-                  Debug Mode
-                </label>
-              </div>
-
-              <div className="action-row">
-                {analyzeMode === 'perms' ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void runQuery('perms', {
-                          user,
-                          object: objectName,
-                          field: fieldName,
-                          limit: parseOptionalInt(limitRaw)
-                        })
-                      }
-                      disabled={loading}
-                    >
-                      Run Permissions Analysis
-                    </button>
-                    <button type="button" className="ghost" onClick={() => void runQuery('permsDiagnose', { user })} disabled={loading}>
-                      Diagnose User Mapping
-                    </button>
-                  </>
-                ) : null}
-
-                {analyzeMode === 'automation' ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void runQuery('automation', {
-                        object: objectName,
-                        limit: parseOptionalInt(limitRaw),
-                        strict: strictMode,
-                        explain: explainMode,
-                        includeLowConfidence: askWorkspace.includeLowConfidence
-                      })
-                    }
-                    disabled={loading}
-                  >
-                    Run Automation Analysis
-                  </button>
-                ) : null}
-
-                {analyzeMode === 'impact' ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void runQuery('impact', {
-                        field: fieldName,
-                        limit: parseOptionalInt(limitRaw),
-                        strict: strictMode,
-                        explain: explainMode,
-                        debug: debugMode,
-                        includeLowConfidence: askWorkspace.includeLowConfidence
-                      })
-                    }
-                    disabled={loading}
-                  >
-                    Run Impact Analysis
-                  </button>
-                ) : null}
-
-                {analyzeMode === 'system' ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void runQuery('permsSystem', {
-                        user,
-                        permission: systemPermission,
-                        limit: parseOptionalInt(limitRaw)
-                      })
-                    }
-                    disabled={loading}
-                  >
-                    Run System Permission Check
-                  </button>
-                ) : null}
-              </div>
-            </>
+            <AnalyzeWorkspace
+              analyzeMode={analyzeMode}
+              setAnalyzeMode={setAnalyzeMode}
+              user={user}
+              setUser={setUser}
+              objectName={objectName}
+              setObjectName={setObjectName}
+              fieldName={fieldName}
+              setFieldName={setFieldName}
+              systemPermission={systemPermission}
+              setSystemPermission={setSystemPermission}
+              limitRaw={limitRaw}
+              setLimitRaw={setLimitRaw}
+              strictMode={strictMode}
+              setStrictMode={setStrictMode}
+              explainMode={explainMode}
+              setExplainMode={setExplainMode}
+              debugMode={debugMode}
+              setDebugMode={setDebugMode}
+              loading={loading}
+              onRunPermissions={() =>
+                void runQuery('perms', {
+                  user,
+                  object: objectName,
+                  field: fieldName,
+                  limit: parseOptionalInt(limitRaw)
+                })
+              }
+              onDiagnoseUserMapping={() => void runQuery('permsDiagnose', { user })}
+              onRunAutomation={() =>
+                void runQuery('automation', {
+                  object: objectName,
+                  limit: parseOptionalInt(limitRaw),
+                  strict: strictMode,
+                  explain: explainMode,
+                  includeLowConfidence: askWorkspace.includeLowConfidence
+                })
+              }
+              onRunImpact={() =>
+                void runQuery('impact', {
+                  field: fieldName,
+                  limit: parseOptionalInt(limitRaw),
+                  strict: strictMode,
+                  explain: explainMode,
+                  debug: debugMode,
+                  includeLowConfidence: askWorkspace.includeLowConfidence
+                })
+              }
+              onRunSystemPermission={() =>
+                void runQuery('permsSystem', {
+                  user,
+                  permission: systemPermission,
+                  limit: parseOptionalInt(limitRaw)
+                })
+              }
+            />
           )}
 
           {uiTab === 'proofs' && (

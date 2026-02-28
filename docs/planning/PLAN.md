@@ -190,5 +190,8 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - Ask transport is no longer owned by the generic `/api/query` multiplexer.
   - Ask rendering/state is no longer inlined entirely inside `apps/web/app/page.tsx`.
 - Proofs/History is also no longer inlined entirely inside `apps/web/app/page.tsx`.
+- Connect is also no longer inlined entirely inside `apps/web/app/page.tsx`.
+- Analyze is also no longer inlined entirely inside `apps/web/app/page.tsx`.
 - The next live architectural priority is the next remaining page-level workspace slice inside:
   - `apps/web/app/page.tsx`
+  - preferred next step: reassess whether the remaining page shell should keep shrinking through Browser/Refresh extraction or whether the cleaner pivot is Phase 3 org-session boundary cleanup

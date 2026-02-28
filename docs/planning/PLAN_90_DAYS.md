@@ -80,9 +80,14 @@ Progress note:
   - Ask workspace rendering and Ask-specific state moved out of `apps/web/app/page.tsx`
 - Slice 3 completed:
   - Proofs/History workspace rendering and proof-history state moved out of `apps/web/app/page.tsx`
+- Slice 4 completed:
+  - Connect workspace rendering moved out of `apps/web/app/page.tsx`
+- Slice 5 completed:
+  - Analyze workspace rendering moved out of `apps/web/app/page.tsx`
 - Next narrow step:
-  - move the next page-level workspace slice out of `apps/web/app/page.tsx`
-  - preferred next candidates: Connect or Analyze
+  - reassess whether the next highest-value move is:
+    - another page-level workspace extraction,
+    - or a pivot to Phase 3 org-session boundary cleanup now that Ask, Proofs, Connect, and Analyze are isolated
 
 ## Phase 3: Org Session Boundary Cleanup
 
@@ -206,6 +211,8 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 2 by extracting the next non-Ask workspace from `apps/web/app/page.tsx`.
-- Preferred next slice: Connect, because it still owns substantial operator workflow and state.
+- Preferred next step: reassess the remaining page-shell coupling and choose between:
+  - Browser/Refresh extraction if composition shrinkage is still the highest-value move,
+  - or Phase 3 org-session boundary cleanup if the current shell is now thin enough.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.
