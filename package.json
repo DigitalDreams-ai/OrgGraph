@@ -7,6 +7,7 @@
     "build": "pnpm -r build",
     "dev": "pnpm --filter api start:dev",
     "lint": "pnpm -r lint",
+    "mcp:project-memory": "./scripts/project-memory-mcp.sh",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "test:web-smoke": "./scripts/web-smoke.sh",

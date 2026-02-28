@@ -100,6 +100,8 @@ npm run phase13:metrics-export
 npm run phase14:drift-report -- latest latest artifacts/phase14-drift-report.json
 npm run phase14:drift-gate
 ./scripts/phase17-benchmark.sh
+npm run mcp:project-memory
+npm exec --yes pnpm@9.12.3 -- --filter @orgumented/project-memory-mcp test
 ```
 
 ## WebUI Tabs
@@ -123,3 +125,30 @@ curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -
 # Rebuild web if unhealthy
 docker compose -f docker/docker-compose.yml up -d --build web
 ```
+
+## Project Memory MCP
+```bash
+cd /volume1/data/projects/OrgGraph
+npm run mcp:project-memory
+```
+
+Optional env:
+```bash
+export ORGUMENTED_PROJECT_MEMORY_PATH=data/project-memory/events.jsonl
+export ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT=/volume1/data/projects/OrgGraph
+```
+
+Codex config snippet:
+```json
+{
+  "mcpServers": {
+    "project-memory": {
+      "command": "/volume1/data/projects/OrgGraph/scripts/project-memory-mcp.sh"
+    }
+  }
+}
+```
+
+Orgumented-specific tools:
+- `seed_orgumented_baseline`
+- `summarize_orgumented_waves`

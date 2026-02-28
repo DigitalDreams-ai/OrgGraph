@@ -232,6 +232,61 @@ Dashboard-ready metrics export:
 ```bash
 curl http://localhost:3100/ask/metrics/export
 ```
+
+## 9. Project Memory MCP
+
+Use this when Codex needs advisory project continuity across many files and moving parts.
+It does not participate in `/ask`, proof generation, or runtime truth.
+
+Start the MCP:
+```bash
+cd /volume1/data/projects/OrgGraph
+npm run mcp:project-memory
+```
+
+Optional overrides:
+```bash
+export ORGUMENTED_PROJECT_MEMORY_PATH=data/project-memory/events.jsonl
+export ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT=/volume1/data/projects/OrgGraph
+```
+
+Register it in Codex with:
+```json
+{
+  "mcpServers": {
+    "project-memory": {
+      "command": "/volume1/data/projects/OrgGraph/scripts/project-memory-mcp.sh"
+    }
+  }
+}
+```
+
+Available tools:
+- `put_record`
+- `append_event`
+- `get_record`
+- `list_records`
+- `mark_stale`
+- `link_records`
+- `summarize_scope`
+- `prune_expired`
+- `seed_orgumented_baseline`
+- `summarize_orgumented_waves`
+
+Record types supported:
+- `work_item`
+- `decision_note`
+- `repo_map`
+- `verification_result`
+- `risk_item`
+- `handoff_note`
+- `runtime_observation`
+
+Orgumented-specific helpers:
+- `seed_orgumented_baseline`: seed repo-map records for API runtime, web UI, ontology, and planning.
+- `summarize_orgumented_waves`: read `docs/planning/WAVE_A_TASKLIST.md` through `WAVE_E_TASKLIST.md` and return deterministic task/exit-gate counts.
+
+See `docs/runbooks/PROJECT_MEMORY_MCP.md` for operating rules and guardrails.
 Export now includes:
 - `bySnapshot`: trust and meaning metrics rollups
 - `byProvider`: provider/model success, error rate, latency, token, and estimated cost rollups
