@@ -22,6 +22,7 @@ import { useProofsWorkspace } from './workspaces/proofs/use-proofs-workspace';
 import { RefreshWorkspace } from './workspaces/refresh/refresh-workspace';
 import { useRefreshWorkspace } from './workspaces/refresh/use-refresh-workspace';
 import { SystemWorkspace } from './workspaces/system/system-workspace';
+import { useSystemWorkspace } from './workspaces/system/use-system-workspace';
 
 type QueryKind = SecondaryQueryKind;
 
@@ -89,8 +90,6 @@ export default function Page(): JSX.Element {
 
   const [limitRaw, setLimitRaw] = useState('25');
 
-  const [metaDryRun, setMetaDryRun] = useState(true);
-
   const askWorkspace = useAskWorkspace({
     presentResponse,
     resolveErrorMessage,
@@ -133,6 +132,10 @@ export default function Page(): JSX.Element {
     parseOptionalInt,
     limitRaw,
     includeLowConfidence: askWorkspace.includeLowConfidence
+  });
+  const systemWorkspace = useSystemWorkspace({
+    runQuery,
+    loadOrgStatus: () => connectWorkspace.loadToolStatus()
   });
 
   useEffect(() => {
@@ -430,12 +433,12 @@ export default function Page(): JSX.Element {
 
           {uiTab === 'system' && (
             <SystemWorkspace
-              metaDryRun={metaDryRun}
-              setMetaDryRun={setMetaDryRun}
+              metaDryRun={systemWorkspace.metaDryRun}
+              setMetaDryRun={systemWorkspace.setMetaDryRun}
               loading={loading}
-              onLoadMetaContext={() => void runQuery('metaContext')}
-              onRunMetaAdapt={() => void runQuery('metaAdapt', { dryRun: metaDryRun })}
-              onLoadOrgStatus={() => void connectWorkspace.loadToolStatus()}
+              onLoadMetaContext={() => void systemWorkspace.loadMetaContext()}
+              onRunMetaAdapt={() => void systemWorkspace.runMetaAdapt()}
+              onLoadOrgStatus={() => void systemWorkspace.loadOrgStatus()}
             />
           )}
         </section>

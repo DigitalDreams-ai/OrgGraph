@@ -206,8 +206,11 @@ Progress note:
 - Slice 8 completed:
   - Analyze state and action handlers moved out of `apps/web/app/page.tsx`
   - Analyze orchestration now lives in `apps/web/app/workspaces/analyze/use-analyze-workspace.ts`
+- Slice 9 completed:
+  - System state and action handlers moved out of `apps/web/app/page.tsx`
+  - System orchestration now lives in `apps/web/app/workspaces/system/use-system-workspace.ts`
 - Next narrow step:
-  - move remaining System state or shared shell orchestration out of `apps/web/app/page.tsx`
+  - move remaining shared response and persistence shell orchestration out of `apps/web/app/page.tsx`
   - then reassess whether the remaining page shell is small enough to pivot back to deeper runtime or org-session proof work
 
 ## Determinism and Replay Harness Plan
@@ -296,6 +299,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: reduce the remaining System and shared shell page orchestration now that Browser, Refresh, Connect, Analyze, shell runtime status, and operator rail rendering are modular and packaged smoke covers shell launch, readiness, Ask proof, and org status.
+- Preferred next step: reduce the remaining shared response and persistence shell orchestration now that Browser, Refresh, Connect, Analyze, System, shell runtime status, and operator rail rendering are modular and packaged smoke covers shell launch, readiness, Ask proof, and org status.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

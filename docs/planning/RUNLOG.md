@@ -794,3 +794,29 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns Analyze workflow state or Analyze action lambdas directly.
 - The remaining page shell is now concentrated around local persistence, shared copy/error state, `limitRaw`, and the remaining System/shared shell orchestration.
 - The next narrow slice is extracting the remaining System/shared shell state or deciding that the page shell is now small enough to pivot back to runtime and packaged-workflow proof work.
+
+## Entry 23: Phase 5 System State Extraction
+
+### Change
+- Extracted System workspace state and action orchestration out of `apps/web/app/page.tsx`.
+- Added `apps/web/app/workspaces/system/use-system-workspace.ts`.
+- Moved the following into the System workspace hook:
+  - `metaDryRun` state
+  - meta-context action handler
+  - meta-adapt action handler
+  - org-status action handler for the System workspace
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - typed desktop boundary routes remained present after the System hook extraction
+
+### Outcome
+- `page.tsx` no longer owns System workspace state or System action handlers directly.
+- The remaining page shell is now concentrated around local persistence, shared copy/error/raw-response state, `limitRaw`, and the generic secondary-query helper.
+- The next narrow slice is extracting the remaining shared response and persistence shell orchestration or deciding that the shell is small enough to pivot back to runtime work.
