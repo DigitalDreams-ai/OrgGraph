@@ -8,6 +8,7 @@ import { resolveQueryErrorMessage, useResponseInspector } from './shell/use-resp
 import { ShellTopbar } from './shell/shell-topbar';
 import { StatusStrip } from './shell/status-strip';
 import { useShellRuntime } from './shell/use-shell-runtime';
+import { WorkspaceNav, type WorkspaceTab as UiTab } from './shell/workspace-nav';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
 import { useAskShellActions } from './workspaces/ask/use-ask-shell-actions';
 import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
@@ -24,23 +25,7 @@ import { useRefreshWorkspace } from './workspaces/refresh/use-refresh-workspace'
 import { SystemWorkspace } from './workspaces/system/system-workspace';
 import { useSystemWorkspace } from './workspaces/system/use-system-workspace';
 
-type UiTab = 'ask' | 'connect' | 'browser' | 'refresh' | 'analyze' | 'proofs' | 'system';
-
 const BUILD_VERSION = process.env.NEXT_PUBLIC_BUILD_VERSION || 'dev-local';
-const PRIMARY_TABS: Array<[UiTab, string, string]> = [
-  ['ask', 'Ask', 'Decision packets, trust, and follow-up actions.'],
-  ['connect', 'Org Sessions', 'Local Salesforce sessions backed by sf and cci.'],
-  ['browser', 'Org Browser', 'Browse metadata types and retrieve selected members.'],
-  ['refresh', 'Refresh & Build', 'Refresh semantic state and compare snapshot drift.'],
-  ['analyze', 'Explain & Analyze', 'Readable analysis cards for permissions and automation.'],
-  ['proofs', 'Proofs & History', 'Replay, inspect, and export proof artifacts.'],
-  ['system', 'Settings & Diagnostics', 'Runtime health, tool versions, and diagnostics.']
-];
-const ASK_PRESETS = [
-  'What touches Opportunity.StageName?',
-  'Who can edit Opportunity.StageName?',
-  'What automations update Opportunity.StageName?'
-];
 
 function parseOptionalInt(raw: string): number | undefined {
   if (!raw.trim()) return undefined;
@@ -148,31 +133,7 @@ export default function Page(): JSX.Element {
       />
 
       <section className="workspace-grid">
-        <aside className="left-nav panel">
-          <h2>Workspace</h2>
-          <nav className="tab-stack" role="tablist" aria-label="Primary navigation tabs">
-            {PRIMARY_TABS.map(([id, label, caption]) => (
-              <button
-                key={id}
-                role="tab"
-                aria-selected={uiTab === id}
-                type="button"
-                className={uiTab === id ? 'tab-btn active' : 'tab-btn'}
-                onClick={() => setUiTab(id)}
-              >
-                <span>{label}</span>
-                <small>{caption}</small>
-              </button>
-            ))}
-          </nav>
-
-          <div className="hint-card">
-            <h3>Launch Rule</h3>
-            <p>
-              Ask stays first. JSON and low-level payloads are still available, but only as secondary inspection surfaces.
-            </p>
-          </div>
-        </aside>
+        <WorkspaceNav uiTab={uiTab} setUiTab={setUiTab} />
 
         <section className="center-work panel">
           {uiTab === 'ask' && (

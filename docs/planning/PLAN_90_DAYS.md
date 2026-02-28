@@ -227,6 +227,9 @@ Progress note:
     - Refresh
     - Analyze
     - Proofs handoff
+- Slice 17 completed:
+  - workspace navigation and the launch-rule panel moved out of `apps/web/app/page.tsx` into `apps/web/app/shell/workspace-nav.tsx`
+  - `page.tsx` is now about `305` lines after web verification
 - Next narrow step:
   - continue Phase 5 shell reduction from the current `page.tsx` composition surface
   - stop only if the remaining page-level state is no longer a meaningful boundary concentration

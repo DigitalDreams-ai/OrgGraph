@@ -318,7 +318,9 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - `loading`, `limitRaw`, and the generic secondary request dispatcher now live in `apps/web/app/shell/use-secondary-query-runner.ts`
   - Ask cross-workspace shell actions are no longer owned directly by `apps/web/app/page.tsx`
   - Ask-to-Connect/Analyze/Proofs navigation and action wiring now live in `apps/web/app/workspaces/ask/use-ask-shell-actions.ts`
-  - `apps/web/app/page.tsx` remains near `342` lines, but more of it is now shell composition rather than inline orchestration
+  - workspace navigation and the launch-rule panel are no longer owned directly by `apps/web/app/page.tsx`
+  - navigation rendering now lives in `apps/web/app/shell/workspace-nav.tsx`
+  - `apps/web/app/page.tsx` is now down to about `305` lines, and most of what remains is workspace composition
 - The next live architectural priority is back in the UI boundary layer:
   - packaged runtime hardening is complete enough for now because the packaged shell now proves:
     - deterministic Ask identity

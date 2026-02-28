@@ -1257,3 +1257,24 @@ Branch: `dna-foundation`
 ### Outcome
 - More of the remaining page shell is now composition wiring rather than inline cross-workspace logic.
 - The next Phase 5 slices should keep targeting the remaining page-level orchestration hotspots rather than revisiting packaging work.
+
+## Entry 37: Extract Workspace Navigation Shell
+
+### Change
+- Added `apps/web/app/shell/workspace-nav.tsx`.
+- Moved the inline workspace navigation and launch-rule panel out of `apps/web/app/page.tsx`.
+- Removed the dead `ASK_PRESETS` constant from `page.tsx`.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - Next build completed successfully after the workspace-nav extraction
+  - `apps/web/app/page.tsx` measured about `305` lines after the slice
+
+### Outcome
+- The page shell is now substantially smaller and more composition-focused.
+- Remaining Phase 5 work should focus only on the last page-level orchestration hotspots that still matter architecturally.
