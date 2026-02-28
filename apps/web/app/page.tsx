@@ -7,12 +7,9 @@ import {
 import {
   connectOrgSession,
   disconnectOrgSession,
-  getOrgMetadataCatalog,
-  getOrgMetadataMembers,
   getOrgSession,
   getOrgStatus,
   listOrgSessionAliases,
-  retrieveOrgMetadata,
   runOrgRetrieve,
   runOrgPreflight,
   switchOrgSession
@@ -24,6 +21,7 @@ import { AskWorkspace } from './workspaces/ask/ask-workspace';
 import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
 import { AnalyzeWorkspace, type AnalyzeMode } from './workspaces/analyze/analyze-workspace';
 import { BrowserWorkspace } from './workspaces/browser/browser-workspace';
+import { useBrowserWorkspace } from './workspaces/browser/use-browser-workspace';
 import { ConnectWorkspace } from './workspaces/connect/connect-workspace';
 import type {
   OrgPreflightPayload,
@@ -34,11 +32,6 @@ import type {
 import { ProofsWorkspace } from './workspaces/proofs/proofs-workspace';
 import { useProofsWorkspace } from './workspaces/proofs/use-proofs-workspace';
 import { SystemWorkspace } from './workspaces/system/system-workspace';
-import type {
-  MetadataCatalogPayload,
-  MetadataMembersPayload,
-  MetadataSelection
-} from './workspaces/browser/types';
 
 type OrgQueryKind =
   | 'orgConnect'
@@ -48,10 +41,7 @@ type OrgQueryKind =
   | 'orgSessionSwitch'
   | 'orgSessionDisconnect'
   | 'orgStatus'
-  | 'orgRetrieve'
-  | 'metadataCatalog'
-  | 'metadataMembers'
-  | 'metadataRetrieve';
+  | 'orgRetrieve';
 
 type RefreshQueryKind = 'refresh' | 'refreshDiff';
 type QueryKind = SecondaryQueryKind;
@@ -130,17 +120,6 @@ export default function Page(): JSX.Element {
   const [orgPreflight, setOrgPreflight] = useState<OrgPreflightPayload | null>(null);
   const [orgAliases, setOrgAliases] = useState<OrgSessionAliasesPayload | null>(null);
 
-  const [metadataSearch, setMetadataSearch] = useState('');
-  const [metadataMemberSearch, setMetadataMemberSearch] = useState('');
-  const [metadataLimitRaw, setMetadataLimitRaw] = useState('200');
-  const [metadataForceRefresh, setMetadataForceRefresh] = useState(false);
-  const [metadataAutoRefresh, setMetadataAutoRefresh] = useState(true);
-  const [metadataCatalog, setMetadataCatalog] = useState<MetadataCatalogPayload | null>(null);
-  const [metadataMembersByType, setMetadataMembersByType] = useState<Record<string, MetadataMembersPayload>>({});
-  const [metadataLoadingType, setMetadataLoadingType] = useState('');
-  const [metadataSelected, setMetadataSelected] = useState<MetadataSelection[]>([]);
-  const [metadataSelectionsRaw, setMetadataSelectionsRaw] = useState('[]');
-
   const [refreshMode, setRefreshMode] = useState<'incremental' | 'full'>('incremental');
   const [fromSnapshot, setFromSnapshot] = useState('');
   const [toSnapshot, setToSnapshot] = useState('');
@@ -167,6 +146,13 @@ export default function Page(): JSX.Element {
     setErrorText
   });
   const proofsWorkspace = useProofsWorkspace({
+    presentResponse,
+    resolveErrorMessage,
+    setLoading,
+    setCopied,
+    setErrorText
+  });
+  const browserWorkspace = useBrowserWorkspace({
     presentResponse,
     resolveErrorMessage,
     setLoading,
@@ -204,10 +190,6 @@ export default function Page(): JSX.Element {
   useEffect(() => {
     proofsWorkspace.syncFromAsk(askWorkspace.askProofId, askWorkspace.askReplayToken);
   }, [askWorkspace.askProofId, askWorkspace.askReplayToken]);
-
-  useEffect(() => {
-    setMetadataSelectionsRaw(pretty(metadataSelected));
-  }, [metadataSelected]);
 
   async function refreshStatuses(): Promise<void> {
     try {
@@ -265,19 +247,6 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
         parsed = await listOrgSessionAliases();
       } else if (kind === 'orgSession') {
         parsed = await getOrgSession();
-      } else if (kind === 'metadataCatalog') {
-        parsed = await getOrgMetadataCatalog({
-          q: typeof payload.q === 'string' ? payload.q : undefined,
-          limit: typeof payload.limit === 'number' ? payload.limit : undefined,
-          refresh: typeof payload.refresh === 'boolean' ? payload.refresh : undefined
-        });
-      } else if (kind === 'metadataMembers') {
-        parsed = await getOrgMetadataMembers({
-          type: typeof payload.type === 'string' ? payload.type : '',
-          q: typeof payload.q === 'string' ? payload.q : undefined,
-          limit: typeof payload.limit === 'number' ? payload.limit : undefined,
-          refresh: typeof payload.refresh === 'boolean' ? payload.refresh : undefined
-        });
       } else if (kind === 'orgPreflight') {
         parsed = await runOrgPreflight(typeof payload.alias === 'string' ? payload.alias : undefined);
       } else if (kind === 'orgSessionSwitch') {
@@ -286,13 +255,6 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
         });
       } else if (kind === 'orgSessionDisconnect') {
         parsed = await disconnectOrgSession();
-      } else if (kind === 'metadataRetrieve') {
-        parsed = await retrieveOrgMetadata({
-          selections: Array.isArray(payload.selections)
-            ? (payload.selections as Array<{ type: string; members?: string[] }>)
-            : [],
-          autoRefresh: typeof payload.autoRefresh === 'boolean' ? payload.autoRefresh : undefined
-        });
       } else if (kind === 'orgRetrieve') {
         parsed = await runOrgRetrieve({
           alias: typeof payload.alias === 'string' ? payload.alias : undefined,
@@ -324,16 +286,6 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
       }
       if (kind === 'orgPreflight' && parsed.payload) {
         setOrgPreflight(parsed.payload as OrgPreflightPayload);
-      }
-      if (kind === 'metadataCatalog' && parsed.payload) {
-        setMetadataCatalog(parsed.payload as MetadataCatalogPayload);
-      }
-      if (kind === 'metadataMembers' && parsed.payload && typeof payload.type === 'string') {
-        const type = payload.type;
-        setMetadataMembersByType((current) => ({
-          ...current,
-          [type]: parsed.payload as MetadataMembersPayload
-        }));
       }
 
       return parsed;
@@ -385,55 +337,6 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
   function presentResponse(parsed: QueryResponse): void {
     setResponseData(parsed);
     setResponseText(pretty(parsed));
-  }
-
-  function toggleTypeSelection(type: string): void {
-    setMetadataSelected((current) => {
-      const idx = current.findIndex((entry) => entry.type === type);
-      if (idx >= 0) {
-        return current.filter((entry) => entry.type !== type);
-      }
-      return [...current, { type }];
-    });
-  }
-
-  function toggleMemberSelection(type: string, member: string): void {
-    setMetadataSelected((current) => {
-      const idx = current.findIndex((entry) => entry.type === type);
-      if (idx < 0) {
-        return [...current, { type, members: [member] }];
-      }
-
-      const existing = current[idx];
-      const members = Array.isArray(existing.members) ? [...existing.members] : [];
-      const exists = members.includes(member);
-      const nextMembers = exists ? members.filter((v) => v !== member) : [...members, member].sort((a, b) => a.localeCompare(b));
-      const nextEntry = nextMembers.length > 0 ? { type, members: nextMembers } : { type };
-      const copy = [...current];
-      copy[idx] = nextEntry;
-      return copy;
-    });
-  }
-
-  function isTypeSelected(type: string): boolean {
-    return metadataSelected.some((entry) => entry.type === type);
-  }
-
-  function isMemberSelected(type: string, member: string): boolean {
-    const typeEntry = metadataSelected.find((entry) => entry.type === type);
-    if (!typeEntry || !Array.isArray(typeEntry.members)) return false;
-    return typeEntry.members.includes(member);
-  }
-
-  async function loadMembers(type: string): Promise<void> {
-    setMetadataLoadingType(type);
-    await runOrgQuery('metadataMembers', {
-      type,
-      q: metadataMemberSearch,
-      limit: parseOptionalInt(metadataLimitRaw) ?? 1000,
-      refresh: metadataForceRefresh
-    });
-    setMetadataLoadingType('');
   }
 
   async function copyJson(): Promise<void> {
@@ -610,51 +513,30 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
 
           {uiTab === 'browser' && (
             <BrowserWorkspace
-              metadataSearch={metadataSearch}
-              setMetadataSearch={setMetadataSearch}
-              metadataMemberSearch={metadataMemberSearch}
-              setMetadataMemberSearch={setMetadataMemberSearch}
-              metadataLimitRaw={metadataLimitRaw}
-              setMetadataLimitRaw={setMetadataLimitRaw}
-              metadataForceRefresh={metadataForceRefresh}
-              setMetadataForceRefresh={setMetadataForceRefresh}
-              metadataAutoRefresh={metadataAutoRefresh}
-              setMetadataAutoRefresh={setMetadataAutoRefresh}
-              metadataCatalog={metadataCatalog}
-              metadataMembersByType={metadataMembersByType}
-              metadataLoadingType={metadataLoadingType}
-              metadataSelectionsRaw={metadataSelectionsRaw}
-              setMetadataSelectionsRaw={setMetadataSelectionsRaw}
+              metadataSearch={browserWorkspace.metadataSearch}
+              setMetadataSearch={browserWorkspace.setMetadataSearch}
+              metadataMemberSearch={browserWorkspace.metadataMemberSearch}
+              setMetadataMemberSearch={browserWorkspace.setMetadataMemberSearch}
+              metadataLimitRaw={browserWorkspace.metadataLimitRaw}
+              setMetadataLimitRaw={browserWorkspace.setMetadataLimitRaw}
+              metadataForceRefresh={browserWorkspace.metadataForceRefresh}
+              setMetadataForceRefresh={browserWorkspace.setMetadataForceRefresh}
+              metadataAutoRefresh={browserWorkspace.metadataAutoRefresh}
+              setMetadataAutoRefresh={browserWorkspace.setMetadataAutoRefresh}
+              metadataCatalog={browserWorkspace.metadataCatalog}
+              metadataMembersByType={browserWorkspace.metadataMembersByType}
+              metadataLoadingType={browserWorkspace.metadataLoadingType}
+              metadataSelectionsRaw={browserWorkspace.metadataSelectionsRaw}
+              setMetadataSelectionsRaw={browserWorkspace.setMetadataSelectionsRaw}
               loading={loading}
-              onRefreshTypes={() =>
-                void runOrgQuery('metadataCatalog', {
-                  q: metadataSearch,
-                  limit: parseOptionalInt(metadataLimitRaw) ?? 200,
-                  refresh: metadataForceRefresh
-                })
-              }
-              onClearFilters={() => {
-                setMetadataSearch('');
-                setMetadataMemberSearch('');
-                setMetadataForceRefresh(false);
-              }}
-              onLoadMembers={(type) => void loadMembers(type)}
-              onToggleType={toggleTypeSelection}
-              onToggleMember={toggleMemberSelection}
-              isTypeSelected={isTypeSelected}
-              isMemberSelected={isMemberSelected}
-              onRetrieveSelected={() => {
-                let selections: MetadataSelection[] = metadataSelected;
-                try {
-                  const parsed = JSON.parse(metadataSelectionsRaw) as MetadataSelection[];
-                  if (Array.isArray(parsed)) {
-                    selections = parsed;
-                  }
-                } catch {
-                  // keep structured selection
-                }
-                void runOrgQuery('metadataRetrieve', { selections, autoRefresh: metadataAutoRefresh });
-              }}
+              onRefreshTypes={() => void browserWorkspace.refreshTypes()}
+              onClearFilters={browserWorkspace.clearFilters}
+              onLoadMembers={(type) => void browserWorkspace.loadMembers(type)}
+              onToggleType={browserWorkspace.toggleTypeSelection}
+              onToggleMember={browserWorkspace.toggleMemberSelection}
+              isTypeSelected={browserWorkspace.isTypeSelected}
+              isMemberSelected={browserWorkspace.isMemberSelected}
+              onRetrieveSelected={() => void browserWorkspace.retrieveSelected()}
             />
           )}
 

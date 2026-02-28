@@ -241,6 +241,8 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - browser types and rendering now live under `apps/web/app/workspaces/browser/`
   - `Settings & Diagnostics` rendering is no longer inlined inside `apps/web/app/page.tsx`
   - system rendering now lives under `apps/web/app/workspaces/system/`
+  - Browser metadata selection, member loading, and retrieve orchestration are no longer owned directly by `apps/web/app/page.tsx`
+  - Browser state and actions now live under `apps/web/app/workspaces/browser/use-browser-workspace.ts`
 - The next live architectural priority is to keep moving runtime expectations into the shell:
-  - move Browser/System state and shell orchestration out of `apps/web/app/page.tsx`
+  - move remaining System/shared shell orchestration out of `apps/web/app/page.tsx`
   - then decide whether packaged smoke should grow into an authenticated org-session attach workflow

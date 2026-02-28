@@ -583,3 +583,34 @@ Branch: `dna-foundation`
 - `page.tsx` no longer owns the `Settings & Diagnostics` render tree inline.
 - The page shell is now mostly shared shell state, workflow orchestration, and the operator rail.
 - The next narrow slice is extracting Browser/System state or shared shell orchestration out of `apps/web/app/page.tsx`.
+
+## Entry 17: Phase 5 Browser State Extraction
+
+### Change
+- Extracted `Org Browser` metadata state and actions out of `apps/web/app/page.tsx`.
+- Added `apps/web/app/workspaces/browser/use-browser-workspace.ts`.
+- Moved the following into the Browser workspace hook:
+  - metadata search/filter state
+  - type/member selection state
+  - metadata catalog loading
+  - metadata member loading
+  - metadata retrieve execution
+- Kept the slice narrow by reusing the existing typed org client and preserving the current Browser workspace presentation contract.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - typed org boundary routes remained present for:
+    - `/api/org/metadata/catalog`
+    - `/api/org/metadata/members`
+    - `/api/org/metadata/retrieve`
+
+### Outcome
+- `page.tsx` no longer owns Browser metadata state or Browser action orchestration directly.
+- The remaining page shell is increasingly limited to shared shell state and the System/operator rail.
+- The next narrow slice is extracting the remaining System or shared shell orchestration out of `apps/web/app/page.tsx`.
