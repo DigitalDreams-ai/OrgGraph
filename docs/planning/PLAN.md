@@ -256,6 +256,10 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - repeated packaged builds no longer depend on manual cleanup:
     - build preflight now stops stale packaged `orgumented-desktop.exe` and bundled `node.exe`
     - release smoke cleanup now loops until packaged processes are actually gone on Windows
+- Packaged runtime entry is now explicit instead of shell-hardcoded:
+  - `apps/desktop/src-tauri/src/lib.rs` now reads `runtime/manifest.json`
+  - the packaged shell resolves `nodeBinary`, `apiEntry`, and `configEntry` from the manifest rather than assuming `runtime/api/dist/main.js`
+  - packaged build and release smoke both stayed green after the manifest-driven launch change
 - Phase 5 modular UI reconstruction is now moving again:
   - `Org Browser` rendering is no longer inlined inside `apps/web/app/page.tsx`
   - browser types and rendering now live under `apps/web/app/workspaces/browser/`

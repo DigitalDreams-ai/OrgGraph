@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -144,11 +145,27 @@ function stopLingeringPackagedProcesses() {
     return;
   }
 
-  const command = [
-    "$targets = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.Name -in @('orgumented-desktop.exe', 'node.exe') -and ($_.ExecutablePath -like '*OrgGraph\\\\apps\\\\desktop\\\\src-tauri\\\\target\\\\release*' -or $_.CommandLine -like '*OrgGraph\\\\apps\\\\desktop\\\\src-tauri\\\\target\\\\release*' -or $_.CommandLine -like '*OrgGraph\\\\apps\\\\desktop\\\\src-tauri\\\\runtime*') }",
-    "if ($targets) { $targets | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; Start-Sleep -Milliseconds 500 }"
-  ].join('; ');
-  runStep('packaged-process-cleanup', 'powershell.exe', ['-NoProfile', '-Command', command]);
+  const cleanupScriptPath = path.join(os.tmpdir(), 'orgumented-packaged-process-cleanup.ps1');
+  writeFileSync(
+    cleanupScriptPath,
+    [
+      "$targets = Get-Process -Name orgumented-desktop,node -ErrorAction SilentlyContinue |",
+      "  Where-Object {",
+      "    $_.Path -like '*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*' -or",
+      "    $_.Path -like '*OrgGraph\\apps\\desktop\\src-tauri\\runtime*'",
+      '  }',
+      'if ($targets) {',
+      '  $targets | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }',
+      '  Start-Sleep -Milliseconds 500',
+      '}'
+    ].join('\n')
+  );
+
+  try {
+    runStep('packaged-process-cleanup', 'pwsh.exe', ['-NoProfile', '-File', cleanupScriptPath]);
+  } finally {
+    rmSync(cleanupScriptPath, { force: true });
+  }
 }
 
 function ensureExists(filePath, label) {

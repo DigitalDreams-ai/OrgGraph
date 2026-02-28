@@ -1,14 +1,26 @@
 use std::{
     env,
+    fs,
     io::{Error, ErrorKind},
     path::PathBuf,
     process::{Child, Command, Stdio},
     sync::Mutex,
 };
 
+use serde::Deserialize;
 use tauri::{path::BaseDirectory, Manager};
 
 struct ApiChild(Mutex<Option<Child>>);
+
+#[derive(Deserialize)]
+struct BundledRuntimeManifest {
+    #[serde(rename = "apiEntry")]
+    api_entry: String,
+    #[serde(rename = "configEntry")]
+    config_entry: String,
+    #[serde(rename = "nodeBinary")]
+    node_binary: String,
+}
 
 fn should_manage_api() -> bool {
     env::var("ORGUMENTED_DESKTOP_MANAGED_API")
@@ -43,14 +55,6 @@ fn build_windows_path() -> Option<String> {
     env::join_paths(entries)
         .ok()
         .and_then(|value| value.into_string().ok())
-}
-
-fn bundled_node_binary_name() -> &'static str {
-    if cfg!(target_os = "windows") {
-        "node.exe"
-    } else {
-        "node"
-    }
 }
 
 fn spawn_development_api_child() -> std::io::Result<Child> {
@@ -97,14 +101,27 @@ fn resolve_resource_path(
         .map_err(|error| Error::new(ErrorKind::NotFound, error.to_string()))
 }
 
+fn bundled_runtime_manifest(app: &tauri::AppHandle) -> std::io::Result<BundledRuntimeManifest> {
+    let manifest_path = resolve_resource_path(app, "runtime/manifest.json")?;
+    let manifest_raw = fs::read_to_string(&manifest_path)?;
+    serde_json::from_str::<BundledRuntimeManifest>(&manifest_raw).map_err(|error| {
+        Error::new(
+            ErrorKind::InvalidData,
+            format!(
+                "failed to parse packaged runtime manifest at {}: {}",
+                manifest_path.display(),
+                error
+            ),
+        )
+    })
+}
+
 fn spawn_packaged_api_child(app: &tauri::AppHandle) -> std::io::Result<Child> {
-    let node_path = resolve_resource_path(
-        app,
-        &format!("runtime/node/{}", bundled_node_binary_name()),
-    )?;
+    let manifest = bundled_runtime_manifest(app)?;
+    let node_path = resolve_resource_path(app, &format!("runtime/node/{}", manifest.node_binary))?;
     let api_root = resolve_resource_path(app, "runtime/api")?;
-    let config_path = resolve_resource_path(app, "runtime/config.json")?;
-    let api_entry = api_root.join("dist").join("main.js");
+    let config_path = resolve_resource_path(app, &format!("runtime/{}", manifest.config_entry))?;
+    let api_entry = resolve_resource_path(app, &format!("runtime/{}", manifest.api_entry))?;
     if !api_entry.exists() {
         return Err(Error::new(
             ErrorKind::NotFound,

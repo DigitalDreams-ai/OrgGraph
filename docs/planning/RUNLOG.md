@@ -987,3 +987,31 @@ Branch: `dna-foundation`
 - The packaged API runtime is materially smaller and carries less build-time baggage into release bundles.
 - Repeated packaged builds no longer require manual cleanup of stale bundled Windows processes to avoid native-module lock failures.
 - The next narrow decision is whether to keep the trimmed deployed API tree or replace it with a standalone bundled API artifact.
+
+## Entry 28: Manifest-Driven Packaged Runtime Entry
+
+### Change
+- Updated `apps/desktop/src-tauri/src/lib.rs` so packaged launch now reads `runtime/manifest.json`.
+- The packaged shell now resolves:
+  - `nodeBinary`
+  - `apiEntry`
+  - `configEntry`
+  from the staged manifest instead of hardcoding `runtime/api/dist/main.js`.
+- Hardened `apps/desktop/scripts/prepare-packaged-runtime.mjs` further so the Windows build preflight uses the same `pwsh -File` execution model as the working release smoke cleanup.
+
+### Verification
+1. `pnpm desktop:build`
+- Result: passed
+- Proof:
+  - `Built application at: ...\\apps\\desktop\\src-tauri\\target\\release\\orgumented-desktop.exe`
+  - `Finished 2 bundles`
+
+2. `$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH='1'; pnpm desktop:smoke:release`
+- Result: passed
+- Proof:
+  - packaged shell reached ready state through the manifest-driven runtime path
+  - release smoke completed successfully after the manifest launch change
+
+### Outcome
+- The packaged desktop shell now has an explicit runtime contract for launch entrypoints instead of a Rust-side hardcoded API path.
+- The next narrow step remains evaluating whether the packaged API should move from a trimmed deployed tree to a standalone bundled artifact.

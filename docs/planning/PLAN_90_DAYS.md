@@ -178,6 +178,10 @@ Progress note:
   - packaged `better-sqlite3` payload dropped from about `11.32 MB` to about `1.67 MB`
   - packaged build preflight now stops stale packaged desktop processes before staging on Windows
   - release smoke cleanup now loops until packaged `orgumented-desktop.exe` and bundled `node.exe` are gone
+- Slice 8 completed:
+  - packaged shell launch now reads `runtime/manifest.json` for `nodeBinary`, `apiEntry`, and `configEntry`
+  - the packaged runtime no longer depends on a Rust-side hardcoded `runtime/api/dist/main.js` assumption
+  - packaged build and release smoke both passed after the manifest-driven launch change
 - Next narrow step:
   - evaluate whether the packaged API runtime should stay as a trimmed deployed tree or move to a standalone bundled artifact
   - stop if that change would threaten replay parity, org-session behavior, or packaged smoke reliability

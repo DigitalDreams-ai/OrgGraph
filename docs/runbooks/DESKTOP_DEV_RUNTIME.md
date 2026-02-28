@@ -83,6 +83,7 @@ pnpm desktop:build
 
 Current packaged build behavior:
 - `beforeBuildCommand` stages a packaged runtime under `apps/desktop/src-tauri/runtime/`
+- `runtime/manifest.json` explicitly declares the packaged Node binary, API entry, web entry, and config entry used by the shell
 - the staged runtime includes:
   - static web entry assets
   - trimmed deployed API runtime

@@ -25,29 +25,23 @@ function Stop-PackagedProcesses {
   )
 
   for ($attempt = 0; $attempt -lt $Attempts; $attempt += 1) {
-    $targets = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+    $targets = Get-Process -Name orgumented-desktop,node -ErrorAction SilentlyContinue |
       Where-Object {
-        $_.Name -in @('orgumented-desktop.exe', 'node.exe') -and (
-          $_.ExecutablePath -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
-          $_.CommandLine -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
-          $_.CommandLine -like "*OrgGraph\\apps\\desktop\\src-tauri\\runtime*"
-        )
+        $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
+        $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\runtime*"
       }
     if (-not $targets) {
       return
     }
 
-    $targets | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+    $targets | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
     Start-Sleep -Milliseconds $DelayMilliseconds
   }
 
-  $remaining = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+  $remaining = Get-Process -Name orgumented-desktop,node -ErrorAction SilentlyContinue |
     Where-Object {
-      $_.Name -in @('orgumented-desktop.exe', 'node.exe') -and (
-        $_.ExecutablePath -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
-        $_.CommandLine -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
-        $_.CommandLine -like "*OrgGraph\\apps\\desktop\\src-tauri\\runtime*"
-      )
+      $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
+      $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\runtime*"
     }
   if ($remaining) {
     throw "Failed to stop packaged desktop runtime processes before/after smoke."
