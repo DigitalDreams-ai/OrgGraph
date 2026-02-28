@@ -25,7 +25,7 @@ Objective: move Orgumented onto a desktop-native runtime foundation before furth
 - [x] Define local dev/test strategy for the standalone Windows desktop runtime.
 
 ## Exit Gates
-- [ ] Desktop shell launches successfully on Windows.
+- [x] Desktop shell launches successfully on Windows.
 - [x] Local NestJS engine runs under desktop-managed lifecycle.
 - [ ] Operator can discover at least one locally authenticated alias through Orgumented desktop on Windows.
 - [ ] Operator can attach an existing alias without using Docker, browser brokers, or legacy auth paths on Windows.
@@ -47,3 +47,8 @@ Objective: move Orgumented onto a desktop-native runtime foundation before furth
 - alias attach sample
 - updated docs showing Docker deprecation as product runtime
 - Windows MCP verification summary for the desktop operator toolchain (`github` and `project-memory`)
+
+## Proof Notes
+- Windows shell proof captured on February 27, 2026 via `pnpm desktop:dev`, with Tauri launching `apps/desktop/src-tauri/target/debug/orgumented-desktop.exe` and a visible `Orgumented` window title.
+- Windows local runtime proof captured on February 27, 2026 via `node apps/desktop/scripts/dev-runtime.mjs`, with `http://127.0.0.1:3001` and `http://127.0.0.1:3100/ready` both returning `200`.
+- Remaining Wave F product gates are now the two org-session UX proofs: alias discovery and alias attach through the desktop shell.

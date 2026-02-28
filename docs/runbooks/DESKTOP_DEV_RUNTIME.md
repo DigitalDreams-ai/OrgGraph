@@ -61,6 +61,11 @@ Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:dev
 ```
 
+Observed proof in current repo state:
+- `tauri dev` launches `target\debug\orgumented-desktop.exe`
+- Windows shows an `Orgumented` desktop window
+- Tauri now launches the local runtime through `node ./scripts/dev-runtime.mjs` instead of recursively invoking `pnpm` inside `pnpm`
+
 ## Local Org Auth
 
 Authenticate locally, not in Docker:

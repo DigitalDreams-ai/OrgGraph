@@ -19,10 +19,9 @@ Last updated: February 28, 2026.
 
 ### Repo and planning alignment
 - `BLUE_OCEAN_EXECUTION_PLAN.md` and `BLUE_OCEAN_PHASE_ROADMAP.md` both point to a Windows-only desktop target for Waves F-G.
-- `WAVE_F_TASKLIST.md` still shows three open product gates:
-  1. desktop shell launch on Windows
-  2. alias discovery through Orgumented desktop on Windows
-  3. alias attach through Orgumented desktop on Windows
+- `WAVE_F_TASKLIST.md` now shows two open product gates:
+  1. alias discovery through Orgumented desktop on Windows
+  2. alias attach through Orgumented desktop on Windows
 
 ### Already completed in Wave F
 - Tauri shell scaffold exists under `apps/desktop`.
@@ -90,6 +89,8 @@ pnpm --filter web build
 pnpm --filter api test
 pnpm --filter @orgumented/project-memory-mcp test
 pnpm desktop:build
+node apps/desktop/scripts/dev-runtime.mjs
+pnpm desktop:dev
 ```
 
 Observed proof:
@@ -99,6 +100,13 @@ Observed proof:
 - desktop installers are produced at:
   - `apps/desktop/src-tauri/target/release/bundle/msi/Orgumented_0.1.0_x64_en-US.msi`
   - `apps/desktop/src-tauri/target/release/bundle/nsis/Orgumented_0.1.0_x64-setup.exe`
+- direct desktop runtime proof succeeded with:
+  - `http://127.0.0.1:3001` returning `200`
+  - `http://127.0.0.1:3100/ready` returning `200`
+- Tauri shell proof succeeded with:
+  - `tauri dev` reaching `Running target\\debug\\orgumented-desktop.exe`
+  - Windows process `orgumented-desktop.exe`
+  - visible window title `Orgumented`
 
 ### 1. Tooling and desktop prerequisites
 ```powershell
@@ -146,10 +154,9 @@ Set-Location "C:\Users\sean\Projects\GitHub\OrgGraph"
 pnpm desktop:dev
 ```
 
-This is still the first real Wave F product-runtime gate.
-Current note:
-- packaging is proven on Windows
-- a live `desktop:dev` shell proof artifact is still needed before closing the gate
+Status:
+- shell launch is now proven on Windows
+- the remaining Wave F product-runtime work is org-session UX proof inside the shell
 
 ### 5. Verify Windows MCPs
 ```powershell
@@ -166,10 +173,10 @@ Expected Windows MCP state:
 - `github`: enabled in Codex and Cursor without a plaintext token in config files
 
 ## Immediate Next Implementation Slice After Environment Is Stable
-1. Prove the Tauri shell launches successfully on Windows.
-2. Surface alias inventory directly in the desktop shell UX.
+1. Surface alias inventory directly in the desktop shell UX.
+2. Prove alias discovery through the shell against a real local alias.
 3. Prove alias attach through the shell.
-4. Record Windows proof artifacts and close the remaining Wave F exit gates.
+4. Record those org-session proof artifacts and close the remaining Wave F exit gates.
 
 Do not start the major Wave G UX migration before those proofs exist.
 
