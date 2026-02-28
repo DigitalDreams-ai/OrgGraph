@@ -93,11 +93,50 @@ Exit gates:
 - production readiness checklist fully green
 - adoption package complete (docs, runbooks, proof examples, role workflows)
 
+## Wave F - Desktop Foundation and Runtime Cutover
+Scope:
+- establish Tauri as the desktop shell
+- preserve Next.js for UI and NestJS for semantic engine
+- remove Docker as a product-runtime assumption
+- replace auth/session model with local CLI-backed alias discovery and attach flows
+- define local app data, logging, diagnostics, and process lifecycle
+
+Entry prerequisites:
+- desktop architecture and transition plan approved
+- legacy removal register created and prioritized
+- reuse/refactor/delete inventory agreed
+
+Exit gates:
+- desktop shell launches local UI and local NestJS engine successfully
+- operator can discover and attach a locally authenticated Salesforce alias
+- no core auth workflow depends on Docker, VNC, browser brokers, or external client app flows
+- local runtime paths for graph, evidence, proofs, and logs are defined and functioning
+
+## Wave G - Desktop Ask-First Product UX
+Scope:
+- build the fresh desktop UX from the blueprint
+- make Ask the default workspace and primary flow
+- migrate org browser, refresh/build, analyze, proofs/history, and diagnostics into desktop-native UX
+- make decision packets the default output shape, with raw JSON secondary
+
+Entry prerequisites:
+- Wave F exit gates passed
+- desktop UX blueprint approved
+- desktop shell and local runtime stable enough for workflow migration
+
+Exit gates:
+- Ask-first desktop UX reaches workflow parity for core operator tasks
+- proof/history access no longer requires manual token bookkeeping
+- org browser supports org-wide selective retrieve in the desktop product
+- legacy browser-hosted operator UI is no longer required for primary workflows
+
 ## Dependency Matrix
-1. Wave A -> required by B, C, D, E
-2. Wave B -> required by C, D, E
-3. Wave C -> required by D, E
-4. Wave D -> required by E
+1. Wave A -> required by B, C, D, E, F, G
+2. Wave B -> required by C, D, E, G
+3. Wave C -> required by D, E, G
+4. Wave D -> required by E, G
+5. Wave E -> independent commercialization layer after D, may continue in parallel with late G hardening
+6. Wave F -> required by G
 
 ## Program-Level Lift Targets
 - `Replay pass rate`: 100% for benchmark corpus.
@@ -116,5 +155,10 @@ Exit gates:
 - `docs/planning/OPERATOR_GRADE_EXECUTION_PLAN.md`
 - `docs/planning/ORGUMENTED_LEXICON.md`
 - `docs/planning/SUCCESS_GATES_CHECKLIST.md`
-- `docs/planning/WAVE_A_TASKLIST.md` through `docs/planning/WAVE_E_TASKLIST.md`
+- `docs/planning/DESKTOP_ARCHITECTURE.md`
+- `docs/planning/DESKTOP_TRANSITION_PLAN.md`
+- `docs/planning/LEGACY_REMOVAL_REGISTER.md`
+- `docs/planning/REUSE_REFACTOR_DELETE_MATRIX.md`
+- `docs/planning/DESKTOP_UX_BLUEPRINT.md`
+- `docs/planning/WAVE_A_TASKLIST.md` through `docs/planning/WAVE_G_TASKLIST.md`
 - `docs/planning/PHASE_TO_WAVE_MAPPING.md`

@@ -199,6 +199,29 @@ Program rule:
 - no major custom subsystem lands without measurable lift criteria and rollback path
 - prove value at operator workflow level before runtime re-platform decisions
 
+## Desktop-Native Transition Rule
+Orgumented is transitioning to a desktop-native product runtime.
+
+Architecture decisions:
+- desktop shell: Tauri
+- operator UI: Next.js
+- semantic engine: NestJS
+- auth source of truth: Salesforce CLI keychain
+- local orchestration tools: `sf` and `cci`
+
+Hard rules:
+- Docker is not the target product runtime.
+- Docker may exist temporarily for migration scaffolding or dev/test, but must not shape future-state architecture.
+- No further investment should expand browser-broker, VNC, or container-auth workarounds.
+- No standard operator workflow should assume container-local paths, mounted keychains, or compose-managed sessions.
+
+Transition references:
+- `docs/planning/DESKTOP_ARCHITECTURE.md`
+- `docs/planning/DESKTOP_TRANSITION_PLAN.md`
+- `docs/planning/LEGACY_REMOVAL_REGISTER.md`
+- `docs/planning/REUSE_REFACTOR_DELETE_MATRIX.md`
+- `docs/planning/DESKTOP_UX_BLUEPRINT.md`
+
 ## Blue Ocean Validation Program
 
 ### Benchmark Scenarios
@@ -237,7 +260,7 @@ They ask:
 
 ## WebUI-First Operating Constraints
 - WebUI is the primary operator surface for auth, retrieval, refresh, analysis, and proof inspection.
-- Authentication path should be Salesforce CLI keychain-driven in primary UX (`sf org login web`, alias/session contract).
+- Authentication path should be Salesforce CLI keychain-driven in primary UX (local CLI-backed alias discovery/attach flow, alias/session contract).
 - Metadata retrieval UX should be org-wide and selective (VS Code Org Browser style), not package.xml-all by default.
 - Legacy manifest-driven retrieval is a removal target, not a long-term path:
   - no package.xml requirement for standard operator workflows

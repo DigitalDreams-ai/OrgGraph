@@ -23,7 +23,7 @@ Purpose: define objective gates for delivery success under the active Wave A-E e
 
 ## 4) Auth/Retrieve Contract (Wave A Critical)
 - [ ] WebUI auth path uses Salesforce CLI keychain as primary flow
-- [ ] Alias/session contract is explicit (`SF_ALIAS`, `SF_BASE_URL`, `sf org login web`, `sf org display`)
+- [ ] Alias/session contract is explicit (`SF_ALIAS`, `SF_BASE_URL`, local CLI-backed alias discovery/attach flow, `sf org display`)
 - [ ] Legacy OAuth and magic-link auth paths are removed from runtime and docs
 - [ ] Org-wide metadata browser behavior defined (expand/select/search across types)
 - [ ] package.xml-all retrieval is not default
