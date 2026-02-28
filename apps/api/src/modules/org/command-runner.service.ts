@@ -28,13 +28,22 @@ export class CommandRunnerService {
             SF_HIDE_RELEASE_NOTES: baseEnv.SF_HIDE_RELEASE_NOTES ?? 'true'
           }
         : baseEnv;
-    const resolved = this.resolveCommand(command, args, env);
+    const runtimeEnv =
+      process.platform === 'win32'
+        ? {
+            ...env,
+            ComSpec: env.ComSpec || process.env.ComSpec || 'C:\\Windows\\System32\\cmd.exe',
+            SystemRoot: env.SystemRoot || process.env.SystemRoot || 'C:\\Windows',
+            PATH: env.PATH || process.env.PATH || ''
+          }
+        : env;
+    const resolved = this.resolveCommand(command, args, runtimeEnv);
 
     return new Promise((resolve, reject) => {
       const child = spawn(resolved.command, resolved.args, {
         cwd: options.cwd,
-        env,
-        shell: false,
+        env: runtimeEnv,
+        shell: resolved.shell,
         stdio: ['pipe', 'pipe', 'pipe']
       });
 
@@ -80,27 +89,29 @@ export class CommandRunnerService {
     command: string,
     args: string[],
     env: NodeJS.ProcessEnv
-  ): { command: string; args: string[] } {
+  ): { command: string; args: string[]; shell: boolean } {
     if (process.platform !== 'win32') {
-      return { command, args };
+      return { command, args, shell: false };
     }
 
     const resolvedPath = this.resolveWindowsPath(command, env);
     if (!resolvedPath) {
-      return { command, args };
+      return { command, args, shell: false };
     }
 
     const extension = path.extname(resolvedPath).toLowerCase();
     if (extension === '.cmd' || extension === '.bat') {
       return {
-        command: 'cmd.exe',
-        args: ['/d', '/s', '/c', resolvedPath, ...args]
+        command: resolvedPath,
+        args,
+        shell: true
       };
     }
 
     return {
       command: resolvedPath,
-      args
+      args,
+      shell: false
     };
   }
 

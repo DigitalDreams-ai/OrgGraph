@@ -1,4 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { existsSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { AppConfigService } from '../../config/app-config.service';
 import { CommandRunnerService, type CommandResult } from './command-runner.service';
 import type { OrgAliasSummary } from './org.types';
@@ -11,25 +14,22 @@ export class OrgToolAdapterService {
   ) {}
 
   async probeSf(cwd: string): Promise<CommandResult> {
-    return this.probe('sf', ['--version'], cwd);
+    return this.runSf(['--version'], cwd, 30_000);
   }
 
   async probeCci(cwd: string): Promise<CommandResult> {
-    return this.probe('cci', ['version'], cwd);
+    return this.probe(this.cciCommand(), ['version'], cwd);
   }
 
   async ensureSfInstalled(cwd: string): Promise<void> {
-    const result = await this.commandRunner.run('sf', ['--version'], {
-      cwd,
-      timeoutMs: 30_000
-    });
+    const result = await this.runSf(['--version'], cwd, 30_000);
     if (result.exitCode !== 0) {
       throw new Error('sf CLI not found in PATH');
     }
   }
 
   async ensureCciInstalled(cwd: string): Promise<void> {
-    const result = await this.commandRunner.run('cci', ['version'], {
+    const result = await this.commandRunner.run(this.cciCommand(), ['version'], {
       cwd,
       timeoutMs: 30_000
     });
@@ -39,28 +39,22 @@ export class OrgToolAdapterService {
   }
 
   async displayOrg(alias: string, cwd: string): Promise<CommandResult> {
-    return this.commandRunner.run('sf', ['org', 'display', '--target-org', alias, '--json'], {
-      cwd,
-      timeoutMs: 30_000
-    });
+    return this.runSf(['org', 'display', '--target-org', alias, '--json'], cwd, 30_000);
   }
 
   async listAliases(cwd: string): Promise<CommandResult> {
-    return this.commandRunner.run('sf', ['org', 'list', '--json'], {
-      cwd,
-      timeoutMs: 30_000
-    });
+    return this.runSf(['org', 'list', '--json'], cwd, 30_000);
   }
 
   async cciOrgInfo(alias: string, cwd: string): Promise<CommandResult> {
-    return this.commandRunner.run('cci', ['org', 'info', alias], {
+    return this.commandRunner.run(this.cciCommand(), ['org', 'info', alias], {
       cwd,
       timeoutMs: 30_000
     });
   }
 
   async importAliasIntoCci(alias: string, username: string, cwd: string): Promise<CommandResult> {
-    return this.commandRunner.run('cci', ['org', 'import', alias, username], {
+    return this.commandRunner.run(this.cciCommand(), ['org', 'import', alias, username], {
       cwd,
       timeoutMs: 60_000
     });
@@ -209,11 +203,7 @@ export class OrgToolAdapterService {
 
     let lastError = '';
     for (let attempt = 0; attempt <= retries; attempt += 1) {
-      const result = await this.commandRunner.run('sf', args, {
-        cwd,
-        timeoutMs,
-        env: process.env
-      });
+      const result = await this.runSf(args, cwd, timeoutMs);
       if (result.exitCode === 0) {
         return;
       }
@@ -223,5 +213,52 @@ export class OrgToolAdapterService {
       }
     }
     throw new Error(lastError);
+  }
+
+  private cciCommand(): string {
+    if (process.platform !== 'win32') {
+      return 'cci';
+    }
+
+    const candidate = path.join(os.homedir(), '.local', 'bin', 'cci.exe');
+    return existsSync(candidate) ? candidate : 'cci';
+  }
+
+  private runSf(args: string[], cwd: string, timeoutMs: number): Promise<CommandResult> {
+    const sfRunner = this.sfRunner();
+    return this.commandRunner.run(sfRunner.command, sfRunner.args.concat(args), {
+      cwd,
+      timeoutMs
+    });
+  }
+
+  private sfRunner(): { command: string; args: string[] } {
+    if (process.platform !== 'win32') {
+      return { command: 'sf', args: [] };
+    }
+
+    const scriptPath = path.join(
+      os.homedir(),
+      'AppData',
+      'Roaming',
+      'npm',
+      'node_modules',
+      '@salesforce',
+      'cli',
+      'bin',
+      'run.js'
+    );
+    if (existsSync(scriptPath)) {
+      return {
+        command: process.execPath,
+        args: ['--no-deprecation', scriptPath]
+      };
+    }
+
+    const fallback = path.join(os.homedir(), 'AppData', 'Roaming', 'npm', 'sf.cmd');
+    return {
+      command: existsSync(fallback) ? fallback : 'sf',
+      args: []
+    };
   }
 }

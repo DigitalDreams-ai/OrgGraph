@@ -41,6 +41,7 @@ export class OrgService {
     const authMode = this.configService.sfAuthMode();
     const alias = this.resolveActiveAlias();
     const projectPath = this.runtimePaths.sfProjectPath();
+    this.ensureProjectScaffold(projectPath);
 
     const sfProbe = await this.orgToolAdapter.probeSf(projectPath);
     const cciProbe = await this.orgToolAdapter.probeCci(projectPath);
@@ -78,6 +79,7 @@ export class OrgService {
     const alias = aliasOverride?.trim() || this.resolveActiveAlias();
     const projectPath = this.runtimePaths.sfProjectPath();
     const parsePath = this.runtimePaths.sfParsePath();
+    this.ensureProjectScaffold(projectPath);
     const session = this.sessionStatus();
 
     const sfProbe = await this.orgToolAdapter.probeSf(projectPath);
@@ -185,6 +187,7 @@ export class OrgService {
   async listSessionAliases(): Promise<OrgSessionAliasesResponse> {
     const authMode = this.configService.sfAuthMode();
     const projectPath = this.runtimePaths.sfProjectPath();
+    this.ensureProjectScaffold(projectPath);
     const activeAlias = this.resolveActiveAlias();
     const sfProbe = await this.orgToolAdapter.probeSf(projectPath);
     if (sfProbe.exitCode !== 0) {
@@ -207,6 +210,7 @@ export class OrgService {
     const authMode = this.configService.sfAuthMode();
     const alias = aliasRaw.trim();
     const projectPath = this.runtimePaths.sfProjectPath();
+    this.ensureProjectScaffold(projectPath);
     const session = this.sessionStatus();
     const issues: OrgSessionAliasValidationResponse['issues'] = [];
 
@@ -319,6 +323,7 @@ export class OrgService {
 
     const authMode = this.configService.sfAuthMode();
     const projectPath = this.runtimePaths.sfProjectPath();
+    this.ensureProjectScaffold(projectPath);
     const alias = input.alias?.trim() || this.configService.sfAlias();
     await this.orgToolAdapter.ensureSfInstalled(projectPath);
     await this.orgToolAdapter.ensureCciInstalled(projectPath);
@@ -354,6 +359,7 @@ export class OrgService {
   async switchSessionAlias(alias: string): Promise<OrgSessionSwitchResponse> {
     const authMode = this.configService.sfAuthMode();
     const projectPath = this.runtimePaths.sfProjectPath();
+    this.ensureProjectScaffold(projectPath);
     await this.orgToolAdapter.ensureSfInstalled(projectPath);
     const aliasCheck = await this.orgToolAdapter.displayOrg(alias, projectPath);
     if (aliasCheck.exitCode !== 0) {
@@ -631,8 +637,12 @@ export class OrgService {
         }
       });
     }
-
-    await this.orgToolAdapter.ensureCciInstalled(projectPath);
+    try {
+      await this.orgToolAdapter.ensureCciInstalled(projectPath);
+    } catch {
+      this.logger.warn(`cci not available; continuing with sf-only auth for alias ${alias}`);
+      return;
+    }
 
     const cciAliasCheck = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
     if (cciAliasCheck.exitCode === 0) {
@@ -641,38 +651,17 @@ export class OrgService {
 
     const username = this.orgToolAdapter.extractSfUsername(sfAliasCheck.stdout);
     if (!username) {
-      throw new BadRequestException({
-        message: `Unable to resolve Salesforce username for alias ${alias}.`,
-        details: {
-          code: 'SF_USERNAME_RESOLUTION_FAILED',
-          hint: `Run 'sf org display --target-org ${alias} --json' and verify result.username exists.`
-        }
-      });
+      this.logger.warn(`sf alias ${alias} authenticated but username resolution failed for optional cci import`);
+      return;
     }
 
     const cciImport = await this.orgToolAdapter.importAliasIntoCci(alias, username, projectPath);
     if (cciImport.exitCode !== 0) {
       const err = (cciImport.stderr || cciImport.stdout || '').toLowerCase();
       if (!err.includes('already exists')) {
-        throw new BadRequestException({
-          message: `Failed to import alias ${alias} into cci org registry.`,
-          details: {
-            code: 'CCI_ALIAS_IMPORT_FAILED',
-            hint: `Run 'cci org import ${alias} ${username}' locally and verify cci configuration.`
-          }
-        });
+        this.logger.warn(`cci import skipped for alias ${alias}: ${cciImport.stderr || cciImport.stdout || 'unknown cci import failure'}`);
+        return;
       }
-    }
-
-    const cciAliasRecheck = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
-    if (cciAliasRecheck.exitCode !== 0) {
-      throw new BadRequestException({
-        message: `sf keychain login found, but cci alias ${alias} is still unavailable.`,
-        details: {
-          code: 'CCI_ALIAS_NOT_CONNECTED',
-          hint: `Run 'cci org import ${alias} ${username}' locally, then retry.`
-        }
-      });
     }
   }
 
