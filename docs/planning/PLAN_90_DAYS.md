@@ -170,6 +170,8 @@ Progress note:
 
 ## Phase 5: Modular UI Reconstruction
 
+Status: in progress on February 28, 2026
+
 ### Scope
 - Break `apps/web/app/page.tsx` into workspace modules.
 - Preserve the Ask-first product model while removing monolithic UI concentration.
@@ -178,6 +180,14 @@ Progress note:
 - No single top-level workspace file exceeds a reasonable module boundary.
 - Workspace state and rendering are separated from engine transport logic.
 - Ask, Org Sessions, and Proofs/History remain functional in desktop runtime.
+
+Progress note:
+- Slice 1 completed:
+  - `Org Browser` rendering moved out of `apps/web/app/page.tsx`
+  - browser types now live under `apps/web/app/workspaces/browser/`
+- Next narrow step:
+  - extract the `Settings & Diagnostics` workspace out of `apps/web/app/page.tsx`
+  - then reassess whether the remaining page shell is small enough to pivot back to deeper runtime or org-session proof work
 
 ## Determinism and Replay Harness Plan
 

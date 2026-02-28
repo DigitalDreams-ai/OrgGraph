@@ -236,6 +236,9 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
     - deterministic Ask proof ID `proof_dd7bcb4c6e249d0ebae058a6`
     - live org status with `session.status=connected` and `activeAlias=shulman-dev2`
   - proof artifacts live under `logs/desktop-release-smoke-*.json`
+- Phase 5 modular UI reconstruction is now moving again:
+  - `Org Browser` rendering is no longer inlined inside `apps/web/app/page.tsx`
+  - browser types and rendering now live under `apps/web/app/workspaces/browser/`
 - The next live architectural priority is to keep moving runtime expectations into the shell:
-  - shrink the page shell further so Browser and System stop shaping engine requests inline
+  - shrink the page shell further so System stops shaping engine requests inline
   - then decide whether packaged smoke should grow into an authenticated org-session attach workflow

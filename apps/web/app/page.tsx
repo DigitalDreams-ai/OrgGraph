@@ -23,6 +23,7 @@ import { getApiHealth, getApiReady } from './lib/status-client';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
 import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
 import { AnalyzeWorkspace, type AnalyzeMode } from './workspaces/analyze/analyze-workspace';
+import { BrowserWorkspace } from './workspaces/browser/browser-workspace';
 import { ConnectWorkspace } from './workspaces/connect/connect-workspace';
 import type {
   OrgPreflightPayload,
@@ -32,6 +33,11 @@ import type {
 } from './workspaces/connect/types';
 import { ProofsWorkspace } from './workspaces/proofs/proofs-workspace';
 import { useProofsWorkspace } from './workspaces/proofs/use-proofs-workspace';
+import type {
+  MetadataCatalogPayload,
+  MetadataMembersPayload,
+  MetadataSelection
+} from './workspaces/browser/types';
 
 type OrgQueryKind =
   | 'orgConnect'
@@ -50,26 +56,6 @@ type RefreshQueryKind = 'refresh' | 'refreshDiff';
 type QueryKind = SecondaryQueryKind;
 
 type UiTab = 'ask' | 'connect' | 'browser' | 'refresh' | 'analyze' | 'proofs' | 'system';
-
-type MetadataCatalogType = { type: string; memberCount: number };
-type MetadataMember = { name: string };
-
-type MetadataCatalogPayload = {
-  source: 'local' | 'source_api' | 'metadata_api' | 'cache' | 'mixed';
-  refreshedAt: string;
-  totalTypes: number;
-  types: MetadataCatalogType[];
-  warnings?: string[];
-};
-
-type MetadataMembersPayload = {
-  source: 'local' | 'source_api' | 'metadata_api' | 'cache' | 'mixed';
-  refreshedAt: string;
-  type: string;
-  totalMembers: number;
-  members: MetadataMember[];
-  warnings?: string[];
-};
 
 const BUILD_VERSION = process.env.NEXT_PUBLIC_BUILD_VERSION || 'dev-local';
 const PRIMARY_TABS: Array<[UiTab, string, string]> = [
@@ -151,7 +137,7 @@ export default function Page(): JSX.Element {
   const [metadataCatalog, setMetadataCatalog] = useState<MetadataCatalogPayload | null>(null);
   const [metadataMembersByType, setMetadataMembersByType] = useState<Record<string, MetadataMembersPayload>>({});
   const [metadataLoadingType, setMetadataLoadingType] = useState('');
-  const [metadataSelected, setMetadataSelected] = useState<Array<{ type: string; members?: string[] }>>([]);
+  const [metadataSelected, setMetadataSelected] = useState<MetadataSelection[]>([]);
   const [metadataSelectionsRaw, setMetadataSelectionsRaw] = useState('[]');
 
   const [refreshMode, setRefreshMode] = useState<'incremental' | 'full'>('incremental');
@@ -622,125 +608,53 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
           )}
 
           {uiTab === 'browser' && (
-            <>
-              <h2>Org Browser</h2>
-              <p className="section-lead">Org-wide selective metadata retrieval with searchable type/member navigation.</p>
-
-              <div className="field-grid">
-                <div>
-                  <label htmlFor="metadataSearch">Type Search</label>
-                  <input id="metadataSearch" value={metadataSearch} onChange={(e) => setMetadataSearch(e.target.value)} />
-                </div>
-                <div>
-                  <label htmlFor="metadataMemberSearch">Member Search</label>
-                  <input id="metadataMemberSearch" value={metadataMemberSearch} onChange={(e) => setMetadataMemberSearch(e.target.value)} />
-                </div>
-                <div>
-                  <label htmlFor="metadataLimit">Catalog Limit</label>
-                  <input id="metadataLimit" value={metadataLimitRaw} onChange={(e) => setMetadataLimitRaw(e.target.value)} />
-                </div>
-                <label className="check-row" htmlFor="forceRefresh">
-                  <input id="forceRefresh" type="checkbox" checked={metadataForceRefresh} onChange={(e) => setMetadataForceRefresh(e.target.checked)} />
-                  Force Refresh
-                </label>
-                <label className="check-row" htmlFor="metadataAutoRefresh">
-                  <input id="metadataAutoRefresh" type="checkbox" checked={metadataAutoRefresh} onChange={(e) => setMetadataAutoRefresh(e.target.checked)} />
-                  Auto Refresh After Retrieve
-                </label>
-              </div>
-
-              <div className="action-row">
-                <button
-                  type="button"
-                  onClick={() =>
-                    void runOrgQuery('metadataCatalog', {
-                      q: metadataSearch,
-                      limit: parseOptionalInt(metadataLimitRaw) ?? 200,
-                      refresh: metadataForceRefresh
-                    })
+            <BrowserWorkspace
+              metadataSearch={metadataSearch}
+              setMetadataSearch={setMetadataSearch}
+              metadataMemberSearch={metadataMemberSearch}
+              setMetadataMemberSearch={setMetadataMemberSearch}
+              metadataLimitRaw={metadataLimitRaw}
+              setMetadataLimitRaw={setMetadataLimitRaw}
+              metadataForceRefresh={metadataForceRefresh}
+              setMetadataForceRefresh={setMetadataForceRefresh}
+              metadataAutoRefresh={metadataAutoRefresh}
+              setMetadataAutoRefresh={setMetadataAutoRefresh}
+              metadataCatalog={metadataCatalog}
+              metadataMembersByType={metadataMembersByType}
+              metadataLoadingType={metadataLoadingType}
+              metadataSelectionsRaw={metadataSelectionsRaw}
+              setMetadataSelectionsRaw={setMetadataSelectionsRaw}
+              loading={loading}
+              onRefreshTypes={() =>
+                void runOrgQuery('metadataCatalog', {
+                  q: metadataSearch,
+                  limit: parseOptionalInt(metadataLimitRaw) ?? 200,
+                  refresh: metadataForceRefresh
+                })
+              }
+              onClearFilters={() => {
+                setMetadataSearch('');
+                setMetadataMemberSearch('');
+                setMetadataForceRefresh(false);
+              }}
+              onLoadMembers={(type) => void loadMembers(type)}
+              onToggleType={toggleTypeSelection}
+              onToggleMember={toggleMemberSelection}
+              isTypeSelected={isTypeSelected}
+              isMemberSelected={isMemberSelected}
+              onRetrieveSelected={() => {
+                let selections: MetadataSelection[] = metadataSelected;
+                try {
+                  const parsed = JSON.parse(metadataSelectionsRaw) as MetadataSelection[];
+                  if (Array.isArray(parsed)) {
+                    selections = parsed;
                   }
-                  disabled={loading}
-                >
-                  Refresh Types
-                </button>
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() => {
-                    setMetadataSearch('');
-                    setMetadataMemberSearch('');
-                    setMetadataForceRefresh(false);
-                  }}
-                >
-                  Clear Filters
-                </button>
-              </div>
-
-              <div className="org-browser-frame">
-                {(metadataCatalog?.types || []).map((typeRow) => {
-                  const membersPayload = metadataMembersByType[typeRow.type];
-                  const members = membersPayload?.members || [];
-                  return (
-                    <details key={typeRow.type}>
-                      <summary>
-                        <span>{typeRow.type}</span>
-                        <span>{typeRow.memberCount}</span>
-                      </summary>
-                      <div className="type-actions">
-                        <button type="button" onClick={() => void loadMembers(typeRow.type)} disabled={loading || metadataLoadingType === typeRow.type}>
-                          {metadataLoadingType === typeRow.type ? 'Loading...' : 'Load Members'}
-                        </button>
-                        <button type="button" className="ghost" onClick={() => toggleTypeSelection(typeRow.type)}>
-                          {isTypeSelected(typeRow.type) ? 'Remove Type' : 'Add Type'}
-                        </button>
-                      </div>
-                      {members.length > 0 ? (
-                        <ul className="member-list">
-                          {members.map((member) => (
-                            <li key={`${typeRow.type}:${member.name}`}>
-                              <span>{member.name}</span>
-                              <button type="button" className="ghost" onClick={() => toggleMemberSelection(typeRow.type, member.name)}>
-                                {isMemberSelected(typeRow.type, member.name) ? 'Remove' : 'Add'}
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="muted">No members loaded.</p>
-                      )}
-                    </details>
-                  );
-                })}
-              </div>
-
-              <h3>Retrieval Cart</h3>
-              <textarea
-                rows={8}
-                value={metadataSelectionsRaw}
-                onChange={(e) => setMetadataSelectionsRaw(e.target.value)}
-                placeholder='[{"type":"CustomObject","members":["Account"]}]'
-              />
-              <div className="action-row">
-                <button
-                  type="button"
-                  onClick={() => {
-                    let selections: Array<{ type: string; members?: string[] }> = metadataSelected;
-                    try {
-                      const parsed = JSON.parse(metadataSelectionsRaw) as Array<{ type: string; members?: string[] }>;
-                      if (Array.isArray(parsed)) {
-                        selections = parsed;
-                      }
-                    } catch {
-                      // keep structured selection
-                    }
-                    void runOrgQuery('metadataRetrieve', { selections, autoRefresh: metadataAutoRefresh });
-                  }}
-                  disabled={loading}
-                >
-                  Retrieve Selected
-                </button>
-              </div>
-            </>
+                } catch {
+                  // keep structured selection
+                }
+                void runOrgQuery('metadataRetrieve', { selections, autoRefresh: metadataAutoRefresh });
+              }}
+            />
           )}
 
           {uiTab === 'refresh' && (

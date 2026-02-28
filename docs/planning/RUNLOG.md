@@ -537,3 +537,27 @@ Branch: `dna-foundation`
 - Packaged desktop verification is now a repeatable command instead of a manual terminal sequence.
 - The release path can now prove deterministic Ask behavior and live org status from the packaged shell, not just `/ready`.
 - The next highest-value cleanup is remaining page-shell orchestration in Browser and System.
+
+## Entry 15: Phase 5 Browser Workspace Extraction
+
+### Change
+- Extracted `Org Browser` rendering out of `apps/web/app/page.tsx`.
+- Added:
+  - `apps/web/app/workspaces/browser/browser-workspace.tsx`
+  - `apps/web/app/workspaces/browser/types.ts`
+- Kept metadata retrieval logic in the page shell so the slice stays presentation-only and does not widen into a transport or engine change.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - route output remained unchanged for the typed desktop boundary surface
+
+### Outcome
+- `page.tsx` no longer owns the `Org Browser` render tree inline.
+- The remaining large inline workspace in the page shell is `Settings & Diagnostics`, plus shared shell/orchestration state.
+- The next narrow slice is extracting `Settings & Diagnostics` out of `apps/web/app/page.tsx`.
