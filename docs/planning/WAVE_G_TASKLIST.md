@@ -24,7 +24,7 @@ Objective: deliver the fresh desktop-native Orgumented experience with Ask as th
 - [ ] Implement desktop Proofs and History workspace.
 - [ ] Implement desktop Settings and Diagnostics workspace.
 - [ ] Add operator history model so proofs/replays are accessed by labeled history, not token bookkeeping.
-- [ ] Remove dependency on the legacy embedded dev-server workflow for primary operator usage.
+- [ ] Remove dependency on the superseded embedded dev-server workflow for primary operator usage.
 
 ## Exit Gates
 - [x] Ask-first desktop experience is the default product interaction.

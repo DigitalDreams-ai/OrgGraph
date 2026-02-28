@@ -9,7 +9,7 @@ Objective: deliver a fresh workflow-native Next.js UI where Ask is the flagship 
 - Use this wave to preserve the product requirements that must be realized in the desktop UX.
 
 ## Scope
-- Fresh Ask-first UI baseline (not legacy endpoint-console derivative).
+- Fresh Ask-first UI baseline.
 - Workflow-native tabs: Ask, Connect, Retrieve, Refresh, Analyze, Proofs, System.
 - Predictable data contract and feature-segmented Next.js structure.
 
@@ -21,13 +21,13 @@ Objective: deliver a fresh workflow-native Next.js UI where Ask is the flagship 
 - [ ] Normalize server/client boundaries and API adapter layer.
 - [ ] Add interaction states, empty states, and actionable error UX.
 - [ ] Add UI smoke + behavior parity tests for core workflows.
-- [ ] Remove dependency on legacy UI routes for core operations.
+- [ ] Remove dependency on superseded UI routes for core operations.
 
 ## Exit Gates
 - [ ] Workflow parity smoke pass on new UI.
-- [ ] Operator task completion target achieved vs legacy baseline.
-- [ ] No legacy UI route required for core workflows.
+- [ ] Operator task completion target achieved vs prior baseline.
+- [ ] No superseded UI route required for core workflows.
 - [ ] New UI supports connect/retrieve/refresh/ask/proof end-to-end.
 
 ## Implementation Note
-- Wave D requirements should now be delivered through [WAVE_G_TASKLIST.md](/volume1/data/projects/OrgGraph/docs/planning/WAVE_G_TASKLIST.md) on top of the desktop foundation defined in [WAVE_F_TASKLIST.md](/volume1/data/projects/OrgGraph/docs/planning/WAVE_F_TASKLIST.md).
+- Wave D requirements should now be delivered through `docs/planning/WAVE_G_TASKLIST.md` on top of the desktop foundation defined in `docs/planning/WAVE_F_TASKLIST.md`.

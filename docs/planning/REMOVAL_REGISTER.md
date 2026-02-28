@@ -1,8 +1,8 @@
-# Orgumented Legacy Removal Register
+# Orgumented Removal Register
 
 Status: active removal register
 
-Purpose: make legacy removal explicit so the project stops carrying dead paths, duplicate runtime models, and failed auth ideas.
+Purpose: make removal work explicit so the project stops carrying dead paths, duplicate runtime models, and failed auth ideas.
 
 ## 1. Removal Policy
 - If a path is not part of the desktop target architecture, it should not be preserved as a product feature.
@@ -26,7 +26,7 @@ Purpose: make legacy removal explicit so the project stops carrying dead paths, 
 
 4. Auth-code file workflows
 - status: remove
-- reason: legacy OAuth-era behavior
+- reason: obsolete OAuth-era behavior
 
 5. Browser-broker / VNC auth sidecars
 - status: remove immediately
@@ -39,7 +39,7 @@ Purpose: make legacy removal explicit so the project stops carrying dead paths, 
 
 7. package.xml as required operator dependency
 - status: remove
-- reason: legacy retrieval model
+- reason: obsolete retrieval model
 
 ### Runtime
 8. Docker as product runtime
@@ -59,10 +59,10 @@ Purpose: make legacy removal explicit so the project stops carrying dead paths, 
 - status: replace
 - reason: operator-hostile default output
 
-## 3. Conditional Legacy Items
+## 3. Conditional Transitional Items
 These may remain temporarily during migration but must not shape future design.
 
-1. Existing browser-hosted WebUI
+1. Existing browser-hosted operator UI
 - temporary role: migration scaffold only
 - removal trigger: desktop workflow parity for core operator tasks
 
@@ -75,9 +75,9 @@ These may remain temporarily during migration but must not shape future design.
 - removal trigger: equivalent desktop/native orchestration exists
 
 ## 4. Removal Order
-1. Remove legacy auth pathways from docs and planning claims.
+1. Remove obsolete auth pathways from docs and planning claims.
 2. Remove browser-broker/VNC implementation.
-3. Remove legacy connect controls from primary UX.
+3. Remove superseded connect controls from primary UX.
 4. Remove manifest-driven retrieve assumptions from remaining operator docs/code.
 5. Deprecate Docker runtime from planning and product claims.
 6. Retire old operator web shell after desktop parity.
@@ -90,14 +90,14 @@ These may remain temporarily during migration but must not shape future design.
 
 ## 6. Verification Checklist
 - [ ] no supported operator auth flow bypasses Salesforce CLI keychain
-- [ ] no primary runbook tells operators to use legacy auth
+- [ ] no primary runbook tells operators to use obsolete auth
 - [ ] no primary runbook treats Docker as required product runtime
 - [ ] no standard operator retrieve flow requires package.xml
 - [ ] no primary UI depends on endpoint-console patterns
 
 ## 7. Governance Rule
 Any item added here must include:
-1. why it is legacy
+1. why it is obsolete
 2. whether it is temporary or permanent removal
 3. what blocks removal
 4. what proves it is gone

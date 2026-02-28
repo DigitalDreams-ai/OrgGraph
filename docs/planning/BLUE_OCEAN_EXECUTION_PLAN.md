@@ -287,7 +287,7 @@ Target state:
 Migration strategy:
 - No big-bang rewrite mixed with backend contract churn.
 - Implement a fresh UI shell and migrate workflow-by-workflow behind stable API contracts.
-- Keep legacy UI paths removable once parity gates pass.
+- Keep superseded UI paths removable once parity gates pass.
 
 Difficulty and payoff:
 - Migration difficulty: medium if incremental, high if combined with concurrent auth/runtime rewrites.
@@ -298,7 +298,7 @@ Release gate for architecture migration:
 
 ## Current Execution Sequencing Update (Wave Model)
 Execution is now dependency-first via waves (see `BLUE_OCEAN_PHASE_ROADMAP.md`):
-1. Wave A: Operator baseline and legacy removal
+1. Wave A: Operator baseline and removal work
 2. Wave B: Ask deterministic core
 3. Wave C: Proof productization
 4. Wave D: Fresh Ask-first UX capability target

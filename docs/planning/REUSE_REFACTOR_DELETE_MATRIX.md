@@ -26,10 +26,10 @@ Purpose: identify what survives the move to a desktop-native Next.js + NestJS ar
 | Tooling | direct scattered `sf` calls | Refactor | too distributed | centralize behind tool adapter |
 | Tooling | direct scattered `cci` calls | Refactor | too distributed | centralize behind tool adapter |
 | Auth | external client app / OAuth remnants | Delete | not target auth model | remove from runtime and docs |
-| Auth | frontdoor/magic link primary auth | Delete | brittle and legacy | not core architecture |
+| Auth | frontdoor/magic link primary auth | Delete | brittle and obsolete | not core architecture |
 | Auth | browser broker / VNC sidecar | Delete | wrong solution | immediate removal target |
 | Retrieve | selector-based metadata retrieve | Reuse | matches target model | promote to standard path |
-| Retrieve | manifest-driven default retrieve | Delete | legacy operator workflow | keep only if needed for dev migration, not product |
+| Retrieve | manifest-driven default retrieve | Delete | obsolete operator workflow | keep only if needed for dev migration, not product |
 | Parsers | Apex, Flow, Object, Permission parsers | Reuse | high-value domain logic | validate local-path assumptions |
 | Ontology | ontology package and constraints | Reuse | core differentiation | keep authoritative role |
 | Storage | SQLite backend | Reuse initially | fastest local-first path | abstract for future evolution |
@@ -47,7 +47,7 @@ Purpose: identify what survives the move to a desktop-native Next.js + NestJS ar
 
 ## 4. Priority Delete Areas
 1. browser-broker auth implementation
-2. legacy auth docs and env/config keys
+2. obsolete auth docs and env/config keys
 3. manifest-first operator messaging
 4. endpoint-console UI assumptions
 
@@ -60,4 +60,5 @@ Purpose: identify what survives the move to a desktop-native Next.js + NestJS ar
 ## 6. Use This Matrix When
 - planning new waves
 - deciding whether to migrate or rewrite a module
-- reviewing PRs that risk reviving legacy behavior
+- reviewing PRs that risk reviving superseded behavior
+- reviewing PRs that risk reviving superseded behavior

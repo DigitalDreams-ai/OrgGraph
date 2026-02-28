@@ -28,7 +28,7 @@ Objective: move Orgumented onto a desktop-native runtime foundation before furth
 - [x] Desktop shell launches successfully on Windows.
 - [x] Local NestJS engine runs under desktop-managed lifecycle.
 - [x] Operator can discover at least one locally authenticated alias through Orgumented desktop on Windows.
-- [x] Operator can attach an existing alias without using Docker, browser brokers, or legacy auth paths on Windows.
+- [x] Operator can attach an existing alias without using Docker, browser brokers, or obsolete auth paths on Windows.
 - [x] Local app data, logs, and proof paths are explicit and functioning.
 - [x] Active docs treat the standalone Windows desktop app as the only product runtime.
 
