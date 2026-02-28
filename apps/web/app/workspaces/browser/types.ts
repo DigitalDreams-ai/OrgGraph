@@ -24,3 +24,22 @@ export type MetadataSelection = {
   type: string;
   members?: string[];
 };
+
+export type MetadataSelectionSummary = {
+  typeCount: number;
+  memberCount: number;
+};
+
+export type MetadataRetrieveResultView = {
+  alias: string;
+  status: string;
+  parsePath: string;
+  metadataArgs: string[];
+  autoRefresh: boolean;
+  completedAt: string;
+  refresh?: {
+    nodeCount: number;
+    edgeCount: number;
+    evidenceCount: number;
+  };
+};

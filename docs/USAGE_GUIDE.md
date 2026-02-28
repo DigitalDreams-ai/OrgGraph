@@ -140,6 +140,14 @@ Current `Org Sessions` behavior:
   - connect
   - switch
 
+Current retrieval handoff behavior:
+- `Org Browser` shows the active alias, cart summary, and the last selected-retrieve result
+- `Open Refresh & Build` moves directly from metadata selection into rebuild and drift review
+- `Refresh & Build` shows structured summaries for:
+  - latest refresh
+  - latest drift diff
+  - latest org-retrieve pipeline
+
 ## 6. Connect a Sandbox Org
 Auth is delegated to Salesforce CLI keychain sessions.
 

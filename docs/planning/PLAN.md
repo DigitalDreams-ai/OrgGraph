@@ -355,3 +355,13 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
     - connect
     - switch
   - the next product/runtime gap is the retrieval handoff between `Org Sessions`, `Org Browser`, and `Refresh & Build`
+- The retrieval handoff is now materially stronger:
+  - `Org Browser` surfaces:
+    - active alias context
+    - cart summary
+    - structured selected-retrieve results
+  - `Refresh & Build` surfaces:
+    - latest refresh summary
+    - latest drift diff summary
+    - latest org-retrieve pipeline summary
+  - the next product question is whether the branch should keep productizing desktop workspaces or pause for review on PR `#42`

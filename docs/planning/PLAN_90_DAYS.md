@@ -289,9 +289,13 @@ Progress note:
   - overview refresh now re-syncs session, aliases, toolchain health, and preflight in one pass
   - alias inventory now supports direct select, inspect, connect, and switch actions
   - selected alias readiness and remediation now surface directly in the desktop UI
+- Slice 14 completed:
+  - retrieval handoff between `Org Sessions`, `Org Browser`, and `Refresh & Build` is now structured in the desktop UI
+  - `Org Browser` now surfaces active alias context, cart summary, and last selected-retrieve result
+  - `Refresh & Build` now surfaces the latest refresh summary, drift diff summary, and org-retrieve pipeline summary
 - Next narrow step:
-  - productize retrieval handoff between `Org Sessions`, `Org Browser`, and `Refresh & Build`
-  - only return for more UI cleanup if the remaining page shell still blocks architectural clarity
+  - either keep productizing remaining desktop workspaces with the same discipline
+  - or pause implementation and review the accumulated DNA branch progress on PR `#42`
 
 ## Determinism and Replay Harness Plan
 
@@ -379,6 +383,6 @@ Progress note:
 
 ## Current Next Step
 - Continue from the reduced shell into higher-value product/runtime slices.
-- Preferred next step: improve retrieval handoff between `Org Sessions`, `Org Browser`, and `Refresh & Build` so the desktop operator flow stays structured after alias attach.
+- Preferred next step: review the accumulated DNA branch product/runtime gains on PR `#42`, then decide whether more workspace productization is justified before deeper runtime changes.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

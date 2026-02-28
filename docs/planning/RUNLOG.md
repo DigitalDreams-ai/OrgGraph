@@ -1364,3 +1364,44 @@ Branch: `dna-foundation`
 - `Org Sessions` now matches the desktop operator model better:
   - alias attach, switch, and readiness are visible as workflow state, not just raw payloads
   - the next higher-value product gap is retrieval handoff after alias selection
+
+## Entry 40: Productize Retrieval Handoff
+
+### Change
+- Expanded `apps/web/app/workspaces/browser/` so `Org Browser` now surfaces:
+  - active and selected alias context
+  - cart summary
+  - structured selected-retrieve results
+- Expanded `apps/web/app/workspaces/refresh/` so `Refresh & Build` now surfaces:
+  - latest refresh summary
+  - latest drift diff summary
+  - latest org-retrieve pipeline summary
+- Updated `apps/web/app/page.tsx` so retrieval-related workspace transitions carry session context into Browser and Refresh.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - Next build completed successfully after the retrieval handoff productization
+  - typed org and refresh routes remained intact:
+    - `/api/org/metadata/catalog`
+    - `/api/org/metadata/members`
+    - `/api/org/metadata/retrieve`
+    - `/api/org/retrieve`
+    - `/api/refresh`
+    - `/api/refresh/diff/[snapshotA]/[snapshotB]`
+
+3. `pnpm desktop:build`
+- Result: passed
+- Proof:
+  - `Built application at: ...\\apps\\desktop\\src-tauri\\target\\release\\orgumented-desktop.exe`
+  - `Finished 2 bundles`
+
+### Outcome
+- The desktop operator flow now stays structured after alias attach:
+  - retrieve context remains visible
+  - selected metadata and retrieve results are no longer hidden in raw payloads
+  - refresh and diff results now read like product workflow state instead of transport output

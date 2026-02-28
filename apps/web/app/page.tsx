@@ -206,6 +206,8 @@ export default function Page(): JSX.Element {
 
           {uiTab === 'browser' && (
             <BrowserWorkspace
+              activeAlias={connectWorkspace.activeAlias}
+              selectedAlias={connectWorkspace.orgAlias}
               metadataSearch={browserWorkspace.metadataSearch}
               setMetadataSearch={browserWorkspace.setMetadataSearch}
               metadataMemberSearch={browserWorkspace.metadataMemberSearch}
@@ -221,6 +223,8 @@ export default function Page(): JSX.Element {
               metadataLoadingType={browserWorkspace.metadataLoadingType}
               metadataSelectionsRaw={browserWorkspace.metadataSelectionsRaw}
               setMetadataSelectionsRaw={browserWorkspace.setMetadataSelectionsRaw}
+              selectionSummary={browserWorkspace.selectionSummary}
+              lastMetadataRetrieve={browserWorkspace.lastMetadataRetrieve}
               loading={secondaryQueryRunner.loading}
               onRefreshTypes={() => void browserWorkspace.refreshTypes()}
               onClearFilters={browserWorkspace.clearFilters}
@@ -230,11 +234,14 @@ export default function Page(): JSX.Element {
               isTypeSelected={browserWorkspace.isTypeSelected}
               isMemberSelected={browserWorkspace.isMemberSelected}
               onRetrieveSelected={() => void browserWorkspace.retrieveSelected()}
+              onOpenRefresh={() => setUiTab('refresh')}
             />
           )}
 
           {uiTab === 'refresh' && (
             <RefreshWorkspace
+              activeAlias={connectWorkspace.activeAlias}
+              selectedAlias={connectWorkspace.orgAlias}
               refreshMode={refreshWorkspace.refreshMode}
               setRefreshMode={refreshWorkspace.setRefreshMode}
               fromSnapshot={refreshWorkspace.fromSnapshot}
@@ -247,6 +254,9 @@ export default function Page(): JSX.Element {
               setOrgRunRetrieve={refreshWorkspace.setOrgRunRetrieve}
               orgAutoRefresh={refreshWorkspace.orgAutoRefresh}
               setOrgAutoRefresh={refreshWorkspace.setOrgAutoRefresh}
+              lastRefreshRun={refreshWorkspace.lastRefreshRun}
+              lastDiffRun={refreshWorkspace.lastDiffRun}
+              lastOrgRetrieveRun={refreshWorkspace.lastOrgRetrieveRun}
               loading={secondaryQueryRunner.loading}
               onRunRefresh={() => void refreshWorkspace.runRefreshNow()}
               onRunDiff={() => void refreshWorkspace.runDiff()}
