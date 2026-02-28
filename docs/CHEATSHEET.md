@@ -27,6 +27,12 @@ Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:build
 ```
 
+Packaged desktop smoke:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:smoke:release
+```
+
 Packaged runtime expectation:
 - `desktop:build` stages a bundled runtime under `apps/desktop/src-tauri/runtime/`
 - release shell launches with bundled static UI assets and bundled API runtime
@@ -117,6 +123,7 @@ npm exec --yes pnpm@9.12.3 -- --filter api build
 pnpm --filter web build
 pnpm desktop:info
 pnpm desktop:build
+pnpm desktop:smoke:release
 pnpm desktop:dev
 npm run ingest:report
 npm run phase12:replay-regression
@@ -151,8 +158,7 @@ pnpm desktop:dev
 
 # Verify packaged shell runtime locally
 pnpm desktop:build
-apps/desktop/src-tauri/target/release/orgumented-desktop.exe
-curl http://localhost:3100/ready
+pnpm desktop:smoke:release
 ```
 
 ## Project Memory MCP

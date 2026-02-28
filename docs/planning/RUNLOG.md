@@ -502,3 +502,38 @@ Branch: `dna-foundation`
 ### Outcome
 - The desktop status strip now reflects the actual engine health path instead of the embedded web layer.
 - The remaining browser-era carryover is no longer in status transport; it is mostly in page-shell orchestration and browser-first verification scripts.
+
+## Entry 14: Packaged Desktop Smoke Harness
+
+### Change
+- Added `scripts/desktop-release-smoke.ps1`.
+- Added `pnpm desktop:smoke:release` in `package.json`.
+- The smoke harness now:
+  - launches `apps/desktop/src-tauri/target/release/orgumented-desktop.exe`
+  - waits for bundled API readiness
+  - captures `/health`, `/ready`, `/ask`, and `/org/status` artifacts under `logs/`
+  - validates Ask proof identity and replay token presence
+  - shuts down packaged desktop processes cleanly
+
+### Verification
+1. `pnpm desktop:build`
+- Result: passed
+- Proof:
+  - `Built application at: ...\\apps\\desktop\\src-tauri\\target\\release\\orgumented-desktop.exe`
+  - `Finished 2 bundles`
+
+2. `pnpm desktop:smoke:release`
+- Result: passed
+- Proof:
+  - `logs/desktop-release-smoke-result.json` recorded:
+    - `healthStatus=ok`
+    - `readyStatus=ready`
+    - `askTrustLevel=refused`
+    - `askProofId=proof_dd7bcb4c6e249d0ebae058a6`
+  - `logs/desktop-release-smoke-ask.json` recorded proof and replay identifiers from the packaged shell runtime
+  - `logs/desktop-release-smoke-org-status.json` recorded `session.status=connected` and `activeAlias=shulman-dev2`
+
+### Outcome
+- Packaged desktop verification is now a repeatable command instead of a manual terminal sequence.
+- The release path can now prove deterministic Ask behavior and live org status from the packaged shell, not just `/ready`.
+- The next highest-value cleanup is remaining page-shell orchestration in Browser and System.

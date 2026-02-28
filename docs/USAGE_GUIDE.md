@@ -57,6 +57,19 @@ Packaged build behavior:
   - `apps/desktop/src-tauri/target/release/bundle/msi/Orgumented_0.1.0_x64_en-US.msi`
   - `apps/desktop/src-tauri/target/release/bundle/nsis/Orgumented_0.1.0_x64-setup.exe`
 
+Run the packaged desktop smoke:
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:smoke:release
+```
+
+The packaged smoke validates:
+- shell launch
+- bundled API health and readiness
+- deterministic Ask proof generation
+- live org status retrieval
+
 ## 4. Health and Readiness
 ```bash
 curl http://localhost:3100/health
@@ -258,6 +271,7 @@ pnpm --filter api test
 pnpm --filter web build
 pnpm desktop:info
 pnpm desktop:build
+pnpm desktop:smoke:release
 pnpm desktop:dev
 npm run phase12:replay-regression
 npm run phase12:replay-load

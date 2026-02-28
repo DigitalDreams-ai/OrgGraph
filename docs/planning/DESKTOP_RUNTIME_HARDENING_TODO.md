@@ -26,7 +26,7 @@ Purpose: track the remaining browser-era and dev-server-era carryover that still
 - [ ] Replace browser-era UI smoke checks with desktop-shell verification.
 - [ ] Replace Playwright screenshot proofs that assume a browser-first surface.
 - [ ] Remove stale verification expectations such as `Mission Control`, `Connect`, `Proofs & Metrics`, and `System` from the UI smoke scripts.
-- [ ] Make the primary product verification path prove the packaged desktop shell, not only the local web surface.
+- [x] Make the primary product verification path prove the packaged desktop shell, not only the local web surface.
 
 ## 4. UI Structure Cleanup
 - [ ] Break the monolithic `apps/web/app/page.tsx` into workspace modules.
@@ -44,6 +44,7 @@ Purpose: track the remaining browser-era and dev-server-era carryover that still
 - `apps/desktop/scripts/dev-runtime.mjs`
 - `apps/web/app/lib/status-client.ts`
 - `apps/web/app/page.tsx`
+- `scripts/desktop-release-smoke.ps1`
 - `scripts/web-smoke.sh`
 - `scripts/ui-smoke-playwright.sh`
 

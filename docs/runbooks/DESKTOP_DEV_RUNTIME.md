@@ -97,6 +97,29 @@ Observed packaged proof in current repo state:
 - `http://127.0.0.1:3100/ready` returned `200`
 - proof log: `logs/desktop-phase4-release.log`
 
+## Run Packaged Desktop Smoke
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:build
+pnpm desktop:smoke:release
+```
+
+Smoke artifacts:
+- `logs/desktop-release-smoke.stdout.log`
+- `logs/desktop-release-smoke.stderr.log`
+- `logs/desktop-release-smoke-health.json`
+- `logs/desktop-release-smoke-ready.json`
+- `logs/desktop-release-smoke-ask.json`
+- `logs/desktop-release-smoke-org-status.json`
+- `logs/desktop-release-smoke-result.json`
+
+Current packaged smoke proof:
+- shell launch succeeded
+- `healthStatus=ok`
+- `readyStatus=ready`
+- Ask returned deterministic proof ID `proof_dd7bcb4c6e249d0ebae058a6`
+
 ## Local Org Auth
 
 Authenticate locally, not in Docker:

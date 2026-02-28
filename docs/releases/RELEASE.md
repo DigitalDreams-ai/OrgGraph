@@ -14,9 +14,8 @@ This release note template defines repeatable Windows desktop release evidence f
 4. `pnpm --filter web build`
 5. `pnpm desktop:info`
 6. `pnpm desktop:build`
-7. Launch packaged shell locally: `apps/desktop/src-tauri/target/release/orgumented-desktop.exe`
-8. Confirm packaged API readiness: `curl http://localhost:3100/ready`
-9. Capture one packaged-shell workflow proof and its log artifact.
+7. Run packaged desktop smoke: `pnpm desktop:smoke:release`
+8. Review smoke artifacts under `logs/desktop-release-smoke-*.json` and `logs/desktop-release-smoke.*.log`
 
 ## Current Runtime Evidence
 - Product boundary: Windows desktop app
@@ -26,9 +25,9 @@ This release note template defines repeatable Windows desktop release evidence f
   - bundled Node runtime
 - Minimum release evidence should include:
   - `pnpm desktop:build` success
-  - packaged shell startup proof
+  - packaged smoke success via `pnpm desktop:smoke:release`
   - `/ready` returning `200`
-  - one operator workflow proof from the packaged shell
+  - one deterministic Ask proof artifact from the packaged shell
 
 ## Release Steps
 1. Merge approved PR into `main`.

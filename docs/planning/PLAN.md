@@ -228,6 +228,14 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
     - impact
     - meta context/adapt
   - build output no longer emits `/api/query`
+- Packaged-shell workflow proof now exists:
+  - `pnpm desktop:smoke:release` launches the packaged shell and bundled API runtime
+  - packaged smoke captured:
+    - `healthStatus=ok`
+    - `readyStatus=ready`
+    - deterministic Ask proof ID `proof_dd7bcb4c6e249d0ebae058a6`
+    - live org status with `session.status=connected` and `activeAlias=shulman-dev2`
+  - proof artifacts live under `logs/desktop-release-smoke-*.json`
 - The next live architectural priority is to keep moving runtime expectations into the shell:
-  - reduce the remaining browser-style health/readiness proxy assumptions
-  - then shrink the page shell further so Browser and System stop shaping engine requests inline
+  - shrink the page shell further so Browser and System stop shaping engine requests inline
+  - then decide whether packaged smoke should grow into an authenticated org-session attach workflow

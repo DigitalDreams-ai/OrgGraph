@@ -157,9 +157,16 @@ Progress note:
 - Slice 4 completed:
   - browser-style `/api/health` and `/api/ready` proxy routes are removed
   - the desktop status strip now calls the local Nest engine directly for health and readiness
+- Slice 5 completed:
+  - added `pnpm desktop:smoke:release`
+  - packaged smoke now proves:
+    - shell launch
+    - bundled API readiness
+    - deterministic Ask proof generation
+    - live org status retrieval
 - Next narrow step:
-  - expand packaged-shell verification beyond readiness smoke into live Ask and org-session proof
-  - then continue shrinking remaining page-shell orchestration in Browser and System
+  - continue shrinking remaining page-shell orchestration in Browser and System
+  - then decide whether packaged smoke should include authenticated org-session attach/switch checks
 
 ## Phase 5: Modular UI Reconstruction
 
@@ -258,6 +265,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: prove a live packaged Ask or org-session workflow now that runtime ownership and direct status checks are in place.
+- Preferred next step: reduce the remaining Browser and System page-shell orchestration now that packaged smoke covers shell launch, readiness, Ask proof, and org status.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.
