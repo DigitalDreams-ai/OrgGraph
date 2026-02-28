@@ -6,9 +6,10 @@ import {
   getAskProof,
   listAskProofsRecent,
   replayAskProof,
-  runAskRequest,
   type QueryResponse
 } from './lib/ask-client';
+import { AskWorkspace } from './workspaces/ask/ask-workspace';
+import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
 
 type QueryKind =
   | 'refresh'
@@ -53,16 +54,6 @@ type MetadataMembersPayload = {
   totalMembers: number;
   members: MetadataMember[];
   warnings?: string[];
-};
-
-type AskPayload = {
-  answer?: string;
-  deterministicAnswer?: string;
-  confidence?: number;
-  trustLevel?: string;
-  policy?: { policyId?: string };
-  proof?: { proofId?: string; replayToken?: string; snapshotId?: string };
-  citations?: Array<{ sourcePath?: string; score?: number; snippet?: string }>;
 };
 
 type OrgSessionPayload = {
@@ -179,17 +170,10 @@ export default function Page(): JSX.Element {
   const [responseText, setResponseText] = useState('');
   const [responseData, setResponseData] = useState<QueryResponse | null>(null);
   const [errorText, setErrorText] = useState('');
-  const [askResult, setAskResult] = useState<AskPayload | null>(null);
 
   const [healthStatus, setHealthStatus] = useState('unknown');
   const [readyStatus, setReadyStatus] = useState('unknown');
   const [readyDetails, setReadyDetails] = useState('');
-
-  const [askQuery, setAskQuery] = useState('What touches Opportunity.StageName?');
-  const [maxCitationsRaw, setMaxCitationsRaw] = useState('5');
-  const [consistencyCheck, setConsistencyCheck] = useState(true);
-  const [includeLowConfidence, setIncludeLowConfidence] = useState(false);
-  const [askElaboration, setAskElaboration] = useState('');
 
   const [orgAlias, setOrgAlias] = useState('orgumented-sandbox');
   const [orgSession, setOrgSession] = useState<OrgSessionPayload | null>(null);
@@ -228,13 +212,16 @@ export default function Page(): JSX.Element {
   const [replayToken, setReplayToken] = useState('');
   const [metaDryRun, setMetaDryRun] = useState(true);
 
+  const askWorkspace = useAskWorkspace({
+    presentResponse,
+    resolveErrorMessage,
+    setLoading,
+    setCopied,
+    setErrorText
+  });
+
   const activeAlias = orgSession?.activeAlias || orgStatus?.session?.activeAlias || orgStatus?.alias || orgAlias;
   const sessionStatus = orgSession?.status || orgStatus?.session?.status || 'unknown';
-  const askSummary = askResult?.answer || askResult?.deterministicAnswer || 'Run Ask to generate a decision packet.';
-  const askTrust = askResult?.trustLevel || 'waiting';
-  const askProofId = askResult?.proof?.proofId || '';
-  const askReplayToken = askResult?.proof?.replayToken || '';
-  const askCitations = askResult?.citations || [];
 
   useEffect(() => {
     try {
@@ -243,7 +230,7 @@ export default function Page(): JSX.Element {
       const savedAlias = localStorage.getItem('orgumented.newui.alias');
       if (savedAlias) setOrgAlias(savedAlias);
       const savedAsk = localStorage.getItem('orgumented.newui.ask');
-      if (savedAsk) setAskQuery(savedAsk);
+      if (savedAsk) askWorkspace.setAskQuery(savedAsk);
     } catch {
       // ignore
     }
@@ -254,11 +241,20 @@ export default function Page(): JSX.Element {
     try {
       localStorage.setItem('orgumented.newui.tab', uiTab);
       localStorage.setItem('orgumented.newui.alias', orgAlias);
-      localStorage.setItem('orgumented.newui.ask', askQuery);
+      localStorage.setItem('orgumented.newui.ask', askWorkspace.askQuery);
     } catch {
       // ignore
     }
-  }, [uiTab, orgAlias, askQuery]);
+  }, [uiTab, orgAlias, askWorkspace.askQuery]);
+
+  useEffect(() => {
+    if (askWorkspace.askProofId) {
+      setProofId(askWorkspace.askProofId);
+    }
+    if (askWorkspace.askReplayToken) {
+      setReplayToken(askWorkspace.askReplayToken);
+    }
+  }, [askWorkspace.askProofId, askWorkspace.askReplayToken]);
 
   useEffect(() => {
     setMetadataSelectionsRaw(pretty(metadataSelected));
@@ -425,76 +421,6 @@ export default function Page(): JSX.Element {
     setErrorText('Copy failed in this browser context. Select JSON from Raw JSON and copy manually.');
   }
 
-  async function runAsk(): Promise<void> {
-    setLoading(true);
-    setCopied(false);
-    setErrorText('');
-
-    try {
-      const result = await runAskRequest({
-        query: askQuery,
-        maxCitations: parseOptionalInt(maxCitationsRaw) ?? 5,
-        consistencyCheck,
-        includeLowConfidence
-      });
-      presentResponse(result);
-
-      if (result.ok === false) {
-        setErrorText(resolveErrorMessage(result));
-        return;
-      }
-
-      const payload = result.payload as AskPayload | undefined;
-      if (payload) {
-        setAskResult(payload);
-        setAskElaboration('');
-        setProofId(payload.proof?.proofId || '');
-        setReplayToken(payload.proof?.replayToken || '');
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected ask failure';
-      const fallback: QueryResponse = { ok: false, error: { message } };
-      presentResponse(fallback);
-      setErrorText('Ask failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function runAskElaboration(): Promise<void> {
-    if (!askQuery.trim()) return;
-    setLoading(true);
-    setCopied(false);
-    setErrorText('');
-
-    try {
-      const result = await runAskRequest({
-        query: `Provide a concise operator explanation for: ${askQuery}`,
-        maxCitations: parseOptionalInt(maxCitationsRaw) ?? 5,
-        consistencyCheck,
-        includeLowConfidence
-      });
-      presentResponse(result);
-
-      if (result.ok === false) {
-        setErrorText(resolveErrorMessage(result));
-        return;
-      }
-
-      const payload = result.payload as AskPayload | undefined;
-      if (payload) {
-        setAskElaboration(payload.answer || payload.deterministicAnswer || 'No elaboration returned.');
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected ask elaboration failure';
-      const fallback: QueryResponse = { ok: false, error: { message } };
-      presentResponse(fallback);
-      setErrorText('Ask elaboration failed. Check API readiness, query format, and local runtime health.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function runAskProofsRecent(): Promise<void> {
     setLoading(true);
     setCopied(false);
@@ -626,9 +552,9 @@ export default function Page(): JSX.Element {
           <span>Org Session</span>
           <strong>{sessionStatus}</strong>
         </article>
-        <article className={`status-pill ${trustTone(askTrust)}`}>
+        <article className={`status-pill ${trustTone(askWorkspace.askTrust)}`}>
           <span>Ask Trust</span>
-          <strong>{askTrust}</strong>
+          <strong>{askWorkspace.askTrust}</strong>
         </article>
       </section>
 
@@ -661,193 +587,52 @@ export default function Page(): JSX.Element {
 
         <section className="center-work panel">
           {uiTab === 'ask' && (
-            <>
-              <h2>Ask</h2>
-              <p className="section-lead">Ask architecture questions in natural language, then move through proof, trust, and follow-up actions without leaving the desktop shell.</p>
-
-              <div className="launch-grid">
-                <article className="sub-card launch-card launch-card-accent">
-                  <p className="panel-caption">Current launch state</p>
-                  <h3>Ask-first desktop runtime</h3>
-                  <p className="launch-copy">The main window opens on Ask, with session health, trust, and recovery actions visible before any deep operator workflow.</p>
-                  <div className="launch-stat-grid">
-                    <div className="hero-metric">
-                      <span>Active alias</span>
-                      <strong>{activeAlias}</strong>
-                    </div>
-                    <div className="hero-metric">
-                      <span>Session</span>
-                      <strong>{sessionStatus}</strong>
-                    </div>
-                    <div className="hero-metric">
-                      <span>Trust state</span>
-                      <strong>{askTrust}</strong>
-                    </div>
-                    <div className="hero-metric">
-                      <span>Build</span>
-                      <strong>{BUILD_VERSION}</strong>
-                    </div>
-                  </div>
-                </article>
-
-                <article className="sub-card launch-card">
-                  <p className="panel-caption">Quick actions</p>
-                  <h3>Next operator move</h3>
-                  <div className="quick-actions-grid">
-                    <button type="button" className="ghost" onClick={() => setUiTab('connect')}>Connect org</button>
-                    <button type="button" className="ghost" onClick={() => void runQuery('orgSessionAliases')} disabled={loading}>Refresh aliases</button>
-                    <button type="button" className="ghost" onClick={() => setUiTab('browser')}>Browse metadata</button>
-                    <button type="button" className="ghost" onClick={() => setUiTab('refresh')}>Run refresh</button>
-                  </div>
-                </article>
-              </div>
-
-              <div className="decision-grid">
-                <article className="sub-card decision-card decision-card-wide">
-                  <p className="panel-caption">Question composer</p>
-                  <label htmlFor="askQuery">Question</label>
-                  <textarea
-                    id="askQuery"
-                    rows={5}
-                    value={askQuery}
-                    onChange={(e) => setAskQuery(e.target.value)}
-                    placeholder="What touches Opportunity.StageName?"
-                  />
-
-                  <div className="field-grid ask-controls">
-                    <div>
-                      <label htmlFor="maxCitations">Max Citations</label>
-                      <input id="maxCitations" value={maxCitationsRaw} onChange={(e) => setMaxCitationsRaw(e.target.value)} />
-                    </div>
-                    <label className="check-row" htmlFor="consistencyCheck">
-                      <input
-                        id="consistencyCheck"
-                        type="checkbox"
-                        checked={consistencyCheck}
-                        onChange={(e) => setConsistencyCheck(e.target.checked)}
-                      />
-                      Consistency Check
-                    </label>
-                    <label className="check-row" htmlFor="includeLowConfidence">
-                      <input
-                        id="includeLowConfidence"
-                        type="checkbox"
-                        checked={includeLowConfidence}
-                        onChange={(e) => setIncludeLowConfidence(e.target.checked)}
-                      />
-                      Include Low Confidence
-                    </label>
-                  </div>
-
-                  <div className="action-row">
-                    <button type="button" onClick={() => void runAsk()} disabled={loading}>Run Ask</button>
-                    <button type="button" onClick={() => void runAskElaboration()} disabled={loading}>Generate Elaboration</button>
-                  </div>
-
-                  <div className="preset-row">
-                    {ASK_PRESETS.map((preset) => (
-                      <button key={preset} type="button" className="ghost chip-btn" onClick={() => setAskQuery(preset)}>
-                        {preset}
-                      </button>
-                    ))}
-                  </div>
-                </article>
-
-                <article className="sub-card decision-card decision-card-accent">
-                  <p className="panel-caption">Decision packet</p>
-                  <h3>Short answer</h3>
-                  <p className="decision-answer">{askSummary}</p>
-                  <div className="decision-meta">
-                    <span className={`decision-badge ${trustTone(askTrust)}`}>Trust: {askTrust}</span>
-                    <span className="decision-badge muted">Confidence: {typeof askResult?.confidence === 'number' ? askResult.confidence : 'n/a'}</span>
-                  </div>
-                  {askElaboration ? (
-                    <>
-                      <h4>Deterministic explanation</h4>
-                      <p>{askElaboration}</p>
-                    </>
-                  ) : (
-                    <p className="muted">Run elaboration when you want a longer explanation built from the same grounded answer.</p>
-                  )}
-                </article>
-
-                <article className="sub-card decision-card">
-                  <p className="panel-caption">Proof context</p>
-                  <h3>Why this answer is trusted</h3>
-                  <p><strong>Policy:</strong> {askResult?.policy?.policyId || 'n/a'}</p>
-                  <p><strong>Proof ID:</strong> {askProofId || 'n/a'}</p>
-                  <p><strong>Replay token:</strong> {askReplayToken || 'n/a'}</p>
-                  <p><strong>Snapshot:</strong> {askResult?.proof?.snapshotId || 'n/a'}</p>
-                </article>
-
-                <article className="sub-card decision-card">
-                  <p className="panel-caption">Evidence</p>
-                  <h3>Citations</h3>
-                  {askCitations.length > 0 ? (
-                    <ul className="citation-list">
-                      {askCitations.map((citation, index) => (
-                        <li key={`${citation.sourcePath || 'citation'}-${index}`} className="citation-item">
-                          <strong>{citation.sourcePath || `citation-${index + 1}`}</strong>
-                          <span>score {typeof citation.score === 'number' ? citation.score : 'n/a'}</span>
-                          <p>{citation.snippet || 'No snippet returned.'}</p>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="muted">Run Ask to populate grounded evidence.</p>
-                  )}
-                </article>
-
-                <article className="sub-card decision-card">
-                  <p className="panel-caption">Follow-up actions</p>
-                  <h3>Next actions</h3>
-                  <div className="follow-up-grid">
-                    <button
-                      type="button"
-                      className="ghost"
-                      onClick={() => {
-                        setAnalyzeMode('automation');
-                        setUiTab('analyze');
-                      }}
-                    >
-                      Inspect impacted automation
-                    </button>
-                    <button
-                      type="button"
-                      className="ghost"
-                      onClick={() => {
-                        setAnalyzeMode('perms');
-                        setUiTab('analyze');
-                      }}
-                    >
-                      Inspect permissions
-                    </button>
-                    <button
-                      type="button"
-                      className="ghost"
-                      onClick={() => {
-                        if (askProofId) setProofId(askProofId);
-                        if (askReplayToken) setReplayToken(askReplayToken);
-                        setUiTab('proofs');
-                      }}
-                    >
-                      Open proof
-                    </button>
-                    <button
-                      type="button"
-                      className="ghost"
-                      onClick={() => {
-                        if (askReplayToken) setReplayToken(askReplayToken);
-                        if (askProofId) setProofId(askProofId);
-                        setUiTab('proofs');
-                      }}
-                    >
-                      Save to history
-                    </button>
-                  </div>
-                </article>
-              </div>
-            </>
+            <AskWorkspace
+              activeAlias={activeAlias}
+              sessionStatus={sessionStatus}
+              buildVersion={BUILD_VERSION}
+              askQuery={askWorkspace.askQuery}
+              setAskQuery={askWorkspace.setAskQuery}
+              maxCitationsRaw={askWorkspace.maxCitationsRaw}
+              setMaxCitationsRaw={askWorkspace.setMaxCitationsRaw}
+              consistencyCheck={askWorkspace.consistencyCheck}
+              setConsistencyCheck={askWorkspace.setConsistencyCheck}
+              includeLowConfidence={askWorkspace.includeLowConfidence}
+              setIncludeLowConfidence={askWorkspace.setIncludeLowConfidence}
+              askElaboration={askWorkspace.askElaboration}
+              askResult={askWorkspace.askResult}
+              askSummary={askWorkspace.askSummary}
+              askTrust={askWorkspace.askTrust}
+              askProofId={askWorkspace.askProofId}
+              askReplayToken={askWorkspace.askReplayToken}
+              askCitations={askWorkspace.askCitations}
+              loading={loading}
+              trustTone={trustTone}
+              onRunAsk={() => void askWorkspace.runAsk(parseOptionalInt(askWorkspace.maxCitationsRaw) ?? 5)}
+              onRunAskElaboration={() => void askWorkspace.runAskElaboration(parseOptionalInt(askWorkspace.maxCitationsRaw) ?? 5)}
+              onOpenConnect={() => setUiTab('connect')}
+              onRefreshAliases={() => void runQuery('orgSessionAliases')}
+              onOpenBrowser={() => setUiTab('browser')}
+              onOpenRefresh={() => setUiTab('refresh')}
+              onInspectAutomation={() => {
+                setAnalyzeMode('automation');
+                setUiTab('analyze');
+              }}
+              onInspectPermissions={() => {
+                setAnalyzeMode('perms');
+                setUiTab('analyze');
+              }}
+              onOpenProof={() => {
+                if (askWorkspace.askProofId) setProofId(askWorkspace.askProofId);
+                if (askWorkspace.askReplayToken) setReplayToken(askWorkspace.askReplayToken);
+                setUiTab('proofs');
+              }}
+              onSaveToHistory={() => {
+                if (askWorkspace.askReplayToken) setReplayToken(askWorkspace.askReplayToken);
+                if (askWorkspace.askProofId) setProofId(askWorkspace.askProofId);
+                setUiTab('proofs');
+              }}
+            />
           )}
 
           {uiTab === 'connect' && (
@@ -1203,7 +988,7 @@ cci org import ${orgAlias} <sf-username>`}</pre>
                         limit: parseOptionalInt(limitRaw),
                         strict: strictMode,
                         explain: explainMode,
-                        includeLowConfidence
+                        includeLowConfidence: askWorkspace.includeLowConfidence
                       })
                     }
                     disabled={loading}
@@ -1222,7 +1007,7 @@ cci org import ${orgAlias} <sf-username>`}</pre>
                         strict: strictMode,
                         explain: explainMode,
                         debug: debugMode,
-                        includeLowConfidence
+                        includeLowConfidence: askWorkspace.includeLowConfidence
                       })
                     }
                     disabled={loading}
@@ -1302,16 +1087,16 @@ cci org import ${orgAlias} <sf-username>`}</pre>
 
           <div className="sub-card">
             <h3>Ask Snapshot</h3>
-            <p>{askSummary}</p>
+            <p>{askWorkspace.askSummary}</p>
           </div>
 
           <div className="sub-card">
             <h3>Trust Envelope</h3>
-            <p><strong>Trust:</strong> {askTrust}</p>
-            <p><strong>Confidence:</strong> {typeof askResult?.confidence === 'number' ? askResult.confidence : 'n/a'}</p>
-            <p><strong>Policy ID:</strong> {askResult?.policy?.policyId || 'n/a'}</p>
-            <p><strong>Proof ID:</strong> {askProofId || 'n/a'}</p>
-            <p><strong>Replay Token:</strong> {askReplayToken || 'n/a'}</p>
+            <p><strong>Trust:</strong> {askWorkspace.askTrust}</p>
+            <p><strong>Confidence:</strong> {typeof askWorkspace.askResult?.confidence === 'number' ? askWorkspace.askResult.confidence : 'n/a'}</p>
+            <p><strong>Policy ID:</strong> {askWorkspace.askResult?.policy?.policyId || 'n/a'}</p>
+            <p><strong>Proof ID:</strong> {askWorkspace.askProofId || 'n/a'}</p>
+            <p><strong>Replay Token:</strong> {askWorkspace.askReplayToken || 'n/a'}</p>
           </div>
 
           <div className="sub-card">

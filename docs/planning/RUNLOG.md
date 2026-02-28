@@ -91,3 +91,36 @@ Branch: `dna-foundation`
 - The Ask workspace now uses a typed route boundary instead of the generic `/api/query` multiplexer.
 - The generic query route is narrower and no longer acts as the transport seam for Ask/proof/replay.
 - The Ask decision packet remains stable in the UI while secondary proof/history actions run.
+
+## Entry 3: Phase 2 Ask Boundary Slice 2
+
+### Change
+- Extracted the Ask workspace UI and Ask-specific state out of `apps/web/app/page.tsx` into:
+  - `apps/web/app/workspaces/ask/ask-workspace.tsx`
+  - `apps/web/app/workspaces/ask/use-ask-workspace.ts`
+  - `apps/web/app/workspaces/ask/types.ts`
+- Kept Ask request execution and Ask decision-packet state inside the Ask workspace boundary instead of the page shell.
+- Preserved proof/replay field syncing so the latest Ask proof can still flow into the Proofs tab without manual re-entry.
+- Left non-Ask workspaces in place so the slice stays limited to the Ask boundary only.
+
+### Verification
+1. `pnpm --filter web typecheck`
+- Result: passed
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - dedicated Ask routes remained present in the app build output
+
+3. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+### Outcome
+- `page.tsx` no longer owns the Ask workspace rendering tree or the Ask request lifecycle.
+- Ask is now a real module boundary in the UI layer rather than a large inline section inside the desktop shell page.
+- The next cleanup target is the Proofs/History slice or the remaining generic page-level wiring around non-Ask workspaces.
