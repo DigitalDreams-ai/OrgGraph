@@ -19,6 +19,7 @@ import {
 } from './lib/org-client';
 import { getRefreshDiff, runRefresh } from './lib/refresh-client';
 import { runSecondaryQueryRequest, type SecondaryQueryKind } from './lib/secondary-client';
+import { getApiHealth, getApiReady } from './lib/status-client';
 import { AskWorkspace } from './workspaces/ask/ask-workspace';
 import { useAskWorkspace } from './workspaces/ask/use-ask-workspace';
 import { AnalyzeWorkspace, type AnalyzeMode } from './workspaces/analyze/analyze-workspace';
@@ -118,7 +119,7 @@ function resolveErrorMessage(data: QueryResponse): string {
     payloadErrorHint ||
     payloadError ||
     topError ||
-    'Request failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.'
+    'Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.'
   );
 }
 
@@ -223,17 +224,18 @@ export default function Page(): JSX.Element {
 
   async function refreshStatuses(): Promise<void> {
     try {
-      const healthRes = await fetch('/api/health', { cache: 'no-store' });
-      setHealthStatus(healthRes.ok ? 'ok' : `http_${healthRes.status}`);
+      const healthRes = await getApiHealth();
+      const payload = healthRes.payload as { status?: string } | undefined;
+      setHealthStatus(healthRes.ok ? payload?.status ?? 'ok' : `http_${healthRes.statusCode ?? 503}`);
     } catch {
       setHealthStatus('unreachable');
     }
 
     try {
-      const readyRes = await fetch('/api/ready', { cache: 'no-store' });
-      const readyJson = await readyRes.json();
-      setReadyStatus(readyRes.ok ? 'ready' : `http_${readyRes.status}`);
-      setReadyDetails(pretty(readyJson));
+      const readyRes = await getApiReady();
+      const payload = readyRes.payload as { status?: string } | undefined;
+      setReadyStatus(readyRes.ok ? payload?.status ?? 'ready' : `http_${readyRes.statusCode ?? 503}`);
+      setReadyDetails(readyRes.payload ? pretty(readyRes.payload) : '');
     } catch {
       setReadyStatus('unreachable');
       setReadyDetails('');
@@ -258,7 +260,7 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
       const message = error instanceof Error ? error.message : 'Unexpected query failure';
       const fallback: QueryResponse = { ok: false, error: { message } };
       presentResponse(fallback);
-      setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.');
+      setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.');
       return null;
     } finally {
       setLoading(false);
@@ -352,7 +354,7 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
       const message = error instanceof Error ? error.message : 'Unexpected org query failure';
       const fallback: QueryResponse = { ok: false, error: { message } };
       presentResponse(fallback);
-      setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.');
+      setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.');
       return null;
     } finally {
       setLoading(false);
@@ -386,7 +388,7 @@ async function runQuery(kind: QueryKind, payload: Record<string, unknown> = {}):
       const message = error instanceof Error ? error.message : 'Unexpected refresh query failure';
       const fallback: QueryResponse = { ok: false, error: { message } };
       presentResponse(fallback);
-      setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.');
+      setErrorText('Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.');
       return null;
     } finally {
       setLoading(false);

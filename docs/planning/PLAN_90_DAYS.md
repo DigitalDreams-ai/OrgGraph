@@ -130,8 +130,7 @@ Status: in progress on February 28, 2026
 ### Target files
 - `apps/desktop/src-tauri/*`
 - `apps/desktop/scripts/dev-runtime.mjs`
-- `apps/web/app/api/health/route.ts`
-- `apps/web/app/api/ready/route.ts`
+- `apps/web/app/lib/status-client.ts`
 
 ### Acceptance gates
 - Desktop shell owns lifecycle expectations clearly.
@@ -155,9 +154,12 @@ Progress note:
   - the generic `/api/query` adapter is removed
   - typed route families now own permissions, automation, impact, and meta transport in dev
   - packaged and dev desktop paths now use the same explicit capability routing model
+- Slice 4 completed:
+  - browser-style `/api/health` and `/api/ready` proxy routes are removed
+  - the desktop status strip now calls the local Nest engine directly for health and readiness
 - Next narrow step:
-  - decide whether health/readiness should keep browser-style proxy routes
-  - then expand packaged-shell verification beyond readiness smoke into live Ask and org-session proof
+  - expand packaged-shell verification beyond readiness smoke into live Ask and org-session proof
+  - then continue shrinking remaining page-shell orchestration in Browser and System
 
 ## Phase 5: Modular UI Reconstruction
 
@@ -194,7 +196,7 @@ Progress note:
 
 ### Current state
 - UI owns command dispatch and payload shaping.
-- Next route families are now typed by capability, but health/readiness and some page-shell orchestration still reflect browser-era assumptions.
+- Next route families are now typed by capability, and health/readiness now hit the local engine directly, but some page-shell orchestration still reflects browser-era assumptions.
 - Tauri dev lifecycle depends on external runtime orchestration.
 
 ### Cleanup order
@@ -256,6 +258,6 @@ Progress note:
 
 ## Current Next Step
 - Continue Phase 4 runtime ownership hardening from the Tauri shell.
-- Preferred next step: remove or narrow the remaining browser-style health/readiness proxies now that the main query multiplexer is gone.
+- Preferred next step: prove a live packaged Ask or org-session workflow now that runtime ownership and direct status checks are in place.
 - Preserve the current typed Ask route boundary and keep replay/proof logic in Nest.
 - Record each slice in `docs/planning/RUNLOG.md` and stop immediately if replay parity regresses.

@@ -7,7 +7,6 @@ Use this when Orgumented returns unexpected 4xx/5xx responses, stale trust metri
 1. Check API and web readiness:
    - `curl -s http://localhost:3100/health`
    - `curl -s http://localhost:3100/ready`
-   - `curl -s http://localhost:3101/api/ready`
 2. Check recent logs:
    - active terminal output from `node apps/desktop/scripts/dev-runtime.mjs`
    - Tauri dev shell output from `pnpm desktop:dev`

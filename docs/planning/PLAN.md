@@ -15,9 +15,7 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
 ### Next.js UI layer
 - `apps/web/app/page.tsx`
 - `apps/web/app/layout.tsx`
-- `apps/web/app/api/query/route.ts`
-- `apps/web/app/api/health/route.ts`
-- `apps/web/app/api/ready/route.ts`
+- `apps/web/app/lib/status-client.ts`
 
 ### NestJS engine layer
 - `apps/api/src/main.ts`
@@ -74,7 +72,7 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
   - payload construction,
   - request dispatch.
 - Typed clients under `apps/web/app/lib/` now own Ask, Org, Refresh, permissions, automation, impact, and meta transport instead of a single browser-era command multiplexer.
-- Health and readiness proxy routes exist separately in `apps/web/app/api/health/route.ts` and `apps/web/app/api/ready/route.ts`.
+- Health and readiness now resolve through `apps/web/app/lib/status-client.ts` and hit the local Nest engine directly.
 
 ### NestJS engine layer
 - The engine is modular at the Nest module level:

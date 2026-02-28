@@ -37,7 +37,7 @@ export function useAskWorkspace(options: UseAskWorkspaceOptions) {
   async function executeAskRequest(
     payload: RunAskRequestOptions,
     onSuccess?: (result: AskPayload) => void,
-    fallbackError = 'Ask failed. Check API readiness, query format, and local runtime health. Use /api/ready and /metrics for diagnosis.'
+    fallbackError = 'Ask failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.'
   ): Promise<void> {
     options.setLoading(true);
     options.setCopied(false);

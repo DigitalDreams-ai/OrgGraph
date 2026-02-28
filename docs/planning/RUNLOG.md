@@ -470,3 +470,35 @@ Branch: `dna-foundation`
 - The browser-era generic query seam is gone from the desktop UI boundary.
 - Dev and packaged desktop paths now share the same explicit capability routing model.
 - The next architectural decision is whether health/readiness should stay as Next proxy routes or move into a shell-owned check path.
+
+## Entry 13: Phase 4 Direct Health and Ready Boundary Slice
+
+### Change
+- Removed `apps/web/app/api/health/route.ts` and `apps/web/app/api/ready/route.ts`.
+- Added `apps/web/app/lib/status-client.ts` so the desktop status strip now calls the local Nest engine directly for:
+  - `/health`
+  - `/ready`
+- Updated UI fallback messaging to reference `/ready` instead of the deleted Next proxy route.
+
+### Verification
+1. `pnpm --filter api test`
+- Result: passed
+- Proof:
+  - `integration passed`
+  - `phase12 replay runtime test passed`
+  - `phase13 meaning gates test passed`
+
+2. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - `Compiled successfully`
+  - build output no longer emitted:
+    - `/api/health`
+    - `/api/ready`
+
+3. `pnpm --filter web typecheck`
+- Result: passed
+
+### Outcome
+- The desktop status strip now reflects the actual engine health path instead of the embedded web layer.
+- The remaining browser-era carryover is no longer in status transport; it is mostly in page-shell orchestration and browser-first verification scripts.

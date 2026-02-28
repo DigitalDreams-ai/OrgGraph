@@ -84,14 +84,13 @@ Branch: `dna-foundation`
 
 ## Risk 6: Browser-era transport assumptions may keep reappearing
 - Evidence:
-  - `apps/web/app/api/health/route.ts`
-  - `apps/web/app/api/ready/route.ts`
+  - `apps/web/app/lib/status-client.ts`
   - `apps/web/app/page.tsx`
 - Impact:
   - product behaves like a wrapped web console instead of a coherent desktop app.
 - Current signal:
   - Ask, Org, Refresh, permissions, automation, impact, and meta flows now have explicit typed or direct-engine boundaries,
-  - residual browser-era seams are mainly health/readiness proxy routes and remaining page-shell request shaping.
+  - residual browser-era seams are mainly remaining page-shell request shaping and browser-first verification scripts.
 - Mitigation:
   - delete remaining browser-era routes incrementally as typed boundaries and shell-owned checks replace them.
 - Pivot trigger:

@@ -20,7 +20,7 @@ Purpose: track the remaining browser-era and dev-server-era carryover that still
 - [x] Replace the browser-style `/api/query` Next proxy with a desktop-native request boundary.
 - [x] Remove the large route multiplexer in `apps/web/app/api/query/route.ts` from the primary product path.
 - [ ] Reduce or remove `NEXT_PUBLIC_API_BASE` dependence for the primary desktop runtime.
-- [ ] Decide whether health/readiness checks should be exposed through a desktop-native bridge instead of a browser-style proxy.
+- [x] Decide whether health/readiness checks should be exposed through a desktop-native bridge instead of a browser-style proxy.
 
 ## 3. Verification Cleanup
 - [ ] Replace browser-era UI smoke checks with desktop-shell verification.
@@ -42,8 +42,7 @@ Purpose: track the remaining browser-era and dev-server-era carryover that still
 ## 6. Current Carryover Reference Points
 - `apps/desktop/src-tauri/tauri.conf.json`
 - `apps/desktop/scripts/dev-runtime.mjs`
-- `apps/web/app/api/health/route.ts`
-- `apps/web/app/api/ready/route.ts`
+- `apps/web/app/lib/status-client.ts`
 - `apps/web/app/page.tsx`
 - `scripts/web-smoke.sh`
 - `scripts/ui-smoke-playwright.sh`
