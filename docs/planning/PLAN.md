@@ -221,6 +221,12 @@ Slice 3 status:
 - `apps/web/app/lib/secondary-client.ts` is now direct-engine only
 - current proof:
   - `pnpm --filter web build` no longer emits those `/api/*` routes in app output
+- the refresh adapter family is now also deleted:
+  - `apps/web/app/api/refresh/route.ts`
+  - `apps/web/app/api/refresh/diff/[snapshotA]/[snapshotB]/route.ts`
+- `apps/web/app/lib/refresh-client.ts` is now direct-engine only
+- current proof:
+  - `pnpm --filter web build` no longer emits `/api/refresh` or `/api/refresh/diff/[snapshotA]/[snapshotB]`
 
 Expected scope:
 1. Default the desktop shell to direct Nest engine access in both dev and packaged flows.

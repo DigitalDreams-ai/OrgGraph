@@ -1463,3 +1463,24 @@ Branch: `dna-foundation`
 - The first non-essential adapter family is gone from the desktop runtime.
 - Analyze and System secondary queries now match the same direct-engine boundary model already used by packaged desktop.
 - The remaining adapter deletion work is now concentrated in Ask, Org, and Refresh.
+
+## Entry 43: Remove Refresh Route Adapters
+
+### Change
+- Updated `apps/web/app/lib/refresh-client.ts` so refresh and diff flows now resolve directly to the local Nest engine with no `/api/*` fallback.
+- Deleted the corresponding Next adapter routes:
+  - `apps/web/app/api/refresh/route.ts`
+  - `apps/web/app/api/refresh/diff/[snapshotA]/[snapshotB]/route.ts`
+
+### Verification
+1. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - Next build completed successfully after the refresh adapter deletions
+  - app output no longer emits:
+    - `/api/refresh`
+    - `/api/refresh/diff/[snapshotA]/[snapshotB]`
+
+### Outcome
+- Refresh now matches the direct-engine desktop boundary in both dev and packaged flows.
+- The remaining adapter deletion work is narrowed to Ask and Org.
