@@ -153,6 +153,10 @@ const packagedApiPruneTargets = [
   path.join('node_modules', 'better-sqlite3', 'binding.gyp')
 ];
 
+function toManifestPath(...segments) {
+  return segments.join('/');
+}
+
 function parseDotenvFile(filePath) {
   if (!existsSync(filePath)) {
     return {};
@@ -338,8 +342,8 @@ writeFileSync(
     {
       nodeBinary: nodeBinaryName,
       nodeVersion: process.version,
-      apiEntry: path.join('api', 'main.cjs'),
-      webEntry: path.join('web', 'index.html'),
+      apiEntry: toManifestPath('api', 'main.cjs'),
+      webEntry: toManifestPath('web', 'index.html'),
       configEntry: 'config.json'
     },
     null,

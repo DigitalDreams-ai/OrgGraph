@@ -22,6 +22,10 @@ struct BundledRuntimeManifest {
     node_binary: String,
 }
 
+fn manifest_resource_path(entry: &str) -> String {
+    entry.replace('\\', "/")
+}
+
 fn should_manage_api() -> bool {
     env::var("ORGUMENTED_DESKTOP_MANAGED_API")
         .map(|value| value != "0")
@@ -118,10 +122,19 @@ fn bundled_runtime_manifest(app: &tauri::AppHandle) -> std::io::Result<BundledRu
 
 fn spawn_packaged_api_child(app: &tauri::AppHandle) -> std::io::Result<Child> {
     let manifest = bundled_runtime_manifest(app)?;
-    let node_path = resolve_resource_path(app, &format!("runtime/node/{}", manifest.node_binary))?;
+    let node_path = resolve_resource_path(
+        app,
+        &format!("runtime/node/{}", manifest_resource_path(&manifest.node_binary)),
+    )?;
     let api_root = resolve_resource_path(app, "runtime/api")?;
-    let config_path = resolve_resource_path(app, &format!("runtime/{}", manifest.config_entry))?;
-    let api_entry = resolve_resource_path(app, &format!("runtime/{}", manifest.api_entry))?;
+    let config_path = resolve_resource_path(
+        app,
+        &format!("runtime/{}", manifest_resource_path(&manifest.config_entry)),
+    )?;
+    let api_entry = resolve_resource_path(
+        app,
+        &format!("runtime/{}", manifest_resource_path(&manifest.api_entry)),
+    )?;
     if !api_entry.exists() {
         return Err(Error::new(
             ErrorKind::NotFound,
