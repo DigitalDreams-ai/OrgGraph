@@ -212,6 +212,16 @@ Slice 2 status:
 - `apps/web/app/lib/runtime-mode.ts` now treats that explicit flag as authoritative instead of relying only on Tauri protocol detection
 - result: normal `pnpm desktop:dev` startup no longer depends on the Next adapter tree for shell-owned Ask, Org, Refresh, and secondary analysis flows
 
+Slice 3 status:
+- the first adapter family is now deleted:
+  - `apps/web/app/api/perms/*`
+  - `apps/web/app/api/automation/route.ts`
+  - `apps/web/app/api/impact/route.ts`
+  - `apps/web/app/api/meta/*`
+- `apps/web/app/lib/secondary-client.ts` is now direct-engine only
+- current proof:
+  - `pnpm --filter web build` no longer emits those `/api/*` routes in app output
+
 Expected scope:
 1. Default the desktop shell to direct Nest engine access in both dev and packaged flows.
 2. Retire the Next route adapter tree from the desktop runtime path.

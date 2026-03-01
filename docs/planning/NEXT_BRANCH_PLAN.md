@@ -92,11 +92,12 @@ Keep temporarily while dev direct mode is not the default:
   - Current workspaces: `apps/web/app/workspaces/refresh/*`
   - Packaged desktop need: no
   - Desktop dev need: only because `isDesktopDirectApiMode()` is currently false under the standalone Next server
+
+Deleted on `dna-runtime-ownership`:
 - `perms/*`, `automation`, `impact`, `meta/*`
-  - Current callers: `apps/web/app/lib/secondary-client.ts`
-  - Current workspaces: `apps/web/app/workspaces/analyze/*`, `apps/web/app/workspaces/system/*`, `apps/web/app/shell/use-secondary-query-runner.ts`
-  - Packaged desktop need: no
-  - Desktop dev need: only because `isDesktopDirectApiMode()` is currently false under the standalone Next server
+  - Former callers: `apps/web/app/lib/secondary-client.ts`
+  - Current state: `secondary-client.ts` now resolves directly to the Nest engine for desktop flows
+  - Verification: `pnpm --filter web build` no longer emits `/api/perms`, `/api/automation`, `/api/impact`, `/api/meta/context`, or `/api/meta/adapt`
 
 Already outside the adapter problem:
 - `apps/web/app/lib/status-client.ts`

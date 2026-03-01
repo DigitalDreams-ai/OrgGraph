@@ -1431,3 +1431,35 @@ Branch: `dna-foundation`
 - Desktop development now defaults to the same direct-engine boundary model that packaged desktop already uses.
 - Ask, Org, Refresh, and secondary analysis flows no longer need the Next adapter tree as part of the normal desktop dev contract.
 - The remaining adapter routes are now candidates for deliberate removal rather than required runtime infrastructure.
+
+## Entry 42: Remove Secondary Analysis Route Adapters
+
+### Change
+- Updated `apps/web/app/lib/secondary-client.ts` so secondary analysis and meta flows now resolve directly to the local Nest engine with no `/api/*` fallback.
+- Deleted the corresponding Next adapter routes:
+  - `apps/web/app/api/perms/route.ts`
+  - `apps/web/app/api/perms/diagnose/route.ts`
+  - `apps/web/app/api/perms/system/route.ts`
+  - `apps/web/app/api/automation/route.ts`
+  - `apps/web/app/api/impact/route.ts`
+  - `apps/web/app/api/meta/context/route.ts`
+  - `apps/web/app/api/meta/adapt/route.ts`
+
+### Verification
+1. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - Next build completed successfully after the adapter deletions
+  - app output no longer emits:
+    - `/api/perms`
+    - `/api/perms/diagnose`
+    - `/api/perms/system`
+    - `/api/automation`
+    - `/api/impact`
+    - `/api/meta/context`
+    - `/api/meta/adapt`
+
+### Outcome
+- The first non-essential adapter family is gone from the desktop runtime.
+- Analyze and System secondary queries now match the same direct-engine boundary model already used by packaged desktop.
+- The remaining adapter deletion work is now concentrated in Ask, Org, and Refresh.
