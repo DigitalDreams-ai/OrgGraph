@@ -334,6 +334,17 @@ Current branch:
 3. Remove one route family at a time from `apps/web/app/api/*` once the direct boundary is proven.
 4. Update CI and operator docs so desktop smoke is the primary runtime contract.
 
+Progress note:
+- Slice 1 is complete:
+  - route adapter inventory is now explicit in `docs/planning/NEXT_BRANCH_PLAN.md`
+- Slice 2 has started:
+  - `apps/desktop/scripts/dev-runtime.mjs` now injects explicit desktop direct-engine env vars into desktop-managed web build/startup
+  - `apps/web/app/lib/runtime-mode.ts` now honors the explicit direct-engine flag in dev
+  - current proof on March 1, 2026:
+    - `logs/dna-runtime-ownership-desktop-dev.stdout.log` captured:
+      - `[desktop-runtime] preparing desktop-managed api on 127.0.0.1:3100 and starting web on 127.0.0.1:3001 (mode=production, directApiMode=1, apiBase=http://127.0.0.1:3100)`
+    - `pnpm desktop:dev` smoke reached `http://127.0.0.1:3100/ready`
+
 ## Determinism and Replay Harness Plan
 
 ### Existing harness to preserve

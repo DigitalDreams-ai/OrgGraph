@@ -1405,3 +1405,29 @@ Branch: `dna-foundation`
   - retrieve context remains visible
   - selected metadata and retrieve results are no longer hidden in raw payloads
   - refresh and diff results now read like product workflow state instead of transport output
+
+## Entry 41: Default Desktop Dev to Direct Engine Mode
+
+### Change
+- Updated `apps/desktop/scripts/dev-runtime.mjs` so the desktop-managed web runtime now injects:
+  - `NEXT_PUBLIC_DESKTOP_DIRECT_API_MODE=1`
+  - `NEXT_PUBLIC_API_BASE=http://127.0.0.1:3100`
+- The desktop launcher now emits that direct-mode configuration in its startup log.
+- Updated `apps/web/app/lib/runtime-mode.ts` so the explicit direct-engine flag is authoritative instead of relying only on Tauri protocol detection.
+- Updated `docs/runbooks/DESKTOP_DEV_RUNTIME.md` with the new dev proof and operator rule.
+
+### Verification
+1. `pnpm --filter web build`
+- Result: passed
+
+2. `pwsh -NoProfile -File .\\logs\\dna-runtime-ownership-desktop-dev-smoke.ps1`
+- Result: passed
+- Proof:
+  - `logs/dna-runtime-ownership-desktop-dev.stdout.log` captured:
+    - `[desktop-runtime] preparing desktop-managed api on 127.0.0.1:3100 and starting web on 127.0.0.1:3001 (mode=production, directApiMode=1, apiBase=http://127.0.0.1:3100)`
+  - the same smoke reached `http://127.0.0.1:3100/ready`
+
+### Outcome
+- Desktop development now defaults to the same direct-engine boundary model that packaged desktop already uses.
+- Ask, Org, Refresh, and secondary analysis flows no longer need the Next adapter tree as part of the normal desktop dev contract.
+- The remaining adapter routes are now candidates for deliberate removal rather than required runtime infrastructure.

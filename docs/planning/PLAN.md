@@ -207,6 +207,11 @@ Slice 1 status:
 - current finding: the remaining `apps/web/app/api/*` tree is still only a desktop-dev fallback for Ask, Org, Refresh, and secondary analysis/meta flows
 - packaged desktop no longer needs those adapters for the main runtime path
 
+Slice 2 status:
+- desktop-managed dev runtime now forces direct-engine mode through explicit `NEXT_PUBLIC_DESKTOP_DIRECT_API_MODE=1` and `NEXT_PUBLIC_API_BASE=http://127.0.0.1:3100` wiring in `apps/desktop/scripts/dev-runtime.mjs`
+- `apps/web/app/lib/runtime-mode.ts` now treats that explicit flag as authoritative instead of relying only on Tauri protocol detection
+- result: normal `pnpm desktop:dev` startup no longer depends on the Next adapter tree for shell-owned Ask, Org, Refresh, and secondary analysis flows
+
 Expected scope:
 1. Default the desktop shell to direct Nest engine access in both dev and packaged flows.
 2. Retire the Next route adapter tree from the desktop runtime path.
