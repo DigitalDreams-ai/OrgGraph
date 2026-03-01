@@ -1544,3 +1544,33 @@ Branch: `dna-foundation`
 - The Next adapter tree is retired from the desktop runtime path.
 - Desktop UI transport is now consistently direct to the local Nest engine across Ask, Org, Refresh, Analyze, and Proofs.
 - The next runtime-ownership work should focus on verification convergence and possibly eliminating the remaining standalone Next server dependence, not more adapter cleanup.
+
+## Entry 46: Verify Adapter-Free Desktop Runtime
+
+### Change
+- No new code change in this entry.
+- Purpose: verify the full desktop runtime after retiring the entire `apps/web/app/api/` adapter tree.
+
+### Verification
+1. `pnpm --filter api test`
+- Result: passed
+
+2. `pnpm desktop:build`
+- Result: passed
+- Proof:
+  - `Built application at: ...\\apps\\desktop\\src-tauri\\target\\release\\orgumented-desktop.exe`
+  - `Finished 2 bundles`
+
+3. `pnpm desktop:smoke:release`
+- Result: passed
+- Proof:
+  - `healthStatus=ok`
+  - `readyStatus=ready`
+  - `proofLookupMatched=true`
+  - `recentProofsMatched=true`
+  - `replayMatched=true`
+  - `sessionConnectStatus=verified`
+
+### Outcome
+- The desktop runtime still passes packaged verification after full adapter retirement.
+- The direct-engine boundary is now proven across build, packaged launch, Ask proof/replay, and org session attach flows.
