@@ -147,10 +147,20 @@ fn spawn_packaged_api_child(app: &tauri::AppHandle) -> std::io::Result<Child> {
             format!("packaged api config missing at {}", config_path.display()),
         ));
     }
+    let relative_api_entry = api_entry.strip_prefix(&api_root).map_err(|_| {
+        Error::new(
+            ErrorKind::InvalidData,
+            format!(
+                "packaged api entry {} is not under runtime api root {}",
+                api_entry.display(),
+                api_root.display()
+            ),
+        )
+    })?;
 
     let mut command = Command::new(node_path);
     command
-        .arg(api_entry)
+        .arg(relative_api_entry)
         .current_dir(api_root)
         .env("ORGUMENTED_CONFIG_PATH", config_path)
         .env("PORT", desktop_api_port())
