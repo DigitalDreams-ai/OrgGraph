@@ -1,5 +1,5 @@
 import type { QueryResponse } from './ask-client';
-import { isDesktopDirectApiMode, resolveDesktopApiUrl } from './runtime-mode';
+import { resolveDesktopApiUrl } from './runtime-mode';
 
 interface OrgAliasPayload {
   alias?: string;
@@ -61,72 +61,49 @@ async function requestBoundary(path: string, init: RequestInit): Promise<QueryRe
 }
 
 export function getOrgStatus(): Promise<QueryResponse> {
-  return requestBoundary(
-    isDesktopDirectApiMode() ? resolveDesktopApiUrl('/org/status') : '/api/org/status',
-    { method: 'GET' }
-  );
+  return requestBoundary(resolveDesktopApiUrl('/org/status'), { method: 'GET' });
 }
 
 export function getOrgSession(): Promise<QueryResponse> {
-  return requestBoundary(
-    isDesktopDirectApiMode() ? resolveDesktopApiUrl('/org/session') : '/api/org/session',
-    { method: 'GET' }
-  );
+  return requestBoundary(resolveDesktopApiUrl('/org/session'), { method: 'GET' });
 }
 
 export function listOrgSessionAliases(): Promise<QueryResponse> {
-  return requestBoundary(
-    isDesktopDirectApiMode() ? resolveDesktopApiUrl('/org/session/aliases') : '/api/org/session/aliases',
-    { method: 'GET' }
-  );
+  return requestBoundary(resolveDesktopApiUrl('/org/session/aliases'), { method: 'GET' });
 }
 
 export function runOrgPreflight(alias?: string): Promise<QueryResponse> {
   const suffix = alias ? `?alias=${encodeURIComponent(alias)}` : '';
-  const path = isDesktopDirectApiMode()
-    ? resolveDesktopApiUrl(`/org/preflight${suffix}`)
-    : `/api/org/preflight${suffix}`;
+  const path = resolveDesktopApiUrl(`/org/preflight${suffix}`);
   return requestBoundary(path, { method: 'GET' });
 }
 
 export function connectOrgSession(payload: OrgAliasPayload): Promise<QueryResponse> {
-  return requestBoundary(
-    isDesktopDirectApiMode() ? resolveDesktopApiUrl('/org/session/connect') : '/api/org/session/connect',
-    {
+  return requestBoundary(resolveDesktopApiUrl('/org/session/connect'), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
-    }
-  );
+  });
 }
 
 export function switchOrgSession(payload: OrgAliasPayload): Promise<QueryResponse> {
-  return requestBoundary(
-    isDesktopDirectApiMode() ? resolveDesktopApiUrl('/org/session/switch') : '/api/org/session/switch',
-    {
+  return requestBoundary(resolveDesktopApiUrl('/org/session/switch'), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
-    }
-  );
+  });
 }
 
 export function disconnectOrgSession(): Promise<QueryResponse> {
-  return requestBoundary(
-    isDesktopDirectApiMode() ? resolveDesktopApiUrl('/org/session/disconnect') : '/api/org/session/disconnect',
-    { method: 'POST' }
-  );
+  return requestBoundary(resolveDesktopApiUrl('/org/session/disconnect'), { method: 'POST' });
 }
 
 export function runOrgRetrieve(payload: OrgRetrievePayload): Promise<QueryResponse> {
-  return requestBoundary(
-    isDesktopDirectApiMode() ? resolveDesktopApiUrl('/org/retrieve') : '/api/org/retrieve',
-    {
+  return requestBoundary(resolveDesktopApiUrl('/org/retrieve'), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
-    }
-  );
+  });
 }
 
 export function getOrgMetadataCatalog(payload: MetadataCatalogPayload): Promise<QueryResponse> {
@@ -141,9 +118,7 @@ export function getOrgMetadataCatalog(payload: MetadataCatalogPayload): Promise<
     params.set('refresh', String(payload.refresh));
   }
   const suffix = params.toString();
-  const path = isDesktopDirectApiMode()
-    ? resolveDesktopApiUrl(`/org/metadata/catalog${suffix ? `?${suffix}` : ''}`)
-    : `/api/org/metadata/catalog${suffix ? `?${suffix}` : ''}`;
+  const path = resolveDesktopApiUrl(`/org/metadata/catalog${suffix ? `?${suffix}` : ''}`);
   return requestBoundary(path, { method: 'GET' });
 }
 
@@ -159,19 +134,14 @@ export function getOrgMetadataMembers(payload: MetadataMembersPayload): Promise<
   if (typeof payload.refresh === 'boolean') {
     params.set('refresh', String(payload.refresh));
   }
-  const path = isDesktopDirectApiMode()
-    ? resolveDesktopApiUrl(`/org/metadata/members?${params.toString()}`)
-    : `/api/org/metadata/members?${params.toString()}`;
+  const path = resolveDesktopApiUrl(`/org/metadata/members?${params.toString()}`);
   return requestBoundary(path, { method: 'GET' });
 }
 
 export function retrieveOrgMetadata(payload: MetadataRetrievePayload): Promise<QueryResponse> {
-  return requestBoundary(
-    isDesktopDirectApiMode() ? resolveDesktopApiUrl('/org/metadata/retrieve') : '/api/org/metadata/retrieve',
-    {
+  return requestBoundary(resolveDesktopApiUrl('/org/metadata/retrieve'), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
-    }
-  );
+  });
 }

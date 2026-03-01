@@ -83,6 +83,7 @@ Observed proof in current repo state:
 Current operator rule:
 - desktop-managed development should run in direct-engine mode by default
 - the standalone Next server is expected to serve UI assets only, not to be the normal desktop operator API boundary
+- the `apps/web/app/api/` adapter tree is retired from the desktop runtime path
 
 ## Build Packaged Desktop Runtime
 

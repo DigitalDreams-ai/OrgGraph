@@ -33,9 +33,6 @@ Current evidence shows the core engine and packaged desktop path are in material
 The remaining high-value drift is in development/runtime composition:
 - desktop dev still starts a standalone web server:
   - `apps/desktop/scripts/dev-runtime.mjs`
-- the repo still maintains a large Next route adapter surface:
-  - `apps/web/app/api/`
-  - `apps/web/app/api/_lib/upstream.ts`
 - verification still carries browser-era smoke scripts:
   - `scripts/web-smoke.sh`
   - `scripts/ui-smoke-playwright.sh`
@@ -77,20 +74,9 @@ Acceptance:
 #### Current route adapter inventory
 
 Keep temporarily while dev direct mode is not the default:
-- `ask/*`
-  - Current callers: `apps/web/app/lib/ask-client.ts`
-  - Current workspaces: `apps/web/app/workspaces/ask/*`, `apps/web/app/workspaces/proofs/*`
-  - Packaged desktop need: no
-  - Desktop dev need: no
-  - Current state on `dna-runtime-ownership`: deleted after direct-engine dev mode became the default
 - `org/*`
   - Current callers: `apps/web/app/lib/org-client.ts`
   - Current workspaces: `apps/web/app/workspaces/connect/*`, `apps/web/app/workspaces/browser/*`, `apps/web/app/workspaces/refresh/*`, `apps/web/app/workspaces/system/*`
-  - Packaged desktop need: no
-  - Desktop dev need: only because `isDesktopDirectApiMode()` is currently false under the standalone Next server
-- `refresh/*`
-  - Current callers: `apps/web/app/lib/refresh-client.ts`
-  - Current workspaces: `apps/web/app/workspaces/refresh/*`
   - Packaged desktop need: no
   - Desktop dev need: no
   - Current state on `dna-runtime-ownership`: deleted after direct-engine dev mode became the default
@@ -108,11 +94,19 @@ Deleted on `dna-runtime-ownership`:
   - Former callers: `apps/web/app/lib/refresh-client.ts`
   - Current state: `refresh-client.ts` now resolves directly to the Nest engine for desktop flows
   - Verification: `pnpm --filter web build` no longer emits `/api/refresh` or `/api/refresh/diff/[snapshotA]/[snapshotB]`
+- `org/*`
+  - Former callers: `apps/web/app/lib/org-client.ts`
+  - Current state: `org-client.ts` now resolves directly to the Nest engine for desktop flows
+  - Verification: `pnpm --filter web build` no longer emits any `/api/org/*` routes, and the app route surface is now only `/` plus `/_not-found`
 
 Already outside the adapter problem:
 - `apps/web/app/lib/status-client.ts`
   - Calls the Nest engine directly now for `/health` and `/ready`
   - No `apps/web/app/api/*` dependency remains for shell status checks
+
+Current outcome:
+- the `apps/web/app/api/` adapter tree is retired from the desktop runtime path
+- `apps/web/app/lib/runtime-mode.ts` is now only a direct engine URL resolver
 
 Deletion posture:
 1. Make desktop dev default to direct-engine mode.

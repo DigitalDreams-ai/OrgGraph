@@ -1511,3 +1511,36 @@ Branch: `dna-foundation`
 ### Outcome
 - Ask and Proofs now match the direct-engine desktop boundary in both dev and packaged flows.
 - The remaining adapter deletion work is narrowed to Org only.
+
+## Entry 45: Remove Org Route Adapters
+
+### Change
+- Updated `apps/web/app/lib/org-client.ts` so org status, session, preflight, retrieve, and metadata flows now resolve directly to the local Nest engine with no `/api/*` fallback.
+- Deleted the remaining Next adapter routes:
+  - `apps/web/app/api/org/status/route.ts`
+  - `apps/web/app/api/org/preflight/route.ts`
+  - `apps/web/app/api/org/session/route.ts`
+  - `apps/web/app/api/org/session/aliases/route.ts`
+  - `apps/web/app/api/org/session/connect/route.ts`
+  - `apps/web/app/api/org/session/switch/route.ts`
+  - `apps/web/app/api/org/session/disconnect/route.ts`
+  - `apps/web/app/api/org/retrieve/route.ts`
+  - `apps/web/app/api/org/metadata/catalog/route.ts`
+  - `apps/web/app/api/org/metadata/members/route.ts`
+  - `apps/web/app/api/org/metadata/retrieve/route.ts`
+- Deleted `apps/web/app/api/_lib/upstream.ts` because no route adapters remain.
+- Simplified `apps/web/app/lib/runtime-mode.ts` to a direct engine URL resolver only.
+
+### Verification
+1. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - Next build completed successfully after the Org adapter deletions
+  - app output now emits only:
+    - `/`
+    - `/_not-found`
+
+### Outcome
+- The Next adapter tree is retired from the desktop runtime path.
+- Desktop UI transport is now consistently direct to the local Nest engine across Ask, Org, Refresh, Analyze, and Proofs.
+- The next runtime-ownership work should focus on verification convergence and possibly eliminating the remaining standalone Next server dependence, not more adapter cleanup.
