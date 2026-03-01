@@ -1574,3 +1574,29 @@ Branch: `dna-foundation`
 ### Outcome
 - The desktop runtime still passes packaged verification after full adapter retirement.
 - The direct-engine boundary is now proven across build, packaged launch, Ask proof/replay, and org session attach flows.
+
+## Entry 47: Retire Browser Smoke Script Residue
+
+### Change
+- Removed the obsolete package scripts:
+  - `test:web-smoke`
+  - `test:ui-smoke`
+- Deleted the old browser-smoke files:
+  - `scripts/web-smoke.sh`
+  - `scripts/ui-smoke-playwright.sh`
+  - `scripts/webui-functional-test.js`
+- Updated runbooks and planning docs so desktop smoke is the canonical verification path.
+- Updated `packages/project-memory-mcp/src/orgumented-profile.ts` so the operator-surface seed references packaged desktop smoke instead of the deleted UI smoke script.
+
+### Verification
+1. `rg -n "test:web-smoke|test:ui-smoke|web-smoke\\.sh|ui-smoke-playwright\\.sh|webui-functional-test\\.js|npm run test:web-smoke|npm run test:ui-smoke" .`
+- Result: passed
+- Proof:
+  - no live references remained after the cleanup
+
+2. `pnpm --filter @orgumented/project-memory-mcp test`
+- Result: passed
+
+### Outcome
+- Browser-era smoke scripts are removed from the repo.
+- Desktop packaged smoke is now the unambiguous verification contract in both code and operator docs.

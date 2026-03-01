@@ -33,9 +33,7 @@ Current evidence shows the core engine and packaged desktop path are in material
 The remaining high-value drift is in development/runtime composition:
 - desktop dev still starts a standalone web server:
   - `apps/desktop/scripts/dev-runtime.mjs`
-- verification still carries browser-era smoke scripts:
-  - `scripts/web-smoke.sh`
-  - `scripts/ui-smoke-playwright.sh`
+- verification convergence still needs to reduce dependence on browser-style helper assumptions around the standalone Next server itself
 
 ## Scope
 

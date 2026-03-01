@@ -58,7 +58,7 @@ curl -s -X POST http://localhost:3100/refresh \
 ```
 4. Re-run smoke:
 ```bash
-npm run test:web-smoke
+pnpm desktop:smoke:release
 ```
 
 ## Post-Incident Requirements

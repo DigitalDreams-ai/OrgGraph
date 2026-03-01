@@ -23,9 +23,9 @@ Purpose: track the remaining browser-era and dev-server-era carryover that still
 - [x] Decide whether health/readiness checks should be exposed through a desktop-native bridge instead of a browser-style proxy.
 
 ## 3. Verification Cleanup
-- [ ] Replace browser-era UI smoke checks with desktop-shell verification.
-- [ ] Replace Playwright screenshot proofs that assume a browser-first surface.
-- [ ] Remove stale verification expectations such as `Mission Control`, `Connect`, `Proofs & Metrics`, and `System` from the UI smoke scripts.
+- [x] Replace browser-era UI smoke checks with desktop-shell verification.
+- [x] Replace Playwright screenshot proofs that assume a browser-first surface.
+- [x] Remove stale browser-era UI smoke scripts and their outdated expectations from the repo.
 - [x] Make the primary product verification path prove the packaged desktop shell, not only the local web surface.
 
 ## 4. UI Structure Cleanup
@@ -45,8 +45,6 @@ Purpose: track the remaining browser-era and dev-server-era carryover that still
 - `apps/web/app/lib/status-client.ts`
 - `apps/web/app/page.tsx`
 - `scripts/desktop-release-smoke.ps1`
-- `scripts/web-smoke.sh`
-- `scripts/ui-smoke-playwright.sh`
 
 ## 7. Completion Condition
 This checklist is complete when:

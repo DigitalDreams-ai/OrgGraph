@@ -314,13 +314,9 @@ Current branch:
 - packaged runtime already calls the local Nest engine directly:
   - `apps/desktop/src-tauri/src/lib.rs`
   - `apps/web/app/lib/runtime-mode.ts`
-- dev runtime still starts a standalone web server and preserves the `apps/web/app/api/*` proxy tree:
+- dev runtime still starts a standalone web server:
   - `apps/desktop/scripts/dev-runtime.mjs`
-  - `apps/web/app/api/_lib/upstream.ts`
-  - `apps/web/app/api/`
-- legacy browser-style verification still exists:
-  - `scripts/web-smoke.sh`
-  - `scripts/ui-smoke-playwright.sh`
+- browser-era smoke scripts are retired, but the standalone Next server is still part of the dev runtime composition
 
 ### Acceptance gates
 - `pnpm desktop:dev` succeeds without requiring Next route adapters for desktop flows.

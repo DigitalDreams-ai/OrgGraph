@@ -196,8 +196,7 @@ Evidence:
 - `apps/web/app/lib/runtime-mode.ts`
 - `apps/web/app/api/_lib/upstream.ts`
 - `apps/web/app/api/`
-- `scripts/web-smoke.sh`
-- `scripts/ui-smoke-playwright.sh`
+- `scripts/desktop-release-smoke.ps1`
 
 Primary branch objective:
 - make desktop dev and packaged desktop use the same explicit UI-to-engine boundary model
