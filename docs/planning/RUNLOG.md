@@ -1484,3 +1484,30 @@ Branch: `dna-foundation`
 ### Outcome
 - Refresh now matches the direct-engine desktop boundary in both dev and packaged flows.
 - The remaining adapter deletion work is narrowed to Ask and Org.
+
+## Entry 44: Remove Ask Route Adapters
+
+### Change
+- Updated `apps/web/app/lib/ask-client.ts` so Ask, replay, proof lookup, recent proofs, and metrics export now resolve directly to the local Nest engine with no `/api/*` fallback.
+- Deleted the corresponding Next adapter routes:
+  - `apps/web/app/api/ask/route.ts`
+  - `apps/web/app/api/ask/proof/[proofId]/route.ts`
+  - `apps/web/app/api/ask/proofs/recent/route.ts`
+  - `apps/web/app/api/ask/replay/route.ts`
+  - `apps/web/app/api/ask/metrics/route.ts`
+
+### Verification
+1. `pnpm --filter web build`
+- Result: passed
+- Proof:
+  - Next build completed successfully after the Ask adapter deletions
+  - app output no longer emits:
+    - `/api/ask`
+    - `/api/ask/proof/[proofId]`
+    - `/api/ask/proofs/recent`
+    - `/api/ask/replay`
+    - `/api/ask/metrics`
+
+### Outcome
+- Ask and Proofs now match the direct-engine desktop boundary in both dev and packaged flows.
+- The remaining adapter deletion work is narrowed to Org only.

@@ -213,6 +213,15 @@ Slice 2 status:
 - result: normal `pnpm desktop:dev` startup no longer depends on the Next adapter tree for shell-owned Ask, Org, Refresh, and secondary analysis flows
 
 Slice 3 status:
+- the Ask adapter family is now deleted:
+  - `apps/web/app/api/ask/route.ts`
+  - `apps/web/app/api/ask/proof/[proofId]/route.ts`
+  - `apps/web/app/api/ask/proofs/recent/route.ts`
+  - `apps/web/app/api/ask/replay/route.ts`
+  - `apps/web/app/api/ask/metrics/route.ts`
+- `apps/web/app/lib/ask-client.ts` is now direct-engine only
+- current proof:
+  - `pnpm --filter web build` no longer emits those `/api/ask*` routes in app output
 - the first adapter family is now deleted:
   - `apps/web/app/api/perms/*`
   - `apps/web/app/api/automation/route.ts`

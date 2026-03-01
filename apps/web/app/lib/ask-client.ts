@@ -1,4 +1,4 @@
-import { isDesktopDirectApiMode, resolveDesktopApiUrl } from './runtime-mode';
+import { resolveDesktopApiUrl } from './runtime-mode';
 
 export interface QueryResponse {
   ok?: boolean;
@@ -46,7 +46,7 @@ async function requestBoundary(path: string, init: RequestInit): Promise<QueryRe
 }
 
 export function runAskRequest(payload: AskRequestPayload): Promise<QueryResponse> {
-  return requestBoundary(isDesktopDirectApiMode() ? resolveDesktopApiUrl('/ask') : '/api/ask', {
+  return requestBoundary(resolveDesktopApiUrl('/ask'), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
@@ -54,25 +54,21 @@ export function runAskRequest(payload: AskRequestPayload): Promise<QueryResponse
 }
 
 export function listAskProofsRecent(limit: number): Promise<QueryResponse> {
-  const path = isDesktopDirectApiMode()
-    ? resolveDesktopApiUrl(`/ask/proofs/recent?limit=${encodeURIComponent(String(limit))}`)
-    : `/api/ask/proofs/recent?limit=${encodeURIComponent(String(limit))}`;
+  const path = resolveDesktopApiUrl(`/ask/proofs/recent?limit=${encodeURIComponent(String(limit))}`);
   return requestBoundary(path, {
     method: 'GET'
   });
 }
 
 export function getAskProof(proofId: string): Promise<QueryResponse> {
-  const path = isDesktopDirectApiMode()
-    ? resolveDesktopApiUrl(`/ask/proof/${encodeURIComponent(proofId)}`)
-    : `/api/ask/proof/${encodeURIComponent(proofId)}`;
+  const path = resolveDesktopApiUrl(`/ask/proof/${encodeURIComponent(proofId)}`);
   return requestBoundary(path, {
     method: 'GET'
   });
 }
 
 export function replayAskProof(payload: AskReplayPayload): Promise<QueryResponse> {
-  return requestBoundary(isDesktopDirectApiMode() ? resolveDesktopApiUrl('/ask/replay') : '/api/ask/replay', {
+  return requestBoundary(resolveDesktopApiUrl('/ask/replay'), {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload)
@@ -80,10 +76,7 @@ export function replayAskProof(payload: AskReplayPayload): Promise<QueryResponse
 }
 
 export function exportAskMetrics(): Promise<QueryResponse> {
-  return requestBoundary(
-    isDesktopDirectApiMode() ? resolveDesktopApiUrl('/ask/metrics/export') : '/api/ask/metrics',
-    {
+  return requestBoundary(resolveDesktopApiUrl('/ask/metrics/export'), {
     method: 'GET'
-    }
-  );
+  });
 }

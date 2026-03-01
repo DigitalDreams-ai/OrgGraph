@@ -81,7 +81,8 @@ Keep temporarily while dev direct mode is not the default:
   - Current callers: `apps/web/app/lib/ask-client.ts`
   - Current workspaces: `apps/web/app/workspaces/ask/*`, `apps/web/app/workspaces/proofs/*`
   - Packaged desktop need: no
-  - Desktop dev need: only because `isDesktopDirectApiMode()` is currently false under the standalone Next server
+  - Desktop dev need: no
+  - Current state on `dna-runtime-ownership`: deleted after direct-engine dev mode became the default
 - `org/*`
   - Current callers: `apps/web/app/lib/org-client.ts`
   - Current workspaces: `apps/web/app/workspaces/connect/*`, `apps/web/app/workspaces/browser/*`, `apps/web/app/workspaces/refresh/*`, `apps/web/app/workspaces/system/*`
@@ -95,6 +96,10 @@ Keep temporarily while dev direct mode is not the default:
   - Current state on `dna-runtime-ownership`: deleted after direct-engine dev mode became the default
 
 Deleted on `dna-runtime-ownership`:
+- `ask/*`
+  - Former callers: `apps/web/app/lib/ask-client.ts`
+  - Current state: `ask-client.ts` now resolves directly to the Nest engine for desktop flows
+  - Verification: `pnpm --filter web build` no longer emits `/api/ask`, `/api/ask/proof/[proofId]`, `/api/ask/proofs/recent`, `/api/ask/replay`, or `/api/ask/metrics`
 - `perms/*`, `automation`, `impact`, `meta/*`
   - Former callers: `apps/web/app/lib/secondary-client.ts`
   - Current state: `secondary-client.ts` now resolves directly to the Nest engine for desktop flows
