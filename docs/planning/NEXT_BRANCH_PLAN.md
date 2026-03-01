@@ -74,6 +74,41 @@ The remaining high-value drift is in development/runtime composition:
 Acceptance:
 - there is an explicit list of route families to delete, keep temporarily, or replace
 
+#### Current route adapter inventory
+
+Keep temporarily while dev direct mode is not the default:
+- `ask/*`
+  - Current callers: `apps/web/app/lib/ask-client.ts`
+  - Current workspaces: `apps/web/app/workspaces/ask/*`, `apps/web/app/workspaces/proofs/*`
+  - Packaged desktop need: no
+  - Desktop dev need: only because `isDesktopDirectApiMode()` is currently false under the standalone Next server
+- `org/*`
+  - Current callers: `apps/web/app/lib/org-client.ts`
+  - Current workspaces: `apps/web/app/workspaces/connect/*`, `apps/web/app/workspaces/browser/*`, `apps/web/app/workspaces/refresh/*`, `apps/web/app/workspaces/system/*`
+  - Packaged desktop need: no
+  - Desktop dev need: only because `isDesktopDirectApiMode()` is currently false under the standalone Next server
+- `refresh/*`
+  - Current callers: `apps/web/app/lib/refresh-client.ts`
+  - Current workspaces: `apps/web/app/workspaces/refresh/*`
+  - Packaged desktop need: no
+  - Desktop dev need: only because `isDesktopDirectApiMode()` is currently false under the standalone Next server
+- `perms/*`, `automation`, `impact`, `meta/*`
+  - Current callers: `apps/web/app/lib/secondary-client.ts`
+  - Current workspaces: `apps/web/app/workspaces/analyze/*`, `apps/web/app/workspaces/system/*`, `apps/web/app/shell/use-secondary-query-runner.ts`
+  - Packaged desktop need: no
+  - Desktop dev need: only because `isDesktopDirectApiMode()` is currently false under the standalone Next server
+
+Already outside the adapter problem:
+- `apps/web/app/lib/status-client.ts`
+  - Calls the Nest engine directly now for `/health` and `/ready`
+  - No `apps/web/app/api/*` dependency remains for shell status checks
+
+Deletion posture:
+1. Make desktop dev default to direct-engine mode.
+2. Prove Ask, Org, Refresh, and secondary analysis flows in `pnpm desktop:dev`.
+3. Remove route families after their desktop dev callers no longer hit `/api/*`.
+4. Retain adapters only if a non-desktop browser use case is intentionally reintroduced, which is not the current product direction.
+
 ### Slice 2: Direct-engine desktop dev default
 - Make the desktop shell default to direct-engine clients in development, not only in packaged mode.
 - Keep any required Next surface limited to UI asset serving, not operator API brokering.

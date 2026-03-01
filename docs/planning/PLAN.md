@@ -202,6 +202,11 @@ Evidence:
 Primary branch objective:
 - make desktop dev and packaged desktop use the same explicit UI-to-engine boundary model
 
+Slice 1 status:
+- route adapter inventory is now explicit in `docs/planning/NEXT_BRANCH_PLAN.md`
+- current finding: the remaining `apps/web/app/api/*` tree is still only a desktop-dev fallback for Ask, Org, Refresh, and secondary analysis/meta flows
+- packaged desktop no longer needs those adapters for the main runtime path
+
 Expected scope:
 1. Default the desktop shell to direct Nest engine access in both dev and packaged flows.
 2. Retire the Next route adapter tree from the desktop runtime path.
