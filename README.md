@@ -46,6 +46,18 @@ Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:dev
 ```
 
+Package the standalone desktop runtime:
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:build
+```
+
+Current packaged build behavior:
+- stages static UI assets under `apps/desktop/src-tauri/runtime/web`
+- stages a deployed API runtime under `apps/desktop/src-tauri/runtime/api`
+- bundles `node.exe` for the packaged shell to supervise locally
+
 See [DESKTOP_DEV_RUNTIME.md](./docs/runbooks/DESKTOP_DEV_RUNTIME.md).
 
 Product boundary:
@@ -132,7 +144,7 @@ ORGUMENTED_WEB_LOG_ENABLED=true
 ## Troubleshooting
 
 1. Health endpoints: `curl http://localhost:3100/health` and `curl http://localhost:3100/ready`
-2. Web readiness: `curl http://localhost:3101/api/ready`
+2. Packaged shell readiness: run `apps/desktop/src-tauri/target/release/orgumented-desktop.exe` and then `curl http://localhost:3100/ready`
 3. Metrics snapshot: `curl http://localhost:3100/metrics`
 4. If Tauri readiness fails, re-run `pnpm desktop:info` and confirm `cargo` and `rustc` resolve in the current shell
 
@@ -140,6 +152,7 @@ ORGUMENTED_WEB_LOG_ENABLED=true
 
 - Active execution model: **Wave A-G**
 - See [Blue Ocean Phase Roadmap](./docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md) for dependency-ordered wave sequencing
+- See [Blue Ocean Execution Plan](./docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md) for the canonical product/runtime contract
 - Current active tracking files:
   - [WAVE_A_TASKLIST.md](./docs/planning/WAVE_A_TASKLIST.md)
   - [WAVE_B_TASKLIST.md](./docs/planning/WAVE_B_TASKLIST.md)
@@ -148,4 +161,3 @@ ORGUMENTED_WEB_LOG_ENABLED=true
   - [WAVE_E_TASKLIST.md](./docs/planning/WAVE_E_TASKLIST.md)
   - [WAVE_F_TASKLIST.md](./docs/planning/WAVE_F_TASKLIST.md)
   - [WAVE_G_TASKLIST.md](./docs/planning/WAVE_G_TASKLIST.md)
-- Historical phase artifacts remain in [docs/planning/archive](./docs/planning/archive/)

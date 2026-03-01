@@ -1,198 +1,138 @@
 # Orgumented Lifecycle
 
-This document describes how Orgumented works end-to-end, from startup through retrieval, ingestion, graph rebuild, query serving, and operations.
+This is the canonical lifecycle document for Orgumented. It describes how the desktop product starts, attaches to a Salesforce org, ingests metadata, produces deterministic answers, and preserves proof and replay state.
 
-## 1. Startup and Configuration
-- API loads environment configuration (`GRAPH_BACKEND`, data paths, Salesforce auth settings, logging flags).
-- API initializes graph backend (`sqlite` or `postgres`) and ensures schema/tables exist.
-- Embedded UI starts as a local operator UI/proxy over API.
-- Health and readiness endpoints come online.
+## 1. Runtime Composition
+- Tauri owns the desktop window and native process boundary.
+- Next.js provides the embedded operator UI inside the desktop shell.
+- NestJS provides the local semantic engine and API surface.
+- Local tooling is explicit: `sf` is the authentication source of truth and `cci` is support tooling.
+- Local persistence stores graph state, evidence, proofs, history, and logs on the operator machine.
 
-## 2. Metadata Source Setup
-- Orgumented reads metadata from either:
-  - fixture path (`fixtures/permissions`) for controlled testing, or
-  - retrieved Salesforce source (`data/sf-project/force-app/main/default`) for sandbox/live usage.
-- Retrieval scope is selector-driven (`--metadata`) through metadata browser/API contracts, not manifest/package.xml in standard operator workflows.
-- Planned Phase 19 UX adds org-wide selective retrieval via metadata browser (expand/select/search across metadata types).
+## 2. Startup and Health
+- Desktop startup launches the shell plus the local runtime services it depends on.
+- The engine loads explicit config for graph backend, data paths, logging, and org-session defaults.
+- The configured graph backend initializes schema and storage paths.
+- Health surfaces come online:
+  - `/health`
+  - `/ready`
+  - `/metrics`
+  - `/org/status`
 
-## 3. Salesforce Retrieval (Optional but Typical)
-- Auth is Salesforce CLI keychain only (`sf org login web --alias ... --instance-url ... --set-default`).
-- API/Web connect operations verify alias availability through `sf org display --target-org <alias> --json`.
-- Retrieve command pulls metadata into `SF_PROJECT_PATH`.
-- Retrieve-refresh pipeline can then trigger API refresh to rebuild graph from latest source.
+## 3. Org Session Lifecycle
+- The operator authenticates once through Salesforce CLI keychain:
+  - `sf org login web --alias <alias> --instance-url <url> --set-default`
+- Orgumented discovers available aliases from the local machine.
+- Alias validation uses `sf org display --target-org <alias> --json`.
+- Session attach stores the active alias in Orgumented runtime state.
+- `cci` can enrich org tooling workflows, but `sf` keychain auth is the attach requirement.
 
-## 4. Refresh Trigger
-- Refresh starts via:
-  - `POST /refresh`, or
-  - script pipeline (for example `sf:retrieve-refresh`).
-- Refresh mode:
-  - `full`: always rebuild graph.
-  - `incremental`: skip rebuild if source fingerprint unchanged and graph/evidence are already valid.
-- Concurrency guard: if one refresh is already running, another returns `409 Conflict`.
+## 4. Metadata Retrieval Lifecycle
+- Retrieval is selector-driven, not manifest-driven.
+- The active alias is used to retrieve metadata into the Salesforce project path.
+- Standard sources are:
+  - fixtures for deterministic local testing
+  - retrieved Salesforce source for real-org workflows
+- Retrieve and refresh can be run separately or as a single managed sequence.
 
-## 5. Parse and Extract
-- Parsers scan metadata and emit deterministic graph pieces:
-  - permissions parser
-  - apex trigger parser
-  - apex class parser
-  - flow parser
-  - custom object parser
-  - permission set group parser
-  - custom permission parser
-  - connected app parser
-  - staged UI metadata parser (feature gated by `INGEST_UI_METADATA_ENABLED=true`)
-- Output from each parser:
-  - nodes
-  - edges
-  - parser stats
+## 5. Refresh and Ingestion Lifecycle
+- Refresh starts from `POST /refresh` or from a runtime-managed retrieve-and-refresh flow.
+- A concurrency guard prevents overlapping refresh jobs.
+- The engine fingerprints the source path before work begins.
+- Incremental refresh can short-circuit when the source fingerprint is unchanged and valid state already exists.
 
-## 6. Merge and Normalize
-- Parser outputs are merged into a single graph payload.
-- Node/edge IDs are deterministic.
-- Payload is sorted to preserve deterministic behavior across runs.
+## 6. Parse and Normalize Lifecycle
+- Parsers scan the active metadata source and emit deterministic graph fragments.
+- Current parser set includes:
+  - permissions
+  - Apex triggers
+  - Apex classes
+  - flows
+  - custom objects
+  - permission set groups
+  - custom permissions
+  - connected apps
+  - staged UI metadata when enabled
+- Outputs are merged into one deterministic payload.
+- Node IDs, edge IDs, and ordering are normalized so repeated runs on the same input produce the same graph payload.
 
-## 7. Ontology Validation
-- Merged payload is validated against ontology constraints.
-- On violations, refresh fails with explicit validation error.
-- On success, ontology report is written to disk for auditability.
+## 7. Constraint and Storage Lifecycle
+- The merged payload is validated against ontology constraints before storage writes.
+- Validation failures stop the refresh and surface explicit errors.
+- Successful refresh writes:
+  - graph nodes and edges
+  - ontology report
+  - evidence index
+  - refresh state
+  - semantic snapshot and drift summary
+  - append-only audit history
 
-## 8. Graph Rebuild
-- Graph backend executes a full rebuild transaction:
-  - clear existing graph records
-  - insert nodes
-  - insert edges
-- Returns node/edge counts for run summary.
-
-## 9. Evidence Reindex
-- Evidence store reindexes source files and snippets.
-- Writes evidence index and updates evidence count.
-
-## 10. State and Audit Persistence
-- Refresh state file is updated with:
-  - source path
-  - fingerprint
-  - parser stats
-  - counts
-  - ontology summary
-  - semantic diff summary
-  - meaning change summary
-  - mode and timestamp
-- Audit log appends run summary for historical trace.
-- Semantic snapshot file stores compact digests and type/relation counts for deterministic drift comparison.
-
-## 11. Query Serving
-- Query endpoints operate on graph + evidence:
+## 8. Query and Ask Lifecycle
+- Deterministic engine endpoints operate directly on graph and evidence state:
   - `/perms`
   - `/perms/system`
   - `/automation`
   - `/impact`
   - `/ask`
-- Phase 11 additions for deterministic traceability:
-  - `/ask/proof/:proofId` (proof artifact lookup)
-  - `/ask/replay` (deterministic replay check by replay token/proof id)
-- `/ask` uses planner/orchestration but remains grounded in deterministic graph results and evidence citations.
-- `/ask` also writes proof artifacts and metric timeline records for replay and trend tracking.
+- `/ask` compiles a deterministic plan, executes graph/evidence lookups, applies policy gates, and returns a proof-backed answer envelope.
+- Every supported Ask answer is expected to carry a trust result, proof context, and evidence references.
 
-## 12. Web Operator Layer
-- Web UI posts to `/api/query` proxy.
-- Proxy maps UI actions to API endpoints and returns wrapped JSON.
-- Readiness panel shows upstream API readiness payload.
-- Build badge identifies deployed UI revision.
+## 9. Proof and Replay Lifecycle
+- Ask writes immutable proof artifacts for completed responses.
+- Proof lookup exposes prior decisions by `proofId`.
+- Replay re-executes the deterministic portion of a prior decision under the recorded snapshot and policy envelope.
+- Replay mismatch is surfaced explicitly; there is no hidden fallback path.
+- Metrics and proof history are persisted for operator review and regression verification.
 
-## 13. Observability and Operations
-- Metrics interceptor records route status and latency.
-- `/metrics` exposes request metrics and DB backend.
-- Logging supports detailed local runtime visibility with reduced readiness-noise filtering.
-- `/ready` reports the active fixtures path for the current runtime context and ignores stale cross-runtime state paths.
-- Desktop runtime health is verified through local readiness probes and shell-managed process supervision.
+## 10. Operator Workflow Loop
+- Attach or switch the active org session.
+- Retrieve or refresh metadata.
+- Rebuild graph and evidence state.
+- Ask a question or run focused analysis.
+- Inspect proof, replay, trust, and follow-up actions.
+- Repeat on the next snapshot or change proposal.
 
-## 14. Iteration Loop
-- Retrieve latest metadata.
-- Refresh graph/evidence.
-- Run smoke queries.
-- Inspect logs/metrics.
-- Refine ontology/parser/query behavior.
-- Repeat per phase/PR cycle.
+## 11. Determinism Contract
+For the same snapshot, policy, and query:
+1. the planner emits the same execution intent,
+2. graph and evidence queries produce the same deterministic core payload,
+3. proof artifacts remain derivation-traceable,
+4. replay either matches or fails explicitly.
 
-## Visual: End-to-End Flow
+## Visual: Runtime Flow
 
 ```mermaid
 flowchart TD
-    A[Startup: API + Web + DB] --> B[Load Config + Init Backend]
-    B --> C{Metadata Source}
-    C -->|Fixtures| D[fixtures/permissions]
-    C -->|Salesforce Retrieve| E[data/sf-project/force-app/main/default]
-
-    D --> F[POST /refresh]
-    E --> F
-
-    F --> G{Refresh Lock}
-    G -->|busy| H[409 Conflict]
-    G -->|free| I[Build Source Fingerprint]
-
-    I --> J{Incremental + unchanged?}
-    J -->|yes| K[Skip rebuild, return cached readiness state]
-    J -->|no| L[Run Parsers]
-
-    L --> L1[Permissions Parser]
-    L --> L2[Apex Trigger Parser]
-    L --> L3[Apex Class Parser]
-    L --> L4[Flow Parser]
-    L --> L5[Custom Object Parser]
-    L --> L6[Permission Set Group Parser]
-    L --> L7[Custom Permission Parser]
-    L --> L8[Connected App Parser]
-    L --> L9[Staged UI Metadata Parser]
-
-    L1 --> M[Merge Deterministic Graph Payload]
-    L2 --> M
-    L3 --> M
-    L4 --> M
-    L5 --> M
-    L6 --> M
-    L7 --> M
-    L8 --> M
-    L9 --> M
-
-    M --> N[Ontology Constraint Validation]
-    N -->|violation| O[400 Bad Request]
-    N -->|ok| P[Full Graph Rebuild]
-
-    P --> Q[Reindex Evidence]
-    Q --> R[Write Refresh State + Audit + Ontology Report]
-    R --> S[Ready for Queries]
-
-    S --> T["/perms + /perms/system"]
-    S --> U["/automation + /impact"]
-    S --> V["/ask planner + evidence"]
-
-    T --> W["Web /api/query Proxy + UI"]
-    U --> W
-    V --> W
-
-    S --> X["/metrics + local runtime logs"]
+    A[Desktop Launch] --> B[Tauri Shell Starts]
+    B --> C[Local Engine Loads Config and Storage]
+    C --> D[Health and Readiness Online]
+    D --> E[Discover Local Salesforce Aliases]
+    E --> F[Attach Active Org Session]
+    F --> G[Retrieve Metadata or Use Fixtures]
+    G --> H[Refresh Job Starts]
+    H --> I[Fingerprint Source and Check Lock]
+    I --> J[Run Parsers]
+    J --> K[Merge Deterministic Graph Payload]
+    K --> L[Validate Ontology Constraints]
+    L --> M[Rebuild Graph and Reindex Evidence]
+    M --> N[Write Snapshot, Audit, and Drift State]
+    N --> O[Serve Ask and Analysis Endpoints]
+    O --> P[Persist Proof, Metrics, and Replay State]
 ```
 
-## Visual: Runtime Components
+## Visual: Product Components
 
 ```mermaid
 graph LR
-    User[Operator / Scripts] --> Web[Web UI + /api proxy]
-    User --> API[API Controllers]
-    Web --> API
-
-    API --> Ingestion[Ingestion Service]
-    API --> Query[Query + Analysis + Ask Services]
-
-    Ingestion --> Parsers[Metadata Parsers]
-    Parsers --> Ontology[Ontology Constraints]
-    Ontology --> Graph[(Graph Store: SQLite/Postgres)]
-    Ingestion --> Evidence[(Evidence Index)]
-    Ingestion --> State[(Refresh State + Audit)]
-
-    Query --> Graph
-    Query --> Evidence
-
-    API --> Metrics[Metrics + Logs]
-    Metrics --> Logs[Local Runtime Logs]
+    A[Operator] --> B[Tauri Desktop Shell]
+    B --> C[Embedded Next.js UI]
+    B --> D[NestJS Semantic Engine]
+    D --> E[Org Tool Adapter]
+    E --> F[sf CLI]
+    E --> G[cci]
+    D --> H[(Graph Store)]
+    D --> I[(Evidence Store)]
+    D --> J[(Proof and History Store)]
+    D --> K[(Runtime Logs and Metrics)]
+    C --> D
 ```

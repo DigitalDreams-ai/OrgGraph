@@ -74,6 +74,100 @@ Observed proof in current repo state:
 - Tauri now launches the local runtime through `node ./scripts/dev-runtime.mjs`
 - the embedded UI no longer depends on `next dev` for the primary Windows proof path
 
+## Build Packaged Desktop Runtime
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:build
+```
+
+Current packaged build behavior:
+- `beforeBuildCommand` stages a packaged runtime under `apps/desktop/src-tauri/runtime/`
+- `runtime/manifest.json` explicitly declares the packaged Node binary, API entry, web entry, and config entry used by the shell
+- the staged runtime includes:
+  - static web entry assets
+  - bundled API entry at `runtime/api/main.cjs`
+  - bundled `node.exe`
+  - `config.json` with non-secret Salesforce runtime config snapshot from `.env` and current shell overrides
+- packaged build preflight stops stale packaged desktop processes before restaging on Windows
+- build-only API baggage is pruned from the staged runtime before Tauri bundles it
+- only the native `better-sqlite3` dependency set remains under `runtime/api/node_modules`
+- `runtime/api` no longer carries a staged `package.json`
+- the package build emits:
+  - `apps/desktop/src-tauri/target/release/orgumented-desktop.exe`
+  - `apps/desktop/src-tauri/target/release/bundle/msi/Orgumented_0.1.0_x64_en-US.msi`
+  - `apps/desktop/src-tauri/target/release/bundle/nsis/Orgumented_0.1.0_x64-setup.exe`
+
+Observed packaged proof in current repo state:
+- `orgumented-desktop.exe` started the bundled API runtime
+- `http://127.0.0.1:3100/ready` returned `200`
+- proof log: `logs/desktop-phase4-release.log`
+
+## Run Packaged Desktop Smoke
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:build
+pnpm desktop:smoke:release
+```
+
+Smoke artifacts:
+- `logs/desktop-release-smoke.stdout.log`
+- `logs/desktop-release-smoke.stderr.log`
+- `logs/desktop-release-smoke-health.json`
+- `logs/desktop-release-smoke-ready.json`
+- `logs/desktop-release-smoke-ask.json`
+- `logs/desktop-release-smoke-ask-repeat.json`
+- `logs/desktop-release-smoke-proof.json`
+- `logs/desktop-release-smoke-recent-proofs.json`
+- `logs/desktop-release-smoke-replay.json`
+- `logs/desktop-release-smoke-org-status.json`
+- `logs/desktop-release-smoke-session-before.json`
+- `logs/desktop-release-smoke-session-aliases.json`
+- `logs/desktop-release-smoke-session-connect.json`
+- `logs/desktop-release-smoke-session-after-connect.json`
+- `logs/desktop-release-smoke-session-restore.json`
+- `logs/desktop-release-smoke-result.json`
+
+Current packaged smoke proof:
+- shell launch succeeded
+- `healthStatus=ok`
+- `readyStatus=ready`
+- repeated identical Ask requests returned the same deterministic proof identity:
+  - `proofId=proof_dd7bcb4c6e249d0ebae058a6`
+  - `replayToken=trace_f64fd67605f1ed56028f0e73`
+- replay parity held for the packaged Ask proof:
+  - `matched=true`
+  - `corePayloadMatched=true`
+  - `metricsMatched=true`
+- stored proof lookup and recent-proof history matched the packaged Ask artifact:
+  - `proofLookupMatched=true`
+  - `recentProofsMatched=true`
+- alias inventory is captured from `/org/session/aliases`
+- when local aliases are available, the smoke verifies `POST /org/session/connect` and restores the original session state before shutdown
+- cleanup now retries until packaged `orgumented-desktop.exe` and bundled `node.exe` are actually gone
+- the smoke also forces port `3100` clear before launch, so repeated packaged verification runs do not fail on a stale listener
+
+Optional deeper packaged auth proof:
+
+```powershell
+$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH="1"
+$env:ORGUMENTED_DESKTOP_SMOKE_ALIAS="orgumented-sandbox"
+$env:ORGUMENTED_DESKTOP_SMOKE_SWITCH_ALIAS="orgumented-uat"
+pnpm desktop:smoke:release
+```
+
+Rules:
+- `ORGUMENTED_DESKTOP_SMOKE_ALIAS` chooses the alias used for attach proof
+- if not set, the smoke prefers the current active alias, then the runtime active alias, then the first discovered alias
+- `ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH=1` asks the smoke to verify alias switching as well
+- `ORGUMENTED_DESKTOP_SMOKE_SWITCH_ALIAS` chooses the switch target explicitly
+- `ORGUMENTED_DESKTOP_SMOKE_READY_ATTEMPTS` overrides the packaged readiness polling attempt count for slow runners
+- `ORGUMENTED_DESKTOP_SMOKE_READY_DELAY_SECONDS` overrides the packaged readiness polling delay between attempts
+- when switch verification is requested, the smoke restores the original session alias or disconnected state before exit
+- packaged runtime auth proof depends on `SF_INTEGRATION_ENABLED=true` in `.env`, `.env.local`, or the build shell
+- if packaged startup fails before readiness, the smoke now reports the desktop process state plus the tail of `logs/desktop-release-smoke.stdout.log` and `logs/desktop-release-smoke.stderr.log`
+
 ## Local Org Auth
 
 Authenticate locally, not in Docker:

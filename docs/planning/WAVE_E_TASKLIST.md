@@ -4,7 +4,7 @@ Objective: expand from proof-backed explanation into simulation-backed decision 
 
 ## Interpretation Update
 - Wave E remains valid.
-- It should build on the desktop-native foundation, not on the legacy browser-hosted/Docker-first runtime.
+- It should build on the desktop-native foundation, not on the prior browser-hosted/Docker-first runtime.
 - Simulation, risk, and commercialization work should not proceed in ways that deepen obsolete runtime assumptions.
 
 ## Scope
@@ -27,4 +27,4 @@ Objective: expand from proof-backed explanation into simulation-backed decision 
 - [ ] Production readiness and commercialization artifacts complete.
 
 ## Dependency Note
-- Future Wave E implementation should target the runtime established in [WAVE_F_TASKLIST.md](/volume1/data/projects/OrgGraph/docs/planning/WAVE_F_TASKLIST.md) and the UX patterns established in [WAVE_G_TASKLIST.md](/volume1/data/projects/OrgGraph/docs/planning/WAVE_G_TASKLIST.md).
+- Future Wave E implementation should target the runtime established in `docs/planning/WAVE_F_TASKLIST.md` and the UX patterns established in `docs/planning/WAVE_G_TASKLIST.md`.

@@ -203,7 +203,7 @@ Each job needs:
 
 ## 13. Non-Goals
 - preserving Docker as a first-class runtime
-- preserving legacy auth paths
+- preserving obsolete auth paths
 - preserving the current endpoint-console operator surface
 - supporting macOS desktop runtime
 - supporting Linux desktop runtime

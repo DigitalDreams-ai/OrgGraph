@@ -13,8 +13,8 @@ Operational checklist for routine Orgumented upgrades and safe promotion.
 ## 2. Runtime Validation
 - [ ] Readiness check: `curl http://localhost:3100/ready`
 - [ ] Ingest summary check: `curl http://localhost:3100/ingest/latest`
-- [ ] Smoke check: `npm run phase7:smoke-live`
-- [ ] Regression check: `npm run phase7:regression`
+- [ ] Packaged shell smoke passes: `pnpm desktop:smoke:release`
+- [ ] Review smoke artifacts under `logs/desktop-release-smoke-*.json` and `logs/desktop-release-smoke.*.log`
 
 ## 3. Promotion Safety
 - [ ] Dry-run promotion: `npm run phase8:promotion-dry-run`

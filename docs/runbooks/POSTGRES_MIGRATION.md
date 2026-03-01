@@ -1,4 +1,4 @@
-# Postgres Migration Guide (Phase 9)
+# Postgres Migration Guide
 
 ## Purpose
 Migrate Orgumented graph storage from SQLite to Postgres with parity validation and rollback safety.
@@ -9,7 +9,7 @@ Migrate Orgumented graph storage from SQLite to Postgres with parity validation 
 `DATABASE_URL=file:./data/orgumented.db`
 - Postgres mode:
 `GRAPH_BACKEND=postgres`
-`DATABASE_URL=postgres://orgumented:orgumented@postgres:5432/orgumented`
+`DATABASE_URL=postgres://orgumented:orgumented@localhost:5432/orgumented`
 
 ## Staged Cutover
 1. Baseline snapshot in SQLite mode:

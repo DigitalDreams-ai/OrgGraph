@@ -9,6 +9,7 @@
     "desktop:dev": "pnpm --filter desktop dev",
     "desktop:build": "pnpm --filter desktop build",
     "desktop:info": "pnpm --filter desktop info",
+    "desktop:smoke:release": "pwsh -NoProfile -File ./scripts/desktop-release-smoke.ps1",
     "lint": "pnpm -r lint",
     "mcp:project-memory": "node ./scripts/project-memory-mcp.mjs",
     "test": "pnpm -r test",

@@ -1,6 +1,6 @@
 # Meta-Context Adaptation Runbook
 
-Phase 16 introduces deterministic adaptation of relation ranking priors.
+This runbook covers deterministic adaptation of relation ranking priors.
 
 ## Endpoints
 

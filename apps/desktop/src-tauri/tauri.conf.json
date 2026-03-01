@@ -6,8 +6,8 @@
   "build": {
     "beforeDevCommand": "node ./scripts/dev-runtime.mjs",
     "devUrl": "http://127.0.0.1:3001",
-    "beforeBuildCommand": "powershell -NoProfile -Command \"Set-Location (Resolve-Path '../..'); pnpm --filter web build\"",
-    "frontendDist": "../../web/.next"
+    "beforeBuildCommand": "node ./scripts/prepare-packaged-runtime.mjs",
+    "frontendDist": "./runtime/web"
   },
   "app": {
     "windows": [
@@ -28,6 +28,12 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "resources": [
+      "runtime/api",
+      "runtime/config.json",
+      "runtime/node/node.exe",
+      "runtime/manifest.json"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

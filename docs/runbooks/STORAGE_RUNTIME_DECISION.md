@@ -1,8 +1,8 @@
-# Storage Runtime Decision (Phase 17)
+# Storage Runtime Decision
 
 ## Decision
 
-- Outcome: **No-Go** on specialized runtime promotion in this phase.
+- Outcome: **No-Go** on specialized runtime promotion at this time.
 - Keep production path **Postgres-first** with existing deterministic contracts.
 - Re-evaluate after benchmark thresholds are met with measurable lift.
 

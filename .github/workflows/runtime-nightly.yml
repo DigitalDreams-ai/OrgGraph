@@ -50,61 +50,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Start desktop development runtime
-        shell: bash
-        run: |
-          mkdir -p artifacts
-          ORGUMENTED_DESKTOP_API_PORT=3100 ORGUMENTED_DESKTOP_WEB_PORT=3101 node apps/desktop/scripts/dev-runtime.mjs > artifacts/desktop-runtime-nightly.log 2>&1 &
-          echo $! > artifacts/desktop-runtime-nightly.pid
+      - name: Build packaged desktop runtime
+        run: pnpm desktop:build
 
-      - name: Wait for runtime
-        shell: bash
-        run: |
-          for _ in $(seq 1 60); do
-            if curl -fsS http://127.0.0.1:3101/api/ready >/dev/null && curl -fsS http://127.0.0.1:3100/ready >/dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "desktop runtime did not become ready in time"
-          exit 1
-
-      - name: Run desktop-backed smoke
-        shell: bash
-        run: ./scripts/web-smoke.sh
-
-      - name: Run drift gate
-        shell: bash
-        run: ./scripts/phase14-drift-gate.sh artifacts/phase14-drift-gate-nightly.json
-
-      - name: Ask plus replay determinism check
-        shell: bash
-        run: |
-          curl -sS -X POST http://127.0.0.1:3100/ask \
-            -H 'content-type: application/json' \
-            -d '{"query":"What touches Opportunity.StageName?"}' > artifacts/nightly-ask.json
-          token="$(node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('artifacts/nightly-ask.json','utf8'));process.stdout.write(String(d?.proof?.replayToken||''));")"
-          if [ -z "$token" ]; then
-            echo "replay token missing from /ask response"
-            exit 1
-          fi
-          curl -sS -X POST http://127.0.0.1:3100/ask/replay \
-            -H 'content-type: application/json' \
-            -d "{\"replayToken\":\"$token\"}" > artifacts/nightly-replay.json
-          node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('artifacts/nightly-replay.json','utf8'));if(!d.matched){console.error('replay mismatch');process.exit(1)}"
+      - name: Run packaged desktop smoke
+        run: pnpm desktop:smoke:release
 
       - name: Upload nightly artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: runtime-nightly-artifacts
-          path: artifacts/
+          path: |
+            logs/desktop-release-smoke*
+            logs/desktop-phase4-release.log
           if-no-files-found: ignore
-
-      - name: Stop desktop development runtime
-        if: always()
-        shell: bash
-        run: |
-          if [ -f artifacts/desktop-runtime-nightly.pid ]; then
-            kill "$(cat artifacts/desktop-runtime-nightly.pid)" || true
-          fi

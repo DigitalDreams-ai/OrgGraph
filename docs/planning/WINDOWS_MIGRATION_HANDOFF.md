@@ -79,7 +79,7 @@ Rationale:
 2. Keep only `github` in user-level Cursor config.
 3. Let repo-local `.cursor/mcp.json` supply `project-memory`.
 4. Add `project-memory` and `github` to Codex MCP config on Windows.
-5. Do not restore browser-oriented or legacy runtime MCPs to the default setup.
+5. Do not restore browser-oriented or obsolete runtime MCPs to the default setup.
 6. Do not add `docker`, `chrome-devtools`, `playwright`, `postgres`, or `filesystem` MCPs back to the default Windows desktop configuration unless a specific task proves the need.
 
 ## Required Windows Verification Steps
@@ -198,7 +198,7 @@ Expected Windows MCP state:
 
 ## Operating Notes
 - Do not spend more time on Linux/macOS desktop runtime blockers.
-- Do not re-introduce legacy auth paths.
+- Do not re-introduce obsolete auth paths.
 - Do not treat Docker as a first-class runtime or default MCP dependency again.
 - Do not keep GitHub tokens in plaintext MCP config files.
 - Do not regress the production-backed desktop runtime back to `next dev` as the default Windows proof path.

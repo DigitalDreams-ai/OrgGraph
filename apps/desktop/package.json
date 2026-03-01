@@ -10,6 +10,7 @@
     "typecheck": "echo 'desktop shell has no TypeScript sources yet'"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.10.0"
+    "@tauri-apps/cli": "^2.10.0",
+    "esbuild": "^0.27.3"
   }
 }

@@ -6,8 +6,8 @@ This roadmap consolidates overlapping phases into dependency-ordered waves with 
 Turn Orgumented into a replayable semantic decision runtime for Salesforce architecture work, where every answer is provable under a snapshot + policy envelope.
 
 ## Roadmap Model
-- Historical phase files remain as delivery history.
-- Active execution follows wave gates below.
+- Active execution follows the wave gates below.
+- The wave tasklists are the only planning files that should be treated as execution trackers.
 - No wave starts until all predecessor wave exit gates pass.
 
 ## Wave Interpretation Update
@@ -30,11 +30,11 @@ Interpretation rules:
 Supersession rules:
 - Any wave item that assumes Docker as product runtime is obsolete.
 - Any wave item that assumes the browser-hosted operator UI is the long-term product surface is superseded by Waves F-G.
-- Any auth path outside Salesforce CLI keychain is legacy and should be treated as removal work under Wave A / Wave F.
+- Any auth path outside Salesforce CLI keychain is obsolete and should be treated as removal work under Wave A / Wave F.
 
 ## Wave A - Operator Baseline (Foundation)
 Scope:
-- remove legacy auth paths and duplicate session logic
+- remove obsolete auth paths and duplicate session logic
 - make Salesforce CLI keychain (`sf` + `cci`) the operator auth baseline
 - remove manifest-first retrieve dependency from standard workflows
 - stabilize connect -> retrieve -> refresh on real sandbox metadata
@@ -86,7 +86,7 @@ Exit gates:
 
 ## Wave D - Fresh Next.js Ask-First UX
 Scope:
-- fresh workflow-native Next.js UI baseline (not endpoint-console derivative)
+- fresh workflow-native Next.js UI baseline
 - Ask as flagship primary pane
 - raw JSON as secondary operator view only
 - route-grouped workflows: Ask, Connect, Retrieve, Refresh, Analyze, Proofs, System
@@ -103,7 +103,7 @@ Entry prerequisites:
 Exit gates:
 - workflow parity smoke pass on new UI
 - operator task completion target achieved vs baseline UI
-- no legacy UI route required for core workflows
+- no superseded UI route required for core workflows
 
 ## Wave E - Simulation, Risk, and Commercialization
 Scope:
@@ -131,7 +131,7 @@ Scope:
 
 Entry prerequisites:
 - desktop architecture and transition plan approved
-- legacy removal register created and prioritized
+- removal register created and prioritized
 - reuse/refactor/delete inventory agreed
 
 Exit gates:
@@ -156,7 +156,7 @@ Exit gates:
 - Ask-first desktop UX reaches workflow parity for core operator tasks
 - proof/history access no longer requires manual token bookkeeping
 - org browser supports org-wide selective retrieve in the desktop product
-- legacy browser-hosted operator UI is no longer required for primary workflows
+- pre-desktop operator UI is no longer required for primary workflows
 
 ## Dependency Matrix
 1. Wave A -> required by B, C, D, E, F, G
@@ -168,7 +168,7 @@ Exit gates:
 
 ## Practical Execution Order
 For the desktop-native program, the practical order is:
-1. close remaining relevant Wave A legacy-removal items
+1. close remaining relevant Wave A removal items
 2. preserve Wave B deterministic Ask core requirements
 3. preserve Wave C proof productization requirements
 4. execute Wave F desktop foundation and runtime cutover
@@ -180,11 +180,11 @@ Execution note:
 - Its intended product outcomes should be realized through Wave G.
 
 ## Remaining Relevance of Waves A-E
-- Wave A: still active where legacy removal, auth simplification, and selector-first retrieval are incomplete.
+- Wave A: still active where auth simplification, selector-first retrieval, and runtime cleanup are incomplete.
 - Wave B: still critical and architecture-defining.
 - Wave C: still critical and product-defining.
 - Wave D: capability target retained, implementation path moved to Wave G.
-- Wave E: still valid, but should build on the desktop runtime rather than the legacy web/Docker runtime.
+- Wave E: still valid, but should build on the desktop runtime rather than the prior web/Docker runtime.
 
 ## Program-Level Lift Targets
 - `Replay pass rate`: 100% for benchmark corpus.
@@ -200,13 +200,11 @@ Execution note:
 
 ## Primary References
 - `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
-- `docs/planning/OPERATOR_GRADE_EXECUTION_PLAN.md`
 - `docs/planning/ORGUMENTED_LEXICON.md`
 - `docs/planning/SUCCESS_GATES_CHECKLIST.md`
 - `docs/planning/DESKTOP_ARCHITECTURE.md`
 - `docs/planning/DESKTOP_TRANSITION_PLAN.md`
-- `docs/planning/LEGACY_REMOVAL_REGISTER.md`
+- `docs/planning/REMOVAL_REGISTER.md`
 - `docs/planning/REUSE_REFACTOR_DELETE_MATRIX.md`
 - `docs/planning/DESKTOP_UX_BLUEPRINT.md`
 - `docs/planning/WAVE_A_TASKLIST.md` through `docs/planning/WAVE_G_TASKLIST.md`
-- `docs/planning/PHASE_TO_WAVE_MAPPING.md`

@@ -2,7 +2,7 @@
 
 Status: migration plan
 
-Purpose: define how Orgumented moves from the prior browser-hosted and Docker-oriented implementation to a desktop-native product built on Next.js + NestJS.
+Purpose: define how Orgumented completes the move to a desktop-native product built on Tauri, Next.js, and NestJS.
 
 ## 1. Migration Goal
 Move Orgumented to a desktop-native runtime where:
@@ -16,14 +16,14 @@ Move Orgumented to a desktop-native runtime where:
 ## 2. Transition Constraints
 - No big-bang rewrite combined with backend contract churn.
 - No preserving Docker as a first-class target.
-- No further investment in legacy auth paths.
+- No further investment in obsolete auth paths.
 - Ask remains the flagship workflow during and after migration.
 - Existing semantic logic should be reused where it provides real lift.
 
 ## 3. Current State
 - current operator surface is still implemented as an embedded Next.js app that can also be exercised through local dev servers
 - runtime still carries cleanup debt from prior Docker assumptions
-- auth/session logic has accumulated legacy paths and failed experiments
+- auth/session logic still contains cleanup debt from pre-desktop experiments
 - semantic engine contains substantial reusable value
 - UI does not yet represent the desired product quality
 
@@ -51,8 +51,8 @@ Phase D2: codebase boundary hardening
 - remove UI/runtime assumptions from domain services where possible
 - inventory every auth, retrieve, and storage assumption
 
-Phase D3: legacy removal preparation
-- create deletion register
+Phase D3: removal preparation
+- create removal register
 - mark all unsupported auth paths
 - stop expanding current web-auth UX
 - stop adding Docker-specific operator flows
@@ -77,7 +77,7 @@ Phase D6: Ask-first UX migration
 Phase D7: full cutover
 - retire current primary web-hosted operator UI
 - retire Docker product assumptions
-- close remaining legacy-removal gates
+- close remaining removal gates
 
 ## 6. Workstream Breakdown
 1. Product and UX
@@ -120,21 +120,21 @@ Refactor:
 - path and persistence services
 
 Replace:
-- current operator WebUI shell
+- current operator UI shell
 - Docker-first runtime assumptions
-- legacy auth paths
+- obsolete auth paths
 - browser-broker ideas
 
 ## 8. Cutover Rules
-- New desktop workflows must reach parity before legacy operator claims are made.
+- New desktop workflows must reach parity before older operator claims are made.
 - No "operator-ready" claim until connect, retrieve, refresh, Ask, and proof replay succeed in desktop runtime.
-- Legacy browser-hosted operator flows are removal debt and must not be treated as supported product paths.
+- Browser-hosted operator flows from the pre-desktop implementation are removal debt and must not be treated as supported product paths.
 
 ## 9. Risks
 1. Maintaining two first-class runtimes too long
 - result: duplicated effort and architectural drift
 
-2. Carrying legacy auth paths into desktop design
+2. Carrying obsolete auth paths into desktop design
 - result: complexity without value
 
 3. Reusing the current UI structure
@@ -153,9 +153,10 @@ Replace:
 ## 11. Recommended Immediate Deliverables
 1. `DESKTOP_ARCHITECTURE.md`
 2. `DESKTOP_UX_BLUEPRINT.md`
-3. `LEGACY_REMOVAL_REGISTER.md`
+3. `REMOVAL_REGISTER.md`
 4. `REUSE_REFACTOR_DELETE_MATRIX.md`
 5. roadmap update mapping future waves to desktop transition work
+6. `DESKTOP_RUNTIME_HARDENING_TODO.md`
 
 ## 12. Completion Criteria
 Desktop transition is complete when:

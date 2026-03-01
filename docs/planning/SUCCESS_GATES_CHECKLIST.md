@@ -1,6 +1,6 @@
 # Orgumented Success Gates Checklist
 
-Purpose: define objective gates for delivery success under the active Wave A-E execution model.
+Purpose: define objective gates for delivery success under the active Wave A-G execution model.
 
 ## 1) KPI Lock (Required Before Wave B Build Completion)
 - [ ] Replay pass rate target locked (`100%`)
@@ -15,22 +15,22 @@ Purpose: define objective gates for delivery success under the active Wave A-E e
 - [ ] Baseline run captured on current stable main
 - [ ] Result artifacts stored and versioned
 
-## 3) WebUI-First Contract (Required)
-- [ ] Every primary API capability mapped to a first-class WebUI flow
-- [ ] Deterministic-first output rendering defined for Ask
-- [ ] Proof/provenance visibility required in UI (`snapshotId`, `policyId`, `replayToken`, trust level)
+## 3) Desktop Product Contract (Required)
+- [ ] Every primary capability is reachable from a first-class desktop workspace
+- [ ] Ask uses deterministic-first decision-packet rendering by default
+- [ ] Proof and provenance visibility are available in the desktop product (`snapshotId`, `policyId`, replay identity, trust level)
 - [ ] Failure states mapped to explicit operator actions
 
 ## 4) Auth/Retrieve Contract (Wave A Critical)
-- [ ] WebUI auth path uses Salesforce CLI keychain as primary flow
+- [ ] Desktop org-session flow uses Salesforce CLI keychain as primary path
 - [ ] Alias/session contract is explicit (`SF_ALIAS`, `SF_BASE_URL`, local CLI-backed alias discovery/attach flow, `sf org display`)
-- [ ] Legacy OAuth and magic-link auth paths are removed from runtime and docs
+- [ ] Obsolete OAuth and magic-link auth paths are removed from runtime and docs
 - [ ] Org-wide metadata browser behavior defined (expand/select/search across types)
 - [ ] package.xml-all retrieval is not default
 
 ## 5) CI/Runtime Hardening
 - [ ] CI validates `sf` CLI availability in runtime paths used by retrieve/connect flows
-- [ ] Web smoke includes auth -> retrieve -> refresh -> query -> proof path
+- [ ] Windows validation proves desktop runtime startup plus auth -> retrieve -> refresh -> query -> proof flow
 - [ ] No secret leakage in logs/artifacts checks
 - [ ] Determinism regression checks run in CI for replay/trust gates
 

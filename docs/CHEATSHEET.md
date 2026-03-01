@@ -21,15 +21,46 @@ Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:dev
 ```
 
+Packaged desktop build:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:build
+```
+
+Packaged desktop smoke:
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:smoke:release
+```
+
+Optional packaged auth proof:
+```powershell
+$env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH="1"
+$env:ORGUMENTED_DESKTOP_SMOKE_ALIAS="orgumented-sandbox"
+$env:ORGUMENTED_DESKTOP_SMOKE_SWITCH_ALIAS="orgumented-uat"
+pnpm desktop:smoke:release
+```
+
+Packaged runtime expectation:
+- `desktop:build` stages a bundled runtime under `apps/desktop/src-tauri/runtime/`
+- release shell launches with bundled static UI assets and bundled API runtime
+- release build snapshots non-secret Salesforce runtime config into `apps/desktop/src-tauri/runtime/config.json`
+- smoke captures alias inventory and verifies session attach when aliases are available
+- smoke restores the original session state after attach/switch proof
+
+Desktop launch expectation:
+- app opens on `Ask`
+- use `Org Sessions` to connect/switch aliases
+- use `Raw JSON Inspector` only for secondary payload inspection
+
 ## Health
 ```bash
 curl http://localhost:3100/health
 curl http://localhost:3100/ready
 curl http://localhost:3100/ingest/latest
-curl http://localhost:3101/api/health
-curl http://localhost:3101/api/ready
 curl http://localhost:3100/org/session/aliases
 curl "http://localhost:3100/org/session/validate?alias=orgumented-sandbox"
+curl http://localhost:3100/org/status
 ```
 
 ## Local Fixture Refresh
@@ -76,7 +107,6 @@ curl -X POST http://localhost:3100/ask -H 'content-type: application/json' -d '{
 curl -X POST http://localhost:3100/ask/architecture -H 'content-type: application/json' -d '{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName"}'
 curl -X POST http://localhost:3100/ask/simulate -H 'content-type: application/json' -d '{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"balanced","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"}]}'
 curl -X POST http://localhost:3100/ask/simulate/compare -H 'content-type: application/json' -d '{"scenarioA":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"strict","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"}]},"scenarioB":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"exploratory","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"},{"action":"add_automation","object":"Opportunity"}]}}'
-curl -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"orgConnect","payload":{}}'
 curl http://localhost:3100/org/session
 curl http://localhost:3100/org/session/aliases
 curl "http://localhost:3100/org/session/validate?alias=orgumented-sandbox"
@@ -97,28 +127,16 @@ curl http://localhost:3100/ask/metrics/export
 curl http://localhost:3100/ask/trust/dashboard
 ```
 
-## Embedded UI Proxy (`/api/query`)
-```bash
-curl -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"kind":"automation","payload":{"object":"Opportunity"}}'
-curl -X POST http://localhost:3101/api/query -H 'content-type: application/json' -d '{"endpoint":"impact","params":{"field":"Opportunity.StageName"}}'
-```
-
 ## Core Test Commands
 ```bash
 npm exec --yes pnpm@9.12.3 -- --filter api test
 npm exec --yes pnpm@9.12.3 -- --filter api build
-npm run test:web-smoke
-npm run test:ui-smoke
-# Optional: run smoke against retrieved org metadata instead of fixtures
-WEB_SMOKE_USE_SF_PROJECT=1 npm run test:web-smoke
-# Optional: require CCI org auth validation in smoke (sandbox/local operator check)
-WEB_SMOKE_REQUIRE_ORG_AUTH=1 npm run test:web-smoke
-npm run phase7:smoke-live
-npm run phase7:snapshot
-npm run phase7:regression
+pnpm --filter web build
+pnpm desktop:info
+pnpm desktop:build
+pnpm desktop:smoke:release
+pnpm desktop:dev
 npm run ingest:report
-npm exec --yes pnpm@9.12.3 -- --filter api test:phase11-proof
-npm exec --yes pnpm@9.12.3 -- --filter api test:phase11-sandbox
 npm run phase12:replay-regression
 npm run phase12:replay-load
 npm run phase13:metrics-export
@@ -130,13 +148,13 @@ pnpm --filter @orgumented/project-memory-mcp test
 ```
 
 ## Desktop App Workspaces
-- `Connect`: auth path + session/alias actions
-- `Org Browser`: searchable metadata tree + retrieval cart
-- `Refresh`: full/incremental refresh + snapshot diff
-- `Analyze`: permissions/automation/impact workflows
-- `Ask`: deterministic answer + proof envelope + optional elaboration
-- `Proofs & Metrics`: proof lookup/replay + metrics/trust dashboard
-- `System`: diagnostics, meta-context, action telemetry
+- `Ask`: deterministic answer packet and follow-up actions
+- `Org Sessions`: overview refresh, alias readiness, attach, and switching
+- `Org Browser`: searchable metadata tree, retrieval cart summary, and selected-retrieve handoff
+- `Refresh & Build`: retrieval, refresh, drift, and rebuild summaries
+- `Explain & Analyze`: permissions, automation, and impact workflows
+- `Proofs & History`: recent proof selection, proof lookup, replay parity, and trust history summaries
+- `Settings & Diagnostics`: runtime status, logs, and meta-context controls
 
 ## Fast Fixes
 ```bash
@@ -148,6 +166,10 @@ curl -X POST http://localhost:3100/refresh -H 'content-type: application/json' -
 
 # Restart the standalone desktop shell after UI changes
 pnpm desktop:dev
+
+# Verify packaged shell runtime locally
+pnpm desktop:build
+pnpm desktop:smoke:release
 ```
 
 ## Project Memory MCP
