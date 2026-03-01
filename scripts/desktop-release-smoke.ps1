@@ -147,14 +147,54 @@ function Resolve-SwitchAlias([string[]]$KnownAliases, [string]$RequestedAlias, [
   return @($KnownAliases | Where-Object { $_ -ne $ConnectedAlias } | Select-Object -First 1)[0]
 }
 
+function Get-LogTail {
+  param(
+    [string]$Path,
+    [int]$LineCount = 40
+  )
+
+  if (-not (Test-Path $Path)) {
+    return "<missing: $Path>"
+  }
+
+  $lines = Get-Content -Path $Path -Tail $LineCount -ErrorAction SilentlyContinue
+  if (-not $lines) {
+    return "<empty: $Path>"
+  }
+
+  return ($lines -join [Environment]::NewLine)
+}
+
 function Wait-ForReady {
   param(
     [string]$Url,
-    [int]$Attempts = 30,
-    [int]$DelaySeconds = 2
+    [System.Diagnostics.Process]$DesktopProcess = $null,
+    [string]$StdoutLogPath = '',
+    [string]$StderrLogPath = '',
+    [int]$Attempts = 0,
+    [int]$DelaySeconds = 0
   )
 
+  if ($Attempts -le 0) {
+    $Attempts = [Math]::Max(1, [int]($env:ORGUMENTED_DESKTOP_SMOKE_READY_ATTEMPTS ?? '90'))
+  }
+  if ($DelaySeconds -le 0) {
+    $DelaySeconds = [Math]::Max(1, [int]($env:ORGUMENTED_DESKTOP_SMOKE_READY_DELAY_SECONDS ?? '2'))
+  }
+
   for ($i = 0; $i -lt $Attempts; $i += 1) {
+    if ($null -ne $DesktopProcess) {
+      try {
+        $DesktopProcess.Refresh()
+      } catch {
+      }
+      if ($DesktopProcess.HasExited) {
+        $stdoutTail = Get-LogTail -Path $StdoutLogPath
+        $stderrTail = Get-LogTail -Path $StderrLogPath
+        throw "Packaged desktop process exited before readiness (pid=$($DesktopProcess.Id) exitCode=$($DesktopProcess.ExitCode)).`nSTDOUT:`n$stdoutTail`nSTDERR:`n$stderrTail"
+      }
+    }
+
     try {
       $response = Invoke-WebRequest -UseBasicParsing -Uri $Url
       if ($response.StatusCode -eq 200) {
@@ -167,7 +207,22 @@ function Wait-ForReady {
     Start-Sleep -Seconds $DelaySeconds
   }
 
-  throw "Timed out waiting for packaged desktop runtime readiness at $Url"
+  $processState = 'unknown'
+  if ($null -ne $DesktopProcess) {
+    try {
+      $DesktopProcess.Refresh()
+      $processState = if ($DesktopProcess.HasExited) {
+        "exited (pid=$($DesktopProcess.Id) exitCode=$($DesktopProcess.ExitCode))"
+      } else {
+        "still-running (pid=$($DesktopProcess.Id))"
+      }
+    } catch {
+      $processState = 'unavailable'
+    }
+  }
+  $stdoutTail = Get-LogTail -Path $StdoutLogPath
+  $stderrTail = Get-LogTail -Path $StderrLogPath
+  throw "Timed out waiting for packaged desktop runtime readiness at $Url after $Attempts attempts with $DelaySeconds second delay. ProcessState=$processState`nSTDOUT:`n$stdoutTail`nSTDERR:`n$stderrTail"
 }
 
 if (-not (Test-Path $exePath)) {
@@ -191,7 +246,7 @@ try {
 
   $desktopProcess = Start-Process -FilePath $exePath -WorkingDirectory (Split-Path $exePath) -RedirectStandardOutput $stdoutLog -RedirectStandardError $stderrLog -PassThru
 
-  Wait-ForReady -Url 'http://127.0.0.1:3100/ready'
+  Wait-ForReady -Url 'http://127.0.0.1:3100/ready' -DesktopProcess $desktopProcess -StdoutLogPath $stdoutLog -StderrLogPath $stderrLog
 
   $health = Invoke-JsonGet -Url 'http://127.0.0.1:3100/health' -ArtifactPath $healthArtifact
   if ($health.status -ne 'ok') {

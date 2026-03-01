@@ -162,8 +162,11 @@ Rules:
 - if not set, the smoke prefers the current active alias, then the runtime active alias, then the first discovered alias
 - `ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH=1` asks the smoke to verify alias switching as well
 - `ORGUMENTED_DESKTOP_SMOKE_SWITCH_ALIAS` chooses the switch target explicitly
+- `ORGUMENTED_DESKTOP_SMOKE_READY_ATTEMPTS` overrides the packaged readiness polling attempt count for slow runners
+- `ORGUMENTED_DESKTOP_SMOKE_READY_DELAY_SECONDS` overrides the packaged readiness polling delay between attempts
 - when switch verification is requested, the smoke restores the original session alias or disconnected state before exit
 - packaged runtime auth proof depends on `SF_INTEGRATION_ENABLED=true` in `.env`, `.env.local`, or the build shell
+- if packaged startup fails before readiness, the smoke now reports the desktop process state plus the tail of `logs/desktop-release-smoke.stdout.log` and `logs/desktop-release-smoke.stderr.log`
 
 ## Local Org Auth
 
