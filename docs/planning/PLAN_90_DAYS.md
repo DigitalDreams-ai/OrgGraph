@@ -297,6 +297,43 @@ Progress note:
   - either keep productizing remaining desktop workspaces with the same discipline
   - or pause implementation and review the accumulated DNA branch progress on PR `#42`
 
+## Active Follow-On Branch: Desktop Runtime Convergence
+
+Status: active
+
+Current branch:
+- `dna-runtime-ownership`
+
+### Scope
+- converge dev and packaged desktop runtime boundaries
+- remove remaining desktop dependence on Next route adapters
+- reduce dependence on a standalone Next server for normal desktop verification
+- move shell verification fully toward desktop-owned smoke and release checks
+
+### Evidence for prioritization
+- packaged runtime already calls the local Nest engine directly:
+  - `apps/desktop/src-tauri/src/lib.rs`
+  - `apps/web/app/lib/runtime-mode.ts`
+- dev runtime still starts a standalone web server and preserves the `apps/web/app/api/*` proxy tree:
+  - `apps/desktop/scripts/dev-runtime.mjs`
+  - `apps/web/app/api/_lib/upstream.ts`
+  - `apps/web/app/api/`
+- legacy browser-style verification still exists:
+  - `scripts/web-smoke.sh`
+  - `scripts/ui-smoke-playwright.sh`
+
+### Acceptance gates
+- `pnpm desktop:dev` succeeds without requiring Next route adapters for desktop flows.
+- Desktop dev and packaged runtime hit the same explicit engine boundary for Ask, Org, Refresh, Analyze, and Proofs.
+- The desktop verification path no longer depends on browser-product assumptions.
+- `pnpm --filter api test`, `pnpm --filter web build`, `pnpm desktop:build`, and `pnpm desktop:smoke:release` all pass.
+
+### First slices
+1. Inventory and fence the remaining consumers of `apps/web/app/api/*`.
+2. Make desktop direct-engine mode the default for shell-owned flows in development.
+3. Remove one route family at a time from `apps/web/app/api/*` once the direct boundary is proven.
+4. Update CI and operator docs so desktop smoke is the primary runtime contract.
+
 ## Determinism and Replay Harness Plan
 
 ### Existing harness to preserve

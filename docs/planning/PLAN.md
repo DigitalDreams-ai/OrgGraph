@@ -180,6 +180,40 @@ Purpose: pause wave execution and inspect the runtime "DNA" before further struc
    - Phase 1 stabilized proof identity. Store semantics are the remaining open follow-up.
 4. Whether Postgres parity should remain in the engine now or be postponed until the desktop boundary is clean.
 
+## Current Branch Direction
+
+Current branch:
+- `dna-runtime-ownership`
+
+Reason:
+- Packaged desktop already uses the local Nest engine directly and no longer depends on Next route handlers at release time.
+- Development still depends on a standalone Next server plus the `apps/web/app/api/*` proxy surface.
+- That dev/package split is now the highest-value remaining architectural drift.
+
+Evidence:
+- `apps/desktop/src-tauri/src/lib.rs`
+- `apps/desktop/scripts/dev-runtime.mjs`
+- `apps/web/app/lib/runtime-mode.ts`
+- `apps/web/app/api/_lib/upstream.ts`
+- `apps/web/app/api/`
+- `scripts/web-smoke.sh`
+- `scripts/ui-smoke-playwright.sh`
+
+Primary branch objective:
+- make desktop dev and packaged desktop use the same explicit UI-to-engine boundary model
+
+Expected scope:
+1. Default the desktop shell to direct Nest engine access in both dev and packaged flows.
+2. Retire the Next route adapter tree from the desktop runtime path.
+3. Reduce or eliminate the standalone Next server as a runtime dependency for normal desktop verification.
+4. Replace remaining browser-first smoke assumptions with shell-owned desktop checks.
+
+Non-goals:
+- no new feature wave
+- no storage re-platform
+- no broad UI redesign
+- no Docker fallback
+
 ## Review Update
 - Phase 1 is now complete on `dna-foundation`.
 - `apps/api/src/modules/ask/ask.service.ts` no longer salts `proofId` with wall-clock time for repeated identical asks.

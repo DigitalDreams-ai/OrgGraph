@@ -108,3 +108,20 @@ Branch: `dna-foundation`
   - preserve sandbox-backed verification paths.
 - Pivot trigger:
   - if fixture-backed tests stay green while real org flows repeatedly fail, stop and repair org/runtime contracts before more feature work.
+
+## Risk 8: Dev and packaged desktop may diverge into different boundary models
+- Evidence:
+  - `apps/desktop/scripts/dev-runtime.mjs`
+  - `apps/web/app/lib/runtime-mode.ts`
+  - `apps/web/app/api/_lib/upstream.ts`
+  - `apps/web/app/api/`
+- Impact:
+  - desktop behavior can pass in packaged smoke while remaining overly dependent on Next route adapters in development,
+  - regressions can hide until late verification,
+  - engineers can accidentally preserve browser-era runtime assumptions.
+- Mitigation:
+  - prioritize a follow-on branch that converges dev and packaged runtime boundaries,
+  - remove route adapters only after direct-engine desktop flows are proven,
+  - keep desktop smoke as the release gate while adding narrower dev/runtime parity checks.
+- Pivot trigger:
+  - if a new desktop feature requires adding more `apps/web/app/api/*` adapters or web-server-only logic, stop feature work and fix runtime convergence first.

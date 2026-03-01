@@ -1,0 +1,115 @@
+# Next Branch Plan
+
+Date: February 28, 2026
+Current branch: `dna-runtime-ownership`
+Source checkpoint: `dna-foundation` merged by PR `#42`
+
+## Recommended Branch
+- `dna-runtime-ownership`
+
+## Objective
+Converge Orgumented's desktop runtime around one explicit model:
+- Tauri owns lifecycle,
+- the embedded UI talks directly to the local Nest engine for desktop flows,
+- dev and packaged runtime behave the same way at the UI-to-engine boundary.
+
+This branch is about runtime ownership and boundary convergence, not feature expansion.
+
+## Why This Is Next
+
+Current evidence shows the core engine and packaged desktop path are in materially better shape:
+- packaged shell supervises the API:
+  - `apps/desktop/src-tauri/src/lib.rs`
+- packaged runtime is manifest-driven and release-smoke-verified:
+  - `apps/desktop/src-tauri/runtime/manifest.json`
+  - `scripts/desktop-release-smoke.ps1`
+- packaged desktop already calls the Nest engine directly:
+  - `apps/web/app/lib/runtime-mode.ts`
+  - `apps/web/app/lib/ask-client.ts`
+  - `apps/web/app/lib/org-client.ts`
+  - `apps/web/app/lib/refresh-client.ts`
+  - `apps/web/app/lib/secondary-client.ts`
+
+The remaining high-value drift is in development/runtime composition:
+- desktop dev still starts a standalone web server:
+  - `apps/desktop/scripts/dev-runtime.mjs`
+- the repo still maintains a large Next route adapter surface:
+  - `apps/web/app/api/`
+  - `apps/web/app/api/_lib/upstream.ts`
+- verification still carries browser-era smoke scripts:
+  - `scripts/web-smoke.sh`
+  - `scripts/ui-smoke-playwright.sh`
+
+## Scope
+
+### 1. Runtime boundary convergence
+- Make desktop dev and packaged runtime use the same direct-engine boundary model.
+- Stop treating Next route handlers as part of the desktop runtime contract.
+
+### 2. Route adapter retirement
+- Inventory remaining `apps/web/app/api/*` consumers.
+- Remove route families only after each direct-engine path is proven in desktop dev and packaged smoke.
+
+### 3. Shell-owned verification
+- Make desktop-owned smoke the primary runtime proof.
+- Reduce or remove browser-product assumptions from default validation paths.
+
+### 4. Docs and operator clarity
+- Update runbooks and operator docs to describe one desktop runtime story instead of separate dev/proxy/package stories.
+
+## Non-Goals
+- no new wave execution track
+- no feature expansion unrelated to runtime ownership
+- no storage re-platform
+- no Docker fallback
+- no browser-hosted product path
+
+## Proposed Slice Order
+
+### Slice 1: Boundary inventory and fencing
+- Map each `apps/web/app/api/*` route to its current caller.
+- Confirm which routes are only needed for non-desktop browser/dev convenience.
+- Add a clear boundary table to planning docs before deleting adapters.
+
+Acceptance:
+- there is an explicit list of route families to delete, keep temporarily, or replace
+
+### Slice 2: Direct-engine desktop dev default
+- Make the desktop shell default to direct-engine clients in development, not only in packaged mode.
+- Keep any required Next surface limited to UI asset serving, not operator API brokering.
+
+Acceptance:
+- `pnpm desktop:dev` exercises direct Ask, Org, Refresh, Analyze, and Proofs flows without relying on `apps/web/app/api/*`
+
+### Slice 3: Route family removal
+- Remove one adapter family at a time once its desktop direct path is proven.
+- Start with the lowest-value families first.
+
+Acceptance:
+- route deletion happens with passing desktop smoke and no operator regression in affected workspaces
+
+### Slice 4: Verification convergence
+- Retire or sharply demote browser-first smoke checks from the default desktop branch path.
+- Keep one release smoke and one narrower dev/runtime parity check.
+
+Acceptance:
+- CI and local docs describe desktop runtime smoke as the primary verification contract
+
+## Verification Bar
+- `pnpm --filter api test`
+- `pnpm --filter web build`
+- `pnpm desktop:build`
+- `pnpm desktop:smoke:release`
+- targeted `pnpm desktop:dev` proof for any changed direct-engine flow
+
+## Stop Conditions
+- If replay parity regresses, stop and fix before more boundary deletion.
+- If direct-engine dev flow breaks packaged parity, stop and restore convergence before more cleanup.
+- If a slice requires expanding `apps/web/app/api/*`, stop and reassess branch scope.
+
+## Success Definition
+At the end of this branch, Orgumented should be easier to describe and verify:
+- one desktop product runtime,
+- one primary UI-to-engine boundary,
+- fewer browser-era seams,
+- no ambiguity about whether desktop behavior depends on Next proxy routes.

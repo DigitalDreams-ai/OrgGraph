@@ -9,6 +9,12 @@
 ## Planning
 - [Blue Ocean Execution Plan](./planning/BLUE_OCEAN_EXECUTION_PLAN.md)
 - [Blue Ocean Phase Roadmap](./planning/BLUE_OCEAN_PHASE_ROADMAP.md)
+- [DNA Architecture Plan](./planning/PLAN.md)
+- [DNA Decision Report](./planning/DECISION_REPORT.md)
+- [DNA 90-Day Plan](./planning/PLAN_90_DAYS.md)
+- [DNA Risk Register](./planning/RISK_REGISTER.md)
+- [DNA Runlog](./planning/RUNLOG.md)
+- [Next Branch Plan](./planning/NEXT_BRANCH_PLAN.md)
 - [Success Gates Checklist](./planning/SUCCESS_GATES_CHECKLIST.md)
 - [Orgumented Lexicon](./planning/ORGUMENTED_LEXICON.md)
 - [Desktop Architecture](./planning/DESKTOP_ARCHITECTURE.md)

@@ -150,10 +150,16 @@ ORGUMENTED_WEB_LOG_ENABLED=true
 
 ## Plan
 
-- Active execution model: **Wave A-G**
-- See [Blue Ocean Phase Roadmap](./docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md) for dependency-ordered wave sequencing
-- See [Blue Ocean Execution Plan](./docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md) for the canonical product/runtime contract
-- Current active tracking files:
+- Architectural control set on the current DNA checkpoint:
+  - [PLAN.md](./docs/planning/PLAN.md)
+  - [DECISION_REPORT.md](./docs/planning/DECISION_REPORT.md)
+  - [PLAN_90_DAYS.md](./docs/planning/PLAN_90_DAYS.md)
+  - [RISK_REGISTER.md](./docs/planning/RISK_REGISTER.md)
+  - [RUNLOG.md](./docs/planning/RUNLOG.md)
+- Capability roadmap reference:
+  - [Blue Ocean Phase Roadmap](./docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md)
+  - [Blue Ocean Execution Plan](./docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md)
+- Wave tasklists remain the capability references:
   - [WAVE_A_TASKLIST.md](./docs/planning/WAVE_A_TASKLIST.md)
   - [WAVE_B_TASKLIST.md](./docs/planning/WAVE_B_TASKLIST.md)
   - [WAVE_C_TASKLIST.md](./docs/planning/WAVE_C_TASKLIST.md)
