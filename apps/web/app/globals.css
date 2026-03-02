@@ -611,6 +611,52 @@ button.ghost {
   color: var(--ink-soft);
 }
 
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.analysis-grid-full {
+  grid-column: 1 / -1;
+}
+
+.analysis-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0.65rem 0;
+}
+
+.analysis-list,
+.analysis-path-list,
+.analysis-chip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.analysis-path-list li,
+.analysis-list li,
+.analysis-chip-list li {
+  border: 1px solid #dbe5f3;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.6rem 0.65rem;
+}
+
+.analysis-path-list p,
+.analysis-list p {
+  margin: 0.3rem 0 0;
+  color: var(--ink-soft);
+}
+
+.analysis-chip-list {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
 .ops-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -819,8 +865,10 @@ details summary {
   }
 
   .ops-grid,
+  .analysis-grid,
   .proofs-grid,
   .proof-metric-grid,
+  .analysis-stat-grid,
   .packet-stat-grid {
     grid-template-columns: 1fr;
   }

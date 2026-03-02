@@ -304,6 +304,11 @@ export default function Page(): JSX.Element {
               setExplainMode={analyzeWorkspace.setExplainMode}
               debugMode={analyzeWorkspace.debugMode}
               setDebugMode={analyzeWorkspace.setDebugMode}
+              permissionsResult={analyzeWorkspace.permissionsResult}
+              permissionDiagnosis={analyzeWorkspace.permissionDiagnosis}
+              automationResult={analyzeWorkspace.automationResult}
+              impactResult={analyzeWorkspace.impactResult}
+              systemPermissionResult={analyzeWorkspace.systemPermissionResult}
               loading={secondaryQueryRunner.loading}
               onRunPermissions={() => void analyzeWorkspace.runPermissions()}
               onDiagnoseUserMapping={() => void analyzeWorkspace.diagnoseUserMapping()}
