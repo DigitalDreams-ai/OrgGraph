@@ -14,12 +14,32 @@ async function parseBoundaryResponse(res: Response): Promise<QueryResponse> {
   const text = await res.text();
 
   try {
-    const parsed = JSON.parse(text) as QueryResponse;
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    const payload =
+      Object.prototype.hasOwnProperty.call(parsed, 'payload') && parsed.payload && typeof parsed.payload === 'object'
+        ? (parsed.payload as Record<string, unknown>)
+        : parsed;
+    const topLevelMessage =
+      typeof parsed.message === 'string'
+        ? parsed.message
+        : Array.isArray(parsed.message)
+          ? parsed.message.filter((value): value is string => typeof value === 'string').join('; ')
+          : undefined;
+    const nestedError =
+      parsed.error && typeof parsed.error === 'object'
+        ? (parsed.error as { message?: unknown }).message
+        : undefined;
+
     return {
       ok: typeof parsed.ok === 'boolean' ? parsed.ok : res.ok,
       statusCode: typeof parsed.statusCode === 'number' ? parsed.statusCode : res.status,
-      payload: parsed.payload,
-      error: parsed.error
+      payload,
+      error:
+        typeof nestedError === 'string'
+          ? { message: nestedError }
+          : typeof topLevelMessage === 'string' && topLevelMessage.length > 0
+            ? { message: topLevelMessage }
+            : undefined
     };
   } catch {
     return {

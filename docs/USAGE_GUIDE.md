@@ -149,6 +149,14 @@ Current retrieval handoff behavior:
   - latest drift diff
   - latest org-retrieve pipeline
 
+Current `Explain & Analyze` behavior:
+- `Permissions` shows access verdict, principals checked, deterministic permission paths, and mapping warnings
+- `Diagnose User Mapping` surfaces map freshness, resolved principals, and stale-map warnings in the workspace
+- `Automation` shows matched automations, relation coverage, and confidence-scored evidence
+- `Impact` shows deterministic impact paths, relation coverage, and score/confidence summaries
+- `System Permission` shows grant verdict, mapping status, and grant paths without requiring raw JSON inspection
+- the `Raw JSON Inspector` remains available only as a secondary debugging surface
+
 ## 6. Connect a Sandbox Org
 Auth is delegated to Salesforce CLI keychain sessions.
 
