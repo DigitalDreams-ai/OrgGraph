@@ -154,7 +154,7 @@ pnpm --filter @orgumented/project-memory-mcp test
 - `Refresh & Build`: retrieval, refresh, drift, and rebuild summaries
 - `Explain & Analyze`: structured permissions, mapping diagnosis, automation, impact, and system-permission workflows
 - `Proofs & History`: labeled recent-proof history, one-click proof open/replay, trust history summaries, and advanced token fallback only when needed
-- `Settings & Diagnostics`: runtime status, logs, and meta-context controls
+- `Settings & Diagnostics`: structured runtime health, tooling/session status, meta-context summaries, and meta-adapt before/after results
 
 ## Fast Fixes
 ```bash

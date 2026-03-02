@@ -343,6 +343,12 @@ export default function Page(): JSX.Element {
             <SystemWorkspace
               metaDryRun={systemWorkspace.metaDryRun}
               setMetaDryRun={systemWorkspace.setMetaDryRun}
+              healthStatus={shellRuntime.healthStatus}
+              readyStatus={shellRuntime.readyStatus}
+              readyDetails={shellRuntime.readyDetails}
+              orgStatus={connectWorkspace.orgStatus}
+              metaContext={systemWorkspace.metaContext}
+              metaAdaptResult={systemWorkspace.metaAdaptResult}
               loading={secondaryQueryRunner.loading}
               onLoadMetaContext={() => void systemWorkspace.loadMetaContext()}
               onRunMetaAdapt={() => void systemWorkspace.runMetaAdapt()}
