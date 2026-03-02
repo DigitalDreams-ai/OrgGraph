@@ -35,6 +35,7 @@ Current concrete checkpoint:
 - the Explain and Analyze workspace now renders structured operator summaries for permissions, user-map diagnosis, automation, impact, and system-permission flows instead of depending on raw JSON inspection
 - the Org Sessions workspace now exposes recent auth/session history and an explicit restore-last-session action instead of relying only on manual alias re-selection
 - the Org Browser workspace now builds selective-retrieve payloads through a structured cart with visible-type bulk add and only exposes JSON as an advanced read-only preview
+- the Refresh and Build workspace now keeps the Browser retrieve handoff visible, carries auto-refresh intent into rebuild defaults, and shows the staged retrieve -> refresh -> diff -> org-retrieve chain instead of isolated backend summaries
 - the Settings and Diagnostics workspace now renders runtime health, org tooling/session state, meta-context weights, and meta-adapt before/after summaries instead of acting as a button-only debug surface
 - the Proofs and History workspace now reopens recent decision artifacts through labeled history entries before exposing raw proof tokens
 - desktop-managed API startup now bootstraps a deterministic fixture baseline when graph/evidence state is empty
@@ -108,7 +109,7 @@ Active branch:
 Immediate execution pressure:
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
 - preserve the new structured selective-retrieve cart and carry its handoff cleanly into rebuild work
-- turn Refresh and Build into a clearer operator workflow for refresh, diff, and org-retrieve handoff
+- keep Refresh and Build readable as the primary rebuild chain for browser retrieve, refresh, diff, and org-retrieve state
 - keep rebuild status, drift review, and retrieve pipeline state readable without pushing policy or runtime logic into the UI
 - keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
 - preserve runtime convergence and packaged desktop parity while refresh/build and diagnostics workflows are improved

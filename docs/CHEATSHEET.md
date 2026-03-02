@@ -152,7 +152,7 @@ pnpm --filter @orgumented/project-memory-mcp test
 - `Ask`: deterministic answer packet and follow-up actions
 - `Org Sessions`: overview refresh, alias readiness, recent auth/session history, attach, switch, disconnect, and restore-last-session
 - `Org Browser`: searchable metadata tree, visible-type bulk add, structured retrieval cart, advanced JSON preview, and selected-retrieve handoff
-- `Refresh & Build`: retrieval, refresh, drift, and rebuild summaries
+- `Refresh & Build`: Browser handoff, refresh, drift, and org-retrieve chain with rebuild summaries
 - `Explain & Analyze`: structured permissions, mapping diagnosis, automation, impact, and system-permission workflows
 - `Proofs & History`: labeled recent-proof history, one-click proof open/replay, trust history summaries, and advanced token fallback only when needed
 - `Settings & Diagnostics`: structured runtime health, tooling/session status, meta-context summaries, and meta-adapt before/after results
