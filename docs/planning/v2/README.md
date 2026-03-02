@@ -50,6 +50,12 @@ Purpose:
 - where each topic was consolidated
 - what remains historical/reference-only
 
+8. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
+- controlled parallel-agent model
+- orchestrator and worker roles
+- branch/worktree isolation
+- merge and replay gates
+
 ## Reading Order
 
 Recommended order:
@@ -59,7 +65,8 @@ Recommended order:
 4. `ORGUMENTED_V2_EXECUTION.md`
 5. `ORGUMENTED_V2_GOVERNANCE.md`
 6. `ORGUMENTED_V2_LEXICON.md`
-7. `ORGUMENTED_V2_SOURCE_MAP.md`
+7. `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
+8. `ORGUMENTED_V2_SOURCE_MAP.md`
 
 ## Consolidation Intent
 

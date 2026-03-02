@@ -98,6 +98,11 @@ Before major structural change:
 - justify refactor vs module rebuild vs full rebuild numerically
 - define acceptance gates before coding
 
+For parallel-agent execution:
+- use `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
+- require one orchestrator, isolated worktrees, and explicit merge order
+- stop parallel execution if replay or runtime convergence is placed at risk
+
 Before custom-building a new semantic subsystem:
 - prove it is moat, not plumbing
 - prove open-source alternatives do not already solve the generic part
