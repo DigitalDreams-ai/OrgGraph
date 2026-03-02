@@ -28,7 +28,10 @@ export function useAskWorkspace(options: UseAskWorkspaceOptions) {
   const [askResult, setAskResult] = useState<AskPayload | null>(null);
 
   const askSummary =
-    askResult?.answer || askResult?.deterministicAnswer || 'Run Ask to generate a decision packet.';
+    askResult?.decisionPacket?.summary ||
+    askResult?.answer ||
+    askResult?.deterministicAnswer ||
+    'Run Ask to generate a decision packet.';
   const askTrust = askResult?.trustLevel || 'waiting';
   const askProofId = askResult?.proof?.proofId || '';
   const askReplayToken = askResult?.proof?.replayToken || '';

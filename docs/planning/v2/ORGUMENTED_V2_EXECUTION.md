@@ -29,6 +29,8 @@ Still unresolved:
 Current concrete checkpoint:
 - packaged desktop already uses the direct engine boundary
 - browser-era route adapters are retired from the desktop runtime path
+- the selected high-risk change review packet now compiles through a typed Ask planner path
+- the desktop Ask workspace now renders the review packet as the primary artifact, including risk drivers, permission impact, automation impact, change impact, and next actions
 - desktop smoke already proves:
   - deterministic Ask identity
   - replay parity
@@ -86,10 +88,10 @@ Active branch:
 - `dna-high-risk-review-packet`
 
 Immediate execution pressure:
-- replace the current regex-heavy review path with one typed high-risk change review flow
-- turn one benchmark high-risk review packet into a real Stage 1 workflow artifact
-- preserve runtime convergence and packaged desktop parity while the planner and packet improve
-- capture measurable workflow lift without widening into Stage 2 governance or policy automation
+- preserve runtime convergence and packaged desktop parity while the new review packet path matures
+- capture measurable workflow lift for the benchmark review workflow
+- validate that the review packet remains usable as the primary artifact without raw JSON dependence
+- avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
 
 ## Remaining Stage 1 Product Gates
 

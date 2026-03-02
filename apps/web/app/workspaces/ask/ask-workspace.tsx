@@ -38,7 +38,8 @@ interface AskWorkspaceProps {
 const ASK_PRESETS = [
   'What touches Opportunity.StageName?',
   'Who can edit Opportunity.StageName?',
-  'What automations update Opportunity.StageName?'
+  'What automations update Opportunity.StageName?',
+  'Should we approve changing Opportunity.StageName for jane@example.com?'
 ];
 
 export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
@@ -146,7 +147,55 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
           <div className="decision-meta">
             <span className={`decision-badge ${props.trustTone(props.askTrust)}`}>Trust: {props.askTrust}</span>
             <span className="decision-badge muted">Confidence: {typeof props.askResult?.confidence === 'number' ? props.askResult.confidence : 'n/a'}</span>
+            {props.askResult?.decisionPacket?.riskLevel ? (
+              <span className="decision-badge muted">Risk: {props.askResult.decisionPacket.riskLevel}</span>
+            ) : null}
           </div>
+          {props.askResult?.decisionPacket ? (
+            <div className="packet-section-stack">
+              <div className="packet-stat-grid">
+                <div className="packet-stat">
+                  <span>Workflow</span>
+                  <strong>{props.askResult.decisionPacket.focus || 'review'}</strong>
+                </div>
+                <div className="packet-stat">
+                  <span>Target</span>
+                  <strong>{props.askResult.decisionPacket.targetLabel || 'n/a'}</strong>
+                </div>
+                <div className="packet-stat">
+                  <span>Permission model</span>
+                  <strong>{props.askResult.decisionPacket.permissionImpact?.user || 'n/a'}</strong>
+                </div>
+              </div>
+
+              <div>
+                <h4>Top risk drivers</h4>
+                <ul className="proof-inline-list">
+                  {(props.askResult.decisionPacket.topRiskDrivers || []).map((driver) => (
+                    <li key={driver}>{driver}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="packet-stat-grid">
+                <div className="packet-stat">
+                  <span>Permissions</span>
+                  <strong>{props.askResult.decisionPacket.permissionImpact?.pathCount ?? 'n/a'} paths</strong>
+                  <p>{props.askResult.decisionPacket.permissionImpact?.summary || 'No permission summary returned.'}</p>
+                </div>
+                <div className="packet-stat">
+                  <span>Automation</span>
+                  <strong>{props.askResult.decisionPacket.automationImpact?.automationCount ?? 'n/a'} items</strong>
+                  <p>{props.askResult.decisionPacket.automationImpact?.summary || 'No automation summary returned.'}</p>
+                </div>
+                <div className="packet-stat">
+                  <span>Change impact</span>
+                  <strong>{props.askResult.decisionPacket.changeImpact?.impactPathCount ?? 'n/a'} paths</strong>
+                  <p>{props.askResult.decisionPacket.changeImpact?.summary || 'No impact summary returned.'}</p>
+                </div>
+              </div>
+            </div>
+          ) : null}
           {props.askElaboration ? (
             <>
               <h4>Deterministic explanation</h4>
@@ -160,6 +209,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
         <article className="sub-card decision-card">
           <p className="panel-caption">Proof context</p>
           <h3>Why this answer is trusted</h3>
+          <p><strong>Workflow:</strong> {props.askResult?.decisionPacket?.kind || props.askResult?.decisionPacket?.focus || 'standard ask'}</p>
           <p><strong>Policy:</strong> {props.askResult?.policy?.policyId || 'n/a'}</p>
           <p><strong>Proof ID:</strong> {props.askProofId || 'n/a'}</p>
           <p><strong>Replay token:</strong> {props.askReplayToken || 'n/a'}</p>
@@ -187,6 +237,16 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
         <article className="sub-card decision-card">
           <p className="panel-caption">Follow-up actions</p>
           <h3>Next actions</h3>
+          {props.askResult?.decisionPacket?.nextActions?.length ? (
+            <ul className="packet-action-list">
+              {props.askResult.decisionPacket.nextActions.map((action, index) => (
+                <li key={`${action.label || 'action'}-${index}`}>
+                  <strong>{action.label || 'Suggested action'}</strong>
+                  <p>{action.rationale || 'No rationale returned.'}</p>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <div className="follow-up-grid">
             <button type="button" className="ghost" onClick={props.onInspectAutomation}>
               Inspect impacted automation
