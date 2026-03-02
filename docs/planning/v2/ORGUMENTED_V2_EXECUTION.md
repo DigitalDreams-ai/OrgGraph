@@ -70,10 +70,10 @@ Current concrete checkpoint:
 ## Recommended Immediate Sequence
 
 ### Slice 1
-- deliver the selected high-risk change review packet vertical slice
+- raise grounding for the selected high-risk change review workflow until the packet can clear the policy envelope when the snapshot supports it
 
 ### Slice 2
-- prove packet lift on one benchmark review workflow before broadening planner claims
+- capture human benchmark evidence for the same workflow after the grounding path improves
 
 ### Slice 3
 - strengthen planner/compiler depth beyond the regex-heavy baseline only where the selected workflow requires it
@@ -87,12 +87,12 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-high-risk-review-packet`
+- `dna-high-risk-review-grounding`
 
 Immediate execution pressure:
-- preserve runtime convergence and packaged desktop parity while the new review packet path matures
-- capture measurable workflow lift for the benchmark review workflow
-- validate that the review packet remains usable as the primary artifact without raw JSON dependence
+- improve deterministic grounding for the benchmark review query so the packet can produce trusted or conditional output when the snapshot supports it
+- preserve runtime convergence and packaged desktop parity while the new grounding path is added
+- keep the review packet usable as the primary artifact without raw JSON dependence
 - avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
 
 ## Remaining Stage 1 Product Gates
