@@ -17,6 +17,7 @@ Date: March 1, 2026
 - expected outcomes are documented per scenario
 - baseline runs are captured
 - result artifacts are stored for comparison
+- the active Stage 1 benchmark for the current slice is `HIGH_RISK_REVIEW_BENCHMARK.md`
 
 ### Product and runtime gates
 - replay pass rate target locked and measured

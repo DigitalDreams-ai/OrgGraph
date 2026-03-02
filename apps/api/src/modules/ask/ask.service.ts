@@ -23,6 +23,7 @@ import type {
   AskSimulationRequest,
   AskSimulationResponse,
   AskSimulationRiskProfile,
+  AskDecisionPacket,
   AskProofListResponse,
   AskPolicyValidateRequest,
   AskPolicyValidateResponse,
@@ -594,6 +595,7 @@ export class AskService {
     let answer = 'No deterministic plan matched the query.';
     let deterministicAnswer = answer;
     let confidence = 0.2;
+    let decisionPacket: AskDecisionPacket | undefined;
     let consistency: AskResponse['consistency'] = {
       checked: false,
       aligned: true,
@@ -610,7 +612,139 @@ export class AskService {
       rejectedBranches.push({ branch, reasonCode, reason });
     };
 
-    if (plan.intent === 'mixed') {
+    if (plan.intent === 'review' && plan.reviewWorkflow) {
+      operatorsExecuted.push(
+        COMPOSITION_OPERATORS.OVERLAY,
+        COMPOSITION_OPERATORS.CONSTRAIN,
+        COMPOSITION_OPERATORS.INTERSECT
+      );
+      const user = plan.entities.user ?? 'jane@example.com';
+      const object = plan.entities.object ?? 'Opportunity';
+      const field = plan.entities.field;
+      const targetLabel = plan.reviewWorkflow.targetLabel;
+      const perms = await this.queries.perms(user, object, field);
+      const automations = await this.analysis.automation(
+        object,
+        undefined,
+        false,
+        false,
+        includeLowConfidence
+      );
+      const impact = field
+        ? await this.analysis.impact(field, undefined, false, false, false, includeLowConfidence)
+        : {
+            field: object,
+            paths: [],
+            totalPaths: 0,
+            explanation: `field-level impact unavailable for object-scoped review of ${object}`
+          };
+
+      const reviewRiskScore = Number(
+        Math.min(
+          1,
+          (perms.granted ? 0.2 : 0.45) +
+            Math.min(0.25, automations.totalAutomations / 12) +
+            Math.min(0.3, impact.totalPaths / 18)
+        ).toFixed(3)
+      );
+      const riskLevel: AskDecisionPacket['riskLevel'] =
+        reviewRiskScore >= 0.7 ? 'high' : reviewRiskScore >= 0.4 ? 'medium' : 'low';
+      const recommendedAction =
+        plan.reviewWorkflow.focus === 'approval'
+          ? riskLevel === 'high'
+            ? 'do not approve yet'
+            : riskLevel === 'medium'
+              ? 'review before approving'
+              : 'approve with targeted verification'
+          : plan.reviewWorkflow.focus === 'breakage'
+            ? `expect ${impact.totalPaths} deterministic impact path(s)`
+            : `${riskLevel} review risk`;
+      const summary =
+        plan.reviewWorkflow.focus === 'approval'
+          ? `High-risk change review for ${targetLabel}: ${recommendedAction}.`
+          : plan.reviewWorkflow.focus === 'breakage'
+            ? `Change review for ${targetLabel}: ${recommendedAction}.`
+            : `High-risk change review for ${targetLabel}: ${recommendedAction}.`;
+      const topRiskDrivers = [
+        `${impact.totalPaths} impact path(s) reference ${targetLabel}`,
+        `${automations.totalAutomations} automation item(s) touch ${object}`,
+        perms.granted
+          ? `${user} retains deterministic access coverage for ${field ?? object}`
+          : `${user} lacks deterministic access coverage for ${field ?? object}`
+      ];
+      const nextActions: AskDecisionPacket['nextActions'] = [
+        {
+          label: 'Inspect impacted automation',
+          rationale:
+            automations.totalAutomations > 0
+              ? 'review the highest-scoring automations before changing the target'
+              : 'confirm no hidden automation exists outside the current snapshot'
+        },
+        {
+          label: 'Inspect permissions',
+          rationale: perms.explanation
+        },
+        {
+          label: field ? 'Inspect impact paths' : 'Open proof for object review',
+          rationale: impact.explanation
+        }
+      ];
+      decisionPacket = {
+        kind: 'high_risk_change_review',
+        focus: plan.reviewWorkflow.focus,
+        targetLabel,
+        targetType: plan.reviewWorkflow.targetType,
+        summary,
+        riskLevel,
+        topRiskDrivers,
+        permissionImpact: {
+          user,
+          summary: perms.explanation,
+          granted: perms.granted,
+          pathCount: perms.totalPaths,
+          principalCount: perms.principalsChecked.length,
+          warnings: perms.warnings
+        },
+        automationImpact: {
+          summary: automations.explanation,
+          automationCount: automations.totalAutomations,
+          topAutomationNames: automations.automations.slice(0, 3).map((item) => item.name)
+        },
+        changeImpact: {
+          summary: impact.explanation,
+          impactPathCount: impact.totalPaths,
+          topImpactedSources: impact.paths.slice(0, 3).map((item) => item.from)
+        },
+        nextActions
+      };
+      answer =
+        `${summary} Permission impact: ${perms.explanation}. ` +
+        `Automation impact: ${automations.explanation}. ` +
+        `Change impact: ${impact.explanation}.`;
+      executionTrace.push(
+        `review.focus=${plan.reviewWorkflow.focus}`,
+        `review.target=${targetLabel}`,
+        `review.perms.granted=${String(perms.granted)}`,
+        `review.automation.count=${String(automations.totalAutomations)}`,
+        `review.impact.paths=${String(impact.totalPaths)}`
+      );
+      confidence =
+        riskLevel === 'high' ? 0.91 : riskLevel === 'medium' ? 0.86 : 0.82;
+      consistency = {
+        checked: consistencyCheck,
+        aligned: true,
+        reason: 'review intent composes perms, automation, and impact into one deterministic review packet'
+      };
+      if (!perms.granted) {
+        reject('queries.perms', 'NO_OBJECT_OR_FIELD_GRANT', 'review packet found no deterministic access grant');
+      }
+      if (automations.totalAutomations === 0) {
+        reject('analysis.automation', 'NO_AUTOMATION_MATCH', 'review packet found no automation coverage');
+      }
+      if (field && impact.totalPaths === 0) {
+        reject('analysis.impact', 'NO_IMPACT_PATHS', 'review packet found no deterministic impact paths');
+      }
+    } else if (plan.intent === 'mixed') {
       operatorsExecuted.push(
         COMPOSITION_OPERATORS.OVERLAY,
         COMPOSITION_OPERATORS.CONSTRAIN,
@@ -903,7 +1037,8 @@ export class AskService {
       plan,
       policyId: policy.policyId,
       trustLevel,
-      metrics
+      metrics,
+      decisionPacket
     });
     const corePayloadFingerprint = stableId('core', corePayloadJson);
     const fullProof: AskProofArtifact = {
@@ -937,6 +1072,7 @@ export class AskService {
       answer,
       deterministicAnswer,
       plan,
+      decisionPacket,
       citations,
       confidence,
       mode,
@@ -1007,6 +1143,7 @@ export class AskService {
     policyId: string;
     trustLevel: AskTrustLevel;
     metrics: AskMeaningMetrics;
+    decisionPacket?: AskDecisionPacket;
   }): string;
   private buildCorePayloadJson(input: AskResponse): string;
   private buildCorePayloadJson(
@@ -1018,6 +1155,7 @@ export class AskService {
           policyId: string;
           trustLevel: AskTrustLevel;
           metrics: AskMeaningMetrics;
+          decisionPacket?: AskDecisionPacket;
         }
       | AskResponse
   ): string {
@@ -1029,7 +1167,8 @@ export class AskService {
             plan: input.plan,
             policyId: input.policy.policyId,
             trustLevel: input.trustLevel,
-            metrics: input.metrics
+            metrics: input.metrics,
+            decisionPacket: input.decisionPacket
           }
         : {
             deterministicAnswer: input.deterministicAnswer,
@@ -1037,7 +1176,8 @@ export class AskService {
             plan: input.plan,
             policyId: input.policyId,
             trustLevel: input.trustLevel,
-            metrics: input.metrics
+            metrics: input.metrics,
+            decisionPacket: input.decisionPacket
           };
     return JSON.stringify(payload);
   }

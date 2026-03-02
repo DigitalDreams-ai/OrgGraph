@@ -128,6 +128,62 @@ async function run(): Promise<void> {
     assert.equal(replayBody.matched, true);
     assert.equal(replayBody.corePayloadMatched, true);
 
+    const reviewAskRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Should we approve changing Opportunity.StageName for jane@example.com?',
+        traceLevel: 'full',
+        mode: 'deterministic'
+      })
+    });
+    assert.equal(reviewAskRes.status, 201);
+    const reviewAskBody = (await reviewAskRes.json()) as {
+      plan: { intent: string; reviewWorkflow?: { focus: string } };
+      proof: { proofId: string; replayToken: string };
+      decisionPacket?: { summary: string; topRiskDrivers: string[] };
+    };
+    assert.equal(reviewAskBody.plan.intent, 'review');
+    assert.equal(reviewAskBody.plan.reviewWorkflow?.focus, 'approval');
+    assert.ok((reviewAskBody.decisionPacket?.topRiskDrivers.length ?? 0) >= 3);
+
+    const repeatedReviewAskRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Should we approve changing Opportunity.StageName for jane@example.com?',
+        traceLevel: 'full',
+        mode: 'deterministic'
+      })
+    });
+    assert.equal(repeatedReviewAskRes.status, 201);
+    const repeatedReviewAskBody = (await repeatedReviewAskRes.json()) as {
+      proof: { proofId: string; replayToken: string };
+      decisionPacket?: { summary: string; topRiskDrivers: string[] };
+    };
+    assert.equal(repeatedReviewAskBody.proof.proofId, reviewAskBody.proof.proofId);
+    assert.equal(repeatedReviewAskBody.proof.replayToken, reviewAskBody.proof.replayToken);
+    assert.equal(repeatedReviewAskBody.decisionPacket?.summary, reviewAskBody.decisionPacket?.summary);
+    assert.deepEqual(
+      repeatedReviewAskBody.decisionPacket?.topRiskDrivers,
+      reviewAskBody.decisionPacket?.topRiskDrivers
+    );
+
+    const reviewReplayRes = await fetch(`${base}/ask/replay`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ replayToken: reviewAskBody.proof.replayToken })
+    });
+    assert.equal(reviewReplayRes.status, 201);
+    const reviewReplayBody = (await reviewReplayRes.json()) as {
+      matched: boolean;
+      corePayloadMatched: boolean;
+      proofId: string;
+    };
+    assert.equal(reviewReplayBody.matched, true);
+    assert.equal(reviewReplayBody.corePayloadMatched, true);
+    assert.equal(reviewReplayBody.proofId, reviewAskBody.proof.proofId);
+
     console.log('phase12 replay runtime test passed');
   } finally {
     await app.close();

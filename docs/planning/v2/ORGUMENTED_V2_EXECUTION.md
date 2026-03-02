@@ -29,6 +29,9 @@ Still unresolved:
 Current concrete checkpoint:
 - packaged desktop already uses the direct engine boundary
 - browser-era route adapters are retired from the desktop runtime path
+- the selected high-risk change review packet now compiles through a typed Ask planner path
+- the desktop Ask workspace now renders the review packet as the primary artifact, including risk drivers, permission impact, automation impact, change impact, and next actions
+- automated proxy benchmark evidence now shows major workflow-friction reduction for the selected review workflow, but the packaged benchmark snapshot still returns `trustLevel=refused`
 - desktop smoke already proves:
   - deterministic Ask identity
   - replay parity
@@ -62,24 +65,21 @@ Current concrete checkpoint:
 ### 4. Benchmark and lift discipline
 - benchmark scenarios must be explicit before larger strategic claims
 - measurable workflow lift must be captured on real Stage 1 scenarios
+- `HIGH_RISK_REVIEW_BENCHMARK.md` is the active benchmark for the selected review-packet slice
 
 ## Recommended Immediate Sequence
 
 ### Slice 1
-- finish remaining runtime convergence work beyond the current direct-engine boundary cleanup
+- deliver the selected high-risk change review packet vertical slice
 
 ### Slice 2
-- open a planner/compiler evaluation using the build-vs-borrow screen
-- likely candidates:
-  - `Ajv` now
-  - `OPA/Rego` only if tied tightly to planner depth and scoped narrowly
-  - `Langium` / `Chevrotain` / `Souffle` evaluation later
+- prove packet lift on one benchmark review workflow before broadening planner claims
 
 ### Slice 3
-- define benchmark review workflows where decision packets must prove value
+- strengthen planner/compiler depth beyond the regex-heavy baseline only where the selected workflow requires it
 
 ### Slice 4
-- improve packet quality and workflow fit before pushing policy support further
+- keep runtime convergence green while the review-packet slice is implemented
 
 ### Slice 5
 - use the selected-slice process in `docs/planning/v2/SLICE_SELECTION.md` and `docs/planning/v2/SLICE_EXECUTION_PLAN.md` before broadening scope again
@@ -87,13 +87,13 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-runtime-ownership`
+- `dna-high-risk-review-packet`
 
 Immediate execution pressure:
-- reduce or eliminate remaining standalone Next-server dependence in desktop dev
-- improve planner/compiler depth
-- turn one benchmark high-risk review packet into a real Stage 1 workflow artifact
-- close the remaining Stage 1 desktop workflow parity gaps
+- preserve runtime convergence and packaged desktop parity while the new review packet path matures
+- capture measurable workflow lift for the benchmark review workflow
+- validate that the review packet remains usable as the primary artifact without raw JSON dependence
+- avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
 
 ## Remaining Stage 1 Product Gates
 
@@ -132,6 +132,7 @@ The following product outcomes still need to be explicit in execution, not just 
 ### Checkpoint E
 - selected Stage 1 benchmark workflow completes without raw JSON dependence
 - measurable lift is captured
+- the high-risk change review packet is usable as the primary review artifact
 
 ### Checkpoint F
 - core desktop workflows reach parity:
