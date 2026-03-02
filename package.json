@@ -35,6 +35,7 @@
     "phase14:drift-report": "./scripts/phase14-drift-report.sh",
     "phase14:drift-gate": "./scripts/phase14-drift-gate.sh",
     "phase17:benchmark": "node ./scripts/phase17-benchmark.mjs",
-    "phase17:benchmark:human": "node ./scripts/phase17-human-benchmark.mjs"
+    "phase17:benchmark:human": "node ./scripts/phase17-human-benchmark.mjs",
+    "phase17:benchmark:human:prepare": "node ./scripts/phase17-human-benchmark-prepare.mjs"
   }
 }

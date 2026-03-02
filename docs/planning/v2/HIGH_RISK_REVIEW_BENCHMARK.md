@@ -152,18 +152,30 @@ Human capture command:
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:smoke:release
 pnpm phase17:benchmark
+pnpm phase17:benchmark:human:prepare -- --operator "<name>"
 pnpm phase17:benchmark:human -- --operator "<name>" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --notes "<observation>"
 ```
 
 Human capture outputs:
 - `logs/high-risk-review-human-benchmark.json`
 - `logs/high-risk-review-human-benchmark.md`
+- `logs/high-risk-review-human-capture-template.json`
+- `logs/high-risk-review-human-capture-template.md`
 
 What the human capture command does:
 - reads the latest automated proxy artifact
 - records the operator-observed baseline and review-packet timings
 - preserves proof and replay identifiers alongside the human notes
 - evaluates the Stage 1 pass/fail thresholds automatically
+
+What the prepare command does:
+- reads the latest automated proxy artifact
+- writes a fillable capture packet with:
+  - the benchmark query
+  - baseline and review proof/replay identifiers
+  - current replay/proof guard state
+  - pass thresholds
+  - a ready-to-edit `phase17:benchmark:human` command
 
 Preferred artifact locations:
 - `logs/`
@@ -187,6 +199,7 @@ Current branch status:
 - automated proxy benchmark capture is now available through `pnpm phase17:benchmark`
 - latest proxy run is summarized in `HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
 - human benchmark evidence is still required before claiming full Stage 1 lift proof
+- the active next branch is `dna-human-benchmark-evidence`
 
 ## Bottom Line
 

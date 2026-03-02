@@ -424,10 +424,13 @@ curl http://localhost:3100/ready
 ```bash
 npm run ingest:report
 pnpm phase17:benchmark
+pnpm phase17:benchmark:human:prepare -- --operator "<name>"
+pnpm phase17:benchmark:human -- --operator "<name>" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5>
 ```
 
 `phase17:benchmark` now targets the active v2 benchmark workflow:
 - it compares the fragmented baseline review path against the typed high-risk review packet path
 - it writes proxy timing and deterministic replay evidence to `logs/high-risk-review-benchmark.json`
 - it auto-launches the packaged desktop runtime if no local API is already ready
-- it does not replace the human benchmark capture required in `docs/planning/v2/HIGH_RISK_REVIEW_BENCHMARK.md`
+- `phase17:benchmark:human:prepare` writes a fillable capture packet with proof/replay anchors and threshold reminders
+- `phase17:benchmark:human` records the operator-observed timing, confidence, raw-JSON dependence, and pass/fail result
