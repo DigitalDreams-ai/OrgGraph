@@ -10,6 +10,7 @@ import type {
   OrgRetrieveResponse,
   OrgSessionAliasValidationResponse,
   OrgSessionAliasesResponse,
+  OrgSessionHistoryResponse,
   OrgSessionConnectRequest,
   OrgSessionConnectResponse,
   OrgSessionDisconnectResponse,
@@ -54,6 +55,15 @@ export class OrgController {
   @Get('/org/session/aliases')
   async sessionAliases(): Promise<OrgSessionAliasesResponse> {
     return this.orgService.listSessionAliases();
+  }
+
+  @Get('/org/session/history')
+  async sessionHistory(@Query('limit') limitRaw?: string): Promise<OrgSessionHistoryResponse> {
+    const limit = limitRaw ? Number(limitRaw) : undefined;
+    if (limitRaw && (!Number.isInteger(limit) || (limit as number) < 1 || (limit as number) > 50)) {
+      throw new BadRequestException('limit must be an integer between 1 and 50');
+    }
+    return this.orgService.sessionHistory(limit);
   }
 
   @Get('/org/session/validate')

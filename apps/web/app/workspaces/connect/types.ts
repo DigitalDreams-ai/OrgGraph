@@ -24,6 +24,21 @@ export type OrgSessionAliasesPayload = {
   aliases?: OrgAliasSummary[];
 };
 
+export type OrgSessionAuditEntry = {
+  action?: 'connect' | 'switch' | 'disconnect' | 'switch_failed';
+  alias?: string;
+  authMode?: string;
+  message?: string;
+  timestamp?: string;
+};
+
+export type OrgSessionHistoryPayload = {
+  authMode?: string;
+  activeAlias?: string;
+  restoreAlias?: string;
+  entries?: OrgSessionAuditEntry[];
+};
+
 export type OrgStatusPayload = {
   integrationEnabled?: boolean;
   alias?: string;

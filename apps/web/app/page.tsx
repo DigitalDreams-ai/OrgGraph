@@ -204,21 +204,26 @@ export default function Page(): JSX.Element {
               orgStatus={connectWorkspace.orgStatus}
               orgPreflight={connectWorkspace.orgPreflight}
               orgAliases={connectWorkspace.orgAliases}
+              orgSessionHistory={connectWorkspace.orgSessionHistory}
               orgSession={connectWorkspace.orgSession}
               aliasInventory={connectWorkspace.aliasInventory}
+              recentSessionEvents={connectWorkspace.recentSessionEvents}
               selectedAlias={connectWorkspace.selectedAlias}
               preflightIssues={connectWorkspace.preflightIssues}
               toolingReady={connectWorkspace.toolingReady}
               selectedAliasReady={connectWorkspace.selectedAliasReady}
+              restoreAlias={connectWorkspace.restoreAlias}
               loading={secondaryQueryRunner.loading}
               onRefreshOverview={() => void connectWorkspace.refreshOverview()}
               onLoadAliases={() => void connectWorkspace.loadAliases()}
               onCheckSession={() => void connectWorkspace.checkSession()}
+              onLoadSessionHistory={() => void connectWorkspace.loadSessionHistory()}
               onCheckToolStatus={() => void connectWorkspace.loadToolStatus()}
               onPreflight={() => void connectWorkspace.runPreflight()}
               onSwitchAlias={(alias) => void connectWorkspace.switchAlias(alias)}
               onConnectExistingAlias={(alias) => void connectWorkspace.connectExistingAlias(alias)}
               onDisconnect={() => void connectWorkspace.disconnect()}
+              onRestoreLastSession={() => void connectWorkspace.restoreLastSession()}
               onSelectAlias={connectWorkspace.selectAlias}
               onInspectAlias={(alias) => void connectWorkspace.inspectAlias(alias)}
             />

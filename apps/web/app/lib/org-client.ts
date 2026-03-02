@@ -72,6 +72,11 @@ export function listOrgSessionAliases(): Promise<QueryResponse> {
   return requestBoundary(resolveDesktopApiUrl('/org/session/aliases'), { method: 'GET' });
 }
 
+export function getOrgSessionHistory(limit = 10): Promise<QueryResponse> {
+  const suffix = `?limit=${encodeURIComponent(String(limit))}`;
+  return requestBoundary(resolveDesktopApiUrl(`/org/session/history${suffix}`), { method: 'GET' });
+}
+
 export function runOrgPreflight(alias?: string): Promise<QueryResponse> {
   const suffix = alias ? `?alias=${encodeURIComponent(alias)}` : '';
   const path = resolveDesktopApiUrl(`/org/preflight${suffix}`);

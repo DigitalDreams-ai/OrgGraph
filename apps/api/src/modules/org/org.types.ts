@@ -123,6 +123,21 @@ export interface OrgSessionAliasesResponse {
   aliases: OrgAliasSummary[];
 }
 
+export interface OrgSessionAuditEntry {
+  action: 'connect' | 'switch' | 'disconnect' | 'switch_failed';
+  alias: string;
+  authMode: OrgAuthMode;
+  message: string;
+  timestamp: string;
+}
+
+export interface OrgSessionHistoryResponse {
+  authMode: OrgAuthMode;
+  activeAlias: string;
+  restoreAlias?: string;
+  entries: OrgSessionAuditEntry[];
+}
+
 export interface OrgSessionAliasValidationResponse {
   alias: string;
   authMode: OrgAuthMode;
