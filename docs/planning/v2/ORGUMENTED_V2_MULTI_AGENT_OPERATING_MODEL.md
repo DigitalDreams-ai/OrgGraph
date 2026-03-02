@@ -18,6 +18,13 @@ It is a controlled branch-and-worktree model with:
 - multiple narrow worker roles
 - one integration and replay gate
 
+Concrete repo kit:
+- `.claude/agents/orgumented-coordinator.md`
+- `.claude/agents/orgumented-worker-planner.md`
+- `.claude/agents/orgumented-worker-workflow.md`
+- `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_TASK_BOARD.md`
+- `scripts/setup-orgumented-multi-agent-worktrees.ps1`
+
 ## Operating Rule
 
 Parallel agents are allowed only when:
@@ -193,6 +200,9 @@ Do not:
 ## Worktree Rules
 
 Use `git worktree` so every worker has isolated files and node state.
+
+The repository bootstrap script is:
+- `scripts/setup-orgumented-multi-agent-worktrees.ps1`
 
 Recommended shape:
 

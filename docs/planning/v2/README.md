@@ -56,6 +56,11 @@ Purpose:
 - branch/worktree isolation
 - merge and replay gates
 
+9. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_TASK_BOARD.md`
+- live coordination board
+- worker assignment surface
+- merge gate checklist
+
 ## Reading Order
 
 Recommended order:
