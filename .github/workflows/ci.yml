@@ -36,9 +36,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: '.github/requirements-cumulusci.txt'
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
 
       - name: Install Salesforce CLI
         shell: bash
@@ -48,8 +53,7 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade --force-reinstall "setuptools==80.9.0"
-          pip install "cumulusci==4.5.0"
+          python -m pip install --upgrade --force-reinstall -r .github/requirements-cumulusci.txt
           python -c "import pkg_resources"
 
       - name: Verify desktop prerequisites
@@ -101,6 +105,15 @@ jobs:
             Start-Sleep -Seconds 20
           }
 
+      - name: Upload packaged desktop runtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-packaged-runtime
+          path: |
+            apps/desktop/src-tauri/runtime/**
+            apps/desktop/src-tauri/target/release/**
+          if-no-files-found: error
+
   desktop-runtime-smoke:
     runs-on: windows-latest
     needs: [validate]
@@ -123,9 +136,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+          cache: 'pip'
+          cache-dependency-path: '.github/requirements-cumulusci.txt'
 
       - name: Install Salesforce CLI
         shell: bash
@@ -135,30 +147,14 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade --force-reinstall "setuptools==80.9.0"
-          pip install "cumulusci==4.5.0"
+          python -m pip install --upgrade --force-reinstall -r .github/requirements-cumulusci.txt
           python -c "import pkg_resources"
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packaged desktop runtime
-        shell: pwsh
-        run: |
-          $attempts = 3
-          for ($attempt = 1; $attempt -le $attempts; $attempt++) {
-            pnpm desktop:build
-            if ($LASTEXITCODE -eq 0) {
-              exit 0
-            }
-
-            if ($attempt -eq $attempts) {
-              throw "pnpm desktop:build failed after $attempts attempts"
-            }
-
-            Write-Host "desktop:build failed on attempt $attempt. Retrying after transient bundle download error..."
-            Start-Sleep -Seconds 20
-          }
+      - name: Download packaged desktop runtime
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-packaged-runtime
+          path: .
 
       - name: Run packaged desktop smoke
         run: pnpm desktop:smoke:release
