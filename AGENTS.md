@@ -240,6 +240,11 @@ Routing:
 
 If multi-mode agents unavailable, emulate with disciplined sequencing.
 
+Default execution model:
+- one primary implementation agent per coherent slice
+- one optional verifier agent when an independent gate pass adds value
+- do not use a standing coordinator/planner/workflow swarm unless the user explicitly chooses the extra coordination cost
+
 ---
 
 # 13) MCP-First Workflow

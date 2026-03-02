@@ -51,30 +51,26 @@ Purpose:
 - what remains historical/reference-only
 
 8. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
-- controlled parallel-agent model
-- orchestrator and worker roles
-- branch/worktree isolation
+- simplified agent operating model
+- primary-agent-first execution
+- optional verifier usage
 - merge and replay gates
 
 9. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_TASK_BOARD.md`
-- live coordination board
-- worker assignment surface
-- gate status tracking
-- merge sequence tracker
+- lightweight execution board
+- current-slice visibility
+- optional verifier handoff
+- merge-readiness notes
 
 10. `docs/planning/v2/ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
-- Codex-native launch and handoff runbook
-- coordinator, worker, and verifier session flow
-- worktree bootstrap and recovery steps
+- Codex-native execution and handoff runbook
+- primary and verifier session flow
+- verification and recovery steps
 
 11. `scripts/verify-worker-branch.ps1`
 - verifier gate script
 - structured pass/fail JSON output
 - runs typecheck, tests, build, desktop smoke, replay parity, scope check
-
-12. `scripts/start-orgumented-codex-role.ps1`
-- launches a role-specific Codex session in the correct worktree
-- uses `.codex/roles/` prompt files
 
 ## Reading Order
 
@@ -88,6 +84,16 @@ Recommended order:
 7. `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
 8. `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
 9. `ORGUMENTED_V2_SOURCE_MAP.md`
+
+## Default Execution Mode
+
+Default repo execution is now:
+- one primary implementation agent
+- one optional verifier agent
+- one branch for one coherent slice
+- one PR for one coherent slice
+
+The older always-on coordinator/planner/workflow swarm is retired as the default because the coordination overhead outweighed the gain.
 
 ## Consolidation Intent
 

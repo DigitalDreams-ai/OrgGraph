@@ -1,5 +1,5 @@
 # verify-worker-branch.ps1
-# Runs the full gate pipeline on a worker branch before merge.
+# Runs the full gate pipeline on an implementation branch before merge.
 # Called by the orgumented-verifier agent or manually.
 # Does NOT replace CI — runs locally as a pre-merge check.
 
@@ -24,7 +24,7 @@ if (-not (Test-Path $logsDir)) {
 $resultPath = Join-Path $logsDir "verify-worker-branch-result.json"
 $startTime = Get-Date
 
-Write-Host "=== Orgumented Worker Branch Verification ==="
+Write-Host "=== Orgumented Branch Verification ==="
 Write-Host "Branch:          $Branch"
 Write-Host "Worker:          $WorkerName"
 Write-Host "Semantic Change: $SemanticChange"

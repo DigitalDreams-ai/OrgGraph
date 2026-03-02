@@ -98,12 +98,11 @@ Before major structural change:
 - justify refactor vs module rebuild vs full rebuild numerically
 - define acceptance gates before coding
 
-For parallel-agent execution:
-- use `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
-- use `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md` when Codex sessions are the execution layer
-- require one orchestrator, isolated worktrees, one verifier, and explicit merge order
-- verifier must run `scripts/verify-worker-branch.ps1` before any merge approval
-- stop parallel execution if replay or runtime convergence is placed at risk
+For agent execution:
+- default to one primary agent and use one verifier only when an independent pass adds value
+- use `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md` and `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
+- verifier must run `scripts/verify-worker-branch.ps1` before any merge approval when independent verification is requested
+- stop optional parallel execution if replay or runtime convergence is placed at risk
 
 Before custom-building a new semantic subsystem:
 - prove it is moat, not plumbing
