@@ -51,7 +51,22 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build packaged desktop runtime
-        run: pnpm desktop:build
+        shell: pwsh
+        run: |
+          $attempts = 3
+          for ($attempt = 1; $attempt -le $attempts; $attempt++) {
+            pnpm desktop:build
+            if ($LASTEXITCODE -eq 0) {
+              exit 0
+            }
+
+            if ($attempt -eq $attempts) {
+              throw "pnpm desktop:build failed after $attempts attempts"
+            }
+
+            Write-Host "desktop:build failed on attempt $attempt. Retrying after transient bundle download error..."
+            Start-Sleep -Seconds 20
+          }
 
       - name: Run packaged desktop smoke
         run: pnpm desktop:smoke:release
