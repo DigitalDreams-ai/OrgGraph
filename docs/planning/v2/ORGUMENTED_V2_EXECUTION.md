@@ -103,11 +103,11 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-org-browser-selective-retrieve`
+- `dna-refresh-build-workflow`
 
 Immediate execution pressure:
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
-- preserve the new structured selective-retrieve cart and keep JSON demoted to advanced inspection only
+- preserve the new structured selective-retrieve cart and carry its handoff cleanly into rebuild work
 - turn Refresh and Build into a clearer operator workflow for refresh, diff, and org-retrieve handoff
 - keep rebuild status, drift review, and retrieve pipeline state readable without pushing policy or runtime logic into the UI
 - keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
