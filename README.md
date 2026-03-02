@@ -150,20 +150,13 @@ ORGUMENTED_WEB_LOG_ENABLED=true
 
 ## Plan
 
-- Architectural control set on the current DNA checkpoint:
-  - [PLAN.md](./docs/planning/PLAN.md)
-  - [DECISION_REPORT.md](./docs/planning/DECISION_REPORT.md)
-  - [PLAN_90_DAYS.md](./docs/planning/PLAN_90_DAYS.md)
-  - [RISK_REGISTER.md](./docs/planning/RISK_REGISTER.md)
-  - [RUNLOG.md](./docs/planning/RUNLOG.md)
-- Capability roadmap reference:
-  - [Blue Ocean Phase Roadmap](./docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md)
-  - [Blue Ocean Execution Plan](./docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md)
-- Wave tasklists remain the capability references:
-  - [WAVE_A_TASKLIST.md](./docs/planning/WAVE_A_TASKLIST.md)
-  - [WAVE_B_TASKLIST.md](./docs/planning/WAVE_B_TASKLIST.md)
-  - [WAVE_C_TASKLIST.md](./docs/planning/WAVE_C_TASKLIST.md)
-  - [WAVE_D_TASKLIST.md](./docs/planning/WAVE_D_TASKLIST.md)
-  - [WAVE_E_TASKLIST.md](./docs/planning/WAVE_E_TASKLIST.md)
-  - [WAVE_F_TASKLIST.md](./docs/planning/WAVE_F_TASKLIST.md)
-  - [WAVE_G_TASKLIST.md](./docs/planning/WAVE_G_TASKLIST.md)
+- Start here:
+  - [v2 Planning Index](./docs/planning/v2/README.md)
+  - [v2 Strategy](./docs/planning/v2/ORGUMENTED_V2_STRATEGY.md)
+  - [v2 Architecture](./docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md)
+  - [v2 Roadmap](./docs/planning/v2/ORGUMENTED_V2_ROADMAP.md)
+  - [v2 Execution](./docs/planning/v2/ORGUMENTED_V2_EXECUTION.md)
+  - [v2 Governance](./docs/planning/v2/ORGUMENTED_V2_GOVERNANCE.md)
+  - [v2 Lexicon](./docs/planning/v2/ORGUMENTED_V2_LEXICON.md)
+- Archived pre-v2 planning and execution history:
+  - [Planning Archive Index](./docs/planning/archive/README.md)
