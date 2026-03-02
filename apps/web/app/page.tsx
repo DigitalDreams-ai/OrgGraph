@@ -246,16 +246,21 @@ export default function Page(): JSX.Element {
               metadataCatalog={browserWorkspace.metadataCatalog}
               metadataMembersByType={browserWorkspace.metadataMembersByType}
               metadataLoadingType={browserWorkspace.metadataLoadingType}
-              metadataSelectionsRaw={browserWorkspace.metadataSelectionsRaw}
-              setMetadataSelectionsRaw={browserWorkspace.setMetadataSelectionsRaw}
+              metadataSelectionsPreview={browserWorkspace.metadataSelectionsPreview}
+              selectedMetadata={browserWorkspace.selectedMetadata}
               selectionSummary={browserWorkspace.selectionSummary}
+              visibleCatalogTypes={browserWorkspace.visibleCatalogTypes}
               lastMetadataRetrieve={browserWorkspace.lastMetadataRetrieve}
               loading={secondaryQueryRunner.loading}
+              onAddVisibleTypes={browserWorkspace.addVisibleTypesToSelection}
               onRefreshTypes={() => void browserWorkspace.refreshTypes()}
               onClearFilters={browserWorkspace.clearFilters}
+              onClearSelections={browserWorkspace.clearSelections}
               onLoadMembers={(type) => void browserWorkspace.loadMembers(type)}
               onToggleType={browserWorkspace.toggleTypeSelection}
               onToggleMember={browserWorkspace.toggleMemberSelection}
+              onRemoveType={browserWorkspace.removeTypeSelection}
+              onRemoveMember={browserWorkspace.removeMemberSelection}
               isTypeSelected={browserWorkspace.isTypeSelected}
               isMemberSelected={browserWorkspace.isMemberSelected}
               onRetrieveSelected={() => void browserWorkspace.retrieveSelected()}

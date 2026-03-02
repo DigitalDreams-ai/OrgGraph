@@ -4,6 +4,7 @@ import type {
   MetadataCatalogPayload,
   MetadataMembersPayload,
   MetadataRetrieveResultView,
+  MetadataSelection,
   MetadataSelectionSummary
 } from './types';
 
@@ -23,16 +24,21 @@ interface BrowserWorkspaceProps {
   metadataCatalog: MetadataCatalogPayload | null;
   metadataMembersByType: Record<string, MetadataMembersPayload>;
   metadataLoadingType: string;
-  metadataSelectionsRaw: string;
-  setMetadataSelectionsRaw: (value: string) => void;
+  metadataSelectionsPreview: string;
+  selectedMetadata: MetadataSelection[];
   selectionSummary: MetadataSelectionSummary;
+  visibleCatalogTypes: string[];
   lastMetadataRetrieve: MetadataRetrieveResultView | null;
   loading: boolean;
+  onAddVisibleTypes: () => void;
   onRefreshTypes: () => void;
   onClearFilters: () => void;
+  onClearSelections: () => void;
   onLoadMembers: (type: string) => void;
   onToggleType: (type: string) => void;
   onToggleMember: (type: string, member: string) => void;
+  onRemoveType: (type: string) => void;
+  onRemoveMember: (type: string, member: string) => void;
   isTypeSelected: (type: string) => boolean;
   isMemberSelected: (type: string, member: string) => boolean;
   onRetrieveSelected: () => void;
@@ -77,12 +83,13 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           <div className="decision-meta">
             <span className="decision-badge muted">Types: {props.selectionSummary.typeCount}</span>
             <span className="decision-badge muted">Members: {props.selectionSummary.memberCount}</span>
+            <span className="decision-badge muted">Visible types: {props.visibleCatalogTypes.length}</span>
             <span className={`decision-badge ${props.metadataAutoRefresh ? 'good' : 'muted'}`}>
               Auto refresh: {String(props.metadataAutoRefresh)}
             </span>
           </div>
           <p><strong>Force catalog refresh:</strong> {String(props.metadataForceRefresh)}</p>
-          <p className="muted">Retrieve from here, then continue to `Refresh & Build` for drift and snapshot review.</p>
+          <p className="muted">Build the retrieve cart from the visible catalog, then continue to `Refresh & Build` for drift and snapshot review.</p>
         </article>
       </div>
 
@@ -127,6 +134,9 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
         <button type="button" onClick={props.onRefreshTypes} disabled={props.loading}>
           Refresh Types
         </button>
+        <button type="button" onClick={props.onAddVisibleTypes} disabled={props.loading || props.visibleCatalogTypes.length === 0}>
+          Add Visible Types
+        </button>
         <button type="button" onClick={props.onRetrieveSelected} disabled={props.loading || props.selectionSummary.typeCount === 0}>
           Retrieve Selected
         </button>
@@ -135,6 +145,9 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
         </button>
         <button type="button" className="ghost" onClick={props.onClearFilters}>
           Clear Filters
+        </button>
+        <button type="button" className="ghost" onClick={props.onClearSelections} disabled={props.selectionSummary.typeCount === 0}>
+          Clear Cart
         </button>
       </div>
 
@@ -181,14 +194,52 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
 
       <div className="ops-grid">
         <article className="sub-card">
-          <p className="panel-caption">Cart payload</p>
-          <h3>Retrieval selections</h3>
-          <textarea
-            rows={8}
-            value={props.metadataSelectionsRaw}
-            onChange={(e) => props.setMetadataSelectionsRaw(e.target.value)}
-            placeholder='[{"type":"CustomObject","members":["Account"]}]'
-          />
+          <p className="panel-caption">Structured cart</p>
+          <h3>Selected metadata</h3>
+          {props.selectedMetadata.length > 0 ? (
+            <ul className="selection-list">
+              {props.selectedMetadata.map((selection) => (
+                <li key={selection.type} className="selection-item">
+                  <div className="ops-list-item">
+                    <div>
+                      <strong>{selection.type}</strong>
+                      <p>
+                        {selection.members && selection.members.length > 0
+                          ? `${selection.members.length} member selection${selection.members.length === 1 ? '' : 's'}`
+                          : 'Whole type selected'}
+                      </p>
+                    </div>
+                    <div className="ops-list-actions">
+                      <button type="button" className="ghost" onClick={() => props.onRemoveType(selection.type)}>
+                        Remove Type
+                      </button>
+                    </div>
+                  </div>
+                  {selection.members && selection.members.length > 0 ? (
+                    <div className="selection-members">
+                      {selection.members.map((member) => (
+                        <button
+                          key={`${selection.type}:${member}`}
+                          type="button"
+                          className="ghost chip-btn"
+                          onClick={() => props.onRemoveMember(selection.type, member)}
+                        >
+                          {member} ×
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">Add visible types or individual members from the catalog to build the retrieve cart.</p>
+          )}
+
+          <details className="advanced-block">
+            <summary>Advanced JSON preview</summary>
+            <textarea rows={8} value={props.metadataSelectionsPreview} readOnly />
+          </details>
         </article>
 
         <article className="sub-card">

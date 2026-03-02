@@ -770,6 +770,39 @@ pre {
   background: #f8fbff;
 }
 
+.selection-list {
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+}
+
+.selection-item {
+  border: 1px solid #d6e2f1;
+  border-radius: 10px;
+  padding: 0.55rem 0.6rem;
+  background: #ffffff;
+}
+
+.selection-members {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.55rem;
+}
+
+.advanced-block {
+  margin-top: 0.8rem;
+}
+
+.advanced-block summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #17427a;
+  margin-bottom: 0.45rem;
+}
+
 .sub-tab-row {
   display: flex;
   gap: 0.45rem;
