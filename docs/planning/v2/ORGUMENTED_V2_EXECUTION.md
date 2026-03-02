@@ -80,23 +80,23 @@ Current concrete checkpoint:
 ## Recommended Immediate Sequence
 
 ### Slice 1
+- capture one human benchmark run for the trusted high-risk review workflow
+- record operator timing, confidence, raw-JSON dependence, and workflow friction through `pnpm phase17:benchmark:human`
+- keep the benchmark replay-linked to the current proof and replay artifacts
+
+### Slice 2
 - make Refresh and Build product-grade for the common desktop rebuild path
 - keep rebuild, diff, and org-retrieve summaries readable without treating them as backend-only capability demos
 - preserve the existing direct engine boundary while improving the desktop operator flow
 
-### Slice 2
+### Slice 3
 - preserve the new structured Settings and Diagnostics workflow as the primary operator path for runtime and semantic diagnostics
 - keep org status, meta context, and meta adapt readable without regressing direct engine semantics
 - protect the desktop boundary so diagnostic presentation does not alter runtime behavior
 
-### Slice 3
+### Slice 4
 - preserve the new structured Analyze workflow as the primary operator path
 - keep deterministic replay and proof lookup stable while diagnostics, sessions, and benchmark evidence harden
-
-### Slice 4
-- capture human benchmark evidence for the same workflow now that the packaged runtime clears the policy envelope
-- use `pnpm phase17:benchmark:human` so the human benchmark output is a repeatable artifact rather than a free-form note
-- run the benchmark against an already grounded desktop runtime instead of depending on implicit shell auto-launch
 
 ### Slice 5
 - use the selected-slice process in `docs/planning/v2/SLICE_SELECTION.md` and `docs/planning/v2/SLICE_EXECUTION_PLAN.md` before broadening scope again
@@ -104,15 +104,13 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-refresh-build-workflow`
+- `dna-human-benchmark-evidence`
 
 Immediate execution pressure:
-- preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
-- preserve the new structured selective-retrieve cart and carry its handoff cleanly into rebuild work
-- keep Refresh and Build readable as the primary rebuild chain for browser retrieve, refresh, diff, and org-retrieve state
-- keep rebuild status, drift review, and retrieve pipeline state readable without pushing policy or runtime logic into the UI
+- capture one grounded human benchmark artifact for the trusted high-risk review scenario
 - keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
-- preserve runtime convergence and packaged desktop parity while refresh/build and diagnostics workflows are improved
+- preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
+- preserve runtime convergence and packaged desktop parity while benchmark evidence is captured
 - keep the review packet usable as the primary artifact without raw JSON dependence
 - avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
 

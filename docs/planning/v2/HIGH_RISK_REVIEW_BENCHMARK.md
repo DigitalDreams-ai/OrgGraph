@@ -187,6 +187,7 @@ Current branch status:
 - automated proxy benchmark capture is now available through `pnpm phase17:benchmark`
 - latest proxy run is summarized in `HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
 - human benchmark evidence is still required before claiming full Stage 1 lift proof
+- the active next branch is `dna-human-benchmark-evidence`
 
 ## Bottom Line
 
