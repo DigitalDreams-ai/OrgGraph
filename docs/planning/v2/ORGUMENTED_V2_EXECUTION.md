@@ -31,6 +31,7 @@ Current concrete checkpoint:
 - browser-era route adapters are retired from the desktop runtime path
 - the selected high-risk change review packet now compiles through a typed Ask planner path
 - the desktop Ask workspace now renders the review packet as the primary artifact, including risk drivers, permission impact, automation impact, change impact, and next actions
+- automated proxy benchmark evidence now shows major workflow-friction reduction for the selected review workflow, but the packaged benchmark snapshot still returns `trustLevel=refused`
 - desktop smoke already proves:
   - deterministic Ask identity
   - replay parity

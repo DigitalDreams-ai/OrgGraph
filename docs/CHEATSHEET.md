@@ -142,7 +142,7 @@ npm run phase12:replay-load
 npm run phase13:metrics-export
 npm run phase14:drift-report -- latest latest artifacts/phase14-drift-report.json
 npm run phase14:drift-gate
-./scripts/phase17-benchmark.sh
+pnpm phase17:benchmark
 npm run mcp:project-memory
 pnpm --filter @orgumented/project-memory-mcp test
 ```
@@ -170,6 +170,9 @@ pnpm desktop:dev
 # Verify packaged shell runtime locally
 pnpm desktop:build
 pnpm desktop:smoke:release
+
+# Capture Stage 1 review-packet benchmark proxy metrics
+pnpm phase17:benchmark
 ```
 
 ## Project Memory MCP

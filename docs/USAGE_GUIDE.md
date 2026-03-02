@@ -385,5 +385,11 @@ curl http://localhost:3100/ready
 ## 12. Storage and Drift Operations
 ```bash
 npm run ingest:report
-./scripts/phase17-benchmark.sh
+pnpm phase17:benchmark
 ```
+
+`phase17:benchmark` now targets the active v2 benchmark workflow:
+- it compares the fragmented baseline review path against the typed high-risk review packet path
+- it writes proxy timing and deterministic replay evidence to `logs/high-risk-review-benchmark.json`
+- it auto-launches the packaged desktop runtime if no local API is already ready
+- it does not replace the human benchmark capture required in `docs/planning/v2/HIGH_RISK_REVIEW_BENCHMARK.md`

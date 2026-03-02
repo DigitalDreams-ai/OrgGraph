@@ -119,6 +119,31 @@ Capture at minimum:
 - one replay verification result for the benchmark query
 - one notes block comparing baseline vs review-packet path
 
+Automated proxy harness:
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm phase17:benchmark
+```
+
+Default artifact:
+- `logs/high-risk-review-benchmark.json`
+
+What the harness captures:
+- API-path proxy timing for the fragmented baseline path
+- API-path proxy timing for the review-packet path
+- deterministic proof stability across repeated identical review asks
+- replay parity for the review-packet proof
+
+Harness runtime behavior:
+- uses the existing local runtime if `http://127.0.0.1:3100/ready` is already healthy
+- otherwise auto-launches the packaged desktop runtime when `apps/desktop/src-tauri/target/release/orgumented-desktop.exe` is available
+
+What still requires human capture:
+- real desktop operator timing
+- operator confidence rating
+- any nuance about whether the packet was sufficient without further drill-down
+
 Preferred artifact locations:
 - `logs/`
 - proof and replay artifacts retrieved through the desktop product
@@ -138,7 +163,9 @@ Current branch status:
 - deterministic review packet exists
 - desktop Ask renders the packet as the primary artifact
 - replay parity protection is green
-- measurable lift has not yet been captured on a recorded benchmark run
+- automated proxy benchmark capture is now available through `pnpm phase17:benchmark`
+- latest proxy run is summarized in `HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
+- human benchmark evidence is still required before claiming full Stage 1 lift proof
 
 ## Bottom Line
 
