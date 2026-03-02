@@ -1,10 +1,16 @@
 'use client';
 
-import type { OrgRetrieveRunView, RefreshDiffView, RefreshRunView } from './types';
+import type {
+  OrgRetrieveRunView,
+  RefreshDiffView,
+  RefreshRetrieveHandoffView,
+  RefreshRunView
+} from './types';
 
 interface RefreshWorkspaceProps {
   activeAlias: string;
   selectedAlias: string;
+  retrieveHandoff: RefreshRetrieveHandoffView | null;
   refreshMode: 'incremental' | 'full';
   setRefreshMode: (value: 'incremental' | 'full') => void;
   fromSnapshot: string;
@@ -43,7 +49,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
   return (
     <>
       <h2>Refresh &amp; Build</h2>
-      <p className="section-lead">Rebuild semantic state, review drift, and keep the current alias visible while moving from retrieve into refresh.</p>
+      <p className="section-lead">Rebuild semantic state, review drift, and keep the retrieve-to-refresh handoff visible instead of treating rebuild as a separate backend step.</p>
 
       <div className="ops-grid">
         <article className="sub-card">
@@ -57,6 +63,35 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
           <p><strong>Org retrieve auth:</strong> {String(props.orgRunAuth)}</p>
           <p><strong>Org retrieve metadata:</strong> {String(props.orgRunRetrieve)}</p>
           <p><strong>Auto refresh:</strong> {String(props.orgAutoRefresh)}</p>
+        </article>
+
+        <article className="sub-card">
+          <p className="panel-caption">Browser handoff</p>
+          <h3>Latest retrieve context</h3>
+          {props.retrieveHandoff ? (
+            <>
+              <div className="decision-meta">
+                <span className="decision-badge good">Status: {props.retrieveHandoff.status}</span>
+                <span className={`decision-badge ${props.retrieveHandoff.autoRefresh ? 'good' : 'muted'}`}>
+                  Auto refresh: {String(props.retrieveHandoff.autoRefresh)}
+                </span>
+              </div>
+              <p><strong>Alias:</strong> {props.retrieveHandoff.alias}</p>
+              <p><strong>Completed:</strong> {formatTimestamp(props.retrieveHandoff.completedAt)}</p>
+              <p><strong>Parse path:</strong> {props.retrieveHandoff.parsePath}</p>
+              <p><strong>Metadata args:</strong> {props.retrieveHandoff.metadataArgs.join(' ') || 'n/a'}</p>
+              {props.retrieveHandoff.refresh ? (
+                <p>
+                  <strong>Retrieve refresh counts:</strong> {props.retrieveHandoff.refresh.nodeCount} nodes,{' '}
+                  {props.retrieveHandoff.refresh.edgeCount} edges, {props.retrieveHandoff.refresh.evidenceCount} evidence
+                </p>
+              ) : (
+                <p className="muted">The latest browser retrieve did not include an automatic refresh summary.</p>
+              )}
+            </>
+          ) : (
+            <p className="muted">Use `Org Browser` first to stage a selective retrieve handoff into this workspace.</p>
+          )}
         </article>
 
         <article className="sub-card">
@@ -82,6 +117,65 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
           )}
         </article>
       </div>
+
+      <article className="sub-card">
+        <p className="panel-caption">Workflow state</p>
+        <h3>Current rebuild chain</h3>
+        <ul className="issue-list">
+          <li>
+            <div className="decision-meta">
+              <span className={`decision-badge ${props.retrieveHandoff ? 'good' : 'muted'}`}>Browser retrieve</span>
+              <span className="decision-badge muted">
+                {props.retrieveHandoff ? formatTimestamp(props.retrieveHandoff.completedAt) : 'waiting'}
+              </span>
+            </div>
+            <p>
+              {props.retrieveHandoff
+                ? `Latest retrieve staged ${props.retrieveHandoff.metadataArgs.length} metadata argument${props.retrieveHandoff.metadataArgs.length === 1 ? '' : 's'} for rebuild review.`
+                : 'No browser retrieve handoff captured yet.'}
+            </p>
+          </li>
+          <li>
+            <div className="decision-meta">
+              <span className={`decision-badge ${props.lastRefreshRun ? 'good' : 'muted'}`}>Refresh</span>
+              <span className="decision-badge muted">
+                {props.lastRefreshRun ? props.lastRefreshRun.snapshotId : 'waiting'}
+              </span>
+            </div>
+            <p>
+              {props.lastRefreshRun
+                ? `${props.lastRefreshRun.mode} rebuild captured ${props.lastRefreshRun.nodeCount} nodes and ${props.lastRefreshRun.edgeCount} edges.`
+                : 'Run Refresh to capture the next grounded snapshot.'}
+            </p>
+          </li>
+          <li>
+            <div className="decision-meta">
+              <span className={`decision-badge ${props.lastDiffRun ? 'good' : 'muted'}`}>Diff</span>
+              <span className="decision-badge muted">
+                {props.lastDiffRun ? `${props.lastDiffRun.fromSnapshotId} → ${props.lastDiffRun.toSnapshotId}` : 'waiting'}
+              </span>
+            </div>
+            <p>
+              {props.lastDiffRun
+                ? `${props.lastDiffRun.meaningChangeSummary || 'Diff captured.'} Structure changed: ${String(props.lastDiffRun.structureDigestChanged)}.`
+                : 'Run Diff after two snapshots are available.'}
+            </p>
+          </li>
+          <li>
+            <div className="decision-meta">
+              <span className={`decision-badge ${props.lastOrgRetrieveRun ? 'good' : 'muted'}`}>Org retrieve</span>
+              <span className="decision-badge muted">
+                {props.lastOrgRetrieveRun ? formatTimestamp(props.lastOrgRetrieveRun.completedAt) : 'waiting'}
+              </span>
+            </div>
+            <p>
+              {props.lastOrgRetrieveRun
+                ? `Latest pipeline ran ${props.lastOrgRetrieveRun.stepSummary.length} staged step${props.lastOrgRetrieveRun.stepSummary.length === 1 ? '' : 's'}.`
+                : 'Run Org Retrieve when the rebuild path should include auth and metadata retrieval from this workspace.'}
+            </p>
+          </li>
+        </ul>
+      </article>
 
       <label htmlFor="refreshMode">Refresh Mode</label>
       <select
@@ -179,6 +273,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
           <p><strong>Completed:</strong> {formatTimestamp(props.lastOrgRetrieveRun.completedAt)}</p>
           <p><strong>Project path:</strong> {props.lastOrgRetrieveRun.projectPath}</p>
           <p><strong>Parse path:</strong> {props.lastOrgRetrieveRun.parsePath}</p>
+          <p><strong>Metadata args:</strong> {props.lastOrgRetrieveRun.metadataArgs.join(' ') || 'n/a'}</p>
           <ul className="issue-list">
             {props.lastOrgRetrieveRun.stepSummary.map((step) => (
               <li key={`${step.step}-${step.status}`}>

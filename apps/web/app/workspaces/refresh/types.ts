@@ -1,5 +1,9 @@
 'use client';
 
+import type { MetadataRetrieveResultView } from '../browser/types';
+
+export type RefreshRetrieveHandoffView = MetadataRetrieveResultView;
+
 export interface RefreshRunView {
   snapshotId: string;
   mode: string;
@@ -32,6 +36,7 @@ export interface OrgRetrieveRunView {
   completedAt: string;
   parsePath: string;
   projectPath: string;
+  metadataArgs: string[];
   stepSummary: Array<{
     step: string;
     status: string;

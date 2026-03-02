@@ -1,13 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { QueryResponse } from '../../lib/ask-client';
 import { runOrgRetrieve } from '../../lib/org-client';
 import { getRefreshDiff, runRefresh } from '../../lib/refresh-client';
-import type { OrgRetrieveRunView, RefreshDiffView, RefreshRunView } from './types';
+import type {
+  OrgRetrieveRunView,
+  RefreshDiffView,
+  RefreshRetrieveHandoffView,
+  RefreshRunView
+} from './types';
 
 interface UseRefreshWorkspaceOptions {
   orgAlias: string;
+  retrieveHandoff: RefreshRetrieveHandoffView | null;
   presentResponse: (response: QueryResponse) => void;
   resolveErrorMessage: (response: QueryResponse) => string;
   setLoading: (loading: boolean) => void;
@@ -100,6 +106,7 @@ function parseOrgRetrieveRun(response: QueryResponse): OrgRetrieveRunView | null
     completedAt: String(payload.completedAt ?? ''),
     parsePath: String(payload.parsePath ?? ''),
     projectPath: String(payload.projectPath ?? ''),
+    metadataArgs: Array.isArray(payload.metadataArgs) ? payload.metadataArgs.map((item) => String(item)) : [],
     stepSummary: Array.isArray(payload.steps)
       ? payload.steps.map((entry) => {
           const step = entry as Record<string, unknown>;
@@ -124,6 +131,14 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
   const [lastRefreshRun, setLastRefreshRun] = useState<RefreshRunView | null>(null);
   const [lastDiffRun, setLastDiffRun] = useState<RefreshDiffView | null>(null);
   const [lastOrgRetrieveRun, setLastOrgRetrieveRun] = useState<OrgRetrieveRunView | null>(null);
+
+  useEffect(() => {
+    if (!options.retrieveHandoff) {
+      return;
+    }
+
+    setOrgAutoRefresh(options.retrieveHandoff.autoRefresh);
+  }, [options.retrieveHandoff]);
 
   async function runRefreshNow(): Promise<void> {
     options.setLoading(true);
