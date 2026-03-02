@@ -66,20 +66,16 @@ Current concrete checkpoint:
 ## Recommended Immediate Sequence
 
 ### Slice 1
-- finish remaining runtime convergence work beyond the current direct-engine boundary cleanup
+- deliver the selected high-risk change review packet vertical slice
 
 ### Slice 2
-- open a planner/compiler evaluation using the build-vs-borrow screen
-- likely candidates:
-  - `Ajv` now
-  - `OPA/Rego` only if tied tightly to planner depth and scoped narrowly
-  - `Langium` / `Chevrotain` / `Souffle` evaluation later
+- prove packet lift on one benchmark review workflow before broadening planner claims
 
 ### Slice 3
-- define benchmark review workflows where decision packets must prove value
+- strengthen planner/compiler depth beyond the regex-heavy baseline only where the selected workflow requires it
 
 ### Slice 4
-- improve packet quality and workflow fit before pushing policy support further
+- keep runtime convergence green while the review-packet slice is implemented
 
 ### Slice 5
 - use the selected-slice process in `docs/planning/v2/SLICE_SELECTION.md` and `docs/planning/v2/SLICE_EXECUTION_PLAN.md` before broadening scope again
@@ -87,13 +83,13 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-runtime-ownership`
+- `dna-high-risk-review-packet`
 
 Immediate execution pressure:
-- reduce or eliminate remaining standalone Next-server dependence in desktop dev
-- improve planner/compiler depth
+- replace the current regex-heavy review path with one typed high-risk change review flow
 - turn one benchmark high-risk review packet into a real Stage 1 workflow artifact
-- close the remaining Stage 1 desktop workflow parity gaps
+- preserve runtime convergence and packaged desktop parity while the planner and packet improve
+- capture measurable workflow lift without widening into Stage 2 governance or policy automation
 
 ## Remaining Stage 1 Product Gates
 
@@ -132,6 +128,7 @@ The following product outcomes still need to be explicit in execution, not just 
 ### Checkpoint E
 - selected Stage 1 benchmark workflow completes without raw JSON dependence
 - measurable lift is captured
+- the high-risk change review packet is usable as the primary review artifact
 
 ### Checkpoint F
 - core desktop workflows reach parity:
