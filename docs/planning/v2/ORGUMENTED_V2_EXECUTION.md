@@ -74,6 +74,8 @@ Current concrete checkpoint:
 
 ### Slice 1
 - capture human benchmark evidence for the same workflow now that the packaged runtime clears the policy envelope
+- use `pnpm phase17:benchmark:human` so the human benchmark output is a repeatable artifact rather than a free-form note
+- run the benchmark against an already grounded desktop runtime instead of depending on implicit shell auto-launch
 
 ### Slice 2
 - strengthen planner/compiler depth beyond the regex-heavy baseline only where the selected workflow still needs it
@@ -92,6 +94,7 @@ Active branch:
 Immediate execution pressure:
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
 - capture human benchmark evidence for the same review workflow
+- keep the human benchmark capture structured and replay-linked
 - preserve runtime convergence and packaged desktop parity while the new grounding path is added
 - keep the review packet usable as the primary artifact without raw JSON dependence
 - avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists

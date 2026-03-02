@@ -123,6 +123,7 @@ Automated proxy harness:
 
 ```powershell
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:smoke:release
 pnpm phase17:benchmark
 ```
 
@@ -136,13 +137,33 @@ What the harness captures:
 - replay parity for the review-packet proof
 
 Harness runtime behavior:
-- uses the existing local runtime only if `http://127.0.0.1:3100/ready` is already grounded
-- otherwise auto-launches the packaged desktop runtime when `apps/desktop/src-tauri/target/release/orgumented-desktop.exe` is available
+- expects `http://127.0.0.1:3100/ready` to already be grounded before the benchmark starts
+- the recommended path is to establish that state through the packaged desktop shell or `pnpm desktop:smoke:release`
+- packaged auto-launch is available only as an explicit best-effort fallback with `ORGUMENTED_BENCHMARK_LAUNCH_PACKAGED=1`
 
 What still requires human capture:
 - real desktop operator timing
 - operator confidence rating
 - any nuance about whether the packet was sufficient without further drill-down
+
+Human capture command:
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm desktop:smoke:release
+pnpm phase17:benchmark
+pnpm phase17:benchmark:human -- --operator "<name>" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --notes "<observation>"
+```
+
+Human capture outputs:
+- `logs/high-risk-review-human-benchmark.json`
+- `logs/high-risk-review-human-benchmark.md`
+
+What the human capture command does:
+- reads the latest automated proxy artifact
+- records the operator-observed baseline and review-packet timings
+- preserves proof and replay identifiers alongside the human notes
+- evaluates the Stage 1 pass/fail thresholds automatically
 
 Preferred artifact locations:
 - `logs/`
