@@ -116,6 +116,26 @@ export default function Page(): JSX.Element {
     proofsWorkspace.syncFromAsk(askWorkspace.askProofId, askWorkspace.askReplayToken);
   }, [askWorkspace.askProofId, askWorkspace.askReplayToken]);
 
+  useEffect(() => {
+    if (uiTab !== 'proofs' || proofsWorkspace.recentProofs.length > 0) {
+      return;
+    }
+
+    void proofsWorkspace.runProofsRecent(parseOptionalInt(secondaryQueryRunner.limitRaw) ?? 20);
+  }, [uiTab, proofsWorkspace.recentProofs.length, secondaryQueryRunner.limitRaw]);
+
+  useEffect(() => {
+    if (uiTab !== 'proofs' || !proofsWorkspace.proofId.trim()) {
+      return;
+    }
+
+    if (proofsWorkspace.selectedProof?.proofId === proofsWorkspace.proofId) {
+      return;
+    }
+
+    void proofsWorkspace.runProofLookup();
+  }, [uiTab, proofsWorkspace.proofId, proofsWorkspace.selectedProof?.proofId]);
+
   return (
     <main className="og-shell">
       <ShellTopbar
@@ -300,6 +320,7 @@ export default function Page(): JSX.Element {
               replayToken={proofsWorkspace.replayToken}
               setReplayToken={proofsWorkspace.setReplayToken}
               recentProofs={proofsWorkspace.recentProofs}
+              selectedRecentProof={proofsWorkspace.selectedRecentProof}
               selectedProof={proofsWorkspace.selectedProof}
               replayResult={proofsWorkspace.replayResult}
               metricsExport={proofsWorkspace.metricsExport}
@@ -309,6 +330,7 @@ export default function Page(): JSX.Element {
               onReplay={() => void proofsWorkspace.runReplay()}
               onExportMetrics={() => void proofsWorkspace.runMetricsExport()}
               onUseRecentProof={proofsWorkspace.useRecentProof}
+              onReplayRecentProof={(proof) => void proofsWorkspace.replayRecentProof(proof)}
             />
           )}
 

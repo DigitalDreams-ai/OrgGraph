@@ -580,9 +580,21 @@ button.ghost {
   padding: 0.65rem 0.7rem;
 }
 
+.proof-list-item.active {
+  border-color: #7dd3fc;
+  background: #eef6ff;
+  box-shadow: inset 0 0 0 1px #bfdbfe;
+}
+
 .proof-list-item p {
   margin: 0.3rem 0 0;
   color: var(--ink-soft);
+}
+
+.proof-list-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .proof-metric-grid {
