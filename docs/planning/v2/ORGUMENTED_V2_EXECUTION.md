@@ -34,6 +34,7 @@ Current concrete checkpoint:
 - the desktop Ask workspace now renders the review packet as the primary artifact, including risk drivers, permission impact, automation impact, change impact, and next actions
 - the Explain and Analyze workspace now renders structured operator summaries for permissions, user-map diagnosis, automation, impact, and system-permission flows instead of depending on raw JSON inspection
 - the Org Sessions workspace now exposes recent auth/session history and an explicit restore-last-session action instead of relying only on manual alias re-selection
+- the Org Browser workspace now builds selective-retrieve payloads through a structured cart with visible-type bulk add and only exposes JSON as an advanced read-only preview
 - the Settings and Diagnostics workspace now renders runtime health, org tooling/session state, meta-context weights, and meta-adapt before/after summaries instead of acting as a button-only debug surface
 - the Proofs and History workspace now reopens recent decision artifacts through labeled history entries before exposing raw proof tokens
 - desktop-managed API startup now bootstraps a deterministic fixture baseline when graph/evidence state is empty
@@ -78,8 +79,8 @@ Current concrete checkpoint:
 ## Recommended Immediate Sequence
 
 ### Slice 1
-- make Org Browser product-grade for org-wide selective retrieve
-- keep selective retrieve readable and structured without depending on raw JSON editing
+- make Refresh and Build product-grade for the common desktop rebuild path
+- keep rebuild, diff, and org-retrieve summaries readable without treating them as backend-only capability demos
 - preserve the existing direct engine boundary while improving the desktop operator flow
 
 ### Slice 2
@@ -106,18 +107,17 @@ Active branch:
 
 Immediate execution pressure:
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
-- turn Org Browser into a clearer operator workflow for org-wide selective retrieve
-- remove dependence on raw JSON editing for the common retrieve path
-- keep metadata selection, retrieve handoff, and alias readiness readable without pushing policy or runtime logic into the UI
+- preserve the new structured selective-retrieve cart and keep JSON demoted to advanced inspection only
+- turn Refresh and Build into a clearer operator workflow for refresh, diff, and org-retrieve handoff
+- keep rebuild status, drift review, and retrieve pipeline state readable without pushing policy or runtime logic into the UI
 - keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
-- preserve runtime convergence and packaged desktop parity while browser and diagnostics workflows are improved
+- preserve runtime convergence and packaged desktop parity while refresh/build and diagnostics workflows are improved
 - keep the review packet usable as the primary artifact without raw JSON dependence
 - avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
 
 ## Remaining Stage 1 Product Gates
 
 The following product outcomes still need to be explicit in execution, not just implied:
-- Org Browser must support org-wide selective retrieve
 - Refresh and Build must be first-class desktop workflows
 - Explain and Analyze must work as operator workflows rather than backend capability demos
 - Proofs and History must be accessible through labeled history instead of manual ID/token tracking

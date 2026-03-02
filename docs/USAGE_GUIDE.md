@@ -111,7 +111,7 @@ The desktop product centers on these workspaces:
 Expected operator flow:
 1. Open on `Ask` and confirm current session status.
 2. Use `Org Sessions` to refresh overview, inspect alias readiness, and connect or switch the active alias.
-3. Use `Org Browser` and `Refresh & Build` to retrieve and ingest metadata.
+3. Use `Org Browser` to build the retrieve cart from visible types and members, then move into `Refresh & Build` to ingest and review drift.
 4. Return to `Ask` or `Explain & Analyze` for decision work.
 5. Use `Proofs & History` for replay and prior decision lookup.
 
@@ -144,7 +144,10 @@ Current `Org Sessions` behavior:
   - switch
 
 Current retrieval handoff behavior:
-- `Org Browser` shows the active alias, cart summary, and the last selected-retrieve result
+- `Org Browser` shows the active alias, visible catalog counts, a structured retrieve cart, and the last selected-retrieve result
+- `Add Visible Types` lets the operator stage a broad retrieve pass from the current filtered catalog without editing JSON
+- selected types and members are removed from the cart directly in the workspace
+- the JSON cart payload remains available only as an advanced read-only preview
 - `Open Refresh & Build` moves directly from metadata selection into rebuild and drift review
 - `Refresh & Build` shows structured summaries for:
   - latest refresh
