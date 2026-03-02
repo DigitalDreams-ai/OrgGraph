@@ -11,10 +11,10 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $parent = Resolve-Path (Join-Path $repoRoot $ParentPath)
 
 $worktrees = @(
-  @{ Name = "$RootName-coord"; Branch = $BaseBranch },
-  @{ Name = "$RootName-pla"; Branch = $BaseBranch },
-  @{ Name = "$RootName-ui"; Branch = $BaseBranch },
-  @{ Name = "$RootName-verify"; Branch = $BaseBranch }
+  @{ Name = "$RootName-coord"; Branch = $BaseBranch; Detached = $false },
+  @{ Name = "$RootName-pla"; Branch = $BaseBranch; Detached = $true },
+  @{ Name = "$RootName-ui"; Branch = $BaseBranch; Detached = $true },
+  @{ Name = "$RootName-verify"; Branch = $BaseBranch; Detached = $true }
 )
 
 Write-Host "Repo root: $repoRoot"
@@ -48,12 +48,20 @@ foreach ($entry in $worktrees) {
     continue
   }
 
-  Write-Host "Creating worktree $targetPath from $($entry.Branch)"
-  git -C $repoRoot worktree add $targetPath $entry.Branch
+  if ($entry.Detached) {
+    Write-Host "Creating detached worktree $targetPath from $($entry.Branch)"
+    git -C $repoRoot worktree add --detach $targetPath $entry.Branch
+  } else {
+    Write-Host "Creating worktree $targetPath from $($entry.Branch)"
+    git -C $repoRoot worktree add $targetPath $entry.Branch
+  }
 }
 
 Write-Host ""
 Write-Host "Suggested next commands:"
+Write-Host ""
+Write-Host "  # Note: planner/workflow/verifier worktrees are created detached at $BaseBranch."
+Write-Host "  # Create a branch inside each worker worktree before starting Codex."
 Write-Host ""
 Write-Host "  # Coordinator"
 Write-Host "  Set-Location $(Join-Path $parent "$RootName-coord")"
