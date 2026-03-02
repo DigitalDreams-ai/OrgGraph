@@ -79,6 +79,7 @@ Current concrete checkpoint:
 
 ### Slice 2
 - strengthen planner/compiler depth beyond the regex-heavy baseline only where the selected workflow still needs it
+- do that through deterministic review-query compilation for the active high-risk change workflow, not a broad planner rewrite
 
 ### Slice 3
 - keep runtime convergence green while human benchmark capture and planner depth work proceed
@@ -89,13 +90,13 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-high-risk-review-grounding`
+- `dna-high-risk-review-planner-depth`
 
 Immediate execution pressure:
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
-- capture human benchmark evidence for the same review workflow
-- keep the human benchmark capture structured and replay-linked
-- preserve runtime convergence and packaged desktop parity while the new grounding path is added
+- keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
+- deepen planner compilation for the selected review query family beyond the current regex-heavy gate
+- preserve runtime convergence and packaged desktop parity while planner depth is improved
 - keep the review packet usable as the primary artifact without raw JSON dependence
 - avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
 
