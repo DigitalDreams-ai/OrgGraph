@@ -31,7 +31,10 @@ Current concrete checkpoint:
 - browser-era route adapters are retired from the desktop runtime path
 - the selected high-risk change review packet now compiles through a typed Ask planner path
 - the desktop Ask workspace now renders the review packet as the primary artifact, including risk drivers, permission impact, automation impact, change impact, and next actions
-- automated proxy benchmark evidence now shows major workflow-friction reduction for the selected review workflow, but the packaged benchmark snapshot still returns `trustLevel=refused`
+- desktop-managed API startup now bootstraps a deterministic fixture baseline when graph/evidence state is empty
+- packaged runtime now bundles the fixture baseline and seeds the user principal map used by the benchmark workflow
+- `/ready` now fails closed until the runtime has grounded graph and evidence state
+- automated proxy benchmark evidence now shows both workflow-friction reduction and `trustLevel=trusted` for the selected review workflow
 - desktop smoke already proves:
   - deterministic Ask identity
   - replay parity
@@ -70,18 +73,15 @@ Current concrete checkpoint:
 ## Recommended Immediate Sequence
 
 ### Slice 1
-- raise grounding for the selected high-risk change review workflow until the packet can clear the policy envelope when the snapshot supports it
+- capture human benchmark evidence for the same workflow now that the packaged runtime clears the policy envelope
 
 ### Slice 2
-- capture human benchmark evidence for the same workflow after the grounding path improves
+- strengthen planner/compiler depth beyond the regex-heavy baseline only where the selected workflow still needs it
 
 ### Slice 3
-- strengthen planner/compiler depth beyond the regex-heavy baseline only where the selected workflow requires it
+- keep runtime convergence green while human benchmark capture and planner depth work proceed
 
 ### Slice 4
-- keep runtime convergence green while the review-packet slice is implemented
-
-### Slice 5
 - use the selected-slice process in `docs/planning/v2/SLICE_SELECTION.md` and `docs/planning/v2/SLICE_EXECUTION_PLAN.md` before broadening scope again
 
 ## Active Branch and Immediate Focus
@@ -90,7 +90,8 @@ Active branch:
 - `dna-high-risk-review-grounding`
 
 Immediate execution pressure:
-- improve deterministic grounding for the benchmark review query so the packet can produce trusted or conditional output when the snapshot supports it
+- preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
+- capture human benchmark evidence for the same review workflow
 - preserve runtime convergence and packaged desktop parity while the new grounding path is added
 - keep the review packet usable as the primary artifact without raw JSON dependence
 - avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
@@ -124,6 +125,7 @@ The following product outcomes still need to be explicit in execution, not just 
 - `pnpm desktop:smoke:release`
 - packaged shell still proves:
   - startup
+  - grounded runtime bootstrap
   - engine reachability
   - Ask
   - proof and replay

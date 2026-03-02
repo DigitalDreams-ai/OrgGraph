@@ -51,6 +51,8 @@ Observed proof in current repo state:
 - API builds, then starts from `dist/main.js`
 - Web starts from the last verified production build
 - On Windows, the runtime seeds standard local CLI paths for `sf`, `cci`, and Rust tooling
+- desktop-managed API startup now defaults `ORGUMENTED_BOOTSTRAP_ON_STARTUP=true`
+- when the runtime graph/evidence state is empty, the API bootstraps from the fixture baseline before reporting readiness
 - both processes shut down cleanly on `SIGTERM`
 
 Default runtime behavior:
@@ -98,6 +100,7 @@ Current packaged build behavior:
 - the staged runtime includes:
   - static web entry assets
   - bundled API entry at `runtime/api/main.cjs`
+  - bundled fixture baseline at `runtime/fixtures/permissions`
   - bundled `node.exe`
   - `config.json` with non-secret Salesforce runtime config snapshot from `.env` and current shell overrides
 - packaged build preflight stops stale packaged desktop processes before restaging on Windows
@@ -111,6 +114,7 @@ Current packaged build behavior:
 
 Observed packaged proof in current repo state:
 - `orgumented-desktop.exe` started the bundled API runtime
+- packaged API startup bootstrapped the fixture baseline when graph/evidence state was empty
 - `http://127.0.0.1:3100/ready` returned `200`
 - proof log: `logs/desktop-phase4-release.log`
 
@@ -144,9 +148,12 @@ Current packaged smoke proof:
 - shell launch succeeded
 - `healthStatus=ok`
 - `readyStatus=ready`
+- `/ready` now implies a grounded runtime, not just a listening process:
+  - graph node/edge counts are non-zero
+  - evidence index exists and is populated
 - repeated identical Ask requests returned the same deterministic proof identity:
-  - `proofId=proof_dd7bcb4c6e249d0ebae058a6`
-  - `replayToken=trace_f64fd67605f1ed56028f0e73`
+  - `proofId=proof_bb15a905228c6632a3641b1b`
+  - `replayToken=trace_2b4fd7b005750f5732ad242c`
 - replay parity held for the packaged Ask proof:
   - `matched=true`
   - `corePayloadMatched=true`
@@ -158,6 +165,7 @@ Current packaged smoke proof:
 - when local aliases are available, the smoke verifies `POST /org/session/connect` and restores the original session state before shutdown
 - cleanup now retries until packaged `orgumented-desktop.exe` and bundled `node.exe` are actually gone
 - the smoke also forces port `3100` clear before launch, so repeated packaged verification runs do not fail on a stale listener
+- the current packaged benchmark query now returns `askTrustLevel=trusted`
 
 Optional deeper packaged auth proof:
 
