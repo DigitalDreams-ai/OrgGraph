@@ -77,31 +77,37 @@ Current concrete checkpoint:
 ## Recommended Immediate Sequence
 
 ### Slice 1
+- make Org Sessions product-grade for attach, switch, disconnect, and restore
+- surface recent auth/session history without moving policy or runtime logic into the UI
+- keep session restore readable and explicit for the desktop operator path
+
+### Slice 2
 - preserve the new structured Settings and Diagnostics workflow as the primary operator path for runtime and semantic diagnostics
 - keep org status, meta context, and meta adapt readable without regressing direct engine semantics
 - protect the desktop boundary so diagnostic presentation does not alter runtime behavior
 
-### Slice 2
+### Slice 3
 - preserve the new structured Analyze workflow as the primary operator path
 - keep deterministic replay and proof lookup stable while diagnostics, sessions, and benchmark evidence harden
 
-### Slice 3
+### Slice 4
 - capture human benchmark evidence for the same workflow now that the packaged runtime clears the policy envelope
 - use `pnpm phase17:benchmark:human` so the human benchmark output is a repeatable artifact rather than a free-form note
 - run the benchmark against an already grounded desktop runtime instead of depending on implicit shell auto-launch
 
-### Slice 4
+### Slice 5
 - use the selected-slice process in `docs/planning/v2/SLICE_SELECTION.md` and `docs/planning/v2/SLICE_EXECUTION_PLAN.md` before broadening scope again
 
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-system-diagnostics`
+- `dna-org-session-history`
 
 Immediate execution pressure:
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
-- preserve the new System workspace as the readable operator surface for runtime/tool health
-- keep org status, meta context, and meta adapt readable without pushing policy or runtime logic into the UI
+- turn Org Sessions into a clearer operator workflow for attach, switch, disconnect, and restore
+- surface recent auth/session history without inventing hidden fallback behavior
+- keep session restore and alias readiness readable without pushing policy or runtime logic into the UI
 - keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
 - preserve runtime convergence and packaged desktop parity while sessions and diagnostics are improved
 - keep the review packet usable as the primary artifact without raw JSON dependence
