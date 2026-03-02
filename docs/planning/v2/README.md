@@ -59,7 +59,22 @@ Purpose:
 9. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_TASK_BOARD.md`
 - live coordination board
 - worker assignment surface
-- merge gate checklist
+- gate status tracking
+- merge sequence tracker
+
+10. `docs/planning/v2/ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
+- Codex-native launch and handoff runbook
+- coordinator, worker, and verifier session flow
+- worktree bootstrap and recovery steps
+
+11. `scripts/verify-worker-branch.ps1`
+- verifier gate script
+- structured pass/fail JSON output
+- runs typecheck, tests, build, desktop smoke, replay parity, scope check
+
+12. `scripts/start-orgumented-codex-role.ps1`
+- launches a role-specific Codex session in the correct worktree
+- uses `.codex/roles/` prompt files
 
 ## Reading Order
 
@@ -71,7 +86,8 @@ Recommended order:
 5. `ORGUMENTED_V2_GOVERNANCE.md`
 6. `ORGUMENTED_V2_LEXICON.md`
 7. `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
-8. `ORGUMENTED_V2_SOURCE_MAP.md`
+8. `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
+9. `ORGUMENTED_V2_SOURCE_MAP.md`
 
 ## Consolidation Intent
 

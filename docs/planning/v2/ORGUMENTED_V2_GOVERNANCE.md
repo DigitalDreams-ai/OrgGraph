@@ -100,7 +100,9 @@ Before major structural change:
 
 For parallel-agent execution:
 - use `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
-- require one orchestrator, isolated worktrees, and explicit merge order
+- use `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md` when Codex sessions are the execution layer
+- require one orchestrator, isolated worktrees, one verifier, and explicit merge order
+- verifier must run `scripts/verify-worker-branch.ps1` before any merge approval
 - stop parallel execution if replay or runtime convergence is placed at risk
 
 Before custom-building a new semantic subsystem:
