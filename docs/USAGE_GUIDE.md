@@ -135,6 +135,8 @@ Current `Org Sessions` behavior:
 - `Refresh Overview` re-syncs tool status, session state, alias inventory, and preflight in one pass
 - the selected alias shows readiness state directly in the workspace
 - preflight blockers and remediation are listed directly in the desktop UI
+- recent auth/session events are listed directly in the workspace
+- `Restore Last Session` reconnects the most recent disconnected alias without manual re-selection
 - discovered aliases support:
   - select
   - inspect
@@ -194,6 +196,7 @@ cci org info orgumented-sandbox
 curl http://localhost:3100/org/preflight
 curl http://localhost:3100/org/session
 curl http://localhost:3100/org/session/aliases
+curl "http://localhost:3100/org/session/history?limit=10"
 curl "http://localhost:3100/org/session/validate?alias=orgumented-sandbox"
 curl -X POST http://localhost:3100/org/session/connect -H 'content-type: application/json' -d '{"alias":"orgumented-sandbox"}'
 ```

@@ -33,6 +33,7 @@ Current concrete checkpoint:
 - the selected review-query family now compiles through explicit change-action rules with stable compiler rule IDs instead of relying only on broad regex review signals
 - the desktop Ask workspace now renders the review packet as the primary artifact, including risk drivers, permission impact, automation impact, change impact, and next actions
 - the Explain and Analyze workspace now renders structured operator summaries for permissions, user-map diagnosis, automation, impact, and system-permission flows instead of depending on raw JSON inspection
+- the Org Sessions workspace now exposes recent auth/session history and an explicit restore-last-session action instead of relying only on manual alias re-selection
 - the Settings and Diagnostics workspace now renders runtime health, org tooling/session state, meta-context weights, and meta-adapt before/after summaries instead of acting as a button-only debug surface
 - the Proofs and History workspace now reopens recent decision artifacts through labeled history entries before exposing raw proof tokens
 - desktop-managed API startup now bootstraps a deterministic fixture baseline when graph/evidence state is empty
@@ -116,7 +117,6 @@ Immediate execution pressure:
 ## Remaining Stage 1 Product Gates
 
 The following product outcomes still need to be explicit in execution, not just implied:
-- Org Sessions must feel product-grade for attach, switch, disconnect, and restore
 - Org Browser must support org-wide selective retrieve
 - Refresh and Build must be first-class desktop workflows
 - Explain and Analyze must work as operator workflows rather than backend capability demos

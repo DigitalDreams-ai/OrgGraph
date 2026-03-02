@@ -109,6 +109,7 @@ curl -X POST http://localhost:3100/ask/simulate -H 'content-type: application/js
 curl -X POST http://localhost:3100/ask/simulate/compare -H 'content-type: application/json' -d '{"scenarioA":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"strict","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"}]},"scenarioB":{"user":"jane@example.com","object":"Opportunity","field":"Opportunity.StageName","profile":"exploratory","proposedChanges":[{"action":"modify_field","object":"Opportunity","field":"Opportunity.StageName"},{"action":"add_automation","object":"Opportunity"}]}}'
 curl http://localhost:3100/org/session
 curl http://localhost:3100/org/session/aliases
+curl "http://localhost:3100/org/session/history?limit=10"
 curl "http://localhost:3100/org/session/validate?alias=orgumented-sandbox"
 curl -X POST http://localhost:3100/org/session/connect -H 'content-type: application/json' -d '{"alias":"orgumented-sandbox"}'
 curl -X POST http://localhost:3100/org/session/switch -H 'content-type: application/json' -d '{"alias":"orgumented-sandbox"}'
@@ -149,7 +150,7 @@ pnpm --filter @orgumented/project-memory-mcp test
 
 ## Desktop App Workspaces
 - `Ask`: deterministic answer packet and follow-up actions
-- `Org Sessions`: overview refresh, alias readiness, attach, and switching
+- `Org Sessions`: overview refresh, alias readiness, recent auth/session history, attach, switch, disconnect, and restore-last-session
 - `Org Browser`: searchable metadata tree, retrieval cart summary, and selected-retrieve handoff
 - `Refresh & Build`: retrieval, refresh, drift, and rebuild summaries
 - `Explain & Analyze`: structured permissions, mapping diagnosis, automation, impact, and system-permission workflows
