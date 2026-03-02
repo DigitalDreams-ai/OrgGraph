@@ -75,17 +75,18 @@ Current concrete checkpoint:
 ## Recommended Immediate Sequence
 
 ### Slice 1
-- make Proofs and History label-first for the selected high-risk review workflow
-- let operators reopen recent decision artifacts by human-meaningful labels and query summaries instead of leading with opaque proof tokens
-- preserve deterministic replay and proof lookup while manual human benchmark capture is still pending
+- make Explain and Analyze a structured operator workflow instead of a raw-JSON handoff
+- surface permissions, automation, impact, and system-permission results as decision-ready summaries inside the desktop workspace
+- keep all decision and policy logic in the engine while improving the Stage 1 workflow surface
 
 ### Slice 2
+- preserve the new label-first Proofs and History flow as the default operator path
+- keep deterministic replay and proof lookup stable while the Analyze workspace is upgraded
+
+### Slice 3
 - capture human benchmark evidence for the same workflow now that the packaged runtime clears the policy envelope
 - use `pnpm phase17:benchmark:human` so the human benchmark output is a repeatable artifact rather than a free-form note
 - run the benchmark against an already grounded desktop runtime instead of depending on implicit shell auto-launch
-
-### Slice 3
-- keep runtime convergence green while labeled-history and benchmark work proceed
 
 ### Slice 4
 - use the selected-slice process in `docs/planning/v2/SLICE_SELECTION.md` and `docs/planning/v2/SLICE_EXECUTION_PLAN.md` before broadening scope again
@@ -93,13 +94,13 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-labeled-proof-history`
+- `dna-analyze-workflow`
 
 Immediate execution pressure:
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
-- remove token-first proof/history interaction from the desktop workflow for the selected review packet
+- make permissions, automation, impact, and system-permission analysis readable without falling back to raw JSON
 - keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
-- preserve runtime convergence and packaged desktop parity while labeled-history access is improved
+- preserve runtime convergence and packaged desktop parity while Analyze is improved
 - keep the review packet usable as the primary artifact without raw JSON dependence
 - avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
 
