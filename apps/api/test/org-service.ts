@@ -191,6 +191,14 @@ async function run(): Promise<void> {
     assert.equal(disconnected.status, 'disconnected');
     assert.equal(disconnected.activeAlias, 'orgumented-sandbox');
 
+    const sessionHistory = service.sessionHistory(5);
+    assert.equal(sessionHistory.activeAlias, 'orgumented-sandbox');
+    assert.equal(sessionHistory.restoreAlias, 'orgumented-sandbox');
+    assert.equal(sessionHistory.entries.length, 3);
+    assert.equal(sessionHistory.entries[0].action, 'disconnect');
+    assert.equal(sessionHistory.entries[1].action, 'switch');
+    assert.equal(sessionHistory.entries[2].action, 'connect');
+
     const result = await service.retrieveAndRefresh({
       selections: [{ type: 'CustomObject', members: ['Account'] }]
     });

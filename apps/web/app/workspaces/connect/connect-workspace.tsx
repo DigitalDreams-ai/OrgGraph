@@ -4,7 +4,9 @@ import type {
   OrgAliasSummary,
   OrgPreflightIssue,
   OrgPreflightPayload,
+  OrgSessionAuditEntry,
   OrgSessionAliasesPayload,
+  OrgSessionHistoryPayload,
   OrgSessionPayload,
   OrgStatusPayload
 } from './types';
@@ -17,21 +19,26 @@ interface ConnectWorkspaceProps {
   orgStatus: OrgStatusPayload | null;
   orgPreflight: OrgPreflightPayload | null;
   orgAliases: OrgSessionAliasesPayload | null;
+  orgSessionHistory: OrgSessionHistoryPayload | null;
   orgSession: OrgSessionPayload | null;
   aliasInventory: OrgAliasSummary[];
+  recentSessionEvents: OrgSessionAuditEntry[];
   selectedAlias: OrgAliasSummary | null;
   preflightIssues: OrgPreflightIssue[];
   toolingReady: boolean;
   selectedAliasReady: boolean;
+  restoreAlias: string;
   loading: boolean;
   onRefreshOverview: () => void;
   onLoadAliases: () => void;
   onCheckSession: () => void;
+  onLoadSessionHistory: () => void;
   onCheckToolStatus: () => void;
   onPreflight: () => void;
   onSwitchAlias: (alias?: string) => void;
   onConnectExistingAlias: (alias?: string) => void;
   onDisconnect: () => void;
+  onRestoreLastSession: () => void;
   onSelectAlias: (alias: string) => void;
   onInspectAlias: (alias: string) => void;
 }
@@ -134,12 +141,16 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
         <button type="button" onClick={props.onRefreshOverview} disabled={props.loading}>Refresh Overview</button>
         <button type="button" onClick={() => props.onConnectExistingAlias()} disabled={props.loading}>Connect Selected</button>
         <button type="button" onClick={() => props.onSwitchAlias()} disabled={props.loading}>Switch Selected</button>
+        <button type="button" onClick={props.onRestoreLastSession} disabled={props.loading || !props.restoreAlias}>
+          Restore Last Session
+        </button>
         <button type="button" className="ghost" onClick={props.onDisconnect} disabled={props.loading}>Disconnect</button>
       </div>
 
       <div className="action-row">
         <button type="button" className="ghost" onClick={props.onLoadAliases} disabled={props.loading}>Load Aliases</button>
         <button type="button" className="ghost" onClick={props.onCheckSession} disabled={props.loading}>Check Session</button>
+        <button type="button" className="ghost" onClick={props.onLoadSessionHistory} disabled={props.loading}>Session History</button>
         <button type="button" className="ghost" onClick={props.onCheckToolStatus} disabled={props.loading}>Check Tool Status</button>
         <button type="button" className="ghost" onClick={props.onPreflight} disabled={props.loading}>Preflight Selected</button>
       </div>
@@ -177,6 +188,30 @@ sf org login web --alias ${props.orgAlias} --instance-url https://test.salesforc
 
 # 2) Bridge alias into CCI registry
 cci org import ${props.orgAlias} <sf-username>`}</pre>
+          <p><strong>Restore alias:</strong> {props.restoreAlias || props.orgSessionHistory?.restoreAlias || 'n/a'}</p>
+        </article>
+
+        <article className="sub-card">
+          <p className="panel-caption">Recent auth events</p>
+          <h3>Session history</h3>
+          {props.recentSessionEvents.length > 0 ? (
+            <ul className="issue-list">
+              {props.recentSessionEvents.map((entry, index) => (
+                <li key={`${entry.timestamp || 'event'}-${entry.alias || 'alias'}-${index}`}>
+                  <div className="decision-meta">
+                    <span className={`decision-badge ${entry.action === 'switch_failed' ? 'bad' : 'good'}`}>
+                      {entry.action || 'event'}
+                    </span>
+                    <span className="decision-badge muted">{entry.alias || 'n/a'}</span>
+                  </div>
+                  <p><strong>{formatTimestamp(entry.timestamp)}</strong></p>
+                  <p>{entry.message || 'No message recorded.'}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">No recent auth/session events have been recorded yet.</p>
+          )}
         </article>
       </div>
 

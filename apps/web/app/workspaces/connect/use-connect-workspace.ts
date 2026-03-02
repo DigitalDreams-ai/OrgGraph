@@ -6,6 +6,7 @@ import {
   connectOrgSession,
   disconnectOrgSession,
   getOrgSession,
+  getOrgSessionHistory,
   getOrgStatus,
   listOrgSessionAliases,
   runOrgPreflight,
@@ -15,7 +16,9 @@ import type {
   OrgAliasSummary,
   OrgPreflightIssue,
   OrgPreflightPayload,
+  OrgSessionAuditEntry,
   OrgSessionAliasesPayload,
+  OrgSessionHistoryPayload,
   OrgSessionPayload,
   OrgStatusPayload
 } from './types';
@@ -38,10 +41,13 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   const [orgStatus, setOrgStatus] = useState<OrgStatusPayload | null>(null);
   const [orgPreflight, setOrgPreflight] = useState<OrgPreflightPayload | null>(null);
   const [orgAliases, setOrgAliases] = useState<OrgSessionAliasesPayload | null>(null);
+  const [orgSessionHistory, setOrgSessionHistory] = useState<OrgSessionHistoryPayload | null>(null);
 
   const aliasInventory = orgAliases?.aliases ?? [];
   const activeAlias = orgSession?.activeAlias || orgStatus?.session?.activeAlias || orgStatus?.alias || orgAlias;
   const sessionStatus = orgSession?.status || orgStatus?.session?.status || 'unknown';
+  const restoreAlias = orgSessionHistory?.restoreAlias || (sessionStatus === 'disconnected' ? activeAlias : '');
+  const recentSessionEvents = orgSessionHistory?.entries ?? [];
   const selectedAlias = useMemo<OrgAliasSummary | null>(
     () => aliasInventory.find((entry) => entry.alias === orgAlias) ?? null,
     [aliasInventory, orgAlias]
@@ -84,17 +90,23 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   }
 
   async function syncOverview(alias = orgAlias, present = false): Promise<QueryResponse> {
-    const [statusResponse, sessionResponse, aliasesResponse, preflightResponse] = await Promise.all([
+    const [statusResponse, sessionResponse, aliasesResponse, preflightResponse, historyResponse] = await Promise.all([
       getOrgStatus(),
       getOrgSession(),
       listOrgSessionAliases(),
-      runOrgPreflight(alias)
+      runOrgPreflight(alias),
+      getOrgSessionHistory()
     ]);
 
     const statusPayload = readPayload<OrgStatusPayload>(statusResponse);
     const sessionPayload = readPayload<OrgSessionPayload>(sessionResponse);
     const aliasesPayload = readPayload<OrgSessionAliasesPayload>(aliasesResponse);
     const preflightPayload = readPayload<OrgPreflightPayload>(preflightResponse);
+    const historyPayload = readPayload<OrgSessionHistoryPayload>(historyResponse);
+
+    if (historyPayload) {
+      setOrgSessionHistory(historyPayload);
+    }
 
     if (statusPayload) {
       setOrgStatus(statusPayload);
@@ -109,7 +121,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       setOrgPreflight(preflightPayload);
     }
 
-    const failedResponse = [statusResponse, sessionResponse, aliasesResponse, preflightResponse].find(
+    const failedResponse = [statusResponse, sessionResponse, aliasesResponse, preflightResponse, historyResponse].find(
       (response) => response.ok === false
     );
 
@@ -120,7 +132,8 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
         status: statusPayload,
         session: sessionPayload,
         aliases: aliasesPayload,
-        preflight: preflightPayload
+        preflight: preflightPayload,
+        history: historyPayload
       },
       error: failedResponse?.error
     };
@@ -149,6 +162,15 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       const payload = readPayload<OrgSessionPayload>(response);
       if (payload) {
         setOrgSession(payload);
+      }
+    });
+  }
+
+  function loadSessionHistory(): Promise<QueryResponse | null> {
+    return runAction(() => getOrgSessionHistory(), (response) => {
+      const payload = readPayload<OrgSessionHistoryPayload>(response);
+      if (payload) {
+        setOrgSessionHistory(payload);
       }
     });
   }
@@ -210,6 +232,17 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     });
   }
 
+  function restoreLastSession(): Promise<QueryResponse | null> {
+    const alias = restoreAlias?.trim();
+    if (!alias) {
+      const fallback: QueryResponse = { ok: false, error: { message: 'No restorable alias available.' } };
+      options.presentResponse(fallback);
+      options.setErrorText('No restorable alias is available in recent session history.');
+      return Promise.resolve(fallback);
+    }
+    return connectExistingAlias(alias);
+  }
+
   function selectAlias(alias: string): void {
     setOrgAlias(alias);
   }
@@ -226,21 +259,26 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     orgStatus,
     orgPreflight,
     orgAliases,
+    orgSessionHistory,
     activeAlias,
     sessionStatus,
+    restoreAlias,
     aliasInventory,
+    recentSessionEvents: recentSessionEvents as OrgSessionAuditEntry[],
     selectedAlias,
     preflightIssues: preflightIssues as OrgPreflightIssue[],
     toolingReady,
     selectedAliasReady,
     loadAliases,
     checkSession,
+    loadSessionHistory,
     loadToolStatus,
     runPreflight,
     refreshOverview,
     connectExistingAlias,
     switchAlias,
     disconnect,
+    restoreLastSession,
     selectAlias,
     inspectAlias
   };

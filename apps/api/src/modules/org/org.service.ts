@@ -15,9 +15,11 @@ import type {
   OrgRetrieveResponse,
   OrgSessionAliasValidationResponse,
   OrgSessionAliasesResponse,
+  OrgSessionAuditEntry,
   OrgSessionDisconnectResponse,
   OrgSessionConnectRequest,
   OrgSessionConnectResponse,
+  OrgSessionHistoryResponse,
   OrgSessionStatusResponse,
   OrgSessionSwitchResponse,
   OrgStatusResponse,
@@ -203,6 +205,24 @@ export class OrgService {
       authMode,
       activeAlias,
       aliases: listResult.exitCode === 0 ? this.orgToolAdapter.parseAliasList(listResult.stdout) : []
+    };
+  }
+
+  sessionHistory(limit = 10): OrgSessionHistoryResponse {
+    const authMode = this.configService.sfAuthMode();
+    const session = this.sessionStatus();
+    const activeAlias = session.activeAlias || this.resolveActiveAlias();
+    const entries = this.readSessionAuditEntries(limit);
+    const restoreAlias =
+      session.status === 'disconnected'
+        ? activeAlias || entries.find((entry) => entry.action === 'connect' || entry.action === 'switch')?.alias
+        : undefined;
+
+    return {
+      authMode,
+      activeAlias,
+      restoreAlias: restoreAlias?.trim() || undefined,
+      entries
     };
   }
 
@@ -1035,6 +1055,49 @@ export class OrgService {
       })}\n`,
       'utf8'
     );
+  }
+
+  private readSessionAuditEntries(limit: number): OrgSessionAuditEntry[] {
+    const auditPath = this.runtimePaths.orgAuthAuditPath();
+    if (!fs.existsSync(auditPath)) {
+      return [];
+    }
+
+    const lines = fs
+      .readFileSync(auditPath, 'utf8')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    const entries: OrgSessionAuditEntry[] = [];
+    for (let index = lines.length - 1; index >= 0 && entries.length < limit; index -= 1) {
+      try {
+        const parsed = JSON.parse(lines[index]) as Partial<OrgSessionAuditEntry>;
+        if (
+          (parsed.action === 'connect' ||
+            parsed.action === 'switch' ||
+            parsed.action === 'disconnect' ||
+            parsed.action === 'switch_failed') &&
+          typeof parsed.alias === 'string' &&
+          parsed.alias.trim().length > 0 &&
+          typeof parsed.authMode === 'string' &&
+          typeof parsed.message === 'string' &&
+          typeof parsed.timestamp === 'string'
+        ) {
+          entries.push({
+            action: parsed.action,
+            alias: parsed.alias.trim(),
+            authMode: parsed.authMode as OrgAuthMode,
+            message: parsed.message,
+            timestamp: parsed.timestamp
+          });
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return entries;
   }
 
   private inferMetadataType(folderName: string, fileName: string): string {
