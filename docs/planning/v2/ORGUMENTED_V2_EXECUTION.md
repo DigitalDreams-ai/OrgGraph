@@ -30,6 +30,7 @@ Current concrete checkpoint:
 - packaged desktop already uses the direct engine boundary
 - browser-era route adapters are retired from the desktop runtime path
 - the selected high-risk change review packet now compiles through a typed Ask planner path
+- the selected review-query family now compiles through explicit change-action rules with stable compiler rule IDs instead of relying only on broad regex review signals
 - the desktop Ask workspace now renders the review packet as the primary artifact, including risk drivers, permission impact, automation impact, change impact, and next actions
 - desktop-managed API startup now bootstraps a deterministic fixture baseline when graph/evidence state is empty
 - packaged runtime now bundles the fixture baseline and seeds the user principal map used by the benchmark workflow
@@ -80,6 +81,7 @@ Current concrete checkpoint:
 ### Slice 2
 - strengthen planner/compiler depth beyond the regex-heavy baseline only where the selected workflow still needs it
 - do that through deterministic review-query compilation for the active high-risk change workflow, not a broad planner rewrite
+- equivalent approval/risk phrasings should compile to the same review workflow shape even though proof identity remains raw-query-bound
 
 ### Slice 3
 - keep runtime convergence green while human benchmark capture and planner depth work proceed
