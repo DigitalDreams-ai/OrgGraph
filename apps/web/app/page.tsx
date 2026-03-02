@@ -72,6 +72,7 @@ export default function Page(): JSX.Element {
   });
   const refreshWorkspace = useRefreshWorkspace({
     orgAlias: connectWorkspace.orgAlias,
+    retrieveHandoff: browserWorkspace.lastMetadataRetrieve,
     presentResponse: responseInspector.presentResponse,
     resolveErrorMessage: resolveQueryErrorMessage,
     setLoading: secondaryQueryRunner.setLoading,
@@ -272,6 +273,7 @@ export default function Page(): JSX.Element {
             <RefreshWorkspace
               activeAlias={connectWorkspace.activeAlias}
               selectedAlias={connectWorkspace.orgAlias}
+              retrieveHandoff={browserWorkspace.lastMetadataRetrieve}
               refreshMode={refreshWorkspace.refreshMode}
               setRefreshMode={refreshWorkspace.setRefreshMode}
               fromSnapshot={refreshWorkspace.fromSnapshot}

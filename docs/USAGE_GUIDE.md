@@ -149,7 +149,15 @@ Current retrieval handoff behavior:
 - selected types and members are removed from the cart directly in the workspace
 - the JSON cart payload remains available only as an advanced read-only preview
 - `Open Refresh & Build` moves directly from metadata selection into rebuild and drift review
+- `Refresh & Build` keeps the latest Browser retrieve visible as the current rebuild handoff instead of dropping that context at the tab switch
+- Browser retrieve `autoRefresh` now seeds the default rebuild intent inside `Refresh & Build`
+- `Refresh & Build` shows the staged workflow chain for:
+  - Browser retrieve
+  - Refresh
+  - Diff
+  - Org retrieve
 - `Refresh & Build` shows structured summaries for:
+  - latest browser handoff
   - latest refresh
   - latest drift diff
   - latest org-retrieve pipeline
