@@ -1,6 +1,6 @@
 param(
   [string]$RootName = "org",
-  [string]$BaseBranch = "main",
+  [string]$BaseBranch = "",
   [string]$ParentPath = "..",
   [switch]$Teardown
 )
@@ -9,6 +9,13 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $parent = Resolve-Path (Join-Path $repoRoot $ParentPath)
+
+if ([string]::IsNullOrWhiteSpace($BaseBranch)) {
+  $BaseBranch = (git -C $repoRoot branch --show-current).Trim()
+  if ([string]::IsNullOrWhiteSpace($BaseBranch)) {
+    throw "Could not determine current branch. Pass -BaseBranch explicitly."
+  }
+}
 
 $worktrees = @(
   @{ Name = "$RootName-coord"; Branch = $BaseBranch; Detached = $false },

@@ -39,6 +39,13 @@ From the repo root:
 scripts/setup-orgumented-multi-agent-worktrees.ps1
 ```
 
+By default, the script uses the repo's current checked-out branch as the base for all worktrees.
+Override it only when you intentionally want a different base:
+
+```powershell
+scripts/setup-orgumented-multi-agent-worktrees.ps1 -BaseBranch main
+```
+
 This creates:
 - `../org-coord`
 - `../org-pla`
