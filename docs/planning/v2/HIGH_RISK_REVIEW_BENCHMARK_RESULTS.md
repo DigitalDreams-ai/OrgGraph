@@ -61,9 +61,13 @@ What still needs improvement:
 Human capture path now available:
 - first establish a grounded packaged runtime with `pnpm desktop:smoke:release` or an already-open packaged desktop session
 - run `pnpm phase17:benchmark:human` after the benchmark workflow is exercised manually in the packaged desktop app
+- optionally run `pnpm phase17:benchmark:human:prepare` first to generate a fillable capture packet with proof/replay anchors and threshold reminders
 - the command emits:
   - `logs/high-risk-review-human-benchmark.json`
   - `logs/high-risk-review-human-benchmark.md`
+- the prepare step emits:
+  - `logs/high-risk-review-human-capture-template.json`
+  - `logs/high-risk-review-human-capture-template.md`
 - those artifacts record the operator timing, confidence, raw-JSON dependence, and threshold pass/fail state against the same proxy benchmark run
 
 ## Next Decision
