@@ -1,10 +1,14 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const apiUrl = process.env.API_URL ?? 'http://127.0.0.1:3100';
 const outPath = process.argv[2] ?? path.join(repoRoot, 'logs', 'high-risk-review-benchmark.json');
+const logsDir = path.join(repoRoot, 'logs');
+const runtimeStdoutLog = path.join(logsDir, 'phase17-benchmark-runtime.stdout.log');
+const runtimeStderrLog = path.join(logsDir, 'phase17-benchmark-runtime.stderr.log');
 const packagedExePath = path.join(
   repoRoot,
   'apps',
@@ -15,14 +19,28 @@ const packagedExePath = path.join(
   'orgumented-desktop.exe'
 );
 const shouldAutoLaunchPackaged =
-  process.env.ORGUMENTED_BENCHMARK_LAUNCH_PACKAGED !== '0';
+  process.env.ORGUMENTED_BENCHMARK_LAUNCH_PACKAGED === '1';
+const debugEnabled = process.env.ORGUMENTED_BENCHMARK_DEBUG === '1';
+const benchmarkHttpTimeoutMs = Math.max(
+  1000,
+  Number(process.env.ORGUMENTED_BENCHMARK_HTTP_TIMEOUT_MS ?? 5000)
+);
 
 const reviewQuery = 'Should we approve changing Opportunity.StageName for jane@example.com?';
 const baselineQuery = 'What touches Opportunity.StageName?';
+const execFileAsync = promisify(execFile);
+
+function debugLog(message) {
+  if (debugEnabled) {
+    console.error(`[phase17-benchmark] ${message}`);
+  }
+}
 
 async function isReady() {
   try {
-    const res = await fetch(`${apiUrl}/ready`);
+    const res = await fetch(`${apiUrl}/ready`, {
+      signal: AbortSignal.timeout(benchmarkHttpTimeoutMs)
+    });
     if (!res.ok) {
       return false;
     }
@@ -40,7 +58,9 @@ async function isReady() {
 
 async function isReachable() {
   try {
-    const res = await fetch(`${apiUrl}/health`);
+    const res = await fetch(`${apiUrl}/health`, {
+      signal: AbortSignal.timeout(benchmarkHttpTimeoutMs)
+    });
     return res.ok;
   } catch {
     return false;
@@ -53,6 +73,7 @@ function sleep(ms) {
 
 async function ensureReady(child) {
   if (await isReady()) {
+    debugLog('runtime already grounded');
     return;
   }
 
@@ -60,17 +81,30 @@ async function ensureReady(child) {
     throw new Error('Benchmark runtime launch must be initiated before ensureReady is called.');
   }
 
-  for (let i = 0; i < 45; i += 1) {
-    if (child?.exitCode !== null) {
-      throw new Error(`Packaged desktop benchmark runtime exited before readiness (code=${child.exitCode})`);
+  const attempts = Math.max(1, Number(process.env.ORGUMENTED_BENCHMARK_READY_ATTEMPTS ?? 45));
+  const delayMs = Math.max(1000, Number(process.env.ORGUMENTED_BENCHMARK_READY_DELAY_MS ?? 2000));
+  let processExitedBeforeReady = false;
+
+  for (let i = 0; i < attempts; i += 1) {
+    debugLog(`polling readiness attempt ${i + 1}/${attempts}`);
+    if (child && !(await isProcessRunning(child.pid))) {
+      processExitedBeforeReady = true;
+      debugLog(`packaged shell pid=${child.pid} exited before readiness; continuing to poll child runtime`);
     }
     if (await isReady()) {
+      if (processExitedBeforeReady) {
+        debugLog('runtime reached grounded ready state after shell process exit');
+      }
       return;
     }
-    await sleep(2000);
+    await sleep(delayMs);
   }
 
-  throw new Error(`API not ready at ${apiUrl}/ready after waiting for benchmark runtime`);
+  const stdoutTail = child ? await getLogTail(child.stdoutLogPath) : '<not-started>';
+  const stderrTail = child ? await getLogTail(child.stderrLogPath) : '<not-started>';
+  throw new Error(
+    `API not ready at ${apiUrl}/ready after waiting for benchmark runtime.\nSTDOUT:\n${stdoutTail}\nSTDERR:\n${stderrTail}`
+  );
 }
 
 async function fileExists(targetPath) {
@@ -82,18 +116,100 @@ async function fileExists(targetPath) {
   }
 }
 
-function startPackagedRuntime() {
-  const child = spawn(packagedExePath, {
-    cwd: path.dirname(packagedExePath),
-    stdio: 'ignore',
-    windowsHide: true
-  });
-  child.unref();
-  return child;
+function escapePowerShell(value) {
+  return value.replaceAll("'", "''");
+}
+
+async function runPowerShell(command) {
+  return execFileAsync(
+    'pwsh',
+    ['-NoProfile', '-Command', command],
+    { cwd: repoRoot, windowsHide: true, maxBuffer: 1024 * 1024 * 10 }
+  );
+}
+
+async function getLogTail(logPath, lineCount = 40) {
+  if (!(await fileExists(logPath))) {
+    return `<missing: ${path.relative(repoRoot, logPath).replaceAll('\\', '/')}>`;
+  }
+
+  const content = await fs.readFile(logPath, 'utf8');
+  const lines = content.trim().length > 0 ? content.trimEnd().split(/\r?\n/) : [];
+  if (lines.length === 0) {
+    return `<empty: ${path.relative(repoRoot, logPath).replaceAll('\\', '/')}>`;
+  }
+  return lines.slice(-lineCount).join('\n');
+}
+
+async function stopPackagedProcesses() {
+  const command = `
+$runtimeTargets = Get-Process -Name orgumented-desktop,node -ErrorAction SilentlyContinue |
+  Where-Object {
+    $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
+    $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\runtime*"
+  }
+$portTarget = Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue |
+  Select-Object -ExpandProperty OwningProcess -Unique
+$targetIds = @(
+  $runtimeTargets | Select-Object -ExpandProperty Id
+  $portTarget
+) | Where-Object { $null -ne $_ } | Sort-Object -Unique
+foreach ($targetId in $targetIds) {
+  Stop-Process -Id $targetId -Force -ErrorAction SilentlyContinue
+}
+`;
+  await runPowerShell(command);
+}
+
+async function startPackagedRuntime() {
+  await fs.mkdir(logsDir, { recursive: true });
+  await fs.rm(runtimeStdoutLog, { force: true });
+  await fs.rm(runtimeStderrLog, { force: true });
+
+  const command = `
+$process = Start-Process -FilePath '${escapePowerShell(packagedExePath)}' -WorkingDirectory '${escapePowerShell(path.dirname(packagedExePath))}' -RedirectStandardOutput '${escapePowerShell(runtimeStdoutLog)}' -RedirectStandardError '${escapePowerShell(runtimeStderrLog)}' -PassThru
+$process.Id
+`;
+  const { stdout } = await runPowerShell(command);
+  const pid = Number.parseInt(stdout.trim(), 10);
+  if (!Number.isInteger(pid)) {
+    throw new Error(`Unable to capture packaged runtime pid from PowerShell launch output: ${stdout}`);
+  }
+
+  debugLog(`started packaged runtime pid=${pid}`);
+  return {
+    pid,
+    stdoutLogPath: runtimeStdoutLog,
+    stderrLogPath: runtimeStderrLog
+  };
+}
+
+async function isProcessRunning(pid) {
+  const command = `
+$process = Get-Process -Id ${pid} -ErrorAction SilentlyContinue
+if ($null -eq $process) {
+  'missing'
+} else {
+  'running'
+}
+`;
+  const { stdout } = await runPowerShell(command);
+  return stdout.trim() === 'running';
+}
+
+async function stopPackagedRuntime(runtime) {
+  if (!runtime) {
+    return;
+  }
+  debugLog(`stopping packaged runtime pid=${runtime.pid}`);
+  await runPowerShell(`Stop-Process -Id ${runtime.pid} -Force -ErrorAction SilentlyContinue`);
+  await sleep(1000);
 }
 
 async function getJson(endpoint) {
-  const res = await fetch(`${apiUrl}${endpoint}`);
+  const res = await fetch(`${apiUrl}${endpoint}`, {
+    signal: AbortSignal.timeout(benchmarkHttpTimeoutMs)
+  });
   const body = await res.json();
   if (!res.ok) {
     throw new Error(`GET ${endpoint} failed (${res.status}): ${JSON.stringify(body)}`);
@@ -105,7 +221,8 @@ async function postJson(endpoint, payload) {
   const res = await fetch(`${apiUrl}${endpoint}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(benchmarkHttpTimeoutMs)
   });
   const body = await res.json();
   if (!res.ok) {
@@ -150,20 +267,32 @@ function summarizeAskResponse(body) {
 async function main() {
   let packagedRuntime = null;
   const ready = await isReady();
+  debugLog(`initial grounded readiness=${ready}`);
   if (!ready && shouldAutoLaunchPackaged && (await fileExists(packagedExePath))) {
     if (await isReachable()) {
       throw new Error(
         `Existing runtime is reachable at ${apiUrl} but not grounded. Stop the stale process or refresh it before benchmarking.`
       );
     }
+    debugLog('stopping stale packaged processes before benchmark launch');
+    await stopPackagedProcesses();
+    debugLog('launching packaged runtime for benchmark');
     packagedRuntime = startPackagedRuntime();
   }
 
-  await ensureReady(packagedRuntime);
+  if (!ready && !packagedRuntime) {
+    throw new Error(
+      `Benchmark requires an already grounded runtime at ${apiUrl}. Start the packaged desktop shell first, or set ORGUMENTED_BENCHMARK_LAUNCH_PACKAGED=1 for best-effort auto-launch.`
+    );
+  }
+
+  await ensureReady(await packagedRuntime);
+  debugLog('runtime grounded; starting benchmark sequence');
   await fs.mkdir(path.dirname(outPath), { recursive: true });
 
   try {
     const baselineSteps = [];
+    debugLog('running baseline ask');
     baselineSteps.push(
       await measure('ask-impact', () =>
         postJson('/ask', { query: baselineQuery, traceLevel: 'standard', consistencyCheck: true })
@@ -172,9 +301,11 @@ async function main() {
     baselineSteps.push(
       await measure('impact', () => getJson('/impact?field=Opportunity.StageName'))
     );
+    debugLog('running automation query');
     baselineSteps.push(
       await measure('automation', () => getJson('/automation?object=Opportunity'))
     );
+    debugLog('running permission query');
     baselineSteps.push(
       await measure('perms', () =>
         getJson('/perms?user=jane@example.com&object=Opportunity&field=Opportunity.StageName')
@@ -188,9 +319,11 @@ async function main() {
       await measure('proof-lookup', () => getJson(`/ask/proof/${encodeURIComponent(baselineProofId)}`))
     );
 
+    debugLog('running review ask');
     const reviewAsk = await measure('review-packet-ask', () =>
       postJson('/ask', { query: reviewQuery, traceLevel: 'standard', consistencyCheck: true })
     );
+    debugLog('running repeated review ask');
     const repeatReviewAsk = await measure('review-packet-ask-repeat', () =>
       postJson('/ask', { query: reviewQuery, traceLevel: 'standard', consistencyCheck: true })
     );
@@ -202,6 +335,7 @@ async function main() {
     const reviewProof = await measure('review-proof-lookup', () =>
       getJson(`/ask/proof/${encodeURIComponent(reviewProofId)}`)
     );
+    debugLog('running replay verification');
     const reviewReplay = await measure('review-replay', () =>
       postJson('/ask/replay', { replayToken: reviewReplayToken })
     );
@@ -277,11 +411,13 @@ async function main() {
     };
 
     await fs.writeFile(outPath, `${JSON.stringify(artifact, null, 2)}\n`, 'utf8');
+    debugLog(`wrote benchmark artifact to ${path.relative(repoRoot, outPath).replaceAll('\\', '/')}`);
     process.stdout.write(`${JSON.stringify(artifact, null, 2)}\n`);
   } finally {
-    if (packagedRuntime && packagedRuntime.exitCode === null) {
-      packagedRuntime.kill();
-      await sleep(1000);
+    if (packagedRuntime) {
+      await stopPackagedRuntime(await packagedRuntime);
+      debugLog('stopping any lingering packaged runtime processes');
+      await stopPackagedProcesses();
     }
   }
 }
