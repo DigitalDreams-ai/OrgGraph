@@ -64,6 +64,7 @@ Current concrete checkpoint:
 ### 4. Benchmark and lift discipline
 - benchmark scenarios must be explicit before larger strategic claims
 - measurable workflow lift must be captured on real Stage 1 scenarios
+- `HIGH_RISK_REVIEW_BENCHMARK.md` is the active benchmark for the selected review-packet slice
 
 ## Recommended Immediate Sequence
 

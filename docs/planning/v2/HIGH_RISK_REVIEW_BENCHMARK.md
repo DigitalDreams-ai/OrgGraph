@@ -1,0 +1,150 @@
+# High-Risk Review Benchmark
+
+Date: March 1, 2026
+
+## Purpose
+
+This benchmark exists to prove whether the high-risk change review packet actually creates Stage 1 operator lift.
+
+It measures one benchmark workflow:
+- high-risk field-change review for `Opportunity.StageName`
+
+It does not measure:
+- governance automation
+- approval-state persistence
+- policy engine expansion
+- broad UX polish
+
+## Benchmark Scenario
+
+Operator question:
+- "Should we approve changing `Opportunity.StageName` for `jane@example.com`?"
+
+Expected packet outcome:
+- one deterministic review packet
+- explicit risk level
+- explicit top risk drivers
+- permission impact summary
+- automation impact summary
+- change impact summary
+- proof and replay identifiers
+- explicit next actions
+
+## Comparison Paths
+
+### Baseline path
+
+This is the pre-packet review path that Orgumented should beat.
+
+Operator flow:
+1. run a generic Ask query
+2. inspect impact separately
+3. inspect automation separately
+4. inspect permissions separately
+5. open proof/history separately
+6. manually assemble a review recommendation
+
+Expected pain:
+- more evidence gathering steps
+- more workspace switching
+- more reliance on raw JSON or fragmented answers
+
+### Review-packet path
+
+This is the new benchmark path.
+
+Operator flow:
+1. run the typed high-risk review query
+2. read the review packet in Ask
+3. open proof only if deeper verification is needed
+
+Expected gain:
+- fewer manual evidence assembly steps
+- lower workspace/context switching
+- faster time-to-trusted-answer
+
+## Metrics
+
+Measure all of the following for both paths:
+
+1. time-to-trusted-answer
+2. manual evidence-gathering steps
+3. workspace/context switches
+4. raw JSON dependence
+5. operator confidence rating
+
+### Definitions
+
+`time-to-trusted-answer`
+- elapsed time from first query submission to the point where the operator can state an approval recommendation with proof and replay identifiers available
+
+`manual evidence-gathering steps`
+- count of explicit operator actions required to gather permissions, automation, impact, and proof context
+
+`workspace/context switches`
+- count of times the operator must leave the current review surface to gather the missing evidence needed for the recommendation
+
+`raw JSON dependence`
+- whether the operator must inspect raw payload JSON to complete the workflow
+
+`operator confidence rating`
+- subjective 1-5 confidence score after completing the workflow
+
+## Success Thresholds
+
+The review-packet path passes only if it achieves all of the following:
+
+- replay parity remains 100 percent
+- proof identity remains stable for repeated identical review asks
+- time-to-trusted-answer improves by at least 40 percent versus baseline
+- manual evidence-gathering steps are reduced by at least 2
+- workspace/context switches are reduced by at least 1
+- raw JSON dependence is eliminated
+- operator confidence is not worse than baseline
+
+## Capture Template
+
+Use one row per run.
+
+| Run Date | Path | Query | Time To Trusted Answer | Evidence Steps | Workspace Switches | Raw JSON Needed | Confidence 1-5 | Proof ID | Replay Token | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| YYYY-MM-DD | baseline | Should we approve changing Opportunity.StageName for jane@example.com? | | | | yes/no | | | | |
+| YYYY-MM-DD | review-packet | Should we approve changing Opportunity.StageName for jane@example.com? | | | | yes/no | | | | |
+
+## Evidence Artifacts
+
+Capture at minimum:
+- packaged desktop smoke proof for the branch head
+- one Ask proof artifact for the benchmark query
+- one replay verification result for the benchmark query
+- one notes block comparing baseline vs review-packet path
+
+Preferred artifact locations:
+- `logs/`
+- proof and replay artifacts retrieved through the desktop product
+
+## Stop Conditions
+
+Stop and fix before broadening scope if:
+- the packet still requires raw JSON inspection
+- repeated identical review asks drift in proof identity or replay token
+- the review packet does not beat baseline on at least two workflow-friction measures
+- the packet looks cleaner but does not reduce evidence assembly effort
+
+## Current Status
+
+Current branch status:
+- typed planner path exists
+- deterministic review packet exists
+- desktop Ask renders the packet as the primary artifact
+- replay parity protection is green
+- measurable lift has not yet been captured on a recorded benchmark run
+
+## Bottom Line
+
+This benchmark is the gate between:
+- "Orgumented can produce a better-looking review packet"
+
+and
+
+- "Orgumented materially improves one real Stage 1 architecture-review workflow"
