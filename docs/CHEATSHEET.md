@@ -153,7 +153,7 @@ pnpm --filter @orgumented/project-memory-mcp test
 - `Org Browser`: searchable metadata tree, retrieval cart summary, and selected-retrieve handoff
 - `Refresh & Build`: retrieval, refresh, drift, and rebuild summaries
 - `Explain & Analyze`: permissions, automation, and impact workflows
-- `Proofs & History`: recent proof selection, proof lookup, replay parity, and trust history summaries
+- `Proofs & History`: labeled recent-proof history, one-click proof open/replay, trust history summaries, and advanced token fallback only when needed
 - `Settings & Diagnostics`: runtime status, logs, and meta-context controls
 
 ## Fast Fixes

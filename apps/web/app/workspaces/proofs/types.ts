@@ -7,6 +7,8 @@ export interface RecentProofItem {
   snapshotId: string;
   trustLevel: string;
   query: string;
+  label: string;
+  subtitle: string;
 }
 
 export interface ProofArtifactView {

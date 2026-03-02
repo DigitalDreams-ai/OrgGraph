@@ -41,13 +41,24 @@ function parseRecentProofs(response: QueryResponse): RecentProofItem[] {
       }
 
       const item = proof as Record<string, unknown>;
+      const proofId = String(item.proofId ?? '');
+      const replayToken = String(item.replayToken ?? '');
+      const generatedAt = String(item.generatedAt ?? '');
+      const snapshotId = String(item.snapshotId ?? '');
+      const trustLevel = String(item.trustLevel ?? 'unknown');
+      const query = String(item.query ?? '');
+      const label = query || `Proof ${proofId.slice(0, 12) || 'unknown'}`;
+      const subtitleParts = [`Trust ${trustLevel}`, snapshotId || 'snapshot n/a', generatedAt || 'generated n/a'];
+
       return {
-        proofId: String(item.proofId ?? ''),
-        replayToken: String(item.replayToken ?? ''),
-        generatedAt: String(item.generatedAt ?? ''),
-        snapshotId: String(item.snapshotId ?? ''),
-        trustLevel: String(item.trustLevel ?? 'unknown'),
-        query: String(item.query ?? '')
+        proofId,
+        replayToken,
+        generatedAt,
+        snapshotId,
+        trustLevel,
+        query,
+        label,
+        subtitle: subtitleParts.join(' • ')
       };
     })
     .filter((proof): proof is RecentProofItem => Boolean(proof?.proofId));
@@ -185,6 +196,35 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     setReplayToken(proof.replayToken);
   }
 
+  async function replayRecentProof(proof: RecentProofItem): Promise<void> {
+    useRecentProof(proof);
+    options.setLoading(true);
+    options.setCopied(false);
+    options.setErrorText('');
+
+    try {
+      const result = await replayAskProof({
+        replayToken: proof.replayToken,
+        proofId: proof.proofId
+      });
+      options.presentResponse(result);
+      if (result.ok === false) {
+        options.setErrorText(options.resolveErrorMessage(result));
+        setReplayResult(null);
+      } else {
+        setReplayResult(parseReplayResult(result));
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected replay failure';
+      const fallback: QueryResponse = { ok: false, error: { message } };
+      options.presentResponse(fallback);
+      options.setErrorText('Replay failed. Check API readiness and local runtime health.');
+      setReplayResult(null);
+    } finally {
+      options.setLoading(false);
+    }
+  }
+
   function syncFromAsk(nextProofId?: string, nextReplayToken?: string): void {
     if (nextProofId) {
       setProofId(nextProofId);
@@ -306,16 +346,20 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     }
   }
 
+  const selectedRecentProof = recentProofs.find((proof) => proof.proofId === proofId) ?? null;
+
   return {
     proofId,
     setProofId,
     replayToken,
     setReplayToken,
     recentProofs,
+    selectedRecentProof,
     selectedProof,
     replayResult,
     metricsExport,
     useRecentProof,
+    replayRecentProof,
     syncFromAsk,
     runProofsRecent,
     runProofLookup,

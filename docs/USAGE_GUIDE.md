@@ -121,14 +121,15 @@ Current Ask-first behavior:
 - the default answer shape is a decision packet, not a raw endpoint payload
 
 Current `Proofs & History` behavior:
-- recent proof history is listed directly in the workspace
-- selecting a recent proof fills `proofId` and `replayToken` for reuse
+- recent proof history loads directly in the workspace as labeled decision entries
+- opening a history entry makes that labeled artifact the active proof context
 - proof lookup shows structured artifact details instead of requiring raw JSON inspection
 - replay shows parity status for:
   - `matched`
   - `corePayloadMatched`
   - `metricsMatched`
 - metrics export shows summary counts by snapshot and provider
+- raw `proofId` and `replayToken` fields remain available only as an advanced fallback for debugging
 
 Current `Org Sessions` behavior:
 - `Refresh Overview` re-syncs tool status, session state, alias inventory, and preflight in one pass

@@ -13,6 +13,7 @@ interface ProofsWorkspaceProps {
   replayToken: string;
   setReplayToken: (value: string) => void;
   recentProofs: RecentProofItem[];
+  selectedRecentProof: RecentProofItem | null;
   selectedProof: ProofArtifactView | null;
   replayResult: ReplayResultView | null;
   metricsExport: MetricsExportView | null;
@@ -22,6 +23,7 @@ interface ProofsWorkspaceProps {
   onReplay: () => void;
   onExportMetrics: () => void;
   onUseRecentProof: (proof: RecentProofItem) => void;
+  onReplayRecentProof: (proof: RecentProofItem) => void;
 }
 
 export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
@@ -29,54 +31,72 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
     <>
       <h2>Proofs &amp; History</h2>
       <p className="section-lead">
-        Inspect deterministic proof artifacts, replay parity, and trust history without treating raw tokens as the primary workflow.
+        Inspect deterministic proof artifacts, replay parity, and trust history through labeled decision history instead of leading with opaque tokens.
       </p>
 
-      <div className="field-grid">
-        <div>
-          <label htmlFor="proofId">Proof ID</label>
-          <input id="proofId" value={props.proofId} onChange={(e) => props.setProofId(e.target.value)} />
-        </div>
-        <div>
-          <label htmlFor="replayToken">Replay Token</label>
-          <input id="replayToken" value={props.replayToken} onChange={(e) => props.setReplayToken(e.target.value)} />
-        </div>
-      </div>
-
       <div className="action-row">
-        <button type="button" onClick={props.onListRecent} disabled={props.loading}>List Recent Proofs</button>
-        <button type="button" onClick={props.onGetProof} disabled={props.loading || !props.proofId.trim()}>Get Proof</button>
+        <button type="button" onClick={props.onListRecent} disabled={props.loading}>Refresh History</button>
+        <button type="button" onClick={props.onGetProof} disabled={props.loading || !props.proofId.trim()}>Open Selected Proof</button>
         <button
           type="button"
           onClick={props.onReplay}
           disabled={props.loading || (!props.proofId.trim() && !props.replayToken.trim())}
         >
-          Replay Proof
+          Replay Selected Proof
         </button>
         <button type="button" onClick={props.onExportMetrics} disabled={props.loading}>Export Metrics</button>
       </div>
 
+      <article className="sub-card">
+        <p className="panel-caption">Current selection</p>
+        <h3>Operator-facing history label</h3>
+        {props.selectedRecentProof || props.selectedProof ? (
+          <>
+            <p>
+              <strong>{props.selectedRecentProof?.label || props.selectedProof?.query || `Proof ${props.proofId.slice(0, 12)}`}</strong>
+            </p>
+            <p className="muted">
+              {props.selectedRecentProof?.subtitle || `Trust ${props.selectedProof?.trustLevel || 'unknown'} • ${props.selectedProof?.snapshotId || 'snapshot n/a'}`}
+            </p>
+            <div className="decision-meta">
+              <span className="decision-badge muted">Proof: {props.proofId || 'n/a'}</span>
+              <span className="decision-badge muted">Replay: {props.replayToken || 'n/a'}</span>
+            </div>
+          </>
+        ) : (
+          <p className="muted">Select a recent decision artifact to inspect proof, replay parity, or trust history.</p>
+        )}
+      </article>
+
       <div className="proofs-grid">
         <article className="sub-card">
-          <p className="panel-caption">Recent proofs</p>
+          <p className="panel-caption">History labels</p>
           <h3>Latest decision artifacts</h3>
           {props.recentProofs.length > 0 ? (
             <ul className="proof-list">
               {props.recentProofs.slice(0, 5).map((proof) => (
-                <li key={proof.proofId} className="proof-list-item">
+                <li
+                  key={proof.proofId}
+                  className={`proof-list-item ${props.proofId === proof.proofId ? 'active' : ''}`.trim()}
+                >
                   <div>
-                    <strong>{proof.query || proof.proofId}</strong>
+                    <strong>{proof.label}</strong>
+                    <p>{proof.subtitle}</p>
                     <p><strong>Trust:</strong> {proof.trustLevel} <strong>Snapshot:</strong> {proof.snapshotId}</p>
-                    <p><strong>Generated:</strong> {proof.generatedAt || 'n/a'}</p>
                   </div>
-                  <button type="button" className="ghost" onClick={() => props.onUseRecentProof(proof)}>
-                    Use
-                  </button>
+                  <div className="proof-list-actions">
+                    <button type="button" className="ghost" onClick={() => props.onUseRecentProof(proof)}>
+                      Open
+                    </button>
+                    <button type="button" className="ghost" onClick={() => props.onReplayRecentProof(proof)}>
+                      Replay
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="muted">Run “List Recent Proofs” to inspect recent decision artifacts.</p>
+            <p className="muted">Open this workspace to load recent decision history automatically, or use “Refresh History” if the runtime changed.</p>
           )}
         </article>
 
@@ -163,6 +183,21 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
           )}
         </article>
       </div>
+
+      <details>
+        <summary>Advanced token lookup</summary>
+        <p className="muted">Keep raw proof identifiers available for debugging and parity checks, but do not treat them as the primary workflow.</p>
+        <div className="field-grid">
+          <div>
+            <label htmlFor="proofId">Proof ID</label>
+            <input id="proofId" value={props.proofId} onChange={(e) => props.setProofId(e.target.value)} />
+          </div>
+          <div>
+            <label htmlFor="replayToken">Replay Token</label>
+            <input id="replayToken" value={props.replayToken} onChange={(e) => props.setReplayToken(e.target.value)} />
+          </div>
+        </div>
+      </details>
     </>
   );
 }

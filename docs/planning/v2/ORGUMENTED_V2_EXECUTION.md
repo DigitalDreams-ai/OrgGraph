@@ -32,6 +32,7 @@ Current concrete checkpoint:
 - the selected high-risk change review packet now compiles through a typed Ask planner path
 - the selected review-query family now compiles through explicit change-action rules with stable compiler rule IDs instead of relying only on broad regex review signals
 - the desktop Ask workspace now renders the review packet as the primary artifact, including risk drivers, permission impact, automation impact, change impact, and next actions
+- the Proofs and History workspace now reopens recent decision artifacts through labeled history entries before exposing raw proof tokens
 - desktop-managed API startup now bootstraps a deterministic fixture baseline when graph/evidence state is empty
 - packaged runtime now bundles the fixture baseline and seeds the user principal map used by the benchmark workflow
 - `/ready` now fails closed until the runtime has grounded graph and evidence state
@@ -96,8 +97,8 @@ Active branch:
 
 Immediate execution pressure:
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
-- keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
 - remove token-first proof/history interaction from the desktop workflow for the selected review packet
+- keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
 - preserve runtime convergence and packaged desktop parity while labeled-history access is improved
 - keep the review packet usable as the primary artifact without raw JSON dependence
 - avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
