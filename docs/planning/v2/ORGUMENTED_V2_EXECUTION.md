@@ -33,6 +33,7 @@ Current concrete checkpoint:
 - the selected review-query family now compiles through explicit change-action rules with stable compiler rule IDs instead of relying only on broad regex review signals
 - the desktop Ask workspace now renders the review packet as the primary artifact, including risk drivers, permission impact, automation impact, change impact, and next actions
 - the Explain and Analyze workspace now renders structured operator summaries for permissions, user-map diagnosis, automation, impact, and system-permission flows instead of depending on raw JSON inspection
+- the Settings and Diagnostics workspace now renders runtime health, org tooling/session state, meta-context weights, and meta-adapt before/after summaries instead of acting as a button-only debug surface
 - the Proofs and History workspace now reopens recent decision artifacts through labeled history entries before exposing raw proof tokens
 - desktop-managed API startup now bootstraps a deterministic fixture baseline when graph/evidence state is empty
 - packaged runtime now bundles the fixture baseline and seeds the user principal map used by the benchmark workflow
@@ -76,13 +77,13 @@ Current concrete checkpoint:
 ## Recommended Immediate Sequence
 
 ### Slice 1
-- make Settings and Diagnostics a structured desktop workflow instead of a button-only debug surface
-- surface org status, tool health, meta-context state, and meta-adapt results as operator-readable summaries
-- keep runtime and semantic logic in the engine while preserving the direct desktop boundary
+- preserve the new structured Settings and Diagnostics workflow as the primary operator path for runtime and semantic diagnostics
+- keep org status, meta context, and meta adapt readable without regressing direct engine semantics
+- protect the desktop boundary so diagnostic presentation does not alter runtime behavior
 
 ### Slice 2
 - preserve the new structured Analyze workflow as the primary operator path
-- keep deterministic replay and proof lookup stable while diagnostics and benchmark evidence harden
+- keep deterministic replay and proof lookup stable while diagnostics, sessions, and benchmark evidence harden
 
 ### Slice 3
 - capture human benchmark evidence for the same workflow now that the packaged runtime clears the policy envelope
@@ -99,10 +100,10 @@ Active branch:
 
 Immediate execution pressure:
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
-- turn Settings and Diagnostics into a readable operator workspace for runtime/tool health instead of a raw response launcher
+- preserve the new System workspace as the readable operator surface for runtime/tool health
 - keep org status, meta context, and meta adapt readable without pushing policy or runtime logic into the UI
 - keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
-- preserve runtime convergence and packaged desktop parity while diagnostics are improved
+- preserve runtime convergence and packaged desktop parity while sessions and diagnostics are improved
 - keep the review packet usable as the primary artifact without raw JSON dependence
 - avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
 

@@ -157,6 +157,21 @@ Current `Explain & Analyze` behavior:
 - `System Permission` shows grant verdict, mapping status, and grant paths without requiring raw JSON inspection
 - the `Raw JSON Inspector` remains available only as a secondary debugging surface
 
+Current `Settings & Diagnostics` behavior:
+- runtime health and readiness appear as structured workspace summaries
+- org tooling status shows:
+  - integration enabled
+  - auth mode
+  - `sf` installation
+  - `cci` installation
+  - current alias/session state
+- `Meta Context` shows:
+  - relation multipliers
+  - metrics sample size
+  - trusted/refused intent breakdown
+- `Meta Adapt` shows the latest run as a before/after summary with context and audit artifact paths
+- the `Raw JSON Inspector` remains available only as a secondary debugging surface
+
 ## 6. Connect a Sandbox Org
 Auth is delegated to Salesforce CLI keychain sessions.
 
