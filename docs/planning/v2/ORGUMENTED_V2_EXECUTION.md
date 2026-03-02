@@ -78,9 +78,9 @@ Current concrete checkpoint:
 ## Recommended Immediate Sequence
 
 ### Slice 1
-- make Org Sessions product-grade for attach, switch, disconnect, and restore
-- surface recent auth/session history without moving policy or runtime logic into the UI
-- keep session restore readable and explicit for the desktop operator path
+- make Org Browser product-grade for org-wide selective retrieve
+- keep selective retrieve readable and structured without depending on raw JSON editing
+- preserve the existing direct engine boundary while improving the desktop operator flow
 
 ### Slice 2
 - preserve the new structured Settings and Diagnostics workflow as the primary operator path for runtime and semantic diagnostics
@@ -102,15 +102,15 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-org-session-history`
+- `dna-org-browser-selective-retrieve`
 
 Immediate execution pressure:
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
-- turn Org Sessions into a clearer operator workflow for attach, switch, disconnect, and restore
-- surface recent auth/session history without inventing hidden fallback behavior
-- keep session restore and alias readiness readable without pushing policy or runtime logic into the UI
+- turn Org Browser into a clearer operator workflow for org-wide selective retrieve
+- remove dependence on raw JSON editing for the common retrieve path
+- keep metadata selection, retrieve handoff, and alias readiness readable without pushing policy or runtime logic into the UI
 - keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
-- preserve runtime convergence and packaged desktop parity while sessions and diagnostics are improved
+- preserve runtime convergence and packaged desktop parity while browser and diagnostics workflows are improved
 - keep the review packet usable as the primary artifact without raw JSON dependence
 - avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
 
