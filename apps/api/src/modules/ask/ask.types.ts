@@ -1,4 +1,4 @@
-import type { AskPlan } from '../planner/planner.types';
+import type { AskPlan, AskReviewFocus } from '../planner/planner.types';
 import type { LlmProviderName } from '../llm/llm.types';
 import type { CompositionOperator, DerivationRelation } from '@orgumented/ontology';
 
@@ -92,10 +92,43 @@ export interface AskProofArtifact {
   };
 }
 
+export interface AskDecisionPacket {
+  kind: 'high_risk_change_review';
+  focus: AskReviewFocus;
+  targetLabel: string;
+  targetType: 'field' | 'object';
+  summary: string;
+  riskLevel: 'low' | 'medium' | 'high';
+  topRiskDrivers: string[];
+  permissionImpact: {
+    user: string;
+    summary: string;
+    granted: boolean;
+    pathCount: number;
+    principalCount: number;
+    warnings: string[];
+  };
+  automationImpact: {
+    summary: string;
+    automationCount: number;
+    topAutomationNames: string[];
+  };
+  changeImpact: {
+    summary: string;
+    impactPathCount: number;
+    topImpactedSources: string[];
+  };
+  nextActions: Array<{
+    label: string;
+    rationale: string;
+  }>;
+}
+
 export interface AskResponse {
   answer: string;
   deterministicAnswer: string;
   plan: AskPlan;
+  decisionPacket?: AskDecisionPacket;
   citations: AskCitation[];
   confidence: number;
   mode: 'deterministic' | 'llm_assist';

@@ -1,4 +1,13 @@
-export type AskIntent = 'perms' | 'automation' | 'impact' | 'mixed' | 'unknown';
+export type AskIntent = 'perms' | 'automation' | 'impact' | 'mixed' | 'review' | 'unknown';
+
+export type AskReviewFocus = 'risk' | 'breakage' | 'approval';
+
+export interface AskReviewWorkflow {
+  kind: 'high_risk_change_review';
+  focus: AskReviewFocus;
+  targetType: 'field' | 'object';
+  targetLabel: string;
+}
 
 export interface AskPlan {
   intent: AskIntent;
@@ -11,4 +20,5 @@ export interface AskPlan {
   };
   graphCalls: string[];
   evidenceCalls: string[];
+  reviewWorkflow?: AskReviewWorkflow;
 }

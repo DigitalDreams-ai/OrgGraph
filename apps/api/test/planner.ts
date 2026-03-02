@@ -49,6 +49,25 @@ function run(): void {
   assert.equal(normalizedImpactPlan.intent, 'impact');
   assert.ok(normalizedImpactPlan.rewriteRules?.includes('impact_what_changes_if'));
 
+  const reviewRiskPlan = planner.plan('What is the real risk of changing Opportunity.StageName?');
+  assert.equal(reviewRiskPlan.intent, 'review');
+  assert.equal(reviewRiskPlan.reviewWorkflow?.kind, 'high_risk_change_review');
+  assert.equal(reviewRiskPlan.reviewWorkflow?.focus, 'risk');
+  assert.equal(reviewRiskPlan.reviewWorkflow?.targetType, 'field');
+  assert.equal(reviewRiskPlan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
+  assert.deepEqual(reviewRiskPlan.graphCalls, ['queries.perms', 'analysis.automation', 'analysis.impact']);
+
+  const reviewApprovalPlan = planner.plan(
+    'Should we approve changing Opportunity.StageName for jane@example.com?'
+  );
+  assert.equal(reviewApprovalPlan.intent, 'review');
+  assert.equal(reviewApprovalPlan.entities.user, 'jane@example.com');
+  assert.equal(reviewApprovalPlan.reviewWorkflow?.focus, 'approval');
+
+  const reviewBreakagePlan = planner.plan('What breaks if we change Opportunity.StageName?');
+  assert.equal(reviewBreakagePlan.intent, 'review');
+  assert.equal(reviewBreakagePlan.reviewWorkflow?.focus, 'breakage');
+
   const unknownPlan = planner.plan('hello world');
   assert.equal(unknownPlan.intent, 'unknown');
 

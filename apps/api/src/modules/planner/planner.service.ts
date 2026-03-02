@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { AskPlan, AskIntent } from './planner.types';
+import type { AskPlan, AskIntent, AskReviewWorkflow } from './planner.types';
 
 @Injectable()
 export class PlannerService {
@@ -11,25 +11,32 @@ export class PlannerService {
     const user = this.extractUser(normalized);
     const field = this.extractField(normalized);
     const object = this.extractObject(normalized, field) ?? this.extractObject(normalizedQuery, field);
+    const reviewWorkflow = this.compileReviewWorkflow(normalizedQuery, object, field);
 
     const hasPerms = /(perm|permission|edit|access|who can edit|who has access|can\s+i)/i.test(lower);
     const hasAutomation = /(automation|trigger|flow|runs\s+on|what\s+runs|which\s+flows|which\s+triggers)/i.test(lower);
     const hasImpact = /(impact|break|touches|what\s+touches|blast radius|what changes if)/i.test(lower);
 
     let intent: AskIntent = 'unknown';
-    const activeCount = [hasPerms, hasAutomation, hasImpact].filter(Boolean).length;
-    if (activeCount > 1) {
-      intent = 'mixed';
-    } else if (hasPerms) {
-      intent = 'perms';
-    } else if (hasAutomation) {
-      intent = 'automation';
-    } else if (hasImpact) {
-      intent = 'impact';
+    if (reviewWorkflow) {
+      intent = 'review';
+    } else {
+      const activeCount = [hasPerms, hasAutomation, hasImpact].filter(Boolean).length;
+      if (activeCount > 1) {
+        intent = 'mixed';
+      } else if (hasPerms) {
+        intent = 'perms';
+      } else if (hasAutomation) {
+        intent = 'automation';
+      } else if (hasImpact) {
+        intent = 'impact';
+      }
     }
 
     const graphCalls: string[] = [];
-    if (intent === 'perms' || intent === 'mixed') {
+    if (intent === 'review') {
+      graphCalls.push('queries.perms', 'analysis.automation', 'analysis.impact');
+    } else if (intent === 'perms' || intent === 'mixed') {
       graphCalls.push('queries.perms');
     }
     if (intent === 'automation' || intent === 'mixed') {
@@ -45,7 +52,8 @@ export class PlannerService {
       rewriteRules,
       entities: { user, object, field },
       graphCalls,
-      evidenceCalls: ['evidence.search']
+      evidenceCalls: ['evidence.search'],
+      reviewWorkflow
     };
   }
 
@@ -132,5 +140,39 @@ export class PlannerService {
   ): boolean {
     const tokenEnd = tokenStart + tokenLength;
     return ranges.some((range) => tokenStart < range.end && tokenEnd > range.start);
+  }
+
+  private compileReviewWorkflow(
+    normalizedQuery: string,
+    object?: string,
+    field?: string
+  ): AskReviewWorkflow | undefined {
+    const targetLabel = field ?? object;
+    if (!targetLabel) {
+      return undefined;
+    }
+
+    const reviewSignals = [
+      /\b(real risk|risk of changing|high[- ]risk|approve(?:\s+this)?\s+change|should\s+we\s+approve)\b/,
+      /\bwhat breaks(?:\s+if\s+we\s+change)?\b/,
+      /\breview\b/
+    ];
+    if (!reviewSignals.some((pattern) => pattern.test(normalizedQuery))) {
+      return undefined;
+    }
+
+    let focus: AskReviewWorkflow['focus'] = 'risk';
+    if (/\bapprove(?:\s+this)?\s+change\b|\bshould\s+we\s+approve\b/.test(normalizedQuery)) {
+      focus = 'approval';
+    } else if (/\bwhat breaks(?:\s+if\s+we\s+change)?\b|\bbreakage\b/.test(normalizedQuery)) {
+      focus = 'breakage';
+    }
+
+    return {
+      kind: 'high_risk_change_review',
+      focus,
+      targetType: field ? 'field' : 'object',
+      targetLabel
+    };
   }
 }

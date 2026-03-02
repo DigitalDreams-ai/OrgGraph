@@ -757,6 +757,93 @@ async function run(): Promise<void> {
     assert.match(askMixed.answer, /Release-risk \+ permission-impact:/);
     assert.ok(['trusted', 'conditional'].includes(askMixed.trustLevel));
 
+    const askReviewRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Should we approve changing Opportunity.StageName for jane@example.com?'
+      })
+    });
+    assert.equal(askReviewRes.status, 201, 'ask review should return 201');
+    const askReview = (await askReviewRes.json()) as {
+      plan: {
+        intent: string;
+        reviewWorkflow?: { kind: string; focus: string; targetLabel: string };
+      };
+      trustLevel: string;
+      proof: { proofId: string; replayToken: string };
+      decisionPacket?: {
+        kind: string;
+        focus: string;
+        targetLabel: string;
+        riskLevel: string;
+        summary: string;
+        topRiskDrivers: string[];
+        permissionImpact: { user: string; summary: string; pathCount: number };
+        automationImpact: { summary: string; automationCount: number };
+        changeImpact: { summary: string; impactPathCount: number };
+        nextActions: Array<{ label: string; rationale: string }>;
+      };
+    };
+    assert.equal(askReview.plan.intent, 'review');
+    assert.equal(askReview.plan.reviewWorkflow?.kind, 'high_risk_change_review');
+    assert.equal(askReview.plan.reviewWorkflow?.focus, 'approval');
+    assert.equal(askReview.plan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
+    assert.ok(['trusted', 'conditional'].includes(askReview.trustLevel));
+    assert.equal(askReview.decisionPacket?.kind, 'high_risk_change_review');
+    assert.equal(askReview.decisionPacket?.focus, 'approval');
+    assert.equal(askReview.decisionPacket?.targetLabel, 'Opportunity.StageName');
+    assert.ok(['low', 'medium', 'high'].includes(String(askReview.decisionPacket?.riskLevel)));
+    assert.match(String(askReview.decisionPacket?.summary ?? ''), /High-risk change review/i);
+    assert.ok((askReview.decisionPacket?.topRiskDrivers.length ?? 0) >= 3);
+    assert.equal(askReview.decisionPacket?.permissionImpact.user, 'jane@example.com');
+    assert.equal(typeof askReview.decisionPacket?.permissionImpact.pathCount, 'number');
+    assert.equal(typeof askReview.decisionPacket?.automationImpact.automationCount, 'number');
+    assert.equal(typeof askReview.decisionPacket?.changeImpact.impactPathCount, 'number');
+    assert.ok((askReview.decisionPacket?.nextActions.length ?? 0) >= 3);
+
+    const askReviewRepeatRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Should we approve changing Opportunity.StageName for jane@example.com?'
+      })
+    });
+    assert.equal(askReviewRepeatRes.status, 201, 'repeated ask review should return 201');
+    const askReviewRepeat = (await askReviewRepeatRes.json()) as {
+      proof: { proofId: string; replayToken: string };
+      decisionPacket?: {
+        summary: string;
+        riskLevel: string;
+        topRiskDrivers: string[];
+      };
+    };
+    assert.equal(askReviewRepeat.proof.proofId, askReview.proof.proofId);
+    assert.equal(askReviewRepeat.proof.replayToken, askReview.proof.replayToken);
+    assert.equal(askReviewRepeat.decisionPacket?.summary, askReview.decisionPacket?.summary);
+    assert.equal(askReviewRepeat.decisionPacket?.riskLevel, askReview.decisionPacket?.riskLevel);
+    assert.deepEqual(
+      askReviewRepeat.decisionPacket?.topRiskDrivers,
+      askReview.decisionPacket?.topRiskDrivers
+    );
+
+    const askReviewReplayRes = await fetch(`${base}/ask/replay`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ replayToken: askReview.proof.replayToken })
+    });
+    assert.equal(askReviewReplayRes.status, 201, 'ask review replay should return 201');
+    const askReviewReplay = (await askReviewReplayRes.json()) as {
+      matched: boolean;
+      corePayloadMatched: boolean;
+      replayToken: string;
+      proofId: string;
+    };
+    assert.equal(askReviewReplay.matched, true);
+    assert.equal(askReviewReplay.corePayloadMatched, true);
+    assert.equal(askReviewReplay.replayToken, askReview.proof.replayToken);
+    assert.equal(askReviewReplay.proofId, askReview.proof.proofId);
+
     const architectureDecisionRes = await fetch(`${base}/ask/architecture`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
