@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { QueryResponse } from '../../lib/ask-client';
 import {
   getOrgMetadataCatalog,
@@ -37,19 +37,6 @@ function sanitizeSelections(input: MetadataSelection[]): MetadataSelection[] {
         ? entry.members.map((member) => member.trim()).filter((member) => member.length > 0)
         : undefined
     }));
-}
-
-function parseSelections(raw: string, fallback: MetadataSelection[]): MetadataSelection[] {
-  try {
-    const parsed = JSON.parse(raw) as MetadataSelection[];
-    if (Array.isArray(parsed)) {
-      return sanitizeSelections(parsed);
-    }
-  } catch {
-    // fall through to fallback
-  }
-
-  return sanitizeSelections(fallback);
 }
 
 function buildSelectionSummary(selections: MetadataSelection[]): MetadataSelectionSummary {
@@ -97,20 +84,13 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const [metadataMembersByType, setMetadataMembersByType] = useState<Record<string, MetadataMembersPayload>>({});
   const [metadataLoadingType, setMetadataLoadingType] = useState('');
   const [metadataSelected, setMetadataSelected] = useState<MetadataSelection[]>([]);
-  const [metadataSelectionsRaw, setMetadataSelectionsRaw] = useState('[]');
   const [lastMetadataRetrieve, setLastMetadataRetrieve] = useState<MetadataRetrieveResultView | null>(null);
 
-  useEffect(() => {
-    setMetadataSelectionsRaw(JSON.stringify(metadataSelected, null, 2));
-  }, [metadataSelected]);
-
-  const resolvedSelections = useMemo(
-    () => parseSelections(metadataSelectionsRaw, metadataSelected),
-    [metadataSelectionsRaw, metadataSelected]
-  );
-  const selectionSummary = useMemo(
-    () => buildSelectionSummary(resolvedSelections),
-    [resolvedSelections]
+  const metadataSelectionsPreview = useMemo(() => JSON.stringify(metadataSelected, null, 2), [metadataSelected]);
+  const selectionSummary = useMemo(() => buildSelectionSummary(metadataSelected), [metadataSelected]);
+  const visibleCatalogTypes = useMemo(
+    () => (metadataCatalog?.types ?? []).map((entry) => entry.type),
+    [metadataCatalog]
   );
 
   function clearFilters(): void {
@@ -150,13 +130,48 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   }
 
   function isTypeSelected(type: string): boolean {
-    return resolvedSelections.some((entry) => entry.type === type);
+    return metadataSelected.some((entry) => entry.type === type);
   }
 
   function isMemberSelected(type: string, member: string): boolean {
-    const typeEntry = resolvedSelections.find((entry) => entry.type === type);
+    const typeEntry = metadataSelected.find((entry) => entry.type === type);
     if (!typeEntry || !Array.isArray(typeEntry.members)) return false;
     return typeEntry.members.includes(member);
+  }
+
+  function addVisibleTypesToSelection(): void {
+    setMetadataSelected((current) => {
+      const knownTypes = new Set(current.map((entry) => entry.type));
+      const additions = visibleCatalogTypes
+        .filter((type) => !knownTypes.has(type))
+        .map((type) => ({ type }));
+      return additions.length > 0 ? [...current, ...additions] : current;
+    });
+  }
+
+  function clearSelections(): void {
+    setMetadataSelected([]);
+  }
+
+  function removeTypeSelection(type: string): void {
+    setMetadataSelected((current) => current.filter((entry) => entry.type !== type));
+  }
+
+  function removeMemberSelection(type: string, member: string): void {
+    setMetadataSelected((current) =>
+      current.flatMap((entry) => {
+        if (entry.type !== type) {
+          return [entry];
+        }
+
+        const remainingMembers = (entry.members ?? []).filter((value) => value !== member);
+        if (remainingMembers.length === 0) {
+          return [];
+        }
+
+        return [{ type, members: remainingMembers }];
+      })
+    );
   }
 
   async function refreshTypes(): Promise<void> {
@@ -230,7 +245,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
 
     try {
       const result = await retrieveOrgMetadata({
-        selections: resolvedSelections,
+        selections: metadataSelected,
         autoRefresh: metadataAutoRefresh
       });
       options.presentResponse(result);
@@ -264,16 +279,20 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     metadataCatalog,
     metadataMembersByType,
     metadataLoadingType,
-    metadataSelectionsRaw,
-    setMetadataSelectionsRaw,
-    resolvedSelections,
+    metadataSelectionsPreview,
+    selectedMetadata: metadataSelected,
     selectionSummary,
+    visibleCatalogTypes,
     lastMetadataRetrieve,
     clearFilters,
+    addVisibleTypesToSelection,
+    clearSelections,
     refreshTypes,
     loadMembers,
     toggleTypeSelection,
     toggleMemberSelection,
+    removeTypeSelection,
+    removeMemberSelection,
     isTypeSelected,
     isMemberSelected,
     retrieveSelected
