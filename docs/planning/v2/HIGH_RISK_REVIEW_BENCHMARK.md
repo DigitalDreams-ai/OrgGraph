@@ -162,6 +162,22 @@ Human capture outputs:
 - `logs/high-risk-review-human-capture-template.json`
 - `logs/high-risk-review-human-capture-template.md`
 
+Canonical publication command:
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm phase17:benchmark:human:publish
+```
+
+Canonical publication output:
+- `docs/planning/v2/HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
+
+Publication behavior:
+- reads both the latest automated proxy artifact and the latest human benchmark artifact
+- regenerates the canonical benchmark results markdown instead of relying on manual transcription
+- fails closed if the human artifact still looks synthetic or smoke-only
+- supports non-canonical output overrides only for local verification
+
 What the human capture command does:
 - reads the latest automated proxy artifact
 - records the operator-observed baseline and review-packet timings
@@ -199,7 +215,8 @@ Current branch status:
 - automated proxy benchmark capture is now available through `pnpm phase17:benchmark`
 - latest proxy run is summarized in `HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
 - human benchmark evidence is still required before claiming full Stage 1 lift proof
-- the active next branch is `dna-human-benchmark-evidence`
+- the active next branch is `dna-human-benchmark-results`
+- canonical benchmark publication now has to be generated from artifacts rather than handwritten markdown edits
 
 ## Bottom Line
 
