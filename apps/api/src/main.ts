@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AppConfigService } from './config/app-config.service';
+import { RuntimeBootstrapService } from './config/runtime-bootstrap.service';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
@@ -24,6 +25,9 @@ async function bootstrap(): Promise<void> {
       callback(null, allowed);
     }
   });
+
+  const runtimeBootstrap = app.get(RuntimeBootstrapService);
+  await runtimeBootstrap.ensureRuntimeReady();
 
   const port = configService.port();
   await app.listen(port);

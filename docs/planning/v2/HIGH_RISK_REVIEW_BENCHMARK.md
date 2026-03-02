@@ -136,7 +136,7 @@ What the harness captures:
 - replay parity for the review-packet proof
 
 Harness runtime behavior:
-- uses the existing local runtime if `http://127.0.0.1:3100/ready` is already healthy
+- uses the existing local runtime only if `http://127.0.0.1:3100/ready` is already grounded
 - otherwise auto-launches the packaged desktop runtime when `apps/desktop/src-tauri/target/release/orgumented-desktop.exe` is available
 
 What still requires human capture:

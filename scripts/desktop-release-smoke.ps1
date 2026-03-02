@@ -257,6 +257,12 @@ try {
   if ($ready.status -ne 'ready') {
     throw "Ready check did not return status=ready"
   }
+  if (($ready.checks.db.nodeCount ?? 0) -le 0 -or ($ready.checks.db.edgeCount ?? 0) -le 0) {
+    throw "Ready check reported an empty graph runtime."
+  }
+  if (-not ($ready.checks.evidence.ok)) {
+    throw "Ready check reported missing evidence index."
+  }
 
   $askBody = @{
     query = 'What touches Opportunity.StageName?'
