@@ -50,15 +50,21 @@ If implementation conflicts with these laws, the implementation is wrong.
 
 Primary direction:
 
-- `docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md`
-- `docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md`
-- `docs/planning/ORGUMENTED_LEXICON.md`
-- Active phase tasklist (`docs/planning/PHASE*_TASKLIST.md`)
+- `docs/planning/v2/README.md`
+- `docs/planning/v2/ORGUMENTED_V2_STRATEGY.md`
+- `docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md`
+- `docs/planning/v2/ORGUMENTED_V2_ROADMAP.md`
+- `docs/planning/v2/ORGUMENTED_V2_EXECUTION.md`
+- `docs/planning/v2/ORGUMENTED_V2_GOVERNANCE.md`
+- `docs/planning/v2/ORGUMENTED_V2_LEXICON.md`
+- Active selected-slice execution artifact under `docs/planning/v2/` when present
+- Wave tasklists remain detailed capability references, not the first planning surface
 
 Conflict resolution order:
-1. Active phase tasklist
-2. BLUE_OCEAN_EXECUTION_PLAN
+1. Active selected-slice execution artifact
+2. `docs/planning/v2/README.md` and the v2 planning set
 3. Runtime laws above
+4. Archived planning files for detailed historical or dependency context
 
 Never treat project-memory or external summaries as canonical truth.
 
@@ -68,10 +74,11 @@ Never treat project-memory or external summaries as canonical truth.
 
 For non-trivial architecture changes:
 
-1. Produce PLAN.md before coding.
+1. Produce the applicable planning artifact before coding:
+   - v2 slice work: `docs/planning/v2/EVAL_PLAN.md`
 2. If structural change is proposed:
-   - Apply Orgumented_Decision_Matrix.md.
-   - Produce DECISION_REPORT.md.
+   - Apply the applicable decision matrix.
+   - Produce the matching decision report or matrix result.
    - Justify Refactor vs Module-Rebuild vs Full Rebuild numerically.
 3. Do not perform large refactors without measurable acceptance gates.
 4. Prefer smallest viable change that restores contract compliance.

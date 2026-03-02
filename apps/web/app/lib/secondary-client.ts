@@ -1,5 +1,5 @@
 import type { QueryResponse } from './ask-client';
-import { isDesktopDirectApiMode, resolveDesktopApiUrl } from './runtime-mode';
+import { resolveDesktopApiUrl } from './runtime-mode';
 
 export type SecondaryQueryKind =
   | 'perms'
@@ -45,7 +45,7 @@ function appendParam(params: URLSearchParams, key: string, value: unknown): void
 }
 
 function resolveBoundaryPath(path: string): string {
-  return isDesktopDirectApiMode() ? resolveDesktopApiUrl(path) : `/api${path}`;
+  return resolveDesktopApiUrl(path);
 }
 
 function buildBoundaryRequest(kind: SecondaryQueryKind, payload: Record<string, unknown>): { url: string; init: RequestInit } {

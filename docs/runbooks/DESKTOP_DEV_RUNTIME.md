@@ -73,6 +73,17 @@ Observed proof in current repo state:
 - Windows shows an `Orgumented` desktop window
 - Tauri now launches the local runtime through `node ./scripts/dev-runtime.mjs`
 - the embedded UI no longer depends on `next dev` for the primary Windows proof path
+- desktop-managed web startup now logs:
+  - `[desktop-runtime] preparing desktop-managed api on 127.0.0.1:3100 and starting web on 127.0.0.1:3001 (mode=production, directApiMode=1, apiBase=http://127.0.0.1:3100)`
+- `http://127.0.0.1:3100/ready` returned `200` during the same `pnpm desktop:dev` smoke
+- proof logs:
+  - `logs/dna-runtime-ownership-desktop-dev.stdout.log`
+  - `logs/dna-runtime-ownership-desktop-dev.stderr.log`
+
+Current operator rule:
+- desktop-managed development should run in direct-engine mode by default
+- the standalone Next server is expected to serve UI assets only, not to be the normal desktop operator API boundary
+- the `apps/web/app/api/` adapter tree is retired from the desktop runtime path
 
 ## Build Packaged Desktop Runtime
 

@@ -63,7 +63,7 @@ const ORGUMENTED_SEED_DEFINITIONS: RepoSeedDefinition[] = [
     entryPoints: ['apps/web/app/page.tsx', 'apps/web/app/layout.tsx'],
     keyPaths: ['apps/web/app', 'docs/planning/WAVE_G_TASKLIST.md', 'docs/planning/DESKTOP_UX_BLUEPRINT.md'],
     dependencies: ['apps/api', 'docs/planning/WAVE_G_TASKLIST.md', 'docs/planning/DESKTOP_TRANSITION_PLAN.md'],
-    verificationCommands: ['npm run test:ui-smoke'],
+    verificationCommands: ['npm exec --yes pnpm@9.12.3 -- desktop:smoke:release'],
     docRefs: ['docs/planning/WAVE_G_TASKLIST.md', 'docs/planning/DESKTOP_UX_BLUEPRINT.md']
   },
   {

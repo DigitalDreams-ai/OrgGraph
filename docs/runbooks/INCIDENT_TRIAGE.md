@@ -26,7 +26,7 @@ Use this when Orgumented returns unexpected 4xx/5xx responses, stale trust metri
 ## Recovery
 1. Restore runtime health by restarting the local desktop runtime.
 2. Rebuild graph from latest retrieved metadata.
-3. Re-run known-good smoke set (`scripts/web-smoke.sh`).
+3. Re-run the packaged desktop smoke set (`pnpm desktop:smoke:release`).
 4. Verify trust dashboard trends normalize.
 
 ## Escalation

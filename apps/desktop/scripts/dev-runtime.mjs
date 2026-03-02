@@ -11,6 +11,8 @@ const webPort = process.env.ORGUMENTED_DESKTOP_WEB_PORT || '3001';
 const hostname = process.env.ORGUMENTED_DESKTOP_HOST || '127.0.0.1';
 const webMode = (process.env.ORGUMENTED_DESKTOP_WEB_MODE || 'production').toLowerCase();
 const rebuildWeb = process.env.ORGUMENTED_DESKTOP_WEB_REBUILD === '1';
+const desktopApiBase = process.env.NEXT_PUBLIC_API_BASE || `http://${hostname}:${apiPort}`;
+const desktopDirectApiMode = process.env.NEXT_PUBLIC_DESKTOP_DIRECT_API_MODE || '1';
 const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 const standaloneWebServer = fileURLToPath(
   new URL('../../web/.next/standalone/apps/web/server.js', import.meta.url)
@@ -125,12 +127,15 @@ process.on('SIGINT', () => shutdown(0));
 process.on('SIGTERM', () => shutdown(0));
 
 process.stdout.write(
-  `[desktop-runtime] preparing desktop-managed api on ${hostname}:${apiPort} and starting web on ${hostname}:${webPort} (mode=${webMode})\n`
+  `[desktop-runtime] preparing desktop-managed api on ${hostname}:${apiPort} and starting web on ${hostname}:${webPort} (mode=${webMode}, directApiMode=${desktopDirectApiMode}, apiBase=${desktopApiBase})\n`
 );
 
 runSetupStep('api-build', pnpmCommand, ['--filter', 'api', 'build']);
 if (webMode === 'production' && (rebuildWeb || !existsSync(standaloneWebServer))) {
-  runSetupStep('web-build', pnpmCommand, ['--filter', 'web', 'build']);
+  runSetupStep('web-build', pnpmCommand, ['--filter', 'web', 'build'], {
+    NEXT_PUBLIC_API_BASE: desktopApiBase,
+    NEXT_PUBLIC_DESKTOP_DIRECT_API_MODE: desktopDirectApiMode
+  });
 }
 
 startChild(
@@ -139,10 +144,14 @@ startChild(
   webMode === 'development'
     ? ['--filter', 'web', 'dev', '--hostname', hostname, '--port', webPort]
     : [standaloneWebServer],
-  webMode === 'development'
-    ? {}
-    : {
-        HOSTNAME: hostname,
-        PORT: webPort
-      }
+  {
+    NEXT_PUBLIC_API_BASE: desktopApiBase,
+    NEXT_PUBLIC_DESKTOP_DIRECT_API_MODE: desktopDirectApiMode,
+    ...(webMode === 'development'
+      ? {}
+      : {
+          HOSTNAME: hostname,
+          PORT: webPort
+        })
+  }
 );
