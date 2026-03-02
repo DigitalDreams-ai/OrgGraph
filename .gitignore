@@ -62,7 +62,7 @@ prisma/migrations/**/migration_lock.toml
 *.tsbuildinfo
 .cache/
 artifacts/
-docs/planning/archive/
+docs/planning/archive/*
 .cargo/
 apps/desktop/src-tauri/target/
 apps/desktop/src-tauri/gen/
