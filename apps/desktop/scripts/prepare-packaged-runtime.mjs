@@ -11,14 +11,19 @@ const runtimeRoot = path.join(desktopRoot, 'src-tauri', 'runtime');
 const runtimeWebRoot = path.join(runtimeRoot, 'web');
 const runtimeApiRoot = path.join(runtimeRoot, 'api');
 const runtimeNodeRoot = path.join(runtimeRoot, 'node');
+const runtimeFixturesRoot = path.join(runtimeRoot, 'fixtures');
+const runtimeFixturesPermissionsRoot = path.join(runtimeFixturesRoot, 'permissions');
 const runtimeConfigPath = path.join(runtimeRoot, 'config.json');
 const runtimeApiBundlePath = path.join(runtimeApiRoot, 'main.cjs');
 const webNextRoot = path.join(workspaceRoot, 'apps', 'web', '.next');
+const workspaceFixturesPermissionsRoot = path.join(workspaceRoot, 'fixtures', 'permissions');
 const webIndexPath = path.join(webNextRoot, 'server', 'app', 'index.html');
 const webStaticPath = path.join(webNextRoot, 'static');
 const nodeBinaryName = process.platform === 'win32' ? 'node.exe' : 'node';
 const runtimeNodePath = path.join(runtimeNodeRoot, nodeBinaryName);
 const packagedConfigKeys = [
+  'ORGUMENTED_BOOTSTRAP_ON_STARTUP',
+  'PERMISSIONS_FIXTURES_PATH',
   'SF_INTEGRATION_ENABLED',
   'CCI_VERSION_PIN',
   'SF_ALIAS',
@@ -203,6 +208,8 @@ function resolvePackagedConfig() {
       config[key] = value;
     }
   }
+  config.ORGUMENTED_BOOTSTRAP_ON_STARTUP = 'true';
+  config.PERMISSIONS_FIXTURES_PATH = 'fixtures/permissions';
   return config;
 }
 
@@ -319,6 +326,7 @@ rmSync(runtimeRoot, { recursive: true, force: true });
 mkdirSync(runtimeWebRoot, { recursive: true });
 mkdirSync(runtimeApiRoot, { recursive: true });
 mkdirSync(runtimeNodeRoot, { recursive: true });
+mkdirSync(runtimeFixturesPermissionsRoot, { recursive: true });
 
 runStep('web-build', 'pnpm.cmd', ['--filter', 'web', 'build']);
 runStep('api-build', 'pnpm.cmd', ['--filter', 'api', 'build']);
@@ -331,10 +339,12 @@ ensureExists(webIndexPath, 'web index');
 ensureExists(webStaticPath, 'web static assets');
 ensureExists(process.execPath, 'node runtime');
 ensureExists(runtimeApiBundlePath, 'bundled api entrypoint');
+ensureExists(workspaceFixturesPermissionsRoot, 'fixture baseline');
 
 cpSync(webIndexPath, path.join(runtimeWebRoot, 'index.html'));
 cpSync(webStaticPath, path.join(runtimeWebRoot, '_next', 'static'), { recursive: true });
 cpSync(process.execPath, runtimeNodePath);
+cpSync(workspaceFixturesPermissionsRoot, runtimeFixturesPermissionsRoot, { recursive: true });
 
 writeFileSync(
   path.join(runtimeRoot, 'manifest.json'),

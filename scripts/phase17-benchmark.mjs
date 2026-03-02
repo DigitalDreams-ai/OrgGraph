@@ -27,7 +27,21 @@ async function isReady() {
       return false;
     }
     const body = await res.json();
-    return body?.status === 'ready';
+    return (
+      body?.status === 'ready' &&
+      Number(body?.checks?.db?.nodeCount ?? 0) > 0 &&
+      Number(body?.checks?.db?.edgeCount ?? 0) > 0 &&
+      body?.checks?.evidence?.ok === true
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function isReachable() {
+  try {
+    const res = await fetch(`${apiUrl}/health`);
+    return res.ok;
   } catch {
     return false;
   }
@@ -135,7 +149,13 @@ function summarizeAskResponse(body) {
 
 async function main() {
   let packagedRuntime = null;
-  if (!(await isReady()) && shouldAutoLaunchPackaged && (await fileExists(packagedExePath))) {
+  const ready = await isReady();
+  if (!ready && shouldAutoLaunchPackaged && (await fileExists(packagedExePath))) {
+    if (await isReachable()) {
+      throw new Error(
+        `Existing runtime is reachable at ${apiUrl} but not grounded. Stop the stale process or refresh it before benchmarking.`
+      );
+    }
     packagedRuntime = startPackagedRuntime();
   }
 

@@ -13,6 +13,7 @@ const webMode = (process.env.ORGUMENTED_DESKTOP_WEB_MODE || 'production').toLowe
 const rebuildWeb = process.env.ORGUMENTED_DESKTOP_WEB_REBUILD === '1';
 const desktopApiBase = process.env.NEXT_PUBLIC_API_BASE || `http://${hostname}:${apiPort}`;
 const desktopDirectApiMode = process.env.NEXT_PUBLIC_DESKTOP_DIRECT_API_MODE || '1';
+const desktopBootstrapMode = process.env.ORGUMENTED_BOOTSTRAP_ON_STARTUP || '1';
 const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 const standaloneWebServer = fileURLToPath(
   new URL('../../web/.next/standalone/apps/web/server.js', import.meta.url)
@@ -147,6 +148,7 @@ startChild(
   {
     NEXT_PUBLIC_API_BASE: desktopApiBase,
     NEXT_PUBLIC_DESKTOP_DIRECT_API_MODE: desktopDirectApiMode,
+    ORGUMENTED_BOOTSTRAP_ON_STARTUP: desktopBootstrapMode,
     ...(webMode === 'development'
       ? {}
       : {

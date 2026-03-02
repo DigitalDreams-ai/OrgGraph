@@ -1,9 +1,25 @@
 import { Injectable, type LogLevel } from '@nestjs/common';
 import { existsSync, readFileSync } from 'node:fs';
-import { isAbsolute, resolve } from 'node:path';
+import { dirname, isAbsolute, resolve } from 'node:path';
 
 @Injectable()
 export class AppConfigService {
+  private static readonly CONFIG_PATH_KEYS = new Set([
+    'DATABASE_URL',
+    'PERMISSIONS_FIXTURES_PATH',
+    'USER_PROFILE_MAP_PATH',
+    'EVIDENCE_INDEX_PATH',
+    'REFRESH_STATE_PATH',
+    'REFRESH_AUDIT_PATH',
+    'ONTOLOGY_REPORT_PATH',
+    'ASK_PROOF_STORE_PATH',
+    'ASK_METRICS_PATH',
+    'META_CONTEXT_PATH',
+    'SEMANTIC_SNAPSHOT_PATH',
+    'SF_PROJECT_PATH',
+    'SF_PARSE_PATH'
+  ]);
+
   constructor() {
     this.applyConfigFileDefaults();
 
@@ -20,6 +36,7 @@ export class AppConfigService {
     this.validateOptionalString('ASK_PROOF_STORE_PATH');
     this.validateOptionalString('ASK_METRICS_PATH');
     this.validateOptionalString('META_CONTEXT_PATH');
+    this.validateOptionalString('ORGUMENTED_BOOTSTRAP_ON_STARTUP');
     this.validateOptionalString('ASK_GROUNDING_SCORE_THRESHOLD');
     this.validateOptionalString('ASK_CONSTRAINT_SATISFACTION_THRESHOLD');
     this.validateOptionalString('ASK_AMBIGUITY_MAX_THRESHOLD');
@@ -132,6 +149,10 @@ export class AppConfigService {
 
   metaContextPath(): string | undefined {
     return process.env.META_CONTEXT_PATH;
+  }
+
+  runtimeBootstrapOnStartup(): boolean {
+    return (process.env.ORGUMENTED_BOOTSTRAP_ON_STARTUP || 'false').trim().toLowerCase() === 'true';
   }
 
   askGroundingScoreThreshold(): number {
@@ -404,6 +425,7 @@ export class AppConfigService {
     if (!existsSync(configPath)) {
       throw new Error(`ORGUMENTED_CONFIG_PATH not found: ${configPath}`);
     }
+    const configDir = dirname(configPath);
 
     const raw = readFileSync(configPath, 'utf8');
     const parsed: unknown = JSON.parse(raw);
@@ -422,8 +444,32 @@ export class AppConfigService {
 
       const existing = process.env[key];
       if (existing === undefined || existing.trim() === '') {
-        process.env[key] = String(value);
+        process.env[key] = this.resolveConfigValue(configDir, key, value);
       }
     }
+  }
+
+  private resolveConfigValue(configDir: string, key: string, value: string | number | boolean): string {
+    const normalized = String(value);
+    if (!AppConfigService.CONFIG_PATH_KEYS.has(key) || normalized.trim().length === 0) {
+      return normalized;
+    }
+
+    if (key === 'DATABASE_URL') {
+      if (!normalized.startsWith('file:')) {
+        return normalized;
+      }
+
+      const databasePath = normalized.slice(5);
+      if (databasePath.trim().length === 0 || isAbsolute(databasePath)) {
+        return normalized;
+      }
+      return `file:${resolve(configDir, databasePath)}`;
+    }
+
+    if (isAbsolute(normalized)) {
+      return normalized;
+    }
+    return resolve(configDir, normalized);
   }
 }

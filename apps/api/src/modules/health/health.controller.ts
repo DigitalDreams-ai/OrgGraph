@@ -31,24 +31,37 @@ export class HealthController {
       const dbCounts = await this.graphService.getCounts();
       const fixturesPath = this.resolveReportedFixturesPath();
       const evidencePath = this.evidenceStore.getIndexPath();
-
+      const evidenceDocumentCount = this.evidenceStore.getDocumentCount();
       const checks = {
         db: {
-          ok: true,
+          ok: dbCounts.nodeCount > 0 && dbCounts.edgeCount > 0,
           backend: this.graphService.backend(),
           storageRef: this.graphService.getDatabasePath(),
           nodeCount: dbCounts.nodeCount,
           edgeCount: dbCounts.edgeCount
         },
         fixtures: { ok: fs.existsSync(fixturesPath), sourcePath: fixturesPath },
-        evidence: { ok: fs.existsSync(evidencePath), indexPath: evidencePath }
+        evidence: {
+          ok: fs.existsSync(evidencePath) && evidenceDocumentCount > 0,
+          indexPath: evidencePath
+        }
       };
+
+      if (!checks.db.ok || !checks.fixtures.ok || !checks.evidence.ok) {
+        throw new ServiceUnavailableException({
+          message: 'runtime not grounded',
+          checks
+        });
+      }
 
       return {
         status: 'ready',
         checks
       };
     } catch (error) {
+      if (error instanceof ServiceUnavailableException) {
+        throw error;
+      }
       throw new ServiceUnavailableException({
         message: error instanceof Error ? error.message : 'readiness check failed'
       });

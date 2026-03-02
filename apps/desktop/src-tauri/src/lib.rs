@@ -75,6 +75,7 @@ fn spawn_development_api_child() -> std::io::Result<Child> {
     command
         .current_dir(workspace_root())
         .env("PORT", desktop_api_port())
+        .env("ORGUMENTED_BOOTSTRAP_ON_STARTUP", "true")
         .stdin(Stdio::null())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit());
@@ -164,6 +165,7 @@ fn spawn_packaged_api_child(app: &tauri::AppHandle) -> std::io::Result<Child> {
         .current_dir(api_root)
         .env("ORGUMENTED_CONFIG_PATH", config_path)
         .env("PORT", desktop_api_port())
+        .env("ORGUMENTED_BOOTSTRAP_ON_STARTUP", "true")
         .stdin(Stdio::null())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit());
