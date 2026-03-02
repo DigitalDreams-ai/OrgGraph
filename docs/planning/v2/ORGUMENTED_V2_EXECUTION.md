@@ -76,13 +76,13 @@ Current concrete checkpoint:
 ## Recommended Immediate Sequence
 
 ### Slice 1
-- preserve the new structured Explain and Analyze workflow as the primary operator path
-- keep permissions, automation, impact, and system-permission summaries readable without regressing engine-owned logic
-- protect the direct desktop boundary so structured UI transport does not change engine semantics
+- make Settings and Diagnostics a structured desktop workflow instead of a button-only debug surface
+- surface org status, tool health, meta-context state, and meta-adapt results as operator-readable summaries
+- keep runtime and semantic logic in the engine while preserving the direct desktop boundary
 
 ### Slice 2
-- preserve the new label-first Proofs and History flow as the default operator path
-- keep deterministic replay and proof lookup stable while Analyze and benchmark evidence harden
+- preserve the new structured Analyze workflow as the primary operator path
+- keep deterministic replay and proof lookup stable while diagnostics and benchmark evidence harden
 
 ### Slice 3
 - capture human benchmark evidence for the same workflow now that the packaged runtime clears the policy envelope
@@ -95,14 +95,14 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-analyze-workflow`
+- `dna-system-diagnostics`
 
 Immediate execution pressure:
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
-- make permissions, automation, impact, and system-permission analysis readable without falling back to raw JSON
-- preserve the new structured Analyze result cards as the default workflow surface rather than a sidecar to raw response inspection
+- turn Settings and Diagnostics into a readable operator workspace for runtime/tool health instead of a raw response launcher
+- keep org status, meta context, and meta adapt readable without pushing policy or runtime logic into the UI
 - keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
-- preserve runtime convergence and packaged desktop parity while Analyze is improved
+- preserve runtime convergence and packaged desktop parity while diagnostics are improved
 - keep the review packet usable as the primary artifact without raw JSON dependence
 - avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
 
