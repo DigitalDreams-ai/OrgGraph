@@ -52,6 +52,8 @@ function run(): void {
   const reviewRiskPlan = planner.plan('What is the real risk of changing Opportunity.StageName?');
   assert.equal(reviewRiskPlan.intent, 'review');
   assert.equal(reviewRiskPlan.reviewWorkflow?.kind, 'high_risk_change_review');
+  assert.equal(reviewRiskPlan.reviewWorkflow?.compilerRuleId, 'review_risk_change');
+  assert.equal(reviewRiskPlan.reviewWorkflow?.action, 'change');
   assert.equal(reviewRiskPlan.reviewWorkflow?.focus, 'risk');
   assert.equal(reviewRiskPlan.reviewWorkflow?.targetType, 'field');
   assert.equal(reviewRiskPlan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
@@ -62,11 +64,34 @@ function run(): void {
   );
   assert.equal(reviewApprovalPlan.intent, 'review');
   assert.equal(reviewApprovalPlan.entities.user, 'jane@example.com');
+  assert.equal(reviewApprovalPlan.reviewWorkflow?.compilerRuleId, 'review_approval_change');
   assert.equal(reviewApprovalPlan.reviewWorkflow?.focus, 'approval');
+
+  const reviewApprovalVariantPlan = planner.plan(
+    'Approve the Opportunity.StageName change for jane@example.com.'
+  );
+  assert.equal(reviewApprovalVariantPlan.intent, 'review');
+  assert.equal(reviewApprovalVariantPlan.entities.user, 'jane@example.com');
+  assert.equal(reviewApprovalVariantPlan.reviewWorkflow?.compilerRuleId, 'review_approval_change');
+  assert.equal(reviewApprovalVariantPlan.reviewWorkflow?.focus, 'approval');
+  assert.equal(reviewApprovalVariantPlan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
 
   const reviewBreakagePlan = planner.plan('What breaks if we change Opportunity.StageName?');
   assert.equal(reviewBreakagePlan.intent, 'review');
+  assert.equal(reviewBreakagePlan.reviewWorkflow?.compilerRuleId, 'review_breakage_change');
   assert.equal(reviewBreakagePlan.reviewWorkflow?.focus, 'breakage');
+
+  const reviewRiskVariantPlan = planner.plan('Review the change risk for Opportunity.StageName.');
+  assert.equal(reviewRiskVariantPlan.intent, 'review');
+  assert.equal(reviewRiskVariantPlan.reviewWorkflow?.compilerRuleId, 'review_risk_change');
+  assert.equal(reviewRiskVariantPlan.reviewWorkflow?.focus, 'risk');
+  assert.equal(reviewRiskVariantPlan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
+
+  const nonReviewApprovalPlan = planner.plan('Should we approve jane@example.com for Opportunity?');
+  assert.notEqual(nonReviewApprovalPlan.intent, 'review');
+
+  const nonReviewRiskPlan = planner.plan('What is the risk of Opportunity.StageName?');
+  assert.notEqual(nonReviewRiskPlan.intent, 'review');
 
   const unknownPlan = planner.plan('hello world');
   assert.equal(unknownPlan.intent, 'unknown');
