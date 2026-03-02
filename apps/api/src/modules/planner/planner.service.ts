@@ -7,11 +7,12 @@ export class PlannerService {
     const normalized = query.trim();
     const { normalizedQuery, rewriteRules } = this.normalizeQuery(normalized);
     const lower = normalizedQuery.toLowerCase();
+    const tokens = this.tokenizeQuery(normalizedQuery);
 
     const user = this.extractUser(normalized);
     const field = this.extractField(normalized);
     const object = this.extractObject(normalized, field) ?? this.extractObject(normalizedQuery, field);
-    const reviewWorkflow = this.compileReviewWorkflow(normalizedQuery, object, field);
+    const reviewWorkflow = this.compileReviewWorkflow(tokens, object, field);
 
     const hasPerms = /(perm|permission|edit|access|who can edit|who has access|can\s+i)/i.test(lower);
     const hasAutomation = /(automation|trigger|flow|runs\s+on|what\s+runs|which\s+flows|which\s+triggers)/i.test(lower);
@@ -143,7 +144,7 @@ export class PlannerService {
   }
 
   private compileReviewWorkflow(
-    normalizedQuery: string,
+    tokens: string[],
     object?: string,
     field?: string
   ): AskReviewWorkflow | undefined {
@@ -152,27 +153,80 @@ export class PlannerService {
       return undefined;
     }
 
-    const reviewSignals = [
-      /\b(real risk|risk of changing|high[- ]risk|approve(?:\s+this)?\s+change|should\s+we\s+approve)\b/,
-      /\bwhat breaks(?:\s+if\s+we\s+change)?\b/,
-      /\breview\b/
-    ];
-    if (!reviewSignals.some((pattern) => pattern.test(normalizedQuery))) {
+    const hasChangeAction = this.hasAnyToken(tokens, ['change', 'changing', 'update', 'updating']);
+    if (!hasChangeAction) {
       return undefined;
     }
 
-    let focus: AskReviewWorkflow['focus'] = 'risk';
-    if (/\bapprove(?:\s+this)?\s+change\b|\bshould\s+we\s+approve\b/.test(normalizedQuery)) {
+    const approvalRuleMatched =
+      this.hasTokenSequence(tokens, ['should', 'we', 'approve']) ||
+      this.hasAnyToken(tokens, ['approve', 'approval']);
+    const breakageRuleMatched =
+      this.hasTokenSequence(tokens, ['what', 'breaks']) ||
+      this.hasAnyToken(tokens, ['breaks', 'breakage']);
+    const riskRuleMatched =
+      this.hasAnyToken(tokens, ['risk', 'review']) ||
+      this.hasTokenSequence(tokens, ['what', 'is', 'the', 'real', 'risk']);
+
+    let focus: AskReviewWorkflow['focus'] | undefined;
+    let compilerRuleId: AskReviewWorkflow['compilerRuleId'] | undefined;
+    if (approvalRuleMatched) {
       focus = 'approval';
-    } else if (/\bwhat breaks(?:\s+if\s+we\s+change)?\b|\bbreakage\b/.test(normalizedQuery)) {
+      compilerRuleId = 'review_approval_change';
+    } else if (breakageRuleMatched) {
       focus = 'breakage';
+      compilerRuleId = 'review_breakage_change';
+    } else if (riskRuleMatched) {
+      focus = 'risk';
+      compilerRuleId = 'review_risk_change';
+    }
+
+    if (!focus || !compilerRuleId) {
+      return undefined;
     }
 
     return {
       kind: 'high_risk_change_review',
+      compilerRuleId,
+      action: 'change',
       focus,
       targetType: field ? 'field' : 'object',
       targetLabel
     };
+  }
+
+  private tokenizeQuery(input: string): string[] {
+    return input
+      .toLowerCase()
+      .replace(/[?!,;:()]/g, ' ')
+      .split(/\s+/)
+      .map((token) => token.trim())
+      .filter(Boolean);
+  }
+
+  private hasAnyToken(tokens: string[], candidates: string[]): boolean {
+    const candidateSet = new Set(candidates);
+    return tokens.some((token) => candidateSet.has(token));
+  }
+
+  private hasTokenSequence(tokens: string[], sequence: string[]): boolean {
+    if (sequence.length === 0 || tokens.length < sequence.length) {
+      return false;
+    }
+
+    for (let index = 0; index <= tokens.length - sequence.length; index += 1) {
+      let matched = true;
+      for (let offset = 0; offset < sequence.length; offset += 1) {
+        if (tokens[index + offset] !== sequence[offset]) {
+          matched = false;
+          break;
+        }
+      }
+      if (matched) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

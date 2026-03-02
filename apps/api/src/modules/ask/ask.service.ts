@@ -722,6 +722,8 @@ export class AskService {
         `Automation impact: ${automations.explanation}. ` +
         `Change impact: ${impact.explanation}.`;
       executionTrace.push(
+        `review.compilerRule=${plan.reviewWorkflow.compilerRuleId}`,
+        `review.action=${plan.reviewWorkflow.action}`,
         `review.focus=${plan.reviewWorkflow.focus}`,
         `review.target=${targetLabel}`,
         `review.perms.granted=${String(perms.granted)}`,

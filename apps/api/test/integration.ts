@@ -768,7 +768,13 @@ async function run(): Promise<void> {
     const askReview = (await askReviewRes.json()) as {
       plan: {
         intent: string;
-        reviewWorkflow?: { kind: string; focus: string; targetLabel: string };
+        reviewWorkflow?: {
+          kind: string;
+          compilerRuleId: string;
+          action: string;
+          focus: string;
+          targetLabel: string;
+        };
       };
       trustLevel: string;
       proof: { proofId: string; replayToken: string };
@@ -787,6 +793,8 @@ async function run(): Promise<void> {
     };
     assert.equal(askReview.plan.intent, 'review');
     assert.equal(askReview.plan.reviewWorkflow?.kind, 'high_risk_change_review');
+    assert.equal(askReview.plan.reviewWorkflow?.compilerRuleId, 'review_approval_change');
+    assert.equal(askReview.plan.reviewWorkflow?.action, 'change');
     assert.equal(askReview.plan.reviewWorkflow?.focus, 'approval');
     assert.equal(askReview.plan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
     assert.ok(['trusted', 'conditional'].includes(askReview.trustLevel));
@@ -824,6 +832,38 @@ async function run(): Promise<void> {
     assert.equal(askReviewRepeat.decisionPacket?.riskLevel, askReview.decisionPacket?.riskLevel);
     assert.deepEqual(
       askReviewRepeat.decisionPacket?.topRiskDrivers,
+      askReview.decisionPacket?.topRiskDrivers
+    );
+
+    const askReviewVariantRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Approve the Opportunity.StageName change for jane@example.com.'
+      })
+    });
+    assert.equal(askReviewVariantRes.status, 201, 'ask review variant should return 201');
+    const askReviewVariant = (await askReviewVariantRes.json()) as {
+      plan: {
+        intent: string;
+        reviewWorkflow?: { compilerRuleId: string; focus: string; targetLabel: string };
+      };
+      decisionPacket?: {
+        focus: string;
+        targetLabel: string;
+        summary: string;
+        topRiskDrivers: string[];
+      };
+    };
+    assert.equal(askReviewVariant.plan.intent, 'review');
+    assert.equal(askReviewVariant.plan.reviewWorkflow?.compilerRuleId, 'review_approval_change');
+    assert.equal(askReviewVariant.plan.reviewWorkflow?.focus, 'approval');
+    assert.equal(askReviewVariant.plan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
+    assert.equal(askReviewVariant.decisionPacket?.focus, askReview.decisionPacket?.focus);
+    assert.equal(askReviewVariant.decisionPacket?.targetLabel, askReview.decisionPacket?.targetLabel);
+    assert.equal(askReviewVariant.decisionPacket?.summary, askReview.decisionPacket?.summary);
+    assert.deepEqual(
+      askReviewVariant.decisionPacket?.topRiskDrivers,
       askReview.decisionPacket?.topRiskDrivers
     );
 
