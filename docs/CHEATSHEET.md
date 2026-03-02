@@ -152,7 +152,7 @@ pnpm --filter @orgumented/project-memory-mcp test
 - `Org Sessions`: overview refresh, alias readiness, attach, and switching
 - `Org Browser`: searchable metadata tree, retrieval cart summary, and selected-retrieve handoff
 - `Refresh & Build`: retrieval, refresh, drift, and rebuild summaries
-- `Explain & Analyze`: permissions, automation, and impact workflows
+- `Explain & Analyze`: structured permissions, mapping diagnosis, automation, impact, and system-permission workflows
 - `Proofs & History`: labeled recent-proof history, one-click proof open/replay, trust history summaries, and advanced token fallback only when needed
 - `Settings & Diagnostics`: runtime status, logs, and meta-context controls
 
