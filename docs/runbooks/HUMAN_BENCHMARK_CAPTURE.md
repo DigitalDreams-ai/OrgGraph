@@ -37,6 +37,23 @@ cd /c/Users/sean/Projects/GitHub/OrgGraph
 
 Do not use PowerShell commands like `Set-Location` inside a bash terminal.
 
+## Visibility Rules
+
+If you want to see progress clearly:
+- run commands one at a time
+- wait for each command to finish before pasting the next one
+- use the verbose `pnpm` forms in this runbook instead of the short aliases when available
+
+What "verbose" means here:
+- for `pnpm` commands, prefer:
+  - `--reporter=append-only`
+  - `--loglevel=info`
+- some commands do not have a useful verbose mode:
+  - `node --version`
+  - `pnpm --version`
+
+If a command appears to "just sit there", do not assume it is broken until you have run it by itself and waited for output.
+
 ## Machine Requirements
 
 You are ready to run this benchmark only if all of these are true:
@@ -48,15 +65,51 @@ You are ready to run this benchmark only if all of these are true:
 
 ## First-Time Setup Or Readiness Check
 
-Run these commands in bash:
+Run these commands in bash, one at a time:
 
 ```bash
 cd /c/Users/sean/Projects/GitHub/OrgGraph
 node --version
 pnpm --version
-pnpm install
-pnpm desktop:info
-pnpm desktop:build
+pnpm --reporter=append-only --loglevel=info install
+pnpm --reporter=append-only --loglevel=info --filter desktop info
+pnpm --reporter=append-only --loglevel=info --filter desktop build
+```
+
+Recommended copy/paste pattern:
+
+```bash
+cd /c/Users/sean/Projects/GitHub/OrgGraph
+```
+
+then:
+
+```bash
+node --version
+```
+
+then:
+
+```bash
+pnpm --version
+```
+
+then:
+
+```bash
+pnpm --reporter=append-only --loglevel=info install
+```
+
+then:
+
+```bash
+pnpm --reporter=append-only --loglevel=info --filter desktop info
+```
+
+then:
+
+```bash
+pnpm --reporter=append-only --loglevel=info --filter desktop build
 ```
 
 What success looks like:
@@ -103,12 +156,12 @@ If Orgumented opens and closes once during smoke, that is normal.
 
 ## Step 1: Start A Clean Benchmark Session
 
-Run:
+Run these one at a time:
 
 ```bash
 cd /c/Users/sean/Projects/GitHub/OrgGraph
-pnpm phase17:benchmark:human:reset
-pnpm phase17:benchmark:human:session -- --operator "Sean"
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:reset
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:session -- --operator "Sean"
 ```
 
 Replace `"Sean"` with the real operator name if needed.
@@ -117,6 +170,24 @@ Do not:
 - paste markdown code fences into the terminal
 - close the terminal while the command is running
 - start the manual review before the session command fully finishes
+
+Recommended copy/paste pattern:
+
+```bash
+cd /c/Users/sean/Projects/GitHub/OrgGraph
+```
+
+then:
+
+```bash
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:reset
+```
+
+wait for it to finish, then:
+
+```bash
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:session -- --operator "Sean"
+```
 
 ## Step 2: Confirm Bootstrap Succeeded
 
@@ -249,7 +320,7 @@ If you need the default command shape, run:
 
 ```bash
 cd /c/Users/sean/Projects/GitHub/OrgGraph
-pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms <baseline-ms> --baseline-evidence-steps <baseline-steps> --baseline-workspace-switches <baseline-switches> --baseline-raw-json yes|no --baseline-confidence <baseline-confidence> --review-time-ms <review-ms> --review-evidence-steps <review-steps> --review-workspace-switches <review-switches> --review-raw-json yes|no --review-confidence <review-confidence> --notes "<short observation>"
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms <baseline-ms> --baseline-evidence-steps <baseline-steps> --baseline-workspace-switches <baseline-switches> --baseline-raw-json yes|no --baseline-confidence <baseline-confidence> --review-time-ms <review-ms> --review-evidence-steps <review-steps> --review-workspace-switches <review-switches> --review-raw-json yes|no --review-confidence <review-confidence> --notes "<short observation>"
 ```
 
 Replace every placeholder before pressing Enter.
@@ -265,7 +336,7 @@ Run:
 
 ```bash
 cd /c/Users/sean/Projects/GitHub/OrgGraph
-pnpm phase17:benchmark:human:finalize
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:finalize
 ```
 
 What finalize must do:
@@ -282,7 +353,7 @@ If you want a direct repository status summary after finalize, run:
 
 ```bash
 cd /c/Users/sean/Projects/GitHub/OrgGraph
-pnpm phase17:benchmark:human:status
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:status
 ```
 
 ## Required Output Files
@@ -342,6 +413,14 @@ Fix:
 1. press `Ctrl+C`
 2. paste only the commands, not the opening or closing ``` lines
 
+Also possible:
+- you pasted several long-running commands at once and the current command has not produced output yet
+
+Safer fix:
+1. press `Ctrl+C`
+2. run one command at a time
+3. use the verbose `pnpm --reporter=append-only --loglevel=info ...` forms from this runbook
+
 ### Problem: Orgumented opens and closes once during bootstrap
 
 That is normal during `pnpm desktop:smoke:release`.
@@ -356,7 +435,7 @@ Run:
 
 ```bash
 cd /c/Users/sean/Projects/GitHub/OrgGraph
-pnpm desktop:build
+pnpm --reporter=append-only --loglevel=info --filter desktop build
 ```
 
 Then confirm this path exists:
