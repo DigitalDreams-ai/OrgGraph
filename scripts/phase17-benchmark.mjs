@@ -20,6 +20,8 @@ const packagedExePath = path.join(
 );
 const shouldAutoLaunchPackaged =
   process.env.ORGUMENTED_BENCHMARK_LAUNCH_PACKAGED === '1';
+const shouldKeepPackagedRuntime =
+  process.env.ORGUMENTED_BENCHMARK_KEEP_PACKAGED_RUNTIME === '1';
 const debugEnabled = process.env.ORGUMENTED_BENCHMARK_DEBUG === '1';
 const benchmarkHttpTimeoutMs = Math.max(
   1000,
@@ -202,7 +204,15 @@ async function stopPackagedRuntime(runtime) {
     return;
   }
   debugLog(`stopping packaged runtime pid=${runtime.pid}`);
-  await runPowerShell(`Stop-Process -Id ${runtime.pid} -Force -ErrorAction SilentlyContinue`);
+  try {
+    await execFileAsync(
+      'taskkill',
+      ['/PID', `${runtime.pid}`, '/T', '/F'],
+      { cwd: repoRoot, windowsHide: true, maxBuffer: 1024 * 1024 * 10 }
+    );
+  } catch (error) {
+    debugLog(`taskkill returned non-zero while stopping packaged runtime pid=${runtime.pid}: ${String(error)}`);
+  }
   await sleep(1000);
 }
 
@@ -266,6 +276,7 @@ function summarizeAskResponse(body) {
 
 async function main() {
   let packagedRuntime = null;
+  let forceExitAfterSuccess = false;
   const ready = await isReady();
   debugLog(`initial grounded readiness=${ready}`);
   if (!ready && shouldAutoLaunchPackaged && (await fileExists(packagedExePath))) {
@@ -413,16 +424,28 @@ async function main() {
     await fs.writeFile(outPath, `${JSON.stringify(artifact, null, 2)}\n`, 'utf8');
     debugLog(`wrote benchmark artifact to ${path.relative(repoRoot, outPath).replaceAll('\\', '/')}`);
     process.stdout.write(`${JSON.stringify(artifact, null, 2)}\n`);
+    if (packagedRuntime && shouldKeepPackagedRuntime) {
+      debugLog('keeping packaged runtime alive after benchmark bootstrap');
+      forceExitAfterSuccess = true;
+    }
   } finally {
-    if (packagedRuntime) {
+    if (packagedRuntime && !shouldKeepPackagedRuntime) {
       await stopPackagedRuntime(await packagedRuntime);
       debugLog('stopping any lingering packaged runtime processes');
       await stopPackagedProcesses();
     }
   }
+
+  return { forceExitAfterSuccess };
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-});
+main()
+  .then(({ forceExitAfterSuccess }) => {
+    if (forceExitAfterSuccess) {
+      process.exit(0);
+    }
+  })
+  .catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  });

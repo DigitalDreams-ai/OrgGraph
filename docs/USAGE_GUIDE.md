@@ -424,6 +424,7 @@ curl http://localhost:3100/ready
 ```bash
 npm run ingest:report
 pnpm phase17:benchmark
+pnpm phase17:benchmark:human:reset
 pnpm phase17:benchmark:human:session -- --operator "<name>"
 pnpm phase17:benchmark:human:prepare -- --operator "<name>"
 pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "<name>" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5>
@@ -433,6 +434,7 @@ pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-c
 - it compares the fragmented baseline review path against the typed high-risk review packet path
 - it writes proxy timing and deterministic replay evidence to `logs/high-risk-review-benchmark.json`
 - it auto-launches the packaged desktop runtime if no local API is already ready
+- `phase17:benchmark:human:reset` archives stale benchmark artifacts out of the default `logs/` paths before a real operator run starts
 - `phase17:benchmark:human:session` runs the grounded desktop smoke, refreshes the proxy benchmark, writes the human capture packet, and prints the exact capture command for the operator
 - `phase17:benchmark:human:prepare` writes a fillable capture packet with proof/replay anchors, a proxy-artifact hash, and threshold reminders
 - `phase17:benchmark:human` records the operator-observed timing, confidence, raw-JSON dependence, and pass/fail result, and now fails closed unless it is tied to the prepared capture template for the same query and proxy artifact
