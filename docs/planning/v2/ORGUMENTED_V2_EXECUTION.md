@@ -115,6 +115,13 @@ Immediate execution pressure:
 - keep failure states actionable when local `sf`/`cci` auth prerequisites are missing
 - defer more fixture-benchmark iteration until real-org operator proof is materially stronger
 
+Current real-org proof checkpoint on `dna-real-org-connect-browser`:
+- local alias inventory and preflight succeed against real sandbox aliases on this machine
+- `shulman-uat` can be switched into the active session through the org session engine path
+- selective retrieve for `CustomObject:Opportunity` completes against the real alias
+- `Org Browser` catalog loads from the resulting parse tree
+- the CustomObject member indexer now returns object names like `Opportunity` instead of nested field/listview file names
+
 ## Remaining Stage 1 Product Gates
 
 The following product outcomes still need to be explicit in execution, not just implied:

@@ -70,3 +70,21 @@ Observed candidates on March 3, 2026:
 - `shulman-beta`
 
 The first target should be one sandbox alias, not a scratch org.
+
+## Current Checkpoint
+
+Verified on March 3, 2026 against `shulman-uat`:
+- `Org Sessions` can preflight and switch to the real sandbox alias
+- selective retrieve for `CustomObject:Opportunity` completes against the active alias
+- `Org Browser` catalog loads from the retrieved parse tree after first contact
+- `Org Browser` member loading now returns the real object member (`Opportunity`) instead of nested field/listview file names
+
+The first real bug found in this slice was in metadata indexing:
+- directory-backed `CustomObject` members were being derived from nested file names
+- this made the browser unusable for object-member selection after retrieve
+- branch `dna-real-org-connect-browser` now fixes that behavior and locks it with `apps/api/test/org-service.ts`
+
+Still to prove:
+- direct desktop-UI proof of connect/switch and browser flow on this branch
+- retrieve-cart handoff visibility into `Refresh & Build`
+- one readable fail-closed operator path for missing auth or invalid selections
