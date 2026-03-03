@@ -6,6 +6,9 @@ Date: March 2, 2026
 
 This runbook captures the first real Stage 1 human benchmark result for the trusted high-risk review workflow.
 
+Operator worksheet:
+- `docs/runbooks/HUMAN_BENCHMARK_OPERATOR_FORM.md`
+
 It is for one scenario only:
 - `Should we approve changing Opportunity.StageName for jane@example.com?`
 
