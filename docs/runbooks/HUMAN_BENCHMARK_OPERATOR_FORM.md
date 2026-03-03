@@ -23,7 +23,7 @@ Do not widen the scenario.
 
 Follow this order exactly:
 
-1. Run the session bootstrap command.
+1. Run the clean session bootstrap commands.
 2. Wait until the bootstrap command fully finishes.
 3. Confirm the capture template files exist.
 4. Run the baseline path and fill in the baseline section below.
@@ -35,12 +35,13 @@ Do not enter guessed or synthetic numbers.
 
 ## Before You Start
 
-- [ ] Run the bootstrap command.
+- [ ] Run the clean session bootstrap commands.
 
 PowerShell:
 
 ```powershell
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm phase17:benchmark:human:reset
 pnpm phase17:benchmark:human:session -- --operator "Sean"
 ```
 
@@ -48,10 +49,12 @@ Bash:
 
 ```bash
 cd /c/Users/sean/Projects/GitHub/OrgGraph
+pnpm phase17:benchmark:human:reset
 pnpm phase17:benchmark:human:session -- --operator "Sean"
 ```
 
-- [ ] Confirm the bootstrap finished successfully.
+- [ ] Confirm the reset command archived stale human benchmark artifacts if any existed.
+- [ ] Confirm the session bootstrap finished successfully.
 - [ ] Confirm these files now exist:
   - `logs/high-risk-review-human-capture-template.json`
   - `logs/high-risk-review-human-capture-template.md`
