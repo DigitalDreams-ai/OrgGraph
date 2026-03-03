@@ -37,6 +37,61 @@ cd /c/Users/sean/Projects/GitHub/OrgGraph
 
 Do not use PowerShell commands like `Set-Location` inside a bash terminal.
 
+## Commands You Manually Enter
+
+For the normal benchmark flow, these are the only commands you type yourself.
+
+Enter them in this order:
+
+1. Change into the repo:
+
+```bash
+cd /c/Users/sean/Projects/GitHub/OrgGraph
+```
+
+2. Archive stale benchmark artifacts:
+
+```bash
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:reset
+```
+
+3. Start the benchmark session bootstrap:
+
+```bash
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:session -- --operator "Sean"
+```
+
+4. After you finish the manual review, run the printed capture command.
+
+Default shape if needed:
+
+```bash
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms <baseline-ms> --baseline-evidence-steps <baseline-steps> --baseline-workspace-switches <baseline-switches> --baseline-raw-json yes|no --baseline-confidence <baseline-confidence> --review-time-ms <review-ms> --review-evidence-steps <review-steps> --review-workspace-switches <review-switches> --review-raw-json yes|no --review-confidence <review-confidence> --notes "<short observation>"
+```
+
+5. Finalize the canonical result:
+
+```bash
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:finalize
+```
+
+6. Optional status check after finalize:
+
+```bash
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:status
+```
+
+You do **not** manually enter these during the normal benchmark flow:
+- `pnpm desktop:smoke:release`
+- `pnpm phase17:benchmark`
+- `pnpm phase17:benchmark:human:prepare`
+
+Those are started automatically inside:
+
+```bash
+pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:session -- --operator "Sean"
+```
+
 ## Visibility Rules
 
 If you want to see progress clearly:
