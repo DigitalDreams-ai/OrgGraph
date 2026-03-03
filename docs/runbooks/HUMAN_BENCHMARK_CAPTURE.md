@@ -61,7 +61,15 @@ pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:reset
 pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:session -- --operator "Sean"
 ```
 
-4. After you finish the manual review, run the printed capture command.
+4. After you finish the manual review inside Orgumented, run the printed capture command.
+
+In this runbook, "manual review" means:
+- complete the baseline workflow in Orgumented and record the baseline measurements
+- then complete the review-packet workflow in Orgumented and record the review-packet measurements
+
+You will do those workflows later in:
+- `Step 5: Run The Baseline Path First`
+- `Step 6: Run The Review-Packet Path Second`
 
 Default shape if needed:
 
