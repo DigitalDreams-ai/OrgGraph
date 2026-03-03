@@ -426,7 +426,7 @@ npm run ingest:report
 pnpm phase17:benchmark
 pnpm phase17:benchmark:human:session -- --operator "<name>"
 pnpm phase17:benchmark:human:prepare -- --operator "<name>"
-pnpm phase17:benchmark:human -- --operator "<name>" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5>
+pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "<name>" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5>
 ```
 
 `phase17:benchmark` now targets the active v2 benchmark workflow:
@@ -436,3 +436,4 @@ pnpm phase17:benchmark:human -- --operator "<name>" --baseline-time-ms <ms> --ba
 - `phase17:benchmark:human:session` runs the grounded desktop smoke, refreshes the proxy benchmark, writes the human capture packet, and prints the exact capture command for the operator
 - `phase17:benchmark:human:prepare` writes a fillable capture packet with proof/replay anchors, a proxy-artifact hash, and threshold reminders
 - `phase17:benchmark:human` records the operator-observed timing, confidence, raw-JSON dependence, and pass/fail result, and now fails closed unless it is tied to the prepared capture template for the same query and proxy artifact
+- the full operator walkthrough lives in `docs/runbooks/HUMAN_BENCHMARK_CAPTURE.md`

@@ -18,6 +18,7 @@
 
 ## Runbooks
 - [Desktop Dev Runtime](./runbooks/DESKTOP_DEV_RUNTIME.md)
+- [Human Benchmark Capture](./runbooks/HUMAN_BENCHMARK_CAPTURE.md)
 - [Onboarding First Success](./runbooks/ONBOARDING_FIRST_SUCCESS.md)
 - [Org Integration](./runbooks/ORG_INTEGRATION.md)
 - [Sandbox Connect Checklist](./runbooks/SANDBOX_CONNECT_CHECKLIST.md)

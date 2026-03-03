@@ -180,6 +180,9 @@ pnpm phase17:benchmark:human:session -- --operator "<name>"
 
 # Record the human benchmark against the prepared capture template
 pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "<name>" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --notes "<observation>"
+
+# Publish canonical benchmark results after the real run
+pnpm phase17:benchmark:human:publish
 ```
 
 ## Project Memory MCP
