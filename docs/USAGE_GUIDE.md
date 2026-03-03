@@ -434,5 +434,5 @@ pnpm phase17:benchmark:human -- --operator "<name>" --baseline-time-ms <ms> --ba
 - it writes proxy timing and deterministic replay evidence to `logs/high-risk-review-benchmark.json`
 - it auto-launches the packaged desktop runtime if no local API is already ready
 - `phase17:benchmark:human:session` runs the grounded desktop smoke, refreshes the proxy benchmark, writes the human capture packet, and prints the exact capture command for the operator
-- `phase17:benchmark:human:prepare` writes a fillable capture packet with proof/replay anchors and threshold reminders
-- `phase17:benchmark:human` records the operator-observed timing, confidence, raw-JSON dependence, and pass/fail result
+- `phase17:benchmark:human:prepare` writes a fillable capture packet with proof/replay anchors, a proxy-artifact hash, and threshold reminders
+- `phase17:benchmark:human` records the operator-observed timing, confidence, raw-JSON dependence, and pass/fail result, and now fails closed unless it is tied to the prepared capture template for the same query and proxy artifact

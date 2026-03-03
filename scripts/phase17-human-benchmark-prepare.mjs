@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const defaultProxyArtifactPath = path.join(repoRoot, 'logs', 'high-risk-review-benchmark.json');
@@ -62,6 +63,27 @@ async function readJson(filePath) {
   return JSON.parse(body);
 }
 
+async function sha256File(filePath) {
+  const body = await fs.readFile(filePath);
+  return crypto.createHash('sha256').update(body).digest('hex');
+}
+
+function createTemplateSignature(template) {
+  return crypto
+    .createHash('sha256')
+    .update(
+      JSON.stringify({
+        query: template.query,
+        proxyArtifactPath: template.proxyArtifactPath,
+        proxyArtifactHash: template.proxyArtifactHash,
+        baseline: template.baseline,
+        reviewPacket: template.reviewPacket,
+        proxyGuards: template.proxyGuards
+      })
+    )
+    .digest('hex');
+}
+
 function buildMarkdown(template) {
   const thresholdLines = [
     `- repeated ask stable: ${template.thresholds.repeatedAskStableRequired ? 'required' : 'not required'}`,
@@ -86,6 +108,11 @@ Scenario:
 
 Proxy artifact:
 - \`${template.proxyArtifactPath}\`
+- \`sha256:${template.proxyArtifactHash}\`
+
+Capture template:
+- version: \`${template.captureTemplateVersion}\`
+- signature: \`${template.captureTemplateSignature}\`
 
 Proof and replay anchors:
 - baseline proofId: \`${template.baseline.proofId ?? ''}\`
@@ -115,7 +142,7 @@ ${thresholdLines}
 ## Submit With
 
 \`\`\`powershell
-pnpm phase17:benchmark:human -- --operator "${template.operator ?? '<name>'}" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --baseline-proof-id "${template.baseline.proofId ?? ''}" --baseline-replay-token "${template.baseline.replayToken ?? ''}" --review-proof-id "${template.reviewPacket.proofId ?? ''}" --review-replay-token "${template.reviewPacket.replayToken ?? ''}" --notes "<observation>"
+pnpm phase17:benchmark:human -- --capture-template "${template.captureTemplatePath}" --operator "${template.operator ?? '<name>'}" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --notes "<observation>"
 \`\`\`
 `;
 }
@@ -131,13 +158,17 @@ async function main() {
   const outJsonPath = path.resolve(args['out-json'] ?? defaultOutJson);
   const outMdPath = path.resolve(args['out-md'] ?? defaultOutMd);
   const proxyArtifact = await readJson(proxyArtifactPath);
+  const proxyArtifactHash = await sha256File(proxyArtifactPath);
 
   const template = {
     generatedAt: new Date().toISOString(),
+    captureTemplateVersion: 1,
     runDate: args.date ?? todayIsoDate(),
     operator: args.operator ?? null,
     query: args.query ?? defaultQuery,
+    captureTemplatePath: path.relative(repoRoot, outJsonPath).replaceAll('\\', '/'),
     proxyArtifactPath: path.relative(repoRoot, proxyArtifactPath).replaceAll('\\', '/'),
+    proxyArtifactHash,
     baseline: {
       proofId: proxyArtifact?.baseline?.proofId ?? null,
       replayToken: proxyArtifact?.baseline?.askSummary?.replayToken ?? null
@@ -167,6 +198,7 @@ async function main() {
       confidenceNotWorseRequired: true
     }
   };
+  template.captureTemplateSignature = createTemplateSignature(template);
 
   await fs.mkdir(path.dirname(outJsonPath), { recursive: true });
   await fs.mkdir(path.dirname(outMdPath), { recursive: true });

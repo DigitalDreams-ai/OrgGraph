@@ -1,8 +1,14 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const defaultProxyArtifactPath = path.join(repoRoot, 'logs', 'high-risk-review-benchmark.json');
+const defaultCaptureTemplatePath = path.join(
+  repoRoot,
+  'logs',
+  'high-risk-review-human-capture-template.json'
+);
 const defaultOutJson = path.join(repoRoot, 'logs', 'high-risk-review-human-benchmark.json');
 const defaultOutMd = path.join(repoRoot, 'logs', 'high-risk-review-human-benchmark.md');
 
@@ -27,17 +33,14 @@ Required:
 Optional:
   --date <YYYY-MM-DD>                       Defaults to today in local time
   --query "<text>"                          Defaults to the benchmark scenario query
+  --capture-template <path>                 Defaults to logs/high-risk-review-human-capture-template.json
   --proxy-artifact <path>                   Defaults to logs/high-risk-review-benchmark.json
   --out-json <path>                         Defaults to logs/high-risk-review-human-benchmark.json
   --out-md <path>                           Defaults to logs/high-risk-review-human-benchmark.md
-  --baseline-proof-id <id>
-  --baseline-replay-token <token>
-  --review-proof-id <id>
-  --review-replay-token <token>
   --notes "<text>"                          Repeatable
 
 Example:
-  pnpm phase17:benchmark:human -- --operator "Sean" --baseline-time-ms 180000 --baseline-evidence-steps 5 --baseline-workspace-switches 4 --baseline-raw-json yes --baseline-confidence 3 --review-time-ms 75000 --review-evidence-steps 1 --review-workspace-switches 0 --review-raw-json no --review-confidence 4 --notes "Packet was sufficient without raw JSON"
+  pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms 180000 --baseline-evidence-steps 5 --baseline-workspace-switches 4 --baseline-raw-json yes --baseline-confidence 3 --review-time-ms 75000 --review-evidence-steps 1 --review-workspace-switches 0 --review-raw-json no --review-confidence 4 --notes "Packet was sufficient without raw JSON"
 `;
 
 function parseArgs(argv) {
@@ -115,6 +118,51 @@ function requireFields(args, fields) {
 async function readJson(filePath) {
   const body = await fs.readFile(filePath, 'utf8');
   return JSON.parse(body);
+}
+
+async function sha256File(filePath) {
+  const body = await fs.readFile(filePath);
+  return crypto.createHash('sha256').update(body).digest('hex');
+}
+
+function createTemplateSignature(template) {
+  return crypto
+    .createHash('sha256')
+    .update(
+      JSON.stringify({
+        query: template.query,
+        proxyArtifactPath: template.proxyArtifactPath,
+        proxyArtifactHash: template.proxyArtifactHash,
+        baseline: template.baseline,
+        reviewPacket: template.reviewPacket,
+        proxyGuards: template.proxyGuards
+      })
+    )
+    .digest('hex');
+}
+
+function assertTemplateMatches(template, captureTemplatePath, proxyArtifactPath, proxyArtifactHash, query) {
+  const expectedSignature = createTemplateSignature(template);
+
+  if (template.captureTemplateVersion !== 1) {
+    throw new Error(`Unsupported capture template version in ${captureTemplatePath}`);
+  }
+  if (template.captureTemplateSignature !== expectedSignature) {
+    throw new Error(`Capture template signature mismatch in ${captureTemplatePath}`);
+  }
+  if (path.resolve(repoRoot, template.proxyArtifactPath) !== path.resolve(proxyArtifactPath)) {
+    throw new Error(
+      `Capture template points at ${template.proxyArtifactPath}, but capture used ${path.relative(repoRoot, proxyArtifactPath).replaceAll('\\', '/')}`
+    );
+  }
+  if (template.proxyArtifactHash !== proxyArtifactHash) {
+    throw new Error(
+      'Proxy artifact hash changed since the capture template was prepared. Re-run phase17:benchmark:human:prepare.'
+    );
+  }
+  if (template.query !== query) {
+    throw new Error('Capture query does not match the prepared template query.');
+  }
 }
 
 function computeThresholds(baseline, review) {
@@ -227,7 +275,19 @@ async function main() {
   const proxyArtifactPath = path.resolve(args['proxy-artifact'] ?? defaultProxyArtifactPath);
   const outJsonPath = path.resolve(args['out-json'] ?? defaultOutJson);
   const outMdPath = path.resolve(args['out-md'] ?? defaultOutMd);
+  const captureTemplatePath = path.resolve(args['capture-template'] ?? defaultCaptureTemplatePath);
   const proxyArtifact = await readJson(proxyArtifactPath);
+  const captureTemplate = await readJson(captureTemplatePath);
+  const query = args.query ?? captureTemplate.query ?? reviewQuery;
+  const proxyArtifactHash = await sha256File(proxyArtifactPath);
+
+  assertTemplateMatches(
+    captureTemplate,
+    captureTemplatePath,
+    proxyArtifactPath,
+    proxyArtifactHash,
+    query
+  );
 
   const baseline = {
     timeToTrustedAnswerMs: toWholeNumber(args['baseline-time-ms'], 'baseline-time-ms'),
@@ -235,8 +295,9 @@ async function main() {
     workspaceSwitches: toWholeNumber(args['baseline-workspace-switches'], 'baseline-workspace-switches'),
     rawJsonNeeded: toBooleanYesNo(args['baseline-raw-json'], 'baseline-raw-json'),
     confidenceRating: toWholeNumber(args['baseline-confidence'], 'baseline-confidence'),
-    proofId: args['baseline-proof-id'] ?? proxyArtifact?.baseline?.proofId ?? null,
-    replayToken: args['baseline-replay-token'] ?? proxyArtifact?.baseline?.askSummary?.replayToken ?? null
+    proofId: captureTemplate?.baseline?.proofId ?? proxyArtifact?.baseline?.proofId ?? null,
+    replayToken:
+      captureTemplate?.baseline?.replayToken ?? proxyArtifact?.baseline?.askSummary?.replayToken ?? null
   };
 
   const reviewPacket = {
@@ -245,8 +306,9 @@ async function main() {
     workspaceSwitches: toWholeNumber(args['review-workspace-switches'], 'review-workspace-switches'),
     rawJsonNeeded: toBooleanYesNo(args['review-raw-json'], 'review-raw-json'),
     confidenceRating: toWholeNumber(args['review-confidence'], 'review-confidence'),
-    proofId: args['review-proof-id'] ?? proxyArtifact?.reviewPacket?.ask?.proofId ?? null,
-    replayToken: args['review-replay-token'] ?? proxyArtifact?.reviewPacket?.ask?.replayToken ?? null
+    proofId: captureTemplate?.reviewPacket?.proofId ?? proxyArtifact?.reviewPacket?.ask?.proofId ?? null,
+    replayToken:
+      captureTemplate?.reviewPacket?.replayToken ?? proxyArtifact?.reviewPacket?.ask?.replayToken ?? null
   };
 
   if (baseline.confidenceRating < 1 || baseline.confidenceRating > 5) {
@@ -282,8 +344,11 @@ async function main() {
     generatedAt: new Date().toISOString(),
     runDate: args.date ?? todayIsoDate(),
     operator: args.operator,
-    query: args.query ?? reviewQuery,
+    query,
+    captureTemplatePath: path.relative(repoRoot, captureTemplatePath).replaceAll('\\', '/'),
+    captureTemplateSignature: captureTemplate.captureTemplateSignature,
     proxyArtifactPath: path.relative(repoRoot, proxyArtifactPath).replaceAll('\\', '/'),
+    proxyArtifactHash,
     baseline,
     reviewPacket,
     proxyGuards,
