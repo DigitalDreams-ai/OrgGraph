@@ -189,6 +189,9 @@ pnpm phase17:benchmark:human:finalize
 
 # Verify that the canonical benchmark results are backed by real human evidence
 pnpm phase17:benchmark:human:verify
+
+# Report whether Stage 1 human evidence is pending or verified
+pnpm phase17:benchmark:human:status
 ```
 
 ## Project Memory MCP

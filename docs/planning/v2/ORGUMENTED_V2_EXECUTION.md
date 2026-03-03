@@ -116,6 +116,7 @@ Immediate execution pressure:
 - preserve the capture-template provenance now carried into the canonical results surface
 - keep a fail-closed verifier command available so Stage 1 lift claims can be checked from artifacts instead of inspection alone
 - keep the one-command finalize path available so publication and verification do not drift apart operationally
+- keep an explicit evidence-status command available so Stage 1 human proof can be reported as pending versus verified without hand inspection
 - keep the human benchmark capture and publication workflow replay-linked while manual evidence is recorded
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
 - preserve runtime convergence and packaged desktop parity while benchmark evidence is captured
