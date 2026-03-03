@@ -80,12 +80,10 @@ Current concrete checkpoint:
 ## Recommended Immediate Sequence
 
 ### Slice 1
-- capture one human benchmark run for the trusted high-risk review workflow
-- record operator timing, confidence, raw-JSON dependence, and workflow friction through `pnpm phase17:benchmark:human`
-- keep the benchmark replay-linked to the current proof and replay artifacts
-- publish the resulting human benchmark artifact into the canonical results surface through `pnpm phase17:benchmark:human:publish`
-- use `pnpm phase17:benchmark:human:finalize` as the normal closeout path so publication and provenance verification stay coupled
-- fail closed on synthetic smoke evidence so the canonical benchmark record cannot be updated from placeholder runs
+- prove real-org `Org Sessions` attach/switch behavior against a real authenticated alias on the operator machine
+- prove real-org `Org Browser` catalog, member load, and selective retrieve flow
+- keep the retrieve handoff into `Refresh & Build`
+- tighten real-org operator failures before returning to benchmark work
 
 ### Slice 2
 - make Refresh and Build product-grade for the common desktop rebuild path
@@ -107,23 +105,15 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- no new feature branch is required until the first real human benchmark run is captured
-- `main` is the current benchmark-evidence baseline
+- `dna-real-org-connect-browser`
 
 Immediate execution pressure:
-- execute one real human benchmark run against the prepared capture template
-- archive stale synthetic or test benchmark artifacts out of the default `logs/` paths before that run starts
-- publish canonical benchmark results from real artifacts rather than handwritten markdown edits
-- preserve the capture-template provenance now carried into the canonical results surface
-- keep a fail-closed verifier command available so Stage 1 lift claims can be checked from artifacts instead of inspection alone
-- keep the one-command finalize path available so publication and verification do not drift apart operationally
-- keep an explicit evidence-status command available so Stage 1 human proof can be reported as pending versus verified without hand inspection
-- keep an explicit reset/archive command available so the first real human run does not inherit stale synthetic artifacts
-- keep the human benchmark capture and publication workflow replay-linked while manual evidence is recorded
-- preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
-- preserve runtime convergence and packaged desktop parity while benchmark evidence is captured
-- keep the review packet usable as the primary artifact without raw JSON dependence
-- avoid widening into Stage 2 governance or policy automation before the Stage 1 lift proof exists
+- prove that a real local alias can be discovered, preflighted, connected, and restored through `Org Sessions`
+- prove that `Org Browser` can load real metadata types and members from the active alias
+- prove that selective retrieve works against a real connected org and hands off into `Refresh & Build`
+- preserve runtime convergence and packaged desktop parity while real-org proof is captured
+- keep failure states actionable when local `sf`/`cci` auth prerequisites are missing
+- defer more fixture-benchmark iteration until real-org operator proof is materially stronger
 
 ## Remaining Stage 1 Product Gates
 
