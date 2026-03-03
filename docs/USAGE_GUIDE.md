@@ -436,4 +436,5 @@ pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-c
 - `phase17:benchmark:human:session` runs the grounded desktop smoke, refreshes the proxy benchmark, writes the human capture packet, and prints the exact capture command for the operator
 - `phase17:benchmark:human:prepare` writes a fillable capture packet with proof/replay anchors, a proxy-artifact hash, and threshold reminders
 - `phase17:benchmark:human` records the operator-observed timing, confidence, raw-JSON dependence, and pass/fail result, and now fails closed unless it is tied to the prepared capture template for the same query and proxy artifact
+- `phase17:benchmark:human:verify` fails closed unless the human artifact is real, passed, and still matches the canonical published benchmark results
 - the full operator walkthrough lives in `docs/runbooks/HUMAN_BENCHMARK_CAPTURE.md`

@@ -38,6 +38,7 @@
     "phase17:benchmark:human:session": "node ./scripts/phase17-human-benchmark-session.mjs",
     "phase17:benchmark:human": "node ./scripts/phase17-human-benchmark.mjs",
     "phase17:benchmark:human:prepare": "node ./scripts/phase17-human-benchmark-prepare.mjs",
-    "phase17:benchmark:human:publish": "node ./scripts/phase17-human-benchmark-publish.mjs"
+    "phase17:benchmark:human:publish": "node ./scripts/phase17-human-benchmark-publish.mjs",
+    "phase17:benchmark:human:verify": "node ./scripts/phase17-human-benchmark-verify.mjs"
   }
 }
