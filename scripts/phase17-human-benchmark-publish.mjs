@@ -119,6 +119,13 @@ Artifacts:
 - \`${metadata.proxyArtifactPath}\`
 - \`${metadata.humanArtifactPath}\`
 
+## Provenance Binding
+
+Prepared capture template:
+- path: \`${humanArtifact.captureTemplatePath ?? 'n/a'}\`
+- signature: \`${humanArtifact.captureTemplateSignature ?? 'n/a'}\`
+- proxy artifact hash: \`${humanArtifact.proxyArtifactHash ?? 'n/a'}\`
+
 ## Latest Automated Proxy Run
 
 Runtime mode:
@@ -177,6 +184,7 @@ Human comparison:
 - workspace-switch delta: \`${humanArtifact.thresholds?.workspaceSwitchDelta ?? 'n/a'}\`
 - confidence delta: \`${humanArtifact.thresholds?.confidenceDelta ?? 'n/a'}\`
 - overall result: \`${humanArtifact.passed ? 'PASS' : 'FAIL'}\`
+- benchmark query matched prepared template: \`${humanArtifact.query}\`
 
 Proxy notes:
 ${proxyNotes.length > 0 ? proxyNotes.map((note) => `- ${note}`).join('\n') : '- none recorded'}

@@ -189,6 +189,7 @@ Publication behavior:
 - reads both the latest automated proxy artifact and the latest human benchmark artifact
 - regenerates the canonical benchmark results markdown instead of relying on manual transcription
 - fails closed if the human artifact still looks synthetic or smoke-only
+- carries the prepared capture-template path, signature, and proxy-artifact hash into the canonical results surface
 - supports non-canonical output overrides only for local verification
 
 What the human capture command does:
