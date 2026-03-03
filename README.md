@@ -108,6 +108,7 @@ See [ORG_INTEGRATION.md](./docs/runbooks/ORG_INTEGRATION.md), [DESKTOP_DEV_RUNTI
 - Documentation index: [docs/README.md](./docs/README.md)
 - Usage guide: [docs/USAGE_GUIDE.md](./docs/USAGE_GUIDE.md)
 - Quick commands: [docs/CHEATSHEET.md](./docs/CHEATSHEET.md)
+- Human benchmark runbook: [docs/runbooks/HUMAN_BENCHMARK_CAPTURE.md](./docs/runbooks/HUMAN_BENCHMARK_CAPTURE.md)
 - Production promotion gate: [docs/runbooks/PRODUCTION_PROMOTION.md](./docs/runbooks/PRODUCTION_PROMOTION.md)
 - Release checklist: [docs/releases/RELEASE_CHECKLIST.md](./docs/releases/RELEASE_CHECKLIST.md)
 

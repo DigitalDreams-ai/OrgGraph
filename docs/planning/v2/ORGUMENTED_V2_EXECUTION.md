@@ -106,15 +106,14 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-human-benchmark-session-kit`
+- no new feature branch is required until the first real human benchmark run is captured
+- `main` is the current benchmark-evidence baseline
 
 Immediate execution pressure:
-- reduce operator setup friction for the real human benchmark run
-- make the human benchmark session start from one replay-linked setup command instead of multiple manual preparation steps
-- bind human capture to the prepared template so benchmark evidence cannot drift away from the exact proxy artifact, query, and proof/replay anchors being evaluated
-- surface that same capture-template provenance in the canonical published benchmark results instead of hiding it only in raw log artifacts
-- keep the human benchmark capture and publication workflow replay-linked while manual evidence is recorded
+- execute one real human benchmark run against the prepared capture template
 - publish canonical benchmark results from real artifacts rather than handwritten markdown edits
+- preserve the capture-template provenance now carried into the canonical results surface
+- keep the human benchmark capture and publication workflow replay-linked while manual evidence is recorded
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
 - preserve runtime convergence and packaged desktop parity while benchmark evidence is captured
 - keep the review packet usable as the primary artifact without raw JSON dependence
