@@ -40,8 +40,7 @@ After the operator finishes the two manual paths, record the results with:
 ```powershell
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "<name>" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --notes "<observation>"
-pnpm phase17:benchmark:human:publish
-pnpm phase17:benchmark:human:verify
+pnpm phase17:benchmark:human:finalize
 ```
 
 ## Manual Capture Rules
@@ -68,6 +67,7 @@ The run should produce:
 - `logs/high-risk-review-human-benchmark.md`
 - updated canonical publication:
   - `docs/planning/v2/HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
+- verification summary proving the canonical publication still matches the captured human evidence provenance
 
 ## Fail-Closed Expectations
 
@@ -76,6 +76,7 @@ Do not override these protections:
 - the capture must match the prepared proxy-artifact hash
 - the capture must match the prepared proof and replay anchors
 - canonical publication must not be generated from synthetic-only evidence
+- canonical publication must still pass `phase17:benchmark:human:verify` against the same artifact set
 
 If any of those fail, stop and fix the mismatch before claiming a Stage 1 result.
 
@@ -95,4 +96,4 @@ The review-packet path only counts as Stage 1 lift if:
 - keep the raw JSON and markdown artifacts in `logs/`
 - treat `docs/planning/v2/HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md` as the canonical published surface
 - do not hand-edit benchmark numbers into the canonical results doc
-- use `pnpm phase17:benchmark:human:verify` after publication to confirm the canonical results surface still matches the real human artifact
+- use `pnpm phase17:benchmark:human:finalize` as the default closeout path so publication and provenance verification stay coupled

@@ -183,6 +183,13 @@ pnpm phase17:benchmark:human:publish
 pnpm phase17:benchmark:human:verify
 ```
 
+Preferred one-step finalize command:
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm phase17:benchmark:human:finalize
+```
+
 Canonical publication output:
 - `docs/planning/v2/HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
 
@@ -192,6 +199,7 @@ Publication behavior:
 - fails closed if the human artifact still looks synthetic or smoke-only
 - carries the prepared capture-template path, signature, and proxy-artifact hash into the canonical results surface
 - `phase17:benchmark:human:verify` fails closed unless the human artifact is real, passes the Stage 1 threshold checks, and the canonical results surface still contains the matching provenance fields
+- `phase17:benchmark:human:finalize` runs publication and provenance verification as one fail-closed step
 - supports non-canonical output overrides only for local verification
 
 What the human capture command does:
@@ -234,7 +242,7 @@ Current branch status:
 - latest proxy run is summarized in `HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
 - human benchmark evidence is still required before claiming full Stage 1 lift proof
 - canonical benchmark publication is generated from artifacts rather than handwritten markdown edits
-- the immediate execution task is to capture one real human benchmark run and publish it through `pnpm phase17:benchmark:human:publish`
+- the immediate execution task is to capture one real human benchmark run and close it with `pnpm phase17:benchmark:human:finalize`
 - once that run exists, `pnpm phase17:benchmark:human:verify` becomes the fail-closed proof that the canonical results surface is backed by real Stage 1 evidence
 - the operator handoff for that run is documented in `docs/runbooks/HUMAN_BENCHMARK_CAPTURE.md`
 
