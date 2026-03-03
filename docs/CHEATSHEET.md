@@ -183,6 +183,9 @@ pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-c
 
 # Publish canonical benchmark results after the real run
 pnpm phase17:benchmark:human:publish
+
+# Verify that the canonical benchmark results are backed by real human evidence
+pnpm phase17:benchmark:human:verify
 ```
 
 ## Project Memory MCP
