@@ -215,6 +215,38 @@ async function run(): Promise<void> {
     assert.ok(retrieveCall?.args.includes('--metadata'), 'expected selector-based metadata retrieve');
     assert.ok(!retrieveCall?.args.includes('--manifest'), 'manifest retrieve must not be used');
 
+    fs.mkdirSync(path.join(parsePath, 'objects', 'Opportunity', 'fields'), { recursive: true });
+    fs.mkdirSync(path.join(parsePath, 'objects', 'Account', 'fields'), { recursive: true });
+    fs.writeFileSync(
+      path.join(parsePath, 'objects', 'Opportunity', 'Opportunity.object-meta.xml'),
+      '<CustomObject><fullName>Opportunity</fullName></CustomObject>',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(parsePath, 'objects', 'Opportunity', 'fields', 'StageName.field-meta.xml'),
+      '<CustomField><fullName>StageName</fullName></CustomField>',
+      'utf8'
+    );
+    fs.writeFileSync(
+      path.join(parsePath, 'objects', 'Account', 'Account.object-meta.xml'),
+      '<CustomObject><fullName>Account</fullName></CustomObject>',
+      'utf8'
+    );
+
+    const metadataCatalog = await service.metadataCatalog({ refresh: true, limit: 50 });
+    assert.ok(metadataCatalog.types.some((item) => item.type === 'CustomObject'));
+
+    const metadataMembers = await service.metadataMembers({
+      type: 'CustomObject',
+      refresh: true,
+      limit: 50
+    });
+    assert.equal(metadataMembers.type, 'CustomObject');
+    assert.deepEqual(
+      metadataMembers.members.map((member) => member.name),
+      ['Account', 'Opportunity']
+    );
+
     await assert.rejects(
       service.retrieveAndRefresh({ runAuth: false, runRetrieve: true, autoRefresh: false, selections: [] }),
       (error: unknown) => {

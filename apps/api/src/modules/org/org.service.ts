@@ -917,8 +917,11 @@ export class OrgService {
         if (parts.length < 2) {
           continue;
         }
-        const type = this.inferMetadataType(parts[0], entry.name);
-        const member = entry.name.replace(/\.[^.]+(?:\.[^.]+)?$/, '');
+        const resolved = this.resolveMetadataIndexEntry(parts, entry.name);
+        if (!resolved) {
+          continue;
+        }
+        const { type, member } = resolved;
         if (!typeMembers.has(type)) {
           typeMembers.set(type, new Set());
         }
@@ -1117,6 +1120,35 @@ export class OrgService {
     if (fileName.includes('.trigger')) return 'ApexTrigger';
     if (fileName.includes('.object-meta.xml')) return 'CustomObject';
     return folderName;
+  }
+
+  private resolveMetadataIndexEntry(
+    relativeParts: string[],
+    fileName: string
+  ): { type: string; member: string } | undefined {
+    const topLevelFolder = relativeParts[0];
+    const normalizedFolder = topLevelFolder.toLowerCase();
+    const type = this.inferMetadataType(topLevelFolder, fileName);
+
+    if (normalizedFolder === 'objects' && relativeParts.length >= 2) {
+      const objectName = relativeParts[1]?.trim();
+      if (!objectName) {
+        return undefined;
+      }
+      return {
+        type,
+        member: objectName
+      };
+    }
+
+    const member = fileName.replace(/\.[^.]+(?:\.[^.]+)?$/, '').trim();
+    if (!member) {
+      return undefined;
+    }
+    return {
+      type,
+      member
+    };
   }
 
   private buildMetadataArgs(selections: Array<{ type: string; members?: string[] }>): string[] {
