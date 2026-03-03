@@ -143,6 +143,113 @@ What the bootstrap sequence does:
 7. prints the exact command you will run after the manual review
 8. leaves Orgumented open for your manual work
 
+Step-by-step meaning:
+
+1. Archive stale Phase 17 artifacts
+   - What happens:
+     - old benchmark files are moved out of `logs/`
+     - they are not deleted
+   - What you should see:
+     - JSON output containing:
+       - `archiveDir`
+       - `archivedCount`
+       - `archived`
+     - then either:
+       - `Phase 17 artifacts archived. Start the next real capture with:`
+       - or `No Phase 17 benchmark artifacts needed archiving.`
+   - Where archived files go:
+     - `C:\Users\sean\Projects\GitHub\OrgGraph\logs\archive\phase17-human-benchmark\<timestamp>\`
+   - What you should do:
+     - let the command finish
+     - do not manually move files yourself
+   - If this step fails:
+     - stop and send the full terminal output
+
+2. Run packaged desktop smoke
+   - What happens:
+     - Orgumented validates the packaged desktop runtime automatically
+   - What you should see:
+     - terminal output from `pnpm desktop:smoke:release`
+     - readiness checks against the packaged runtime
+   - What you should do:
+     - wait
+     - do not click around in Orgumented yet
+   - Important:
+     - this is an automated preflight check, not the manual benchmark itself
+
+3. Open Orgumented briefly during smoke, then close it
+   - What happens:
+     - the desktop app may appear, then close on its own
+   - What you should see:
+     - an Orgumented window open briefly
+     - then disappear without your input
+   - What you should do:
+     - nothing
+     - this is normal
+   - This is not a failure by itself.
+
+4. Relaunch the packaged Orgumented desktop app
+   - What happens:
+     - after smoke, the session bootstrap launches the packaged desktop app again
+   - What you should see:
+     - Orgumented opens a second time
+   - What you should do:
+     - wait for the terminal to finish its bootstrap output
+     - do not begin timing the benchmark yet
+   - This second launch is the one intended for your manual review.
+
+5. Refresh the proxy benchmark against the live runtime
+   - What happens:
+     - the session refreshes the Stage 1 proxy benchmark while Orgumented is grounded and live
+   - What you should see:
+     - terminal output from `pnpm phase17:benchmark`
+     - a benchmark artifact refresh under `logs/`
+   - Expected file:
+     - `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-benchmark.json`
+   - What you should do:
+     - wait for the command to finish
+   - If the session ends before this file exists:
+     - stop and report that failure
+
+6. Write a human capture template
+   - What happens:
+     - the bootstrap prepares the exact capture packet for this run
+   - What you should see:
+     - new template files under `logs/`
+   - Required files:
+     - `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-capture-template.json`
+     - `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-capture-template.md`
+   - What you should do:
+     - confirm those files exist before continuing
+   - If either file is missing:
+     - stop and report the failure
+
+7. Print the exact command you will run after the manual review
+   - What happens:
+     - the bootstrap prints the exact `pnpm phase17:benchmark:human -- ...` command for this run
+   - What you should see:
+     - a full command beginning with:
+       - `pnpm phase17:benchmark:human --`
+     - then a final line:
+       - `pnpm phase17:benchmark:human:finalize`
+   - What you should do:
+     - copy that printed capture command somewhere safe
+     - use it later after you finish the manual review
+   - Do not invent your own command if the printed one is available.
+
+8. Leave Orgumented open for your manual work
+   - What happens:
+     - the bootstrap finishes and leaves the desktop app open
+   - What you should see:
+     - the terminal prints:
+       - `Human benchmark session is prepared.`
+       - `Orgumented should now remain open for the manual review.`
+     - Orgumented is still open on screen
+   - What you should do:
+     - only now begin the manual benchmark steps
+   - If Orgumented is closed at this point:
+     - stop and report the failure instead of continuing
+
 Expected visual cues:
 - Orgumented may open once and close automatically during smoke
 - Orgumented should open again and remain open for your manual review
