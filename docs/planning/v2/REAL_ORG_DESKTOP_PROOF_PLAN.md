@@ -81,3 +81,8 @@ Still to prove in this branch:
 - direct packaged desktop UI proof for the same flow
 - retrieve handoff visibility into `Refresh & Build`
 - one readable fail-closed desktop path for invalid selections or missing auth
+
+First implementation note on this branch:
+- `Org Sessions` desktop readiness must not treat a missing parse tree as a connect blocker
+- first-contact connect should be allowed as long as the alias is authenticated in `sf` and the local runtime is available
+- parse-path absence should stay visible as a browser/retrieve warning until the first successful retrieve seeds the parse tree

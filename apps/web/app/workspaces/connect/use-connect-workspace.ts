@@ -54,11 +54,11 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   );
   const preflightIssues = orgPreflight?.issues ?? [];
   const toolingReady = Boolean(orgStatus?.sf?.installed) && Boolean(orgStatus?.cci?.installed);
+  const browserSeeded = Boolean(orgPreflight?.checks?.parsePathPresent);
   const selectedAliasReady = Boolean(
-    orgPreflight?.checks?.aliasAuthenticated &&
-      orgPreflight?.checks?.sfInstalled &&
-      orgPreflight?.checks?.cciInstalled &&
-      orgPreflight?.checks?.parsePathPresent
+    orgPreflight?.integrationEnabled &&
+      orgPreflight?.checks?.aliasAuthenticated &&
+      orgPreflight?.checks?.sfInstalled
   );
 
   async function runAction(
@@ -268,6 +268,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     selectedAlias,
     preflightIssues: preflightIssues as OrgPreflightIssue[],
     toolingReady,
+    browserSeeded,
     selectedAliasReady,
     loadAliases,
     checkSession,
