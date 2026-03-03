@@ -156,6 +156,19 @@ pnpm phase17:benchmark:human:prepare -- --operator "<name>"
 pnpm phase17:benchmark:human -- --operator "<name>" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --notes "<observation>"
 ```
 
+Session bootstrap command:
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm phase17:benchmark:human:session -- --operator "<name>"
+```
+
+What the session bootstrap does:
+- runs packaged desktop smoke unless told not to
+- refreshes the automated proxy benchmark unless told not to
+- generates the fillable human capture packet
+- prints the exact `phase17:benchmark:human` command to run after the manual desktop review
+
 Human capture outputs:
 - `logs/high-risk-review-human-benchmark.json`
 - `logs/high-risk-review-human-benchmark.md`
@@ -215,7 +228,7 @@ Current branch status:
 - automated proxy benchmark capture is now available through `pnpm phase17:benchmark`
 - latest proxy run is summarized in `HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
 - human benchmark evidence is still required before claiming full Stage 1 lift proof
-- the active next branch is `dna-stage1-human-evidence`
+- the active next branch is `dna-human-benchmark-session-kit`
 - canonical benchmark publication is generated from artifacts rather than handwritten markdown edits
 - the immediate execution task is to capture one real human benchmark run and publish it through `pnpm phase17:benchmark:human:publish`
 
