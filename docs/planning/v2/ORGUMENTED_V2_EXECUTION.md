@@ -106,12 +106,12 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-human-benchmark-results`
+- `dna-stage1-human-evidence`
 
 Immediate execution pressure:
-- keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
-- make canonical benchmark publication generated from artifacts instead of manual markdown transcription
-- fail closed on synthetic or placeholder evidence when generating the canonical benchmark results surface
+- capture one real human benchmark run for the trusted high-risk review workflow
+- keep the human benchmark capture and publication workflow replay-linked while manual evidence is recorded
+- publish canonical benchmark results from real artifacts rather than handwritten markdown edits
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
 - preserve runtime convergence and packaged desktop parity while benchmark evidence is captured
 - keep the review packet usable as the primary artifact without raw JSON dependence
