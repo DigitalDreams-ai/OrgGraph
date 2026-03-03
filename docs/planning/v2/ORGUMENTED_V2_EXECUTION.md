@@ -80,10 +80,11 @@ Current concrete checkpoint:
 ## Recommended Immediate Sequence
 
 ### Slice 1
-- prove real-org `Org Sessions` attach/switch behavior against a real authenticated alias on the operator machine
-- prove real-org `Org Browser` catalog, member load, and selective retrieve flow
+- prove the real-org flow through the packaged desktop UI, not only through direct API proof
+- prove `Org Sessions` connect/switch against a real authenticated alias on the operator machine
+- prove `Org Browser` catalog, member load, and selective retrieve flow in the desktop shell
 - keep the retrieve handoff into `Refresh & Build`
-- tighten real-org operator failures before returning to benchmark work
+- tighten one fail-closed real-org operator failure before returning to benchmark work
 
 ### Slice 2
 - make Refresh and Build product-grade for the common desktop rebuild path
@@ -105,22 +106,24 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-real-org-connect-browser`
+- `dna-real-org-desktop-proof`
 
 Immediate execution pressure:
+- prove the real-org path through the packaged desktop UI, not just the API path
 - prove that a real local alias can be discovered, preflighted, connected, and restored through `Org Sessions`
-- prove that `Org Browser` can load real metadata types and members from the active alias
+- prove that `Org Browser` can load real metadata types and members from the active alias in the desktop shell
 - prove that selective retrieve works against a real connected org and hands off into `Refresh & Build`
-- preserve runtime convergence and packaged desktop parity while real-org proof is captured
+- preserve runtime convergence and packaged desktop parity while the desktop proof is captured
 - keep failure states actionable when local `sf`/`cci` auth prerequisites are missing
 - defer more fixture-benchmark iteration until real-org operator proof is materially stronger
 
-Current real-org proof checkpoint on `dna-real-org-connect-browser`:
+Current real-org checkpoint after PR #68:
 - local alias inventory and preflight succeed against real sandbox aliases on this machine
 - `shulman-uat` can be switched into the active session through the org session engine path
 - selective retrieve for `CustomObject:Opportunity` completes against the real alias
 - `Org Browser` catalog loads from the resulting parse tree
 - the CustomObject member indexer now returns object names like `Opportunity` instead of nested field/listview file names
+- the remaining gap is direct desktop-shell proof of the same flow and visible retrieve handoff into `Refresh & Build`
 
 ## Remaining Stage 1 Product Gates
 
