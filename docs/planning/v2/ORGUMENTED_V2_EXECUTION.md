@@ -106,25 +106,25 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-real-org-desktop-proof`
+- `dna-real-org-retrieve-handoff`
 
 Immediate execution pressure:
-- prove the real-org path through the packaged desktop UI, not just the API path
-- prove that a real local alias can be discovered, preflighted, connected, and restored through `Org Sessions`
-- prove that `Org Browser` can load real metadata types and members from the active alias in the desktop shell
-- prove that selective retrieve works against a real connected org and hands off into `Refresh & Build`
-- preserve runtime convergence and packaged desktop parity while the desktop proof is captured
+- prove the real-org retrieve handoff through the packaged desktop UI, not just the API path
+- prove that `Org Browser` selective retrieve is visibly handed into `Refresh & Build`
+- keep alias, parse path, metadata args, and auto-refresh intent readable without raw JSON inspection
+- prove one fail-closed desktop path when retrieve state is incomplete or invalid
+- preserve runtime convergence and packaged desktop parity while the handoff proof is captured
 - keep failure states actionable when local `sf`/`cci` auth prerequisites are missing
 - defer more fixture-benchmark iteration until real-org operator proof is materially stronger
 
-Current real-org checkpoint after PR #68:
+Current real-org checkpoint after PR #70:
 - local alias inventory and preflight succeed against real sandbox aliases on this machine
 - `shulman-uat` can be switched into the active session through the org session engine path
 - selective retrieve for `CustomObject:Opportunity` completes against the real alias
 - `Org Browser` catalog loads from the resulting parse tree
 - the CustomObject member indexer now returns object names like `Opportunity` instead of nested field/listview file names
-- the remaining gap is direct desktop-shell proof of the same flow and visible retrieve handoff into `Refresh & Build`
-- desktop `Org Sessions` readiness should treat parse-path absence as a browser warning, not a connect blocker, on first contact
+- desktop `Org Sessions` now treats parse-path absence as a browser warning instead of a connect blocker on first contact
+- the remaining gap is direct desktop-shell proof that the real retrieve result stays visible and actionable inside `Refresh & Build`
 
 ## Remaining Stage 1 Product Gates
 
