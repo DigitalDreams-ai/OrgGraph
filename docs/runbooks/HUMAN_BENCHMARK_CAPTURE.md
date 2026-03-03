@@ -38,20 +38,20 @@ Do not skip steps.
 
 ## Step 1: Start A Clean Session
 
-Use one shell style only.
-
-PowerShell:
-
-```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
-pnpm phase17:benchmark:human:reset
-pnpm phase17:benchmark:human:session -- --operator "Sean"
-```
+Use bash for all commands in this runbook.
 
 Bash:
 
 ```bash
 cd /c/Users/sean/Projects/GitHub/OrgGraph
+pnpm phase17:benchmark:human:reset
+pnpm phase17:benchmark:human:session -- --operator "Sean"
+```
+
+PowerShell fallback only:
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm phase17:benchmark:human:reset
 pnpm phase17:benchmark:human:session -- --operator "Sean"
 ```
@@ -127,20 +127,18 @@ Record the same five measures:
 
 After the operator form is complete, run the exact capture command printed by the session command.
 
-If you need the default shape, use:
+If you need the default shape, use bash:
 
-PowerShell:
-
-```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+```bash
+cd /c/Users/sean/Projects/GitHub/OrgGraph
 pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --notes "<observation>"
 pnpm phase17:benchmark:human:finalize
 ```
 
-Bash:
+PowerShell fallback only:
 
-```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --notes "<observation>"
 pnpm phase17:benchmark:human:finalize
 ```

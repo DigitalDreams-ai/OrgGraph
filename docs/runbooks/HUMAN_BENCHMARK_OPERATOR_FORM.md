@@ -35,20 +35,20 @@ Do not enter guessed or synthetic numbers.
 
 ## Before You Start
 
-- [ ] Run the clean session bootstrap commands.
-
-PowerShell:
-
-```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
-pnpm phase17:benchmark:human:reset
-pnpm phase17:benchmark:human:session -- --operator "Sean"
-```
+- [ ] Run the clean session bootstrap commands in bash.
 
 Bash:
 
 ```bash
 cd /c/Users/sean/Projects/GitHub/OrgGraph
+pnpm phase17:benchmark:human:reset
+pnpm phase17:benchmark:human:session -- --operator "Sean"
+```
+
+PowerShell fallback only:
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm phase17:benchmark:human:reset
 pnpm phase17:benchmark:human:session -- --operator "Sean"
 ```
@@ -142,20 +142,18 @@ Answer these directly:
 
 Run the exact capture command printed by the bootstrap command.
 
-If you need the default shape, use:
+If you need the default shape, use bash:
 
-PowerShell:
-
-```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+```bash
+cd /c/Users/sean/Projects/GitHub/OrgGraph
 pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms <baseline-ms> --baseline-evidence-steps <baseline-steps> --baseline-workspace-switches <baseline-switches> --baseline-raw-json yes|no --baseline-confidence <baseline-confidence> --review-time-ms <review-ms> --review-evidence-steps <review-steps> --review-workspace-switches <review-switches> --review-raw-json yes|no --review-confidence <review-confidence> --notes "<short observation>"
 pnpm phase17:benchmark:human:finalize
 ```
 
-Bash:
+PowerShell fallback only:
 
-```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms <baseline-ms> --baseline-evidence-steps <baseline-steps> --baseline-workspace-switches <baseline-switches> --baseline-raw-json yes|no --baseline-confidence <baseline-confidence> --review-time-ms <review-ms> --review-evidence-steps <review-steps> --review-workspace-switches <review-switches> --review-raw-json yes|no --review-confidence <review-confidence> --notes "<short observation>"
 pnpm phase17:benchmark:human:finalize
 ```
