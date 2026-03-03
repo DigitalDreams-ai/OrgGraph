@@ -84,6 +84,7 @@ Current concrete checkpoint:
 - record operator timing, confidence, raw-JSON dependence, and workflow friction through `pnpm phase17:benchmark:human`
 - keep the benchmark replay-linked to the current proof and replay artifacts
 - publish the resulting human benchmark artifact into the canonical results surface through `pnpm phase17:benchmark:human:publish`
+- use `pnpm phase17:benchmark:human:finalize` as the normal closeout path so publication and provenance verification stay coupled
 - fail closed on synthetic smoke evidence so the canonical benchmark record cannot be updated from placeholder runs
 
 ### Slice 2
@@ -114,6 +115,7 @@ Immediate execution pressure:
 - publish canonical benchmark results from real artifacts rather than handwritten markdown edits
 - preserve the capture-template provenance now carried into the canonical results surface
 - keep a fail-closed verifier command available so Stage 1 lift claims can be checked from artifacts instead of inspection alone
+- keep the one-command finalize path available so publication and verification do not drift apart operationally
 - keep the human benchmark capture and publication workflow replay-linked while manual evidence is recorded
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
 - preserve runtime convergence and packaged desktop parity while benchmark evidence is captured

@@ -32,6 +32,9 @@ function parseArgs(argv) {
 
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
+    if (token === '--') {
+      continue;
+    }
     if (!token.startsWith('--')) {
       throw new Error(`Unexpected argument: ${token}`);
     }
@@ -139,8 +142,8 @@ function main() {
   process.stdout.write('\nHuman benchmark session is prepared.\n');
   process.stdout.write('After you complete the manual desktop review, run:\n\n');
   process.stdout.write(`${buildCaptureCommand(args)}\n\n`);
-  process.stdout.write('Then publish canonical results with:\n\n');
-  process.stdout.write('pnpm phase17:benchmark:human:publish\n');
+  process.stdout.write('Then publish and verify canonical results with:\n\n');
+  process.stdout.write('pnpm phase17:benchmark:human:finalize\n');
 }
 
 try {

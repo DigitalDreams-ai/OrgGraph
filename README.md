@@ -112,6 +112,10 @@ See [ORG_INTEGRATION.md](./docs/runbooks/ORG_INTEGRATION.md), [DESKTOP_DEV_RUNTI
 - Production promotion gate: [docs/runbooks/PRODUCTION_PROMOTION.md](./docs/runbooks/PRODUCTION_PROMOTION.md)
 - Release checklist: [docs/releases/RELEASE_CHECKLIST.md](./docs/releases/RELEASE_CHECKLIST.md)
 
+Stage 1 human evidence closeout:
+- capture the operator run with `pnpm phase17:benchmark:human`
+- then use `pnpm phase17:benchmark:human:finalize` to publish and verify the canonical benchmark results in one fail-closed step
+
 ## Environment Variables
 
 ```bash
