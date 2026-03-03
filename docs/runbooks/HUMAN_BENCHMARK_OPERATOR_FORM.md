@@ -2,7 +2,7 @@
 
 Date: March 3, 2026
 
-Use this form while running the first real Stage 1 human benchmark for the trusted high-risk review workflow.
+Use this worksheet during the first real Stage 1 human benchmark for the trusted high-risk review workflow.
 
 Scenario only:
 - `Should we approve changing Opportunity.StageName for jane@example.com?`
@@ -19,25 +19,50 @@ Do not widen the scenario.
   - dev shell
 - Notes before start:
 
+## Exact Sequence
+
+Follow this order exactly:
+
+1. Run the session bootstrap command.
+2. Wait until the bootstrap command fully finishes.
+3. Confirm the capture template files exist.
+4. Run the baseline path and fill in the baseline section below.
+5. Run the review-packet path and fill in the review-packet section below.
+6. Run the capture command.
+7. Run `pnpm phase17:benchmark:human:finalize`.
+
+Do not enter guessed or synthetic numbers.
+
 ## Before You Start
 
-Complete these steps first.
+- [ ] Run the bootstrap command.
 
-- [ ] From repo root, run:
+PowerShell:
 
 ```powershell
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
-pnpm phase17:benchmark:human:session -- --operator "<name>"
+pnpm phase17:benchmark:human:session -- --operator "Sean"
 ```
 
-- [ ] Confirm the session bootstrap completed successfully.
-- [ ] Confirm the capture template was generated:
+Bash:
+
+```bash
+cd /c/Users/sean/Projects/GitHub/OrgGraph
+pnpm phase17:benchmark:human:session -- --operator "Sean"
+```
+
+- [ ] Confirm the bootstrap finished successfully.
+- [ ] Confirm these files now exist:
   - `logs/high-risk-review-human-capture-template.json`
   - `logs/high-risk-review-human-capture-template.md`
-- [ ] Confirm stale benchmark artifacts were archived under:
+  - `logs/high-risk-review-benchmark.json`
+- [ ] Confirm an Orgumented desktop window is still open and usable for the manual review.
+- [ ] Confirm stale artifacts were archived under:
   - `logs/archive/phase17-human-benchmark/<timestamp>/`
 - [ ] Confirm the benchmark scenario is still:
   - `Should we approve changing Opportunity.StageName for jane@example.com?`
+
+If any of those checks fail, stop and report the error instead of continuing.
 
 ## What To Measure
 
@@ -56,13 +81,16 @@ Definitions:
 
 ## Path A: Baseline
 
-Use the fragmented review flow:
-1. Run a generic Ask query.
+Use the fragmented review flow.
+
+Steps:
+1. Run a generic Ask query for the scenario.
 2. Inspect impact separately.
 3. Inspect automation separately.
 4. Inspect permissions separately.
 5. Open proof/history separately.
 6. Manually assemble a review recommendation.
+7. Stop timing only when you can answer the approval question confidently.
 
 Record your measurements:
 
@@ -77,10 +105,13 @@ Record your measurements:
 
 ## Path B: Review Packet
 
-Use the typed high-risk review workflow in Ask:
+Use the typed high-risk review workflow in Ask.
+
+Steps:
 1. Run the typed high-risk review query.
 2. Read the review packet in Ask.
-3. Open proof only if deeper verification is needed.
+3. Open proof/history only if you genuinely need more evidence.
+4. Stop timing only when you can answer the approval question confidently.
 
 Record your measurements:
 
@@ -104,13 +135,25 @@ Answer these directly:
 - What felt slower or more confusing in the baseline path?
 - What still feels weak or unclear in the review-packet path?
 
-## Submit the Capture
+## Submit The Capture
 
-After filling the form, run:
+Run the exact capture command printed by the bootstrap command.
+
+If you need the default shape, use:
+
+PowerShell:
 
 ```powershell
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
-pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "<name>" --baseline-time-ms <baseline-ms> --baseline-evidence-steps <baseline-steps> --baseline-workspace-switches <baseline-switches> --baseline-raw-json yes|no --baseline-confidence <baseline-confidence> --review-time-ms <review-ms> --review-evidence-steps <review-steps> --review-workspace-switches <review-switches> --review-raw-json yes|no --review-confidence <review-confidence> --notes "<short observation>"
+pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms <baseline-ms> --baseline-evidence-steps <baseline-steps> --baseline-workspace-switches <baseline-switches> --baseline-raw-json yes|no --baseline-confidence <baseline-confidence> --review-time-ms <review-ms> --review-evidence-steps <review-steps> --review-workspace-switches <review-switches> --review-raw-json yes|no --review-confidence <review-confidence> --notes "<short observation>"
+pnpm phase17:benchmark:human:finalize
+```
+
+Bash:
+
+```bash
+cd /c/Users/sean/Projects/GitHub/OrgGraph
+pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms <baseline-ms> --baseline-evidence-steps <baseline-steps> --baseline-workspace-switches <baseline-switches> --baseline-raw-json yes|no --baseline-confidence <baseline-confidence> --review-time-ms <review-ms> --review-evidence-steps <review-steps> --review-workspace-switches <review-switches> --review-raw-json yes|no --review-confidence <review-confidence> --notes "<short observation>"
 pnpm phase17:benchmark:human:finalize
 ```
 
@@ -134,7 +177,7 @@ Send back either:
 
 Preferred:
 - run the commands above and keep the artifacts in `logs/`
-- then tell me the command output from `pnpm phase17:benchmark:human:finalize`
+- then send the output from `pnpm phase17:benchmark:human:finalize`
 
 ## Pass Reminder
 

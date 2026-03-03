@@ -23,46 +23,132 @@ Do not widen the scenario while Stage 1 lift proof is still open.
   - baseline path
   - review-packet path
 
-## Commands
+## What You Will Do
 
-From the repo root:
+1. Start a clean benchmark session.
+2. Wait for Orgumented to open and close once during automated smoke.
+3. Wait for the session command to finish printing the human capture command.
+4. Open the generated operator worksheet.
+5. Perform the baseline path and record the numbers.
+6. Perform the review-packet path and record the numbers.
+7. Run the printed capture command.
+8. Run `pnpm phase17:benchmark:human:finalize`.
+
+Do not skip steps.
+
+## Step 1: Start A Clean Session
+
+Use one shell style only.
+
+PowerShell:
 
 ```powershell
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm phase17:benchmark:human:reset
-pnpm phase17:benchmark:human:session -- --operator "<name>"
+pnpm phase17:benchmark:human:session -- --operator "Sean"
 ```
 
-That command:
-- archives any existing Phase 17 benchmark artifacts into `logs/archive/phase17-human-benchmark/<timestamp>/`
-- runs packaged desktop smoke unless told not to
-- refreshes the proxy benchmark
-- preserves the current proxy artifact during reset when `--skip-proxy` is used
-- writes the prepared capture template
-- prints the exact human capture command to run after the manual desktop review
+Bash:
 
-After the operator finishes the two manual paths, record the results with:
+```bash
+cd /c/Users/sean/Projects/GitHub/OrgGraph
+pnpm phase17:benchmark:human:reset
+pnpm phase17:benchmark:human:session -- --operator "Sean"
+```
+
+What to expect:
+- archives stale human benchmark artifacts into `logs/archive/phase17-human-benchmark/<timestamp>/`
+- preserves the current proxy benchmark artifact during the reset step
+- launches packaged desktop smoke
+- opens Orgumented briefly and closes it automatically during smoke
+- relaunches packaged runtime for the proxy benchmark
+- leaves Orgumented open for your manual review after bootstrap completes
+- writes the prepared capture template
+- prints the exact human capture command you will run later
+
+Do not interrupt the command unless it clearly errors.
+
+## Step 2: Confirm Session Output
+
+Before you do any manual review, confirm all of these exist:
+
+- `logs/high-risk-review-human-capture-template.json`
+- `logs/high-risk-review-human-capture-template.md`
+- `logs/high-risk-review-benchmark.json`
+- an Orgumented desktop window is still open and usable
+
+If any of those files are missing, stop and report the error instead of continuing.
+
+## Step 3: Open The Operator Worksheet
+
+Use:
+- `docs/runbooks/HUMAN_BENCHMARK_OPERATOR_FORM.md`
+
+Fill it in as you perform the manual workflow.
+
+## Step 4: Perform The Baseline Path
+
+Do this first.
+
+1. Run a generic Ask query for the scenario.
+2. Gather missing evidence separately:
+   - impact
+   - automation
+   - permissions
+   - proof/history
+3. Stop timing when you can state an approval recommendation and you have proof and replay identifiers.
+4. Record the numbers in the operator form.
+
+Record:
+- elapsed time in milliseconds
+- number of evidence-gathering steps
+- number of workspace switches
+- whether raw JSON was required
+- confidence from `1` to `5`
+
+## Step 5: Perform The Review-Packet Path
+
+Do this second.
+
+1. Run the typed high-risk review query in Ask.
+2. Read the review packet.
+3. Open proof/history only if you genuinely need more evidence.
+4. Stop timing when you can state an approval recommendation and you have proof and replay identifiers.
+5. Record the numbers in the operator form.
+
+Record the same five measures:
+- elapsed time in milliseconds
+- number of evidence-gathering steps
+- number of workspace switches
+- whether raw JSON was required
+- confidence from `1` to `5`
+
+## Step 6: Submit The Human Capture
+
+After the operator form is complete, run the exact capture command printed by the session command.
+
+If you need the default shape, use:
+
+PowerShell:
 
 ```powershell
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
-pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "<name>" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --notes "<observation>"
+pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --notes "<observation>"
 pnpm phase17:benchmark:human:finalize
 ```
 
-## Manual Capture Rules
+Bash:
 
-For the baseline path:
-- use the fragmented review flow
-- record real elapsed time
-- count each explicit evidence-gathering action
-- count each workspace/context switch
-- record whether raw JSON inspection was required
-- score confidence from `1` to `5`
+```bash
+cd /c/Users/sean/Projects/GitHub/OrgGraph
+pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --notes "<observation>"
+pnpm phase17:benchmark:human:finalize
+```
 
-For the review-packet path:
-- use the typed high-risk review workflow in Ask
-- only open additional surfaces if the packet is not sufficient
-- record the same five measures
+What finalize must do:
+- publish the canonical markdown result
+- verify the result against the captured human artifact
+- fail closed if provenance does not match
 
 ## Required Artifacts
 
