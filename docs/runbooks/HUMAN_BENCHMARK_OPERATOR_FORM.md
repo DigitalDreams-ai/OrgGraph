@@ -3,12 +3,11 @@
 This file is no longer a separate worksheet.
 
 Use:
-- [HUMAN_BENCHMARK_CAPTURE.md](./HUMAN_BENCHMARK_CAPTURE.md)
+- [HUMAN_BENCHMARK_QUICKSTART.md](./HUMAN_BENCHMARK_QUICKSTART.md)
 
-That runbook now contains:
+That quickstart now contains:
 - the exact bash commands
-- installation and readiness steps
-- required file paths
-- expected terminal and desktop cues
-- the measurement fields to record
-- troubleshooting and fail-closed rules
+- the exact manual actions in Orgumented
+- the required file paths
+- the exact values you need to record
+- the finalize step

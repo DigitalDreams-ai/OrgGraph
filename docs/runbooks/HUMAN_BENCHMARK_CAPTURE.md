@@ -2,6 +2,10 @@
 
 Date: March 3, 2026
 
+If you are about to run the benchmark now, use this file instead:
+
+- [HUMAN_BENCHMARK_QUICKSTART.md](./HUMAN_BENCHMARK_QUICKSTART.md)
+
 This is the only file you need to follow for the first real Stage 1 human benchmark run.
 
 Do not use `docs/runbooks/HUMAN_BENCHMARK_OPERATOR_FORM.md` as a separate worksheet anymore. That file now only redirects back here.
