@@ -88,6 +88,7 @@ function buildPrepareArgs(args) {
 function buildCaptureCommand(args) {
   const command = [
     'pnpm phase17:benchmark:human --',
+    `--capture-template "${args['out-json'] ?? 'logs/high-risk-review-human-capture-template.json'}"`,
     `--operator "${args.operator}"`
   ];
 
