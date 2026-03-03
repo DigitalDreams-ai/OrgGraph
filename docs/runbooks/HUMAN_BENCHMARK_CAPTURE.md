@@ -97,3 +97,4 @@ The review-packet path only counts as Stage 1 lift if:
 - treat `docs/planning/v2/HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md` as the canonical published surface
 - do not hand-edit benchmark numbers into the canonical results doc
 - use `pnpm phase17:benchmark:human:finalize` as the default closeout path so publication and provenance verification stay coupled
+- use `pnpm phase17:benchmark:human:status` when you need to confirm whether the repo still has pending, synthetic-only, or fully verified human evidence

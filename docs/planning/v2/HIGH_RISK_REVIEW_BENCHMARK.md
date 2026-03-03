@@ -190,6 +190,13 @@ Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm phase17:benchmark:human:finalize
 ```
 
+Evidence status command:
+
+```powershell
+Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm phase17:benchmark:human:status
+```
+
 Canonical publication output:
 - `docs/planning/v2/HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
 
@@ -200,6 +207,7 @@ Publication behavior:
 - carries the prepared capture-template path, signature, and proxy-artifact hash into the canonical results surface
 - `phase17:benchmark:human:verify` fails closed unless the human artifact is real, passes the Stage 1 threshold checks, and the canonical results surface still contains the matching provenance fields
 - `phase17:benchmark:human:finalize` runs publication and provenance verification as one fail-closed step
+- `phase17:benchmark:human:status` reports whether Stage 1 human evidence is still missing, synthetic-only, unverified, or fully verified
 - supports non-canonical output overrides only for local verification
 
 What the human capture command does:
