@@ -83,6 +83,8 @@ Current concrete checkpoint:
 - capture one human benchmark run for the trusted high-risk review workflow
 - record operator timing, confidence, raw-JSON dependence, and workflow friction through `pnpm phase17:benchmark:human`
 - keep the benchmark replay-linked to the current proof and replay artifacts
+- publish the resulting human benchmark artifact into the canonical results surface through `pnpm phase17:benchmark:human:publish`
+- fail closed on synthetic smoke evidence so the canonical benchmark record cannot be updated from placeholder runs
 
 ### Slice 2
 - make Refresh and Build product-grade for the common desktop rebuild path
@@ -104,11 +106,12 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-human-benchmark-evidence`
+- `dna-human-benchmark-results`
 
 Immediate execution pressure:
-- capture one grounded human benchmark artifact for the trusted high-risk review scenario
 - keep the human benchmark capture workflow executable and replay-linked while manual evidence is still pending
+- make canonical benchmark publication generated from artifacts instead of manual markdown transcription
+- fail closed on synthetic or placeholder evidence when generating the canonical benchmark results surface
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
 - preserve runtime convergence and packaged desktop parity while benchmark evidence is captured
 - keep the review packet usable as the primary artifact without raw JSON dependence

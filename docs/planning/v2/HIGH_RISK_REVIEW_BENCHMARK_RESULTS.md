@@ -58,6 +58,11 @@ What is now proven:
 What still needs improvement:
 - human benchmark capture for operator confidence and real desktop timing
 
+Canonical publication path:
+- generate this file from artifacts with `pnpm phase17:benchmark:human:publish`
+- do not hand-edit benchmark metrics into this document
+- the publish step fails closed if the human artifact still looks synthetic or smoke-only
+
 Human capture path now available:
 - first establish a grounded packaged runtime with `pnpm desktop:smoke:release` or an already-open packaged desktop session
 - run `pnpm phase17:benchmark:human` after the benchmark workflow is exercised manually in the packaged desktop app
@@ -76,5 +81,6 @@ The next best move is not broader scope.
 
 It is:
 1. capture one human benchmark run using the same scenario
-2. validate the same trusted result after a fresh packaged rebuild on CI
-3. then decide whether the slice is ready to claim full Stage 1 lift proof
+2. publish that human artifact into this canonical results surface through `pnpm phase17:benchmark:human:publish`
+3. validate the same trusted result after a fresh packaged rebuild on CI
+4. then decide whether the slice is ready to claim full Stage 1 lift proof
