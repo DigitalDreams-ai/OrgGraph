@@ -26,6 +26,7 @@ interface ConnectWorkspaceProps {
   selectedAlias: OrgAliasSummary | null;
   preflightIssues: OrgPreflightIssue[];
   toolingReady: boolean;
+  browserSeeded: boolean;
   selectedAliasReady: boolean;
   restoreAlias: string;
   loading: boolean;
@@ -108,7 +109,10 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           <h3>Readiness for attach</h3>
           <div className="decision-meta">
             <span className={`decision-badge ${props.selectedAliasReady ? 'good' : 'muted'}`}>
-              Ready: {String(props.selectedAliasReady)}
+              Ready to connect: {String(props.selectedAliasReady)}
+            </span>
+            <span className={`decision-badge ${props.browserSeeded ? 'good' : 'muted'}`}>
+              Browser seeded: {String(props.browserSeeded)}
             </span>
             <span className={`decision-badge ${props.orgPreflight?.checks?.sessionConnected ? 'good' : 'muted'}`}>
               Session connected: {String(props.orgPreflight?.checks?.sessionConnected ?? false)}
@@ -121,6 +125,7 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           <p><strong>Authenticated in sf:</strong> {props.orgPreflight?.checks?.aliasAuthenticated ? 'yes' : 'no'}</p>
           <p><strong>CCI alias available:</strong> {props.orgPreflight?.checks?.cciAliasAvailable ? 'yes' : 'no'}</p>
           <p><strong>Parse path present:</strong> {props.orgPreflight?.checks?.parsePathPresent ? 'yes' : 'no'}</p>
+          <p className="muted">A missing parse path is a browser/retrieve warning, not a connect blocker on first contact.</p>
         </article>
 
         <article className="sub-card">

@@ -212,6 +212,7 @@ export default function Page(): JSX.Element {
               selectedAlias={connectWorkspace.selectedAlias}
               preflightIssues={connectWorkspace.preflightIssues}
               toolingReady={connectWorkspace.toolingReady}
+              browserSeeded={connectWorkspace.browserSeeded}
               selectedAliasReady={connectWorkspace.selectedAliasReady}
               restoreAlias={connectWorkspace.restoreAlias}
               loading={secondaryQueryRunner.loading}
