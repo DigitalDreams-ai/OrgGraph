@@ -67,6 +67,12 @@ In this runbook, "manual review" means:
 - complete the baseline workflow in Orgumented and record the baseline measurements
 - then complete the review-packet workflow in Orgumented and record the review-packet measurements
 
+In this runbook:
+- `baseline workflow` means the fragmented generic review path starting with:
+  - `What touches Opportunity.StageName?`
+- `review-packet workflow` means the typed approval-review path starting with:
+  - `Should we approve changing Opportunity.StageName for jane@example.com?`
+
 You will do those workflows later in:
 - `Step 5: Run The Baseline Path First`
 - `Step 6: Run The Review-Packet Path Second`
@@ -429,15 +435,31 @@ This is the fragmented path. It should feel slower and more manual than the revi
 
 Start a timer immediately before the first baseline query.
 
-Do this:
-1. Run a generic Ask query for the scenario.
-2. Gather missing evidence separately:
+Exact baseline query:
+- `What touches Opportunity.StageName?`
+
+Do this exactly:
+1. In the Orgumented desktop window, stay on the default `Ask` workspace.
+2. In the Ask input box, enter:
+   - `What touches Opportunity.StageName?`
+3. Submit the query.
+4. Read the Ask answer.
+5. If the Ask answer is not enough to approve or reject the change, gather missing evidence separately. Use whatever Orgumented surfaces you need for:
    - impact
    - automation
    - permissions
    - proof/history
-3. Manually assemble an approval recommendation.
-4. Stop the timer only when you can answer the approval question with enough confidence and can point to proof and replay identifiers.
+6. If you must switch workspaces to collect missing evidence, count each switch.
+7. If you must inspect raw JSON to finish the decision, record `yes` for raw JSON.
+8. Manually assemble your answer to the real approval question:
+   - `Should we approve changing Opportunity.StageName for jane@example.com?`
+9. Stop the timer only when you can give that answer with confidence and can point to proof and replay identifiers.
+
+What you are measuring here:
+- how many extra steps it takes when you start from the generic query instead of the typed review query
+- how often you have to leave Ask
+- whether you have to inspect raw JSON
+- whether the fragmented path still gives you enough confidence to approve or reject the change
 
 Fill in:
 - Baseline time to trusted answer (ms):
@@ -455,11 +477,25 @@ This is the typed high-risk review path in Ask.
 
 Start a new timer immediately before the first review-packet query.
 
-Do this:
-1. Run the typed high-risk review query in Ask.
-2. Read the review packet.
-3. Open proof/history only if you genuinely need more evidence.
-4. Stop the timer only when you can answer the approval question with enough confidence and can point to proof and replay identifiers.
+Exact review-packet query:
+- `Should we approve changing Opportunity.StageName for jane@example.com?`
+
+Do this exactly:
+1. Return to the `Ask` workspace if you left it during the baseline path.
+2. In the Ask input box, enter:
+   - `Should we approve changing Opportunity.StageName for jane@example.com?`
+3. Submit the query.
+4. Read the review packet shown in Ask.
+5. Try to make your approval decision from the review packet alone.
+6. Open proof/history only if you genuinely need more evidence.
+7. If you must inspect raw JSON to finish the decision, record `yes` for raw JSON.
+8. Stop the timer only when you can answer the approval question with enough confidence and can point to proof and replay identifiers.
+
+What you are measuring here:
+- whether the typed review packet removes the need for fragmented evidence gathering
+- whether you can stay in Ask instead of switching workspaces
+- whether the typed path removes raw JSON dependence
+- whether the typed path gives you equal or better confidence faster
 
 Fill in:
 - Review-packet time to trusted answer (ms):
