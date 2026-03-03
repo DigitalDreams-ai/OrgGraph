@@ -26,12 +26,15 @@ From the repo root:
 
 ```powershell
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+pnpm phase17:benchmark:human:reset
 pnpm phase17:benchmark:human:session -- --operator "<name>"
 ```
 
 That command:
+- archives any existing Phase 17 benchmark artifacts into `logs/archive/phase17-human-benchmark/<timestamp>/`
 - runs packaged desktop smoke unless told not to
 - refreshes the proxy benchmark
+- preserves the current proxy artifact during reset when `--skip-proxy` is used
 - writes the prepared capture template
 - prints the exact human capture command to run after the manual desktop review
 
@@ -94,6 +97,7 @@ The review-packet path only counts as Stage 1 lift if:
 ## Output Handling
 
 - keep the raw JSON and markdown artifacts in `logs/`
+- use `pnpm phase17:benchmark:human:reset` before a real run so stale synthetic or test artifacts are archived out of the default paths
 - treat `docs/planning/v2/HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md` as the canonical published surface
 - do not hand-edit benchmark numbers into the canonical results doc
 - use `pnpm phase17:benchmark:human:finalize` as the default closeout path so publication and provenance verification stay coupled

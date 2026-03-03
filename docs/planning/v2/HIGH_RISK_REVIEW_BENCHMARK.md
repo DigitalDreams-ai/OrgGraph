@@ -152,6 +152,7 @@ Human capture command:
 Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
 pnpm desktop:smoke:release
 pnpm phase17:benchmark
+pnpm phase17:benchmark:human:reset
 pnpm phase17:benchmark:human:prepare -- --operator "<name>"
 pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "<name>" --baseline-time-ms <ms> --baseline-evidence-steps <n> --baseline-workspace-switches <n> --baseline-raw-json yes --baseline-confidence <1-5> --review-time-ms <ms> --review-evidence-steps <n> --review-workspace-switches <n> --review-raw-json no --review-confidence <1-5> --notes "<observation>"
 ```
@@ -164,8 +165,10 @@ pnpm phase17:benchmark:human:session -- --operator "<name>"
 ```
 
 What the session bootstrap does:
+- archives existing Phase 17 benchmark artifacts out of the default `logs/` paths before a real run
 - runs packaged desktop smoke unless told not to
 - refreshes the automated proxy benchmark unless told not to
+- preserves the current proxy artifact during reset when `--skip-proxy` is used
 - generates the fillable human capture packet
 - prints the exact `phase17:benchmark:human` command to run after the manual desktop review
 
@@ -208,6 +211,7 @@ Publication behavior:
 - `phase17:benchmark:human:verify` fails closed unless the human artifact is real, passes the Stage 1 threshold checks, and the canonical results surface still contains the matching provenance fields
 - `phase17:benchmark:human:finalize` runs publication and provenance verification as one fail-closed step
 - `phase17:benchmark:human:status` reports whether Stage 1 human evidence is still missing, synthetic-only, unverified, or fully verified
+- `phase17:benchmark:human:reset` archives stale benchmark artifacts into `logs/archive/phase17-human-benchmark/<timestamp>/` before a real run starts
 - supports non-canonical output overrides only for local verification
 
 What the human capture command does:
@@ -250,6 +254,7 @@ Current branch status:
 - latest proxy run is summarized in `HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
 - human benchmark evidence is still required before claiming full Stage 1 lift proof
 - canonical benchmark publication is generated from artifacts rather than handwritten markdown edits
+- stale synthetic or test artifacts can now be archived out of the default benchmark paths with `pnpm phase17:benchmark:human:reset`
 - the immediate execution task is to capture one real human benchmark run and close it with `pnpm phase17:benchmark:human:finalize`
 - once that run exists, `pnpm phase17:benchmark:human:verify` becomes the fail-closed proof that the canonical results surface is backed by real Stage 1 evidence
 - the operator handoff for that run is documented in `docs/runbooks/HUMAN_BENCHMARK_CAPTURE.md`

@@ -112,11 +112,13 @@ Active branch:
 
 Immediate execution pressure:
 - execute one real human benchmark run against the prepared capture template
+- archive stale synthetic or test benchmark artifacts out of the default `logs/` paths before that run starts
 - publish canonical benchmark results from real artifacts rather than handwritten markdown edits
 - preserve the capture-template provenance now carried into the canonical results surface
 - keep a fail-closed verifier command available so Stage 1 lift claims can be checked from artifacts instead of inspection alone
 - keep the one-command finalize path available so publication and verification do not drift apart operationally
 - keep an explicit evidence-status command available so Stage 1 human proof can be reported as pending versus verified without hand inspection
+- keep an explicit reset/archive command available so the first real human run does not inherit stale synthetic artifacts
 - keep the human benchmark capture and publication workflow replay-linked while manual evidence is recorded
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop
 - preserve runtime convergence and packaged desktop parity while benchmark evidence is captured

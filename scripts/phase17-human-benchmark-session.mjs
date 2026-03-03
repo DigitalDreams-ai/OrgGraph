@@ -19,10 +19,11 @@ Optional:
   --help
 
 What it does:
-  1. runs pnpm desktop:smoke:release unless --skip-smoke is set
-  2. runs pnpm phase17:benchmark unless --skip-proxy is set
-  3. runs pnpm phase17:benchmark:human:prepare with your operator name
-  4. prints the exact pnpm phase17:benchmark:human command you should execute after the manual run
+  1. archives stale Phase 17 artifacts with pnpm phase17:benchmark:human:reset
+  2. runs pnpm desktop:smoke:release unless --skip-smoke is set
+  3. runs pnpm phase17:benchmark unless --skip-proxy is set
+  4. runs pnpm phase17:benchmark:human:prepare with your operator name
+  5. prints the exact pnpm phase17:benchmark:human command you should execute after the manual run
 `;
 
 function parseArgs(argv) {
@@ -128,6 +129,12 @@ function main() {
   if (!args.operator) {
     throw new Error('Missing required argument --operator');
   }
+
+  const resetArgs = ['phase17:benchmark:human:reset'];
+  if (args['skip-proxy']) {
+    resetArgs.push('--', '--preserve-proxy');
+  }
+  runCommand('pnpm', resetArgs);
 
   if (!args['skip-smoke']) {
     runCommand('pnpm', ['desktop:smoke:release']);

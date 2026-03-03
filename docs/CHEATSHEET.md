@@ -175,6 +175,9 @@ pnpm desktop:smoke:release
 # Capture Stage 1 review-packet benchmark proxy metrics
 pnpm phase17:benchmark
 
+# Archive stale Phase 17 benchmark artifacts before a real operator run
+pnpm phase17:benchmark:human:reset
+
 # Prepare a full human benchmark session packet
 pnpm phase17:benchmark:human:session -- --operator "<name>"
 
