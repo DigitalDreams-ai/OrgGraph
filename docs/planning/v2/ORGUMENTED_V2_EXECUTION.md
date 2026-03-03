@@ -106,10 +106,11 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-stage1-human-evidence`
+- `dna-human-benchmark-session-kit`
 
 Immediate execution pressure:
-- capture one real human benchmark run for the trusted high-risk review workflow
+- reduce operator setup friction for the real human benchmark run
+- make the human benchmark session start from one replay-linked setup command instead of multiple manual preparation steps
 - keep the human benchmark capture and publication workflow replay-linked while manual evidence is recorded
 - publish canonical benchmark results from real artifacts rather than handwritten markdown edits
 - preserve the grounded-start runtime contract that now makes the benchmark query trusted on packaged desktop

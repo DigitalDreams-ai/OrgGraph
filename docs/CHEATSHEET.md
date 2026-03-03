@@ -174,6 +174,9 @@ pnpm desktop:smoke:release
 
 # Capture Stage 1 review-packet benchmark proxy metrics
 pnpm phase17:benchmark
+
+# Prepare a full human benchmark session packet
+pnpm phase17:benchmark:human:session -- --operator "<name>"
 ```
 
 ## Project Memory MCP
