@@ -6,6 +6,7 @@ import type {
   RefreshRetrieveHandoffView,
   RefreshRunView
 } from './types';
+import { assessRetrieveHandoff } from '../browser/retrieve-handoff';
 
 interface RefreshWorkspaceProps {
   activeAlias: string;
@@ -46,6 +47,8 @@ function formatTimestamp(value?: string): string {
 }
 
 export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
+  const retrieveHandoff = assessRetrieveHandoff(props.retrieveHandoff);
+
   return (
     <>
       <h2>Refresh &amp; Build</h2>
@@ -72,6 +75,9 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
             <>
               <div className="decision-meta">
                 <span className="decision-badge good">Status: {props.retrieveHandoff.status}</span>
+                <span className={`decision-badge ${retrieveHandoff.state === 'ready' ? 'good' : 'bad'}`}>
+                  Handoff: {retrieveHandoff.state === 'ready' ? 'ready' : 'blocked'}
+                </span>
                 <span className={`decision-badge ${props.retrieveHandoff.autoRefresh ? 'good' : 'muted'}`}>
                   Auto refresh: {String(props.retrieveHandoff.autoRefresh)}
                 </span>
@@ -80,6 +86,17 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
               <p><strong>Completed:</strong> {formatTimestamp(props.retrieveHandoff.completedAt)}</p>
               <p><strong>Parse path:</strong> {props.retrieveHandoff.parsePath}</p>
               <p><strong>Metadata args:</strong> {props.retrieveHandoff.metadataArgs.join(' ') || 'n/a'}</p>
+              {retrieveHandoff.state === 'blocked' ? (
+                <ul className="issue-list">
+                  {retrieveHandoff.reasons.map((reason) => (
+                    <li key={reason}>
+                      <strong>Fail closed.</strong> {reason}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">This retrieve is ready to seed rebuild review in `Refresh & Build`.</p>
+              )}
               {props.retrieveHandoff.refresh ? (
                 <p>
                   <strong>Retrieve refresh counts:</strong> {props.retrieveHandoff.refresh.nodeCount} nodes,{' '}
@@ -124,15 +141,19 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
         <ul className="issue-list">
           <li>
             <div className="decision-meta">
-              <span className={`decision-badge ${props.retrieveHandoff ? 'good' : 'muted'}`}>Browser retrieve</span>
+              <span className={`decision-badge ${retrieveHandoff.state === 'ready' ? 'good' : retrieveHandoff.state === 'blocked' ? 'bad' : 'muted'}`}>
+                Browser retrieve
+              </span>
               <span className="decision-badge muted">
                 {props.retrieveHandoff ? formatTimestamp(props.retrieveHandoff.completedAt) : 'waiting'}
               </span>
             </div>
             <p>
-              {props.retrieveHandoff
-                ? `Latest retrieve staged ${props.retrieveHandoff.metadataArgs.length} metadata argument${props.retrieveHandoff.metadataArgs.length === 1 ? '' : 's'} for rebuild review.`
-                : 'No browser retrieve handoff captured yet.'}
+              {retrieveHandoff.state === 'ready'
+                ? `Latest retrieve staged ${props.retrieveHandoff?.metadataArgs.length ?? 0} metadata argument${props.retrieveHandoff?.metadataArgs.length === 1 ? '' : 's'} for rebuild review.`
+                : retrieveHandoff.state === 'blocked'
+                  ? `Latest retrieve is not safe to treat as rebuild input yet. ${retrieveHandoff.reasons[0]}`
+                  : 'No browser retrieve handoff captured yet.'}
             </p>
           </li>
           <li>
