@@ -246,6 +246,7 @@ export default function Page(): JSX.Element {
               metadataAutoRefresh={browserWorkspace.metadataAutoRefresh}
               setMetadataAutoRefresh={browserWorkspace.setMetadataAutoRefresh}
               metadataCatalog={browserWorkspace.metadataCatalog}
+              metadataSearchResults={browserWorkspace.metadataSearchResults}
               metadataMembersByType={browserWorkspace.metadataMembersByType}
               metadataLoadingType={browserWorkspace.metadataLoadingType}
               metadataSelectionsPreview={browserWorkspace.metadataSelectionsPreview}
@@ -259,6 +260,7 @@ export default function Page(): JSX.Element {
               onClearFilters={browserWorkspace.clearFilters}
               onClearSelections={browserWorkspace.clearSelections}
               onLoadMembers={(type) => void browserWorkspace.loadMembers(type)}
+              onAddSearchResult={browserWorkspace.addSearchResult}
               onToggleType={browserWorkspace.toggleTypeSelection}
               onToggleMember={browserWorkspace.toggleMemberSelection}
               onRemoveType={browserWorkspace.removeTypeSelection}

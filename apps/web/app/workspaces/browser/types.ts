@@ -20,6 +20,22 @@ export type MetadataMembersPayload = {
   warnings?: string[];
 };
 
+export type MetadataSearchResult = {
+  kind: 'type' | 'member';
+  type: string;
+  name: string;
+  matchField: 'type' | 'member';
+};
+
+export type MetadataSearchPayload = {
+  source: 'local' | 'source_api' | 'metadata_api' | 'cache' | 'mixed';
+  refreshedAt: string;
+  search: string;
+  totalResults: number;
+  results: MetadataSearchResult[];
+  warnings?: string[];
+};
+
 export type MetadataSelection = {
   type: string;
   members?: string[];
