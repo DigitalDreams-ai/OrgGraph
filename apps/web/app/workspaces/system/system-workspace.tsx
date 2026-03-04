@@ -85,7 +85,7 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
               Ready: {props.readyStatus}
             </span>
           </div>
-          <p>{props.readyDetails || 'No readiness detail available yet.'}</p>
+          <pre>{props.readyDetails || 'No readiness detail available yet.'}</pre>
         </article>
 
         <article className="sub-card">

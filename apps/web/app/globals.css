@@ -48,6 +48,23 @@ body {
   backdrop-filter: blur(8px);
 }
 
+.panel,
+.sub-card,
+.hero-metric,
+.packet-stat,
+.citation-item,
+.packet-action-list li,
+.proof-list-item,
+.ops-list-item,
+.issue-list li,
+.selection-item,
+.member-list li,
+.analysis-path-list li,
+.analysis-list li,
+.analysis-chip-list li {
+  min-width: 0;
+}
+
 .og-topbar {
   display: flex;
   justify-content: space-between;
@@ -336,6 +353,36 @@ button.ghost {
   margin: 0.2rem 0;
 }
 
+.sub-card p,
+.sub-card strong,
+.sub-card span,
+.brand-sub,
+.decision-answer,
+.hero-metric strong,
+.hero-metric span,
+.packet-stat strong,
+.packet-stat span,
+.packet-stat p,
+.citation-item strong,
+.citation-item span,
+.citation-item p,
+.packet-action-list strong,
+.packet-action-list p,
+.proof-list-item strong,
+.proof-list-item p,
+.ops-list-item strong,
+.ops-list-item p,
+.issue-list li,
+.selection-item,
+.selection-members button,
+.member-list li,
+.selection-toggle-copy,
+.selection-toggle-copy strong,
+.selection-toggle-copy small {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .panel-caption {
   margin: 0 0 0.35rem;
   color: #0d9488;
@@ -376,7 +423,7 @@ button.ghost {
 
 .launch-stat-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 0.6rem;
   margin-top: 0.8rem;
 }
@@ -448,7 +495,7 @@ button.ghost {
 
 .packet-stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 0.6rem;
 }
 
@@ -623,7 +670,7 @@ button.ghost {
 
 .analysis-stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 0.6rem;
   margin: 0.65rem 0;
 }
@@ -736,6 +783,7 @@ pre {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.65rem;
   padding: 0.55rem 0.65rem;
   font-weight: 600;
 }
@@ -761,13 +809,44 @@ pre {
 
 .member-list li {
   display: flex;
-  justify-content: space-between;
   gap: 0.4rem;
-  align-items: center;
+  align-items: flex-start;
   border: 1px solid #d6e2f1;
   border-radius: 8px;
   padding: 0.4rem 0.5rem;
   background: #f8fbff;
+}
+
+.selection-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  font-weight: 600;
+}
+
+.selection-toggle.is-disabled {
+  opacity: 0.78;
+}
+
+.selection-toggle input {
+  width: auto;
+  margin: 0.1rem 0 0;
+  flex: 0 0 auto;
+}
+
+.selection-toggle-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.selection-toggle-copy small {
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  font-weight: 500;
 }
 
 .selection-list {

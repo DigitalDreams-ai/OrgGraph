@@ -31,6 +31,17 @@ import type {
 @Injectable()
 export class OrgService {
   private readonly logger = new Logger(OrgService.name);
+  private static readonly LIVE_METADATA_CATALOG_TYPES = [
+    'CustomObject',
+    'Layout',
+    'ApexClass',
+    'ApexTrigger',
+    'Flow',
+    'CustomTab',
+    'RecordType',
+    'FlexiPage'
+  ];
+  private static readonly LIVE_METADATA_SEARCH_ONLY_TYPES = ['CustomField'];
 
   constructor(
     private readonly configService: AppConfigService,
@@ -691,13 +702,13 @@ export class OrgService {
     limit?: number;
     refresh?: boolean;
   }): Promise<OrgMetadataCatalogResponse> {
-    const parsePath = this.runtimePaths.sfParsePath();
-    const refresh = input.refresh === true;
+    const index = await this.loadDiscoveryMetadataIndex({
+      refresh: input.refresh === true,
+      includeSearchOnlyTypes: false
+    });
     const search = input.search?.trim().toLowerCase();
     const limit = input.limit ?? 200;
-    const warnings: string[] = [];
-    const index = this.loadMetadataIndex(parsePath, refresh);
-    warnings.push(...index.warnings);
+    const warnings: string[] = [...index.warnings];
     let types = Array.from(index.typeMembers.entries())
       .map(([type, members]) => ({
         type,
@@ -736,8 +747,10 @@ export class OrgService {
     limit?: number;
     refresh?: boolean;
   }): Promise<OrgMetadataMembersResponse> {
-    const parsePath = this.runtimePaths.sfParsePath();
-    const index = this.loadMetadataIndex(parsePath, input.refresh === true);
+    const index = await this.loadDiscoveryMetadataIndex({
+      refresh: input.refresh === true,
+      includeSearchOnlyTypes: true
+    });
     const warnings: string[] = [...index.warnings];
     const search = input.search?.trim().toLowerCase();
     const limit = input.limit ?? 1000;
@@ -770,8 +783,10 @@ export class OrgService {
     limit?: number;
     refresh?: boolean;
   }): Promise<OrgMetadataSearchResponse> {
-    const parsePath = this.runtimePaths.sfParsePath();
-    const index = this.loadMetadataIndex(parsePath, input.refresh === true);
+    const index = await this.loadDiscoveryMetadataIndex({
+      refresh: input.refresh === true,
+      includeSearchOnlyTypes: true
+    });
     const warnings: string[] = [...index.warnings];
     const search = input.search.trim().toLowerCase();
     const limit = input.limit ?? 200;
@@ -921,6 +936,162 @@ export class OrgService {
       };
     }
     return response;
+  }
+
+  private async loadDiscoveryMetadataIndex(input: {
+    refresh: boolean;
+    includeSearchOnlyTypes: boolean;
+  }): Promise<{
+    source: 'local' | 'cache' | 'metadata_api' | 'mixed';
+    refreshedAt: string;
+    typeMembers: Map<string, string[]>;
+    warnings: string[];
+  }> {
+    const parsePath = this.runtimePaths.sfParsePath();
+    const projectPath = this.runtimePaths.sfProjectPath();
+    const alias = this.resolveActiveAlias();
+    const liveIndex = await this.loadLiveMetadataIndex(alias, projectPath, parsePath, input.refresh, input.includeSearchOnlyTypes);
+
+    if (liveIndex.typeMembers.size > 0) {
+      return liveIndex;
+    }
+
+    const localIndex = this.loadMetadataIndex(parsePath, input.refresh);
+    if (localIndex.typeMembers.size > 0) {
+      return {
+        source: liveIndex.warnings.length > 0 ? 'mixed' : localIndex.source,
+        refreshedAt: localIndex.refreshedAt,
+        typeMembers: localIndex.typeMembers,
+        warnings: [...liveIndex.warnings, ...localIndex.warnings]
+      };
+    }
+
+    return {
+      source: liveIndex.source,
+      refreshedAt: liveIndex.refreshedAt,
+      typeMembers: liveIndex.typeMembers,
+      warnings: [...liveIndex.warnings, ...localIndex.warnings]
+    };
+  }
+
+  private async loadLiveMetadataIndex(
+    alias: string,
+    projectPath: string,
+    parsePath: string,
+    refresh: boolean,
+    includeSearchOnlyTypes: boolean
+  ): Promise<{
+    source: 'metadata_api';
+    refreshedAt: string;
+    typeMembers: Map<string, string[]>;
+    warnings: string[];
+  }> {
+    const warnings: string[] = [];
+    const refreshedAt = new Date().toISOString();
+    const cachePath = path.join(
+      path.dirname(parsePath),
+      includeSearchOnlyTypes ? 'metadata-live-search-cache.json' : 'metadata-live-catalog-cache.json'
+    );
+
+    if (!refresh && fs.existsSync(cachePath)) {
+      try {
+        const raw = fs.readFileSync(cachePath, 'utf8');
+        const parsed = JSON.parse(raw) as {
+          refreshedAt?: string;
+          types?: Array<{ type: string; members: string[] }>;
+        };
+        if (Array.isArray(parsed.types)) {
+          const typeMembers = new Map<string, string[]>();
+          for (const item of parsed.types) {
+            if (!item || typeof item.type !== 'string' || !Array.isArray(item.members)) {
+              continue;
+            }
+            typeMembers.set(
+              item.type,
+              item.members
+                .map((member) => String(member).trim())
+                .filter((member) => member.length > 0)
+                .sort((a, b) => a.localeCompare(b))
+            );
+          }
+          return {
+            source: 'metadata_api',
+            refreshedAt: parsed.refreshedAt ?? refreshedAt,
+            typeMembers,
+            warnings
+          };
+        }
+      } catch {
+        warnings.push(`live metadata cache unreadable: ${cachePath}`);
+      }
+    }
+
+    try {
+      await this.orgToolAdapter.ensureSfInstalled(projectPath);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      warnings.push(`sf CLI unavailable for live metadata discovery: ${message}`);
+      return {
+        source: 'metadata_api',
+        refreshedAt,
+        typeMembers: new Map(),
+        warnings
+      };
+    }
+
+    const typeMembers = new Map<string, string[]>();
+    const metadataTypes = [
+      ...OrgService.LIVE_METADATA_CATALOG_TYPES,
+      ...(includeSearchOnlyTypes ? OrgService.LIVE_METADATA_SEARCH_ONLY_TYPES : [])
+    ];
+
+    for (const metadataType of metadataTypes) {
+      const result = await this.orgToolAdapter.listMetadata(alias, metadataType, projectPath);
+      if (result.exitCode !== 0) {
+        const reason = (result.stderr || result.stdout || 'unknown error').trim();
+        warnings.push(`live metadata discovery failed for ${metadataType}: ${reason}`);
+        continue;
+      }
+
+      const discovered = this.orgToolAdapter.parseMetadataList(result.stdout);
+      const members = Array.from(
+        new Set(
+          discovered
+            .map((item) => item.fullName.trim())
+            .filter((name) => name.length > 0)
+        )
+      ).sort((a, b) => a.localeCompare(b));
+
+      if (members.length > 0) {
+        typeMembers.set(metadataType, members);
+      }
+    }
+
+    try {
+      fs.writeFileSync(
+        cachePath,
+        JSON.stringify(
+          {
+            refreshedAt,
+            types: Array.from(typeMembers.entries())
+              .map(([type, members]) => ({ type, members }))
+              .sort((a, b) => a.type.localeCompare(b.type))
+          },
+          null,
+          2
+        ),
+        'utf8'
+      );
+    } catch {
+      warnings.push(`live metadata cache write failed: ${cachePath}`);
+    }
+
+    return {
+      source: 'metadata_api',
+      refreshedAt,
+      typeMembers,
+      warnings
+    };
   }
 
   private loadMetadataIndex(

@@ -32,21 +32,51 @@ interface BrowserWorkspaceProps {
   selectionSummary: MetadataSelectionSummary;
   visibleCatalogTypes: string[];
   lastMetadataRetrieve: MetadataRetrieveResultView | null;
+  metadataCatalogRequested: boolean;
   loading: boolean;
-  onAddVisibleTypes: () => void;
   onRefreshTypes: () => void;
   onClearFilters: () => void;
   onClearSelections: () => void;
   onLoadMembers: (type: string) => void;
-  onAddSearchResult: (result: MetadataSearchResult) => void;
-  onToggleType: (type: string) => void;
-  onToggleMember: (type: string, member: string) => void;
+  getTypeSelectionState: (type: string) => 'none' | 'partial' | 'all';
+  isMemberSelected: (type: string, member: string) => boolean;
+  onSetTypeSelected: (type: string, selected: boolean) => void;
+  onSetMemberSelected: (type: string, member: string, selected: boolean) => void;
   onRemoveType: (type: string) => void;
   onRemoveMember: (type: string, member: string) => void;
-  isTypeSelected: (type: string) => boolean;
-  isMemberSelected: (type: string, member: string) => boolean;
   onRetrieveSelected: () => void;
   onOpenRefresh: () => void;
+}
+
+interface SelectionCheckboxProps {
+  checked: boolean;
+  indeterminate?: boolean;
+  disabled?: boolean;
+  label: string;
+  hint?: string;
+  onChange: (checked: boolean) => void;
+}
+
+function SelectionCheckbox(props: SelectionCheckboxProps): JSX.Element {
+  return (
+    <label className={`selection-toggle ${props.disabled ? 'is-disabled' : ''}`}>
+      <input
+        type="checkbox"
+        checked={props.checked}
+        disabled={props.disabled}
+        ref={(element) => {
+          if (element) {
+            element.indeterminate = Boolean(props.indeterminate);
+          }
+        }}
+        onChange={(event) => props.onChange(event.target.checked)}
+      />
+      <span className="selection-toggle-copy">
+        <strong>{props.label}</strong>
+        {props.hint ? <small>{props.hint}</small> : null}
+      </span>
+    </label>
+  );
 }
 
 function formatTimestamp(value?: string): string {
@@ -134,10 +164,10 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
             value={props.metadataSearch}
             onChange={(e) => props.setMetadataSearch(e.target.value)}
           />
-          <p className="muted input-hint">Search by the item you know first. Orgumented will show the metadata family after the match is found.</p>
+          <p className="muted input-hint">Search by the item you know first. Results are grouped by metadata family and every row can be selected with a checkbox.</p>
         </div>
         <div>
-          <label htmlFor="metadataMemberSearch">Browse Loaded Members</label>
+          <label htmlFor="metadataMemberSearch">Filter Loaded Members</label>
           <input
             id="metadataMemberSearch"
             placeholder="Filter members inside a loaded type"
@@ -171,10 +201,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
 
       <div className="action-row">
         <button type="button" onClick={props.onRefreshTypes} disabled={props.loading}>
-          {props.metadataSearch.trim().length > 0 ? 'Search Metadata' : 'Refresh Types'}
-        </button>
-        <button type="button" onClick={props.onAddVisibleTypes} disabled={props.loading || props.visibleCatalogTypes.length === 0}>
-          Add Visible Types
+          {props.metadataSearch.trim().length > 0 ? 'Search Metadata' : 'Load Explorer'}
         </button>
         <button type="button" onClick={props.onRetrieveSelected} disabled={props.loading || props.selectionSummary.typeCount === 0}>
           Retrieve Selected
@@ -202,33 +229,34 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
               {groupedSearchResults.map((group) => (
                 <details key={group.type} open>
                   <summary>
-                    <span>{group.type}</span>
+                    <SelectionCheckbox
+                      checked={props.getTypeSelectionState(group.type) === 'all'}
+                      indeterminate={props.getTypeSelectionState(group.type) === 'partial'}
+                      label={group.type}
+                      hint={`${group.results.length} match${group.results.length === 1 ? '' : 'es'}`}
+                      onChange={(checked) => props.onSetTypeSelected(group.type, checked)}
+                    />
                     <span>{group.results.length} match{group.results.length === 1 ? '' : 'es'}</span>
                   </summary>
                   <div className="type-actions">
                     <button type="button" onClick={() => props.onLoadMembers(group.type)}>
                       Load Family
                     </button>
-                    <button type="button" className="ghost" onClick={() => props.onToggleType(group.type)}>
-                      {props.isTypeSelected(group.type) ? 'Remove Type' : 'Add Type'}
-                    </button>
                   </div>
                   <ul className="member-list explorer-list">
                     {group.results.map((result) => (
                       <li key={`${result.kind}:${result.type}:${result.name}`} className="explorer-item">
-                        <div className="explorer-item-copy">
-                          <strong>{result.name}</strong>
-                          <div className="decision-meta">
-                            <span className={`decision-badge ${result.kind === 'member' ? 'good' : 'muted'}`}>{result.kind}</span>
-                            <span className="decision-badge muted">{group.type}</span>
-                            <span className="decision-badge muted">matched {result.matchField}</span>
-                          </div>
-                        </div>
-                        <div className="ops-list-actions">
-                          <button type="button" onClick={() => props.onAddSearchResult(result)}>
-                            {result.kind === 'member' ? 'Add Item' : 'Add Type'}
-                          </button>
-                        </div>
+                        <SelectionCheckbox
+                          checked={result.kind === 'member' ? props.isMemberSelected(result.type, result.name) : props.getTypeSelectionState(result.type) === 'all'}
+                          disabled={result.kind === 'member' && props.getTypeSelectionState(result.type) === 'all'}
+                          label={result.name}
+                          hint={`${group.type} • matched ${result.matchField}`}
+                          onChange={(checked) =>
+                            result.kind === 'member'
+                              ? props.onSetMemberSelected(result.type, result.name, checked)
+                              : props.onSetTypeSelected(result.type, checked)
+                          }
+                        />
                       </li>
                     ))}
                   </ul>
@@ -236,7 +264,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
               ))}
             </div>
           ) : (
-            <p className="muted">No metadata names matched this search yet. Try a broader item name like `Opportunity` or `layout`.</p>
+            <p className="muted">No metadata names matched this search yet. Try a broader item name like `Opportunity`, `layout`, or an Apex class name.</p>
           )}
         </article>
       ) : null}
@@ -246,10 +274,17 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
         {(props.metadataCatalog?.types || []).map((typeRow) => {
           const membersPayload = props.metadataMembersByType[typeRow.type];
           const members = membersPayload?.members || [];
+          const typeSelectionState = props.getTypeSelectionState(typeRow.type);
           return (
             <details key={typeRow.type}>
               <summary>
-                <span>{typeRow.type}</span>
+                <SelectionCheckbox
+                  checked={typeSelectionState === 'all'}
+                  indeterminate={typeSelectionState === 'partial'}
+                  label={typeRow.type}
+                  hint={`${typeRow.memberCount} discoverable item${typeRow.memberCount === 1 ? '' : 's'}`}
+                  onChange={(checked) => props.onSetTypeSelected(typeRow.type, checked)}
+                />
                 <span>{typeRow.memberCount}</span>
               </summary>
               <div className="type-actions">
@@ -260,18 +295,18 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                 >
                   {props.metadataLoadingType === typeRow.type ? 'Loading...' : 'Load Members'}
                 </button>
-                <button type="button" className="ghost" onClick={() => props.onToggleType(typeRow.type)}>
-                  {props.isTypeSelected(typeRow.type) ? 'Remove Type' : 'Add Type'}
-                </button>
               </div>
               {members.length > 0 ? (
                 <ul className="member-list">
                   {members.map((member) => (
                     <li key={`${typeRow.type}:${member.name}`}>
-                      <span>{member.name}</span>
-                      <button type="button" className="ghost" onClick={() => props.onToggleMember(typeRow.type, member.name)}>
-                        {props.isMemberSelected(typeRow.type, member.name) ? 'Remove' : 'Add'}
-                      </button>
+                      <SelectionCheckbox
+                        checked={props.isMemberSelected(typeRow.type, member.name)}
+                        disabled={typeSelectionState === 'all'}
+                        label={member.name}
+                        hint={typeSelectionState === 'all' ? 'included via family selection' : 'select this single item'}
+                        onChange={(checked) => props.onSetMemberSelected(typeRow.type, member.name, checked)}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -281,6 +316,12 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
             </details>
           );
         })}
+        {props.metadataCatalogRequested && (props.metadataCatalog?.types || []).length === 0 ? (
+          <p className="muted">No metadata families were returned yet. Try `Load Explorer` again with `Force Refresh` enabled.</p>
+        ) : null}
+        {!props.metadataCatalogRequested ? (
+          <p className="muted">Click `Load Explorer` to browse live org metadata families before retrieving anything.</p>
+        ) : null}
       </div>
 
       <div className="ops-grid">
@@ -324,7 +365,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
               ))}
             </ul>
           ) : (
-            <p className="muted">Add visible types or individual members from the catalog to build the retrieve cart.</p>
+            <p className="muted">Check families or individual items from search and browse results to build the retrieve cart.</p>
           )}
 
           <details className="advanced-block">

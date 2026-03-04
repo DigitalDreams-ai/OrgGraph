@@ -137,6 +137,14 @@ export default function Page(): JSX.Element {
     void proofsWorkspace.runProofLookup();
   }, [uiTab, proofsWorkspace.proofId, proofsWorkspace.selectedProof?.proofId]);
 
+  useEffect(() => {
+    if (uiTab !== 'browser' || browserWorkspace.metadataCatalogRequested) {
+      return;
+    }
+
+    void browserWorkspace.refreshTypes();
+  }, [uiTab, browserWorkspace.metadataCatalogRequested]);
+
   return (
     <main className="og-shell">
       <ShellTopbar
@@ -255,19 +263,18 @@ export default function Page(): JSX.Element {
               selectionSummary={browserWorkspace.selectionSummary}
               visibleCatalogTypes={browserWorkspace.visibleCatalogTypes}
               lastMetadataRetrieve={browserWorkspace.lastMetadataRetrieve}
+              metadataCatalogRequested={browserWorkspace.metadataCatalogRequested}
               loading={secondaryQueryRunner.loading}
-              onAddVisibleTypes={browserWorkspace.addVisibleTypesToSelection}
               onRefreshTypes={() => void browserWorkspace.refreshTypes()}
               onClearFilters={browserWorkspace.clearFilters}
               onClearSelections={browserWorkspace.clearSelections}
               onLoadMembers={(type) => void browserWorkspace.loadMembers(type)}
-              onAddSearchResult={browserWorkspace.addSearchResult}
-              onToggleType={browserWorkspace.toggleTypeSelection}
-              onToggleMember={browserWorkspace.toggleMemberSelection}
+              isMemberSelected={browserWorkspace.isMemberSelected}
+              getTypeSelectionState={browserWorkspace.getTypeSelectionState}
+              onSetTypeSelected={browserWorkspace.setTypeSelected}
+              onSetMemberSelected={browserWorkspace.setMemberSelected}
               onRemoveType={browserWorkspace.removeTypeSelection}
               onRemoveMember={browserWorkspace.removeMemberSelection}
-              isTypeSelected={browserWorkspace.isTypeSelected}
-              isMemberSelected={browserWorkspace.isMemberSelected}
               onRetrieveSelected={() => void browserWorkspace.retrieveSelected()}
               onOpenRefresh={() => setUiTab('refresh')}
             />
