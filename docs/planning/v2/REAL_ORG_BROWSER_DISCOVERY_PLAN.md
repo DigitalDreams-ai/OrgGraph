@@ -30,9 +30,9 @@ The browser should let them search by the actual item name first, then retrieve 
 
 In scope:
 - one unified metadata-name search input
-- cross-type search results from the current metadata index
+- cross-type search results from live org metadata discovery when no local parse tree is seeded
 - result rows that make the type explicit after the match is found
-- add-type and add-member actions directly from those results
+- checkbox-based selection from those results
 - preserve the existing retrieve cart and `Refresh & Build` handoff
 
 Out of scope:
@@ -47,21 +47,22 @@ The slice is complete only if all of the following are true:
 
 1. An operator can search for `Opportunity` without typing `CustomObject` first.
 2. Search results show both the matched item name and its metadata type.
-3. The operator can add a specific member from the search results directly into the retrieve cart.
-4. The operator can still browse by type when search is empty.
+3. The operator can select a specific member from the search results directly into the retrieve cart with a checkbox.
+4. The operator can still browse metadata families when search is empty.
 5. Existing selective retrieve behavior and `Refresh & Build` handoff remain fail-closed.
 6. Raw JSON is not required to discover a retrievable item by name.
 
 ## Implementation Direction
 
 Engine:
-- add a unified metadata search endpoint over the current parse-tree metadata index
+- add a unified metadata search endpoint that prefers live org metadata discovery and only falls back to the local parse-tree index when needed
 - return typed result entries instead of forcing the UI to infer cross-type matches from catalog rows
 
 UI:
 - replace `Type Search` with a unified name-first search label
-- keep type browsing available as a secondary path
+- keep metadata-family browsing available as a secondary path
 - add a visible search-results section above the type explorer
+- remove mixed add/remove verbs from the discovery surface in favor of checkbox selection
 
 ## Verification
 
@@ -75,12 +76,10 @@ Current branch verification status:
 - `pnpm --filter api typecheck` passes
 - `pnpm --filter web build` passes
 - `pnpm --reporter=append-only --loglevel=info desktop:build` passes
-- `pnpm --reporter=append-only --loglevel=info desktop:smoke:release` is currently blocked by the existing packaged runtime bootstrap failure:
-  - `Semantic drift budget exceeded: objectNodeDelta=75 > 25`
-  - this occurs while fixture bootstrap is seeding the packaged runtime and is not introduced by the unified metadata-search code path
+- `pnpm --reporter=append-only --loglevel=info desktop:smoke:release` passes
 
 Real-org follow-up proof after merge:
 - search for `Opportunity` in packaged desktop `Org Browser`
-- add the result to cart without entering `CustomObject`
+- select the result with a checkbox without entering `CustomObject`
 - retrieve selected metadata
 - confirm the handoff is visible in `Refresh & Build`

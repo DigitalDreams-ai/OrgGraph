@@ -61,7 +61,7 @@ export interface OrgMetadataType extends OrgMetadataTypeSummary {
 }
 
 export interface OrgMetadataCatalogResponse {
-  source: 'local' | 'cache' | 'mixed';
+  source: 'local' | 'cache' | 'metadata_api' | 'mixed';
   refreshedAt: string;
   search?: string;
   totalTypes: number;
@@ -70,7 +70,7 @@ export interface OrgMetadataCatalogResponse {
 }
 
 export interface OrgMetadataMembersResponse {
-  source: 'local' | 'cache' | 'mixed';
+  source: 'local' | 'cache' | 'metadata_api' | 'mixed';
   refreshedAt: string;
   type: string;
   search?: string;
@@ -87,7 +87,7 @@ export interface OrgMetadataSearchResult {
 }
 
 export interface OrgMetadataSearchResponse {
-  source: 'local' | 'cache' | 'mixed';
+  source: 'local' | 'cache' | 'metadata_api' | 'mixed';
   refreshedAt: string;
   search: string;
   totalResults: number;

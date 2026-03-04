@@ -78,6 +78,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const [metadataLoadingType, setMetadataLoadingType] = useState('');
   const [metadataSelected, setMetadataSelected] = useState<MetadataSelection[]>([]);
   const [lastMetadataRetrieve, setLastMetadataRetrieve] = useState<MetadataRetrieveResultView | null>(null);
+  const [metadataCatalogRequested, setMetadataCatalogRequested] = useState(false);
 
   const metadataSelectionsPreview = useMemo(() => JSON.stringify(metadataSelected, null, 2), [metadataSelected]);
   const selectionSummary = useMemo(() => buildSelectionSummary(metadataSelected), [metadataSelected]);
@@ -91,14 +92,6 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     setMetadataMemberSearch('');
     setMetadataForceRefresh(false);
     setMetadataSearchResults([]);
-  }
-
-  function addSearchResult(result: MetadataSearchResult): void {
-    if (result.kind === 'member') {
-      toggleMemberSelection(result.type, result.name);
-      return;
-    }
-    toggleTypeSelection(result.type);
   }
 
   function toggleTypeSelection(type: string): void {
@@ -137,18 +130,20 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
 
   function isMemberSelected(type: string, member: string): boolean {
     const typeEntry = metadataSelected.find((entry) => entry.type === type);
-    if (!typeEntry || !Array.isArray(typeEntry.members)) return false;
+    if (!typeEntry) return false;
+    if (!Array.isArray(typeEntry.members)) return true;
     return typeEntry.members.includes(member);
   }
 
-  function addVisibleTypesToSelection(): void {
-    setMetadataSelected((current) => {
-      const knownTypes = new Set(current.map((entry) => entry.type));
-      const additions = visibleCatalogTypes
-        .filter((type) => !knownTypes.has(type))
-        .map((type) => ({ type }));
-      return additions.length > 0 ? [...current, ...additions] : current;
-    });
+  function getTypeSelectionState(type: string): 'none' | 'partial' | 'all' {
+    const typeEntry = metadataSelected.find((entry) => entry.type === type);
+    if (!typeEntry) {
+      return 'none';
+    }
+    if (!Array.isArray(typeEntry.members)) {
+      return 'all';
+    }
+    return typeEntry.members.length > 0 ? 'partial' : 'none';
   }
 
   function clearSelections(): void {
@@ -176,6 +171,54 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     );
   }
 
+  function setTypeSelected(type: string, selected: boolean): void {
+    if (selected) {
+      setMetadataSelected((current) => {
+        const withoutType = current.filter((entry) => entry.type !== type);
+        return [...withoutType, { type }];
+      });
+      return;
+    }
+    removeTypeSelection(type);
+  }
+
+  function setMemberSelected(type: string, member: string, selected: boolean): void {
+    const selectionState = getTypeSelectionState(type);
+    if (selectionState === 'all') {
+      return;
+    }
+
+    setMetadataSelected((current) => {
+      const idx = current.findIndex((entry) => entry.type === type);
+      if (selected) {
+        if (idx < 0) {
+          return [...current, { type, members: [member] }];
+        }
+        const existing = current[idx];
+        const members = Array.isArray(existing.members) ? [...existing.members] : [];
+        if (members.includes(member)) {
+          return current;
+        }
+        const next = [...current];
+        next[idx] = { type, members: [...members, member].sort((a, b) => a.localeCompare(b)) };
+        return next;
+      }
+
+      if (idx < 0) {
+        return current;
+      }
+
+      const existing = current[idx];
+      const members = Array.isArray(existing.members) ? existing.members.filter((value) => value !== member) : [];
+      if (members.length === 0) {
+        return current.filter((entry) => entry.type !== type);
+      }
+      const next = [...current];
+      next[idx] = { type, members };
+      return next;
+    });
+  }
+
   async function refreshTypes(): Promise<void> {
     options.setLoading(true);
     options.setCopied(false);
@@ -184,6 +227,9 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     try {
       const limit = parseOptionalInt(metadataLimitRaw) ?? 200;
       const search = metadataSearch.trim();
+      if (!search) {
+        setMetadataCatalogRequested(true);
+      }
       const result = search
         ? await getOrgMetadataSearch({
             q: search,
@@ -301,9 +347,8 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     selectionSummary,
     visibleCatalogTypes,
     lastMetadataRetrieve,
+    metadataCatalogRequested,
     clearFilters,
-    addVisibleTypesToSelection,
-    addSearchResult,
     clearSelections,
     refreshTypes,
     loadMembers,
@@ -313,6 +358,9 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     removeMemberSelection,
     isTypeSelected,
     isMemberSelected,
+    getTypeSelectionState,
+    setTypeSelected,
+    setMemberSelected,
     retrieveSelected
   };
 }

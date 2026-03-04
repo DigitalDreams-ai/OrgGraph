@@ -77,6 +77,10 @@ export class OrgToolAdapterService {
     await this.runSfCommandWithRetry(args, cwd);
   }
 
+  async listMetadata(alias: string, metadataType: string, cwd: string): Promise<CommandResult> {
+    return this.runSf(['org', 'list', 'metadata', '--target-org', alias, '--metadata-type', metadataType, '--json'], cwd, 120_000);
+  }
+
   async probe(command: string, args: string[], cwd: string): Promise<CommandResult> {
     try {
       return await this.commandRunner.run(command, args, {
@@ -149,6 +153,24 @@ export class OrgToolAdapterService {
         });
       }
       return Array.from(deduped.values()).sort((left, right) => left.alias.localeCompare(right.alias));
+    } catch {
+      return [];
+    }
+  }
+
+  parseMetadataList(stdout: string): Array<{ type: string; fullName: string; fileName?: string }> {
+    try {
+      const parsed = JSON.parse(stdout) as {
+        result?: Array<{ type?: string; fullName?: string; fileName?: string }>;
+      };
+      const results = Array.isArray(parsed?.result) ? parsed.result : [];
+      return results
+        .map((item) => ({
+          type: typeof item.type === 'string' ? item.type.trim() : '',
+          fullName: typeof item.fullName === 'string' ? item.fullName.trim() : '',
+          fileName: typeof item.fileName === 'string' ? item.fileName.trim() : undefined
+        }))
+        .filter((item) => item.type.length > 0 && item.fullName.length > 0);
     } catch {
       return [];
     }

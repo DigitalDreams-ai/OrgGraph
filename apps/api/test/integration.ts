@@ -378,7 +378,7 @@ async function run(): Promise<void> {
       types: Array<{ type: string }>;
       warnings?: string[];
     };
-    assert.ok(['local', 'cache'].includes(metadataCatalogBody.source));
+    assert.ok(['local', 'cache', 'metadata_api'].includes(metadataCatalogBody.source));
     if (metadataCatalogBody.totalTypes === 0) {
       assert.ok(
         Array.isArray(metadataCatalogBody.warnings) &&

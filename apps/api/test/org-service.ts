@@ -74,6 +74,24 @@ class StubToolAdapter {
     this.calls.push({ command: 'sf', args, cwd });
   }
 
+  async listMetadata(alias: string, metadataType: string, cwd: string) {
+    const args = ['org', 'list', 'metadata', '--target-org', alias, '--metadata-type', metadataType, '--json'];
+    this.calls.push({ command: 'sf', args, cwd });
+    const fixtures: Record<string, Array<{ type: string; fullName: string; fileName?: string }>> = {
+      CustomObject: [
+        { type: 'CustomObject', fullName: 'Account', fileName: 'objects/Account/Account.object-meta.xml' },
+        { type: 'CustomObject', fullName: 'Opportunity', fileName: 'objects/Opportunity/Opportunity.object-meta.xml' }
+      ],
+      Layout: [
+        { type: 'Layout', fullName: 'Opportunity-Opportunity Layout', fileName: 'layouts/Opportunity-Opportunity Layout.layout-meta.xml' }
+      ],
+      CustomField: [
+        { type: 'CustomField', fullName: 'Opportunity.StageName', fileName: 'objects/Opportunity/fields/StageName.field-meta.xml' }
+      ]
+    };
+    return this.ok(JSON.stringify({ result: fixtures[metadataType] ?? [] }));
+  }
+
   extractSfUsername(stdout: string) {
     return JSON.parse(stdout).result.username;
   }
@@ -99,6 +117,14 @@ class StubToolAdapter {
       instanceUrl: org.instanceUrl,
       isDefault: Boolean(org.isDefaultUsername),
       source: 'sf_cli_keychain' as const
+    }));
+  }
+
+  parseMetadataList(stdout: string) {
+    return (JSON.parse(stdout).result ?? []).map((item: Record<string, unknown>) => ({
+      type: String(item.type ?? ''),
+      fullName: String(item.fullName ?? ''),
+      fileName: typeof item.fileName === 'string' ? item.fileName : undefined
     }));
   }
 
@@ -245,6 +271,32 @@ async function run(): Promise<void> {
     assert.deepEqual(
       metadataMembers.members.map((member) => member.name),
       ['Account', 'Opportunity']
+    );
+
+    fs.rmSync(path.join(parsePath, 'objects'), { recursive: true, force: true });
+    const liveCatalog = await service.metadataCatalog({ refresh: true, limit: 50 });
+    assert.equal(liveCatalog.source, 'metadata_api');
+    assert.ok(liveCatalog.types.some((item) => item.type === 'Layout'));
+
+    const liveSearch = await service.metadataSearch({
+      search: 'Opportunity',
+      refresh: true,
+      limit: 50
+    });
+    assert.equal(liveSearch.source, 'metadata_api');
+    assert.ok(
+      liveSearch.results.some((result) => result.type === 'Layout' && result.name === 'Opportunity-Opportunity Layout')
+    );
+
+    const liveMembers = await service.metadataMembers({
+      type: 'Layout',
+      refresh: true,
+      limit: 50
+    });
+    assert.equal(liveMembers.source, 'metadata_api');
+    assert.deepEqual(
+      liveMembers.members.map((member) => member.name),
+      ['Opportunity-Opportunity Layout']
     );
 
     await assert.rejects(
