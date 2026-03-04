@@ -130,6 +130,7 @@ Current real-org checkpoint after PR #71:
 - the remaining gap is direct desktop-shell operator proof of that retrieve handoff against the packaged UI
 - the next real-org browser slice is to make metadata discovery name-first instead of type-first so operators can search for actual items like `Opportunity`, layouts, tabs, fields, and classes without already knowing the metadata type
 - the current unified-search branch compiles and packages cleanly, but packaged smoke is still blocked by the existing fixture bootstrap drift-budget failure (`objectNodeDelta=75 > 25`) before the desktop proof can advance
+- the next real-org session slice is to distinguish engine/runtime unavailability from actual `sf`, `cci`, or session failures so `Refresh Overview` stops presenting fake tool-missing state when the local desktop API cannot be reached
 
 ## Remaining Stage 1 Product Gates
 
