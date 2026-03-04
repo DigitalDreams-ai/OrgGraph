@@ -20,7 +20,7 @@ Purpose:
 | Defect ID | Severity | Workspace | Symptom | Likely Root Cause | Owner Wave | Verification Gate | Status |
 |---|---|---|---|---|---|---|---|
 | D001 | S1 | Packaged Runtime | App can fail at startup with semantic drift budget exception in local operator flow | Bootstrap fixture/graph state mismatch and strict drift threshold handling at startup | Wave2 | `pnpm desktop:smoke:release` + manual packaged launch | In Progress |
-| D002 | S1 | Org Sessions | Runtime-unavailable condition can appear to operator as missing local tools | Status-path mixing between runtime readiness and toolchain checks | Wave2 | Session/diagnostic UI assertions + smoke | Open |
+| D002 | S1 | Org Sessions | Runtime-unavailable condition can appear to operator as missing local tools | Status-path mixing between runtime readiness and toolchain checks | Wave2 | Session/diagnostic UI assertions + smoke | In Progress |
 | D003 | S1 | Org Sessions | `cci` alias warning (`alias not found`) lacks guided remediation path | Alias registry bridge and UX guidance gaps | Wave3 | Real-org connect/switch/preflight workflow proof | Open |
 | D004 | S1 | Org Browser | Name search returns empty with low guidance in some unseeded states | Catalog seeding/discovery timing and empty-state UX | Wave4 | Browser real-org search and retrieval runbook pass | Open |
 | D005 | S1 | Browser -> Refresh | Retrieve handoff readiness can remain ambiguous to operators | Incomplete handoff state rendering for parse path/args/readiness | Wave5 | End-to-end retrieve -> refresh -> diff scenario | Open |
