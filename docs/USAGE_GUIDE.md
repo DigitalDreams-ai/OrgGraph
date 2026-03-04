@@ -148,6 +148,11 @@ Current retrieval handoff behavior:
 - `Org Browser` now auto-loads the explorer on first open and prefers live org metadata discovery before any local parse tree has been seeded
 - families and individual metadata items use the same checkbox selection model in both grouped search results and family browse
 - checking a family row stages that family for retrieve; checking an item row stages just that item
+- expanding a family row auto-loads nested members for tree-style browsing
+- browser actions now use checked-selection language:
+  - `Load Explorer Tree`
+  - `Search Explorer`
+  - `Retrieve Checked`
 - selected types and members are still removable directly in the workspace
 - the JSON cart payload remains available only as an advanced read-only preview
 - `Open Refresh & Build` moves directly from metadata selection into rebuild and drift review

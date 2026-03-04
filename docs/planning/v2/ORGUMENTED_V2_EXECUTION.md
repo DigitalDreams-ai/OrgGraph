@@ -135,6 +135,7 @@ Current real-org checkpoint after PR #71:
 - the next follow-on browser slice is to make those name-first results feel like a grouped explorer instead of a flat metadata API result list
 - the current explorer slice now groups name-first matches by metadata family, emphasizes actual item names before metadata type labels, and lets operators add a member or family directly into the retrieve cart from the grouped explorer surface
 - the current live-discovery follow-up now loads metadata families from the live org before any local parse tree is seeded, uses checkbox selection instead of mixed add/remove verbs, and keeps long paths/IDs readable inside the desktop cards instead of clipping
+- the current tree-selection follow-up now uses one checkbox-first selection model across search and browse, auto-loads nested family members on expand, and stages retrieval through explicit checked-selection actions (`Load Explorer Tree`, `Search Explorer`, `Retrieve Checked`)
 
 ## Remaining Stage 1 Product Gates
 

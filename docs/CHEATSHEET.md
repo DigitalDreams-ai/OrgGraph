@@ -151,7 +151,7 @@ pnpm --filter @orgumented/project-memory-mcp test
 ## Desktop App Workspaces
 - `Ask`: deterministic answer packet and follow-up actions
 - `Org Sessions`: overview refresh, alias readiness, recent auth/session history, attach, switch, disconnect, and restore-last-session
-- `Org Browser`: live-discovery explorer, checkbox-based family/item selection, structured retrieval cart, advanced JSON preview, and selected-retrieve handoff
+- `Org Browser`: live-discovery explorer tree, checkbox-based family/item selection (family includes nested items), structured retrieval cart, advanced JSON preview, and checked-retrieve handoff
 - `Refresh & Build`: Browser handoff, refresh, drift, and org-retrieve chain with rebuild summaries
 - `Explain & Analyze`: structured permissions, mapping diagnosis, automation, impact, and system-permission workflows
 - `Proofs & History`: labeled recent-proof history, one-click proof open/replay, trust history summaries, and advanced token fallback only when needed
