@@ -42,7 +42,10 @@ export class RuntimeBootstrapService {
     this.logger.log(`bootstrapping runtime from fixtures at ${fixturesPath}`);
     const refreshed = await this.ingestionService.refresh({
       fixturesPath,
-      mode: 'full'
+      mode: 'full',
+      // Runtime bootstrap starts from an ungrounded state, so stale snapshot history must not
+      // block recovery with drift-budget enforcement against an obsolete baseline.
+      rebaseline: true
     });
 
     if (refreshed.nodeCount <= 0 || refreshed.edgeCount <= 0 || refreshed.evidenceCount <= 0) {

@@ -9,12 +9,7 @@ function workspaceRoot(): string {
   return path.resolve(process.cwd(), '../..');
 }
 
-async function run(): Promise<void> {
-  const root = workspaceRoot();
-  const appDataRoot = path.join(root, 'data', 'runtime-bootstrap-test');
-
-  fs.rmSync(appDataRoot, { recursive: true, force: true });
-
+function applyBootstrapEnv(root: string, appDataRoot: string): void {
   process.env.ORGUMENTED_APP_DATA_ROOT = appDataRoot;
   process.env.ORGUMENTED_BOOTSTRAP_ON_STARTUP = 'true';
   process.env.DATABASE_URL = `file:${path.join(appDataRoot, 'orgumented.db')}`;
@@ -29,7 +24,41 @@ async function run(): Promise<void> {
   process.env.SF_INTEGRATION_ENABLED = 'false';
   process.env.LLM_ENABLED = 'false';
   process.env.ASK_DEFAULT_MODE = 'deterministic';
+}
 
+function seedStaleSemanticSnapshot(appDataRoot: string): void {
+  const snapshotPath = path.join(appDataRoot, 'refresh', 'semantic-snapshot.json');
+  fs.mkdirSync(path.dirname(snapshotPath), { recursive: true });
+  fs.writeFileSync(
+    snapshotPath,
+    JSON.stringify(
+      {
+        snapshotId: 'stale_snapshot_bootstrap_test',
+        fingerprint: 'stale-bootstrap-fingerprint',
+        generatedAt: new Date(0).toISOString(),
+        sourcePath: path.join(appDataRoot, 'sf-project', 'force-app', 'main', 'default'),
+        nodeCount: 25000,
+        edgeCount: 40000,
+        nodeDigest: 'stale-node-digest',
+        edgeDigest: 'stale-edge-digest',
+        nodeTypeCounts: {
+          OBJECT: 5000,
+          FIELD: 20000,
+          FLOW: 8000
+        },
+        relationCounts: {
+          references: 25000,
+          updates: 15000
+        }
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+}
+
+async function assertReadyAndAsk(appDataRoot: string): Promise<void> {
   const app = await NestFactory.create(AppModule, { logger: false });
   const runtimeBootstrap = app.get(RuntimeBootstrapService);
   await runtimeBootstrap.ensureRuntimeReady();
@@ -77,12 +106,55 @@ async function run(): Promise<void> {
       false,
       'review query should not be refused for missing grounding'
     );
-
-    console.log('runtime bootstrap test passed');
   } finally {
     await app.close();
     fs.rmSync(appDataRoot, { recursive: true, force: true });
   }
+}
+
+async function assertReadyOnly(appDataRoot: string): Promise<void> {
+  const app = await NestFactory.create(AppModule, { logger: false });
+  const runtimeBootstrap = app.get(RuntimeBootstrapService);
+  await runtimeBootstrap.ensureRuntimeReady();
+  await app.listen(0);
+
+  try {
+    const addr = app.getHttpServer().address();
+    const port = typeof addr === 'string' ? 0 : addr.port;
+    const base = `http://127.0.0.1:${port}`;
+
+    const readyRes = await fetch(`${base}/ready`);
+    assert.equal(readyRes.status, 200, 'bootstrap runtime should report ready');
+    const readyBody = (await readyRes.json()) as {
+      checks: {
+        db: { nodeCount: number; edgeCount: number };
+        evidence: { ok: boolean };
+      };
+    };
+    assert.ok(readyBody.checks.db.nodeCount > 0, 'bootstrap should create graph nodes');
+    assert.ok(readyBody.checks.db.edgeCount > 0, 'bootstrap should create graph edges');
+    assert.equal(readyBody.checks.evidence.ok, true, 'bootstrap should create evidence index');
+  } finally {
+    await app.close();
+    fs.rmSync(appDataRoot, { recursive: true, force: true });
+  }
+}
+
+async function run(): Promise<void> {
+  const root = workspaceRoot();
+
+  const baselineAppDataRoot = path.join(root, 'data', 'runtime-bootstrap-test');
+  fs.rmSync(baselineAppDataRoot, { recursive: true, force: true });
+  applyBootstrapEnv(root, baselineAppDataRoot);
+  await assertReadyAndAsk(baselineAppDataRoot);
+
+  const staleSnapshotAppDataRoot = path.join(root, 'data', 'runtime-bootstrap-rebaseline-test');
+  fs.rmSync(staleSnapshotAppDataRoot, { recursive: true, force: true });
+  applyBootstrapEnv(root, staleSnapshotAppDataRoot);
+  seedStaleSemanticSnapshot(staleSnapshotAppDataRoot);
+  await assertReadyOnly(staleSnapshotAppDataRoot);
+
+  console.log('runtime bootstrap test passed');
 }
 
 run().catch((error) => {
