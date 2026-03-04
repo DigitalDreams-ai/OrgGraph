@@ -110,15 +110,27 @@ export class PlannerService {
 
     const explicit = input.match(/\bobject\s+([A-Za-z_][A-Za-z0-9_]*)\b/i);
     if (explicit?.[1]) {
-      return explicit[1];
+      const candidate = explicit[1];
+      if (!this.isObjectStopWord(candidate)) {
+        return candidate;
+      }
     }
 
     const onObject = input.match(/\bon\s+([A-Za-z_][A-Za-z0-9_]*)\b/i);
     if (onObject?.[1]) {
-      return onObject[1];
+      const candidate = onObject[1];
+      if (!this.isObjectStopWord(candidate)) {
+        return candidate;
+      }
     }
 
     return undefined;
+  }
+
+  private isObjectStopWord(candidate: string): boolean {
+    return new Set(['the', 'a', 'an', 'latest', 'this', 'that', 'my', 'our']).has(
+      candidate.toLowerCase()
+    );
   }
 
   private findEmailRanges(input: string): Array<{ start: number; end: number }> {
