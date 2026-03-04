@@ -145,8 +145,10 @@ Current `Org Sessions` behavior:
 
 Current retrieval handoff behavior:
 - `Org Browser` shows the active alias, visible catalog counts, a structured retrieve cart, and the last selected-retrieve result
-- `Add Visible Types` lets the operator stage a broad retrieve pass from the current filtered catalog without editing JSON
-- selected types and members are removed from the cart directly in the workspace
+- `Org Browser` now auto-loads the explorer on first open and prefers live org metadata discovery before any local parse tree has been seeded
+- families and individual metadata items use the same checkbox selection model in both grouped search results and family browse
+- checking a family row stages that family for retrieve; checking an item row stages just that item
+- selected types and members are still removable directly in the workspace
 - the JSON cart payload remains available only as an advanced read-only preview
 - `Open Refresh & Build` moves directly from metadata selection into rebuild and drift review
 - `Refresh & Build` keeps the latest Browser retrieve visible as the current rebuild handoff instead of dropping that context at the tab switch

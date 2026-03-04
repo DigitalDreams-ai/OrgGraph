@@ -134,6 +134,7 @@ Current real-org checkpoint after PR #71:
 - the current session-status branch now clears stale overview state on failed refreshes and renders `runtime unavailable` in Org Sessions and the Operator Rail instead of implying that `sf` or `cci` are actually missing when the desktop engine is unreachable
 - the next follow-on browser slice is to make those name-first results feel like a grouped explorer instead of a flat metadata API result list
 - the current explorer slice now groups name-first matches by metadata family, emphasizes actual item names before metadata type labels, and lets operators add a member or family directly into the retrieve cart from the grouped explorer surface
+- the current live-discovery follow-up now loads metadata families from the live org before any local parse tree is seeded, uses checkbox selection instead of mixed add/remove verbs, and keeps long paths/IDs readable inside the desktop cards instead of clipping
 
 ## Remaining Stage 1 Product Gates
 
