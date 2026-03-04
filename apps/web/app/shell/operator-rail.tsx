@@ -18,10 +18,15 @@ interface OperatorRailProps {
   orgSession: OrgSessionPayload | null;
   orgStatus: OrgStatusPayload | null;
   orgPreflight: OrgPreflightPayload | null;
+  runtimeUnavailable: boolean;
   onCopy: () => void;
 }
 
 export function OperatorRail(props: OperatorRailProps): JSX.Element {
+  const sessionLabel = props.runtimeUnavailable && !props.orgSession && !props.orgStatus ? 'runtime unavailable' : props.sessionStatus;
+  const sfInstalledLabel = props.runtimeUnavailable && !props.orgStatus ? 'unavailable' : props.orgStatus?.sf?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
+  const cciInstalledLabel = props.runtimeUnavailable && !props.orgStatus ? 'unavailable' : props.orgStatus?.cci?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
+
   return (
     <aside className="right-rail panel">
       <div className="rail-head">
@@ -49,11 +54,11 @@ export function OperatorRail(props: OperatorRailProps): JSX.Element {
 
       <div className="sub-card">
         <h3>Connection</h3>
-        <p><strong>Session:</strong> {props.sessionStatus}</p>
+        <p><strong>Session:</strong> {sessionLabel}</p>
         <p><strong>Alias:</strong> {props.activeAlias}</p>
         <p><strong>Auth Mode:</strong> {props.orgSession?.authMode || props.orgStatus?.authMode || 'sf_cli_keychain'}</p>
-        <p><strong>sf Installed:</strong> {props.orgStatus?.sf?.installed ? 'yes' : 'no'}</p>
-        <p><strong>CCI Installed:</strong> {props.orgStatus?.cci?.installed ? 'yes' : 'no'}</p>
+        <p><strong>sf Installed:</strong> {sfInstalledLabel}</p>
+        <p><strong>CCI Installed:</strong> {cciInstalledLabel}</p>
       </div>
 
       {props.orgPreflight?.issues && props.orgPreflight.issues.length > 0 ? (

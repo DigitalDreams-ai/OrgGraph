@@ -42,10 +42,11 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   const [orgPreflight, setOrgPreflight] = useState<OrgPreflightPayload | null>(null);
   const [orgAliases, setOrgAliases] = useState<OrgSessionAliasesPayload | null>(null);
   const [orgSessionHistory, setOrgSessionHistory] = useState<OrgSessionHistoryPayload | null>(null);
+  const [runtimeUnavailable, setRuntimeUnavailable] = useState(false);
 
   const aliasInventory = orgAliases?.aliases ?? [];
   const activeAlias = orgSession?.activeAlias || orgStatus?.session?.activeAlias || orgStatus?.alias || orgAlias;
-  const sessionStatus = orgSession?.status || orgStatus?.session?.status || 'unknown';
+  const sessionStatus = runtimeUnavailable && !orgSession && !orgStatus ? 'runtime unavailable' : orgSession?.status || orgStatus?.session?.status || 'unknown';
   const restoreAlias = orgSessionHistory?.restoreAlias || (sessionStatus === 'disconnected' ? activeAlias : '');
   const recentSessionEvents = orgSessionHistory?.entries ?? [];
   const selectedAlias = useMemo<OrgAliasSummary | null>(
@@ -72,10 +73,13 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     try {
       const response = await action();
       options.presentResponse(response);
+      if (onSuccess) {
+        await onSuccess(response);
+      }
       if (response.ok === false) {
         options.setErrorText(options.resolveErrorMessage(response));
-      } else if (onSuccess) {
-        await onSuccess(response);
+      } else {
+        setRuntimeUnavailable(false);
       }
       return response;
     } catch (error) {
@@ -83,6 +87,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       const fallback: QueryResponse = { ok: false, error: { message } };
       options.presentResponse(fallback);
       options.setErrorText('Org request failed. Check API readiness and local runtime health.');
+      setRuntimeUnavailable(true);
       return null;
     } finally {
       options.setLoading(false);
@@ -104,22 +109,11 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     const preflightPayload = readPayload<OrgPreflightPayload>(preflightResponse);
     const historyPayload = readPayload<OrgSessionHistoryPayload>(historyResponse);
 
-    if (historyPayload) {
-      setOrgSessionHistory(historyPayload);
-    }
-
-    if (statusPayload) {
-      setOrgStatus(statusPayload);
-    }
-    if (sessionPayload) {
-      setOrgSession(sessionPayload);
-    }
-    if (aliasesPayload) {
-      setOrgAliases(aliasesPayload);
-    }
-    if (preflightPayload) {
-      setOrgPreflight(preflightPayload);
-    }
+    setOrgSessionHistory(historyPayload);
+    setOrgStatus(statusPayload);
+    setOrgSession(sessionPayload);
+    setOrgAliases(aliasesPayload);
+    setOrgPreflight(preflightPayload);
 
     const failedResponse = [statusResponse, sessionResponse, aliasesResponse, preflightResponse, historyResponse].find(
       (response) => response.ok === false
@@ -143,6 +137,9 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     }
     if (failedResponse) {
       options.setErrorText(options.resolveErrorMessage(failedResponse));
+      setRuntimeUnavailable(true);
+    } else {
+      setRuntimeUnavailable(false);
     }
 
     return overviewResponse;
@@ -151,44 +148,36 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   function loadAliases(): Promise<QueryResponse | null> {
     return runAction(() => listOrgSessionAliases(), (response) => {
       const payload = readPayload<OrgSessionAliasesPayload>(response);
-      if (payload) {
-        setOrgAliases(payload);
-      }
+      setOrgAliases(payload);
     });
   }
 
   function checkSession(): Promise<QueryResponse | null> {
     return runAction(() => getOrgSession(), (response) => {
       const payload = readPayload<OrgSessionPayload>(response);
-      if (payload) {
-        setOrgSession(payload);
-      }
+      setOrgSession(payload);
     });
   }
 
   function loadSessionHistory(): Promise<QueryResponse | null> {
     return runAction(() => getOrgSessionHistory(), (response) => {
       const payload = readPayload<OrgSessionHistoryPayload>(response);
-      if (payload) {
-        setOrgSessionHistory(payload);
-      }
+      setOrgSessionHistory(payload);
     });
   }
 
   function loadToolStatus(): Promise<QueryResponse | null> {
     return runAction(() => getOrgStatus(), (response) => {
       const payload = readPayload<OrgStatusPayload>(response);
-      if (payload) {
-        setOrgStatus(payload);
-      }
+      setOrgStatus(payload);
     });
   }
 
   function runPreflight(alias = orgAlias): Promise<QueryResponse | null> {
     return runAction(() => runOrgPreflight(alias), (response) => {
       const payload = readPayload<OrgPreflightPayload>(response);
+      setOrgPreflight(payload);
       if (payload) {
-        setOrgPreflight(payload);
         setOrgAlias(alias);
       }
     });
@@ -270,6 +259,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     toolingReady,
     browserSeeded,
     selectedAliasReady,
+    runtimeUnavailable,
     loadAliases,
     checkSession,
     loadSessionHistory,
