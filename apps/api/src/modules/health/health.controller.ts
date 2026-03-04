@@ -2,6 +2,7 @@ import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import fs from 'node:fs';
 import { resolveFixturesPath, resolveRefreshStatePath } from '../../common/path';
 import { AppConfigService } from '../../config/app-config.service';
+import { RuntimeBootstrapService } from '../../config/runtime-bootstrap.service';
 import { EvidenceStoreService } from '../evidence/evidence-store.service';
 import { GraphService } from '../graph/graph.service';
 
@@ -22,6 +23,12 @@ export class HealthController {
   async ready(): Promise<{
     status: 'ready';
     checks: {
+      bootstrap: {
+        ok: boolean;
+        status: string;
+        message?: string;
+        updatedAt: string;
+      };
       db: { ok: boolean; backend: string; storageRef: string; nodeCount: number; edgeCount: number };
       fixtures: { ok: boolean; sourcePath: string };
       evidence: { ok: boolean; indexPath: string };
@@ -32,7 +39,14 @@ export class HealthController {
       const fixturesPath = this.resolveReportedFixturesPath();
       const evidencePath = this.evidenceStore.getIndexPath();
       const evidenceDocumentCount = this.evidenceStore.getDocumentCount();
+      const bootstrapState = RuntimeBootstrapService.readBootstrapState();
       const checks = {
+        bootstrap: {
+          ok: bootstrapState.status !== 'failed',
+          status: bootstrapState.status,
+          message: bootstrapState.message,
+          updatedAt: bootstrapState.updatedAt
+        },
         db: {
           ok: dbCounts.nodeCount > 0 && dbCounts.edgeCount > 0,
           backend: this.graphService.backend(),
@@ -47,9 +61,9 @@ export class HealthController {
         }
       };
 
-      if (!checks.db.ok || !checks.fixtures.ok || !checks.evidence.ok) {
+      if (!checks.bootstrap.ok || !checks.db.ok || !checks.fixtures.ok || !checks.evidence.ok) {
         throw new ServiceUnavailableException({
-          message: 'runtime not grounded',
+          message: checks.bootstrap.ok ? 'runtime not grounded' : 'runtime bootstrap failed',
           checks
         });
       }

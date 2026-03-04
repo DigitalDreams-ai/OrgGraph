@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AppConfigService } from './config/app-config.service';
@@ -27,7 +28,13 @@ async function bootstrap(): Promise<void> {
   });
 
   const runtimeBootstrap = app.get(RuntimeBootstrapService);
-  await runtimeBootstrap.ensureRuntimeReady();
+  const bootstrapReady = await runtimeBootstrap.ensureRuntimeReady();
+  if (!bootstrapReady) {
+    const state = runtimeBootstrap.getBootstrapState();
+    new Logger('Bootstrap').error(
+      `runtime bootstrap failed; server will stay fail-closed until fixed (${state.message ?? 'unknown reason'})`
+    );
+  }
 
   const port = configService.port();
   await app.listen(port);
