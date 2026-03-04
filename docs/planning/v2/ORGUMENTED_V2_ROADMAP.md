@@ -2,6 +2,9 @@
 
 Date: March 1, 2026
 
+Companion execution master:
+- `docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md`
+
 ## Roadmap Model
 
 Orgumented v2 uses two layers:
@@ -17,6 +20,12 @@ Orgumented v2 uses two layers:
 
 The strategic stages define what success means.
 The waves define how the work is sequenced.
+
+For execution tracking, v2 now also uses numbered delivery waves (`wave1`, `wave2`, ...) in:
+- `docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md`
+
+The A-G waves remain strategic capability groupings.
+The numbered waves are the tactical completion sequence to reach 100% of current v2 scope.
 
 ## Stage-to-Wave Mapping
 
