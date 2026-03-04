@@ -106,7 +106,7 @@ Current concrete checkpoint:
 ## Active Branch and Immediate Focus
 
 Active branch:
-- `dna-real-org-retrieve-handoff`
+- `dna-real-org-session-sync`
 
 Immediate execution pressure:
 - prove the real-org retrieve handoff through the packaged desktop UI, not just the API path
@@ -117,7 +117,7 @@ Immediate execution pressure:
 - keep failure states actionable when local `sf`/`cci` auth prerequisites are missing
 - defer more fixture-benchmark iteration until real-org operator proof is materially stronger
 
-Current real-org checkpoint after PR #70:
+Current real-org checkpoint after PR #71:
 - local alias inventory and preflight succeed against real sandbox aliases on this machine
 - `shulman-uat` can be switched into the active session through the org session engine path
 - selective retrieve for `CustomObject:Opportunity` completes against the real alias
@@ -125,6 +125,7 @@ Current real-org checkpoint after PR #70:
 - the CustomObject member indexer now returns object names like `Opportunity` instead of nested field/listview file names
 - desktop `Org Sessions` now treats parse-path absence as a browser warning instead of a connect blocker on first contact
 - `Org Browser` and `Refresh & Build` now assess retrieve handoff readiness from the latest retrieve result and fail closed in the desktop shell when alias, parse path, or metadata args are missing
+- the desktop `Org Sessions` client now preserves top-level `/org/*` payloads so `Refresh Overview` can show live tool, session, and preflight state instead of leaving stale `missing` or `unknown` placeholders after a successful backend response
 - the remaining gap is direct desktop-shell operator proof of that retrieve handoff against the packaged UI
 
 ## Remaining Stage 1 Product Gates

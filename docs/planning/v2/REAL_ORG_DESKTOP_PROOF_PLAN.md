@@ -86,3 +86,4 @@ First implementation note on this branch:
 - `Org Sessions` desktop readiness must not treat a missing parse tree as a connect blocker
 - first-contact connect should be allowed as long as the alias is authenticated in `sf` and the local runtime is available
 - parse-path absence should stay visible as a browser/retrieve warning until the first successful retrieve seeds the parse tree
+- the desktop `Org Sessions` client must preserve top-level `/org/*` payloads from the engine boundary; otherwise a healthy backend can still render stale `sf missing`, `cci missing`, and `session unknown` placeholders after `Refresh Overview`
