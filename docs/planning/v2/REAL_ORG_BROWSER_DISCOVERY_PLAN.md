@@ -70,6 +70,15 @@ Minimum verification for this slice:
 - `pnpm --reporter=append-only desktop:build`
 - `pnpm --reporter=append-only desktop:smoke:release`
 
+Current branch verification status:
+- `pnpm --filter api exec ts-node --transpile-only test/org-service.ts` passes
+- `pnpm --filter api typecheck` passes
+- `pnpm --filter web build` passes
+- `pnpm --reporter=append-only --loglevel=info desktop:build` passes
+- `pnpm --reporter=append-only --loglevel=info desktop:smoke:release` is currently blocked by the existing packaged runtime bootstrap failure:
+  - `Semantic drift budget exceeded: objectNodeDelta=75 > 25`
+  - this occurs while fixture bootstrap is seeding the packaged runtime and is not introduced by the unified metadata-search code path
+
 Real-org follow-up proof after merge:
 - search for `Opportunity` in packaged desktop `Org Browser`
 - add the result to cart without entering `CustomObject`

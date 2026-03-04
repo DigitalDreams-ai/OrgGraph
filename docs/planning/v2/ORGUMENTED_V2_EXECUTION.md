@@ -129,6 +129,7 @@ Current real-org checkpoint after PR #71:
 - the desktop `Org Sessions` client now preserves top-level `/org/*` payloads so `Refresh Overview` can show live tool, session, and preflight state instead of leaving stale `missing` or `unknown` placeholders after a successful backend response
 - the remaining gap is direct desktop-shell operator proof of that retrieve handoff against the packaged UI
 - the next real-org browser slice is to make metadata discovery name-first instead of type-first so operators can search for actual items like `Opportunity`, layouts, tabs, fields, and classes without already knowing the metadata type
+- the current unified-search branch compiles and packages cleanly, but packaged smoke is still blocked by the existing fixture bootstrap drift-budget failure (`objectNodeDelta=75 > 25`) before the desktop proof can advance
 
 ## Remaining Stage 1 Product Gates
 

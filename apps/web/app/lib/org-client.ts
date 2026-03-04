@@ -25,6 +25,12 @@ interface MetadataMembersPayload {
   refresh?: boolean;
 }
 
+interface MetadataSearchPayload {
+  q: string;
+  limit?: number;
+  refresh?: boolean;
+}
+
 interface MetadataSelection {
   type: string;
   members?: string[];
@@ -144,6 +150,19 @@ export function getOrgMetadataMembers(payload: MetadataMembersPayload): Promise<
     params.set('refresh', String(payload.refresh));
   }
   const path = resolveDesktopApiUrl(`/org/metadata/members?${params.toString()}`);
+  return requestBoundary(path, { method: 'GET' });
+}
+
+export function getOrgMetadataSearch(payload: MetadataSearchPayload): Promise<QueryResponse> {
+  const params = new URLSearchParams();
+  params.set('q', payload.q);
+  if (typeof payload.limit === 'number' && Number.isFinite(payload.limit)) {
+    params.set('limit', String(payload.limit));
+  }
+  if (typeof payload.refresh === 'boolean') {
+    params.set('refresh', String(payload.refresh));
+  }
+  const path = resolveDesktopApiUrl(`/org/metadata/search?${params.toString()}`);
   return requestBoundary(path, { method: 'GET' });
 }
 

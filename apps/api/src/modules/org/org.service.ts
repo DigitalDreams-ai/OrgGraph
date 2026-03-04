@@ -8,6 +8,7 @@ import { OrgToolAdapterService } from './org-tool-adapter.service';
 import type {
   OrgMetadataCatalogResponse,
   OrgMetadataMembersResponse,
+  OrgMetadataSearchResponse,
   OrgMetadataRetrieveRequest,
   OrgMetadataRetrieveResponse,
   OrgPreflightResponse,
@@ -760,6 +761,82 @@ export class OrgService {
       search: input.search,
       totalMembers: members.length,
       members: limited,
+      warnings
+    };
+  }
+
+  async metadataSearch(input: {
+    search: string;
+    limit?: number;
+    refresh?: boolean;
+  }): Promise<OrgMetadataSearchResponse> {
+    const parsePath = this.runtimePaths.sfParsePath();
+    const index = this.loadMetadataIndex(parsePath, input.refresh === true);
+    const warnings: string[] = [...index.warnings];
+    const search = input.search.trim().toLowerCase();
+    const limit = input.limit ?? 200;
+    const results: Array<{
+      kind: 'type' | 'member';
+      type: string;
+      name: string;
+      matchField: 'type' | 'member';
+      score: number;
+    }> = [];
+
+    for (const [type, members] of index.typeMembers.entries()) {
+      const typeLower = type.toLowerCase();
+      if (typeLower.includes(search)) {
+        results.push({
+          kind: 'type',
+          type,
+          name: type,
+          matchField: 'type',
+          score: typeLower === search ? 0 : typeLower.startsWith(search) ? 1 : 2
+        });
+      }
+
+      for (const member of members) {
+        const memberLower = member.toLowerCase();
+        if (!memberLower.includes(search)) {
+          continue;
+        }
+        results.push({
+          kind: 'member',
+          type,
+          name: member,
+          matchField: 'member',
+          score: memberLower === search ? 0 : memberLower.startsWith(search) ? 1 : 2
+        });
+      }
+    }
+
+    results.sort((a, b) => {
+      if (a.score !== b.score) {
+        return a.score - b.score;
+      }
+      if (a.name !== b.name) {
+        return a.name.localeCompare(b.name);
+      }
+      if (a.type !== b.type) {
+        return a.type.localeCompare(b.type);
+      }
+      if (a.kind !== b.kind) {
+        return a.kind.localeCompare(b.kind);
+      }
+      return 0;
+    });
+
+    const limited = results.slice(0, limit).map(({ score, ...item }) => item);
+    if (results.length > limit) {
+      warnings.push(`search result truncated to limit=${limit}`);
+    }
+
+    return {
+      source: index.source,
+      refreshedAt: index.refreshedAt,
+      search: input.search,
+      totalResults: results.length,
+      results: limited,
       warnings
     };
   }

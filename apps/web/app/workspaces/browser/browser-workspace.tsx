@@ -4,6 +4,7 @@ import type {
   MetadataCatalogPayload,
   MetadataMembersPayload,
   MetadataRetrieveResultView,
+  MetadataSearchResult,
   MetadataSelection,
   MetadataSelectionSummary
 } from './types';
@@ -23,6 +24,7 @@ interface BrowserWorkspaceProps {
   metadataAutoRefresh: boolean;
   setMetadataAutoRefresh: (value: boolean) => void;
   metadataCatalog: MetadataCatalogPayload | null;
+  metadataSearchResults: MetadataSearchResult[];
   metadataMembersByType: Record<string, MetadataMembersPayload>;
   metadataLoadingType: string;
   metadataSelectionsPreview: string;
@@ -36,6 +38,7 @@ interface BrowserWorkspaceProps {
   onClearFilters: () => void;
   onClearSelections: () => void;
   onLoadMembers: (type: string) => void;
+  onAddSearchResult: (result: MetadataSearchResult) => void;
   onToggleType: (type: string) => void;
   onToggleMember: (type: string, member: string) => void;
   onRemoveType: (type: string) => void;
@@ -98,13 +101,19 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
 
       <div className="field-grid">
         <div>
-          <label htmlFor="metadataSearch">Type Search</label>
-          <input id="metadataSearch" value={props.metadataSearch} onChange={(e) => props.setMetadataSearch(e.target.value)} />
+          <label htmlFor="metadataSearch">Search Metadata Names</label>
+          <input
+            id="metadataSearch"
+            placeholder="Opportunity, layout, tab, class, flow..."
+            value={props.metadataSearch}
+            onChange={(e) => props.setMetadataSearch(e.target.value)}
+          />
         </div>
         <div>
-          <label htmlFor="metadataMemberSearch">Member Search</label>
+          <label htmlFor="metadataMemberSearch">Browse Loaded Members</label>
           <input
             id="metadataMemberSearch"
+            placeholder="Filter members inside a loaded type"
             value={props.metadataMemberSearch}
             onChange={(e) => props.setMetadataMemberSearch(e.target.value)}
           />
@@ -135,7 +144,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
 
       <div className="action-row">
         <button type="button" onClick={props.onRefreshTypes} disabled={props.loading}>
-          Refresh Types
+          {props.metadataSearch.trim().length > 0 ? 'Search Metadata' : 'Refresh Types'}
         </button>
         <button type="button" onClick={props.onAddVisibleTypes} disabled={props.loading || props.visibleCatalogTypes.length === 0}>
           Add Visible Types
@@ -153,6 +162,43 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           Clear Cart
         </button>
       </div>
+
+      {props.metadataSearch.trim().length > 0 ? (
+        <article className="sub-card">
+          <p className="panel-caption">Unified search</p>
+          <h3>Matching metadata items</h3>
+          <p className="muted">
+            Search by the actual item name first. The result tells you the metadata type after the match is found.
+          </p>
+          {props.metadataSearchResults.length > 0 ? (
+            <ul className="ops-list">
+              {props.metadataSearchResults.map((result) => (
+                <li key={`${result.kind}:${result.type}:${result.name}`} className="ops-list-item">
+                  <div>
+                    <div className="decision-meta">
+                      <span className={`decision-badge ${result.kind === 'member' ? 'good' : 'muted'}`}>{result.kind}</span>
+                      <span className="decision-badge muted">{result.type}</span>
+                      <span className="decision-badge muted">matched {result.matchField}</span>
+                    </div>
+                    <p><strong>{result.name}</strong></p>
+                    <p className="muted">{result.kind === 'member' ? 'Specific retrievable member' : 'Metadata type folder'}</p>
+                  </div>
+                  <div className="ops-list-actions">
+                    <button type="button" onClick={() => props.onAddSearchResult(result)}>
+                      {result.kind === 'member' ? 'Add Member' : 'Add Type'}
+                    </button>
+                    <button type="button" className="ghost" onClick={() => props.onLoadMembers(result.type)}>
+                      Load Type
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">No metadata names matched this search yet. Try a broader item name like `Opportunity` or `layout`.</p>
+          )}
+        </article>
+      ) : null}
 
       <div className="org-browser-frame">
         {(props.metadataCatalog?.types || []).map((typeRow) => {

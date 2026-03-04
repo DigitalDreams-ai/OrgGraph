@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { QueryResponse } from '../../lib/ask-client';
 import {
   getOrgMetadataCatalog,
+  getOrgMetadataSearch,
   getOrgMetadataMembers,
   retrieveOrgMetadata
 } from '../../lib/org-client';
@@ -11,6 +12,8 @@ import type {
   MetadataCatalogPayload,
   MetadataMembersPayload,
   MetadataRetrieveResultView,
+  MetadataSearchPayload,
+  MetadataSearchResult,
   MetadataSelection,
   MetadataSelectionSummary
 } from './types';
@@ -26,17 +29,6 @@ interface UseBrowserWorkspaceOptions {
 function parseOptionalInt(raw: string): number | undefined {
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function sanitizeSelections(input: MetadataSelection[]): MetadataSelection[] {
-  return input
-    .filter((entry) => entry && typeof entry.type === 'string' && entry.type.trim().length > 0)
-    .map((entry) => ({
-      type: entry.type.trim(),
-      members: Array.isArray(entry.members)
-        ? entry.members.map((member) => member.trim()).filter((member) => member.length > 0)
-        : undefined
-    }));
 }
 
 function buildSelectionSummary(selections: MetadataSelection[]): MetadataSelectionSummary {
@@ -81,6 +73,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const [metadataForceRefresh, setMetadataForceRefresh] = useState(false);
   const [metadataAutoRefresh, setMetadataAutoRefresh] = useState(true);
   const [metadataCatalog, setMetadataCatalog] = useState<MetadataCatalogPayload | null>(null);
+  const [metadataSearchResults, setMetadataSearchResults] = useState<MetadataSearchResult[]>([]);
   const [metadataMembersByType, setMetadataMembersByType] = useState<Record<string, MetadataMembersPayload>>({});
   const [metadataLoadingType, setMetadataLoadingType] = useState('');
   const [metadataSelected, setMetadataSelected] = useState<MetadataSelection[]>([]);
@@ -97,6 +90,15 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     setMetadataSearch('');
     setMetadataMemberSearch('');
     setMetadataForceRefresh(false);
+    setMetadataSearchResults([]);
+  }
+
+  function addSearchResult(result: MetadataSearchResult): void {
+    if (result.kind === 'member') {
+      toggleMemberSelection(result.type, result.name);
+      return;
+    }
+    toggleTypeSelection(result.type);
   }
 
   function toggleTypeSelection(type: string): void {
@@ -180,17 +182,31 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     options.setErrorText('');
 
     try {
-      const result = await getOrgMetadataCatalog({
-        q: metadataSearch,
-        limit: parseOptionalInt(metadataLimitRaw) ?? 200,
-        refresh: metadataForceRefresh
-      });
+      const limit = parseOptionalInt(metadataLimitRaw) ?? 200;
+      const search = metadataSearch.trim();
+      const result = search
+        ? await getOrgMetadataSearch({
+            q: search,
+            limit,
+            refresh: metadataForceRefresh
+          })
+        : await getOrgMetadataCatalog({
+            q: '',
+            limit,
+            refresh: metadataForceRefresh
+          });
       options.presentResponse(result);
       if (result.ok === false) {
         options.setErrorText(options.resolveErrorMessage(result));
         return;
       }
-      if (result.payload) {
+      if (search) {
+        const payload = result.payload as MetadataSearchPayload | null;
+        setMetadataSearchResults(Array.isArray(payload?.results) ? payload.results : []);
+      } else {
+        setMetadataSearchResults([]);
+      }
+      if (!search && result.payload) {
         setMetadataCatalog(result.payload as MetadataCatalogPayload);
       }
     } catch (error) {
@@ -277,6 +293,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     metadataAutoRefresh,
     setMetadataAutoRefresh,
     metadataCatalog,
+    metadataSearchResults,
     metadataMembersByType,
     metadataLoadingType,
     metadataSelectionsPreview,
@@ -286,6 +303,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     lastMetadataRetrieve,
     clearFilters,
     addVisibleTypesToSelection,
+    addSearchResult,
     clearSelections,
     refreshTypes,
     loadMembers,

@@ -3,6 +3,7 @@ import { OrgService } from './org.service';
 import type {
   OrgMetadataCatalogResponse,
   OrgMetadataMembersResponse,
+  OrgMetadataSearchResponse,
   OrgMetadataRetrieveRequest,
   OrgMetadataRetrieveResponse,
   OrgPreflightResponse,
@@ -191,6 +192,35 @@ export class OrgController {
     return this.orgService.metadataMembers({
       type: type.trim(),
       search: q?.trim() || undefined,
+      limit,
+      refresh: refreshRaw === 'true' || refreshRaw === '1'
+    });
+  }
+
+  @Get('/org/metadata/search')
+  async metadataSearch(
+    @Query('q') q?: string,
+    @Query('limit') limitRaw?: string,
+    @Query('refresh') refreshRaw?: string
+  ): Promise<OrgMetadataSearchResponse> {
+    if (!q || q.trim().length === 0) {
+      throw new BadRequestException('q is required');
+    }
+    const limit = limitRaw ? Number(limitRaw) : undefined;
+    if (limitRaw && (!Number.isInteger(limit) || (limit as number) < 1 || (limit as number) > 5000)) {
+      throw new BadRequestException('limit must be an integer between 1 and 5000');
+    }
+    if (
+      refreshRaw !== undefined &&
+      refreshRaw !== 'true' &&
+      refreshRaw !== 'false' &&
+      refreshRaw !== '1' &&
+      refreshRaw !== '0'
+    ) {
+      throw new BadRequestException("refresh must be one of: true, false, 1, 0");
+    }
+    return this.orgService.metadataSearch({
+      search: q.trim(),
       limit,
       refresh: refreshRaw === 'true' || refreshRaw === '1'
     });

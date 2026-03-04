@@ -79,6 +79,22 @@ export interface OrgMetadataMembersResponse {
   warnings: string[];
 }
 
+export interface OrgMetadataSearchResult {
+  kind: 'type' | 'member';
+  type: string;
+  name: string;
+  matchField: 'type' | 'member';
+}
+
+export interface OrgMetadataSearchResponse {
+  source: 'local' | 'cache' | 'mixed';
+  refreshedAt: string;
+  search: string;
+  totalResults: number;
+  results: OrgMetadataSearchResult[];
+  warnings: string[];
+}
+
 export interface OrgMetadataRetrieveRequest {
   selections: Array<{ type: string; members?: string[] }>;
   autoRefresh?: boolean;
