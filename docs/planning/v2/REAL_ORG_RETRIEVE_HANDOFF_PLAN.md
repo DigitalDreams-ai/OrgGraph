@@ -73,6 +73,10 @@ Merged by PR #70 on March 3, 2026:
 - desktop `Org Sessions` now separates attach readiness from browser seeding
 - a missing parse tree is visible as a browser/retrieve warning, not a connect blocker
 
+Current checkpoint on this branch:
+- `Org Browser` now assesses retrieve handoff readiness directly from the latest retrieve result
+- `Refresh & Build` now mirrors that readiness state and fails closed in the desktop shell when the handoff is incomplete
+- packaged desktop verification still passes after the handoff assessment was added
+
 Still to prove in this branch:
-- direct packaged desktop proof that a real retrieve from `Org Browser` is visible inside `Refresh & Build`
-- one fail-closed desktop path when retrieve state is not usable
+- direct packaged desktop operator proof of the same retrieve -> refresh handoff against the real UI

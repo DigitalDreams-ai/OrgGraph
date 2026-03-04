@@ -7,6 +7,7 @@ import type {
   MetadataSelection,
   MetadataSelectionSummary
 } from './types';
+import { assessRetrieveHandoff } from './retrieve-handoff';
 
 interface BrowserWorkspaceProps {
   activeAlias: string;
@@ -59,6 +60,8 @@ function formatTimestamp(value?: string): string {
 }
 
 export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
+  const retrieveHandoff = assessRetrieveHandoff(props.lastMetadataRetrieve);
+
   return (
     <>
       <h2>Org Browser</h2>
@@ -249,6 +252,9 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
             <>
               <div className="decision-meta">
                 <span className="decision-badge good">Status: {props.lastMetadataRetrieve.status}</span>
+                <span className={`decision-badge ${retrieveHandoff.state === 'ready' ? 'good' : 'bad'}`}>
+                  Handoff: {retrieveHandoff.state === 'ready' ? 'ready' : 'blocked'}
+                </span>
                 <span className={`decision-badge ${props.lastMetadataRetrieve.autoRefresh ? 'good' : 'muted'}`}>
                   Auto refresh: {String(props.lastMetadataRetrieve.autoRefresh)}
                 </span>
@@ -257,6 +263,17 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
               <p><strong>Completed:</strong> {formatTimestamp(props.lastMetadataRetrieve.completedAt)}</p>
               <p><strong>Parse path:</strong> {props.lastMetadataRetrieve.parsePath}</p>
               <p><strong>Metadata args:</strong> {props.lastMetadataRetrieve.metadataArgs.join(' ') || 'n/a'}</p>
+              {retrieveHandoff.state === 'blocked' ? (
+                <ul className="issue-list">
+                  {retrieveHandoff.reasons.map((reason) => (
+                    <li key={reason}>
+                      <strong>Retrieve handoff blocked.</strong> {reason}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">This retrieve is ready to seed `Refresh & Build` without opening raw JSON.</p>
+              )}
               {props.lastMetadataRetrieve.refresh ? (
                 <p>
                   <strong>Refresh counts:</strong> {props.lastMetadataRetrieve.refresh.nodeCount} nodes,{' '}

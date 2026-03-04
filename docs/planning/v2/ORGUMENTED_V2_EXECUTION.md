@@ -124,7 +124,8 @@ Current real-org checkpoint after PR #70:
 - `Org Browser` catalog loads from the resulting parse tree
 - the CustomObject member indexer now returns object names like `Opportunity` instead of nested field/listview file names
 - desktop `Org Sessions` now treats parse-path absence as a browser warning instead of a connect blocker on first contact
-- the remaining gap is direct desktop-shell proof that the real retrieve result stays visible and actionable inside `Refresh & Build`
+- `Org Browser` and `Refresh & Build` now assess retrieve handoff readiness from the latest retrieve result and fail closed in the desktop shell when alias, parse path, or metadata args are missing
+- the remaining gap is direct desktop-shell operator proof of that retrieve handoff against the packaged UI
 
 ## Remaining Stage 1 Product Gates
 
