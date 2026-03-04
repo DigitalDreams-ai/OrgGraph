@@ -214,6 +214,7 @@ export default function Page(): JSX.Element {
               toolingReady={connectWorkspace.toolingReady}
               browserSeeded={connectWorkspace.browserSeeded}
               selectedAliasReady={connectWorkspace.selectedAliasReady}
+              runtimeUnavailable={connectWorkspace.runtimeUnavailable}
               restoreAlias={connectWorkspace.restoreAlias}
               loading={secondaryQueryRunner.loading}
               onRefreshOverview={() => void connectWorkspace.refreshOverview()}
@@ -387,6 +388,7 @@ export default function Page(): JSX.Element {
           orgSession={connectWorkspace.orgSession}
           orgStatus={connectWorkspace.orgStatus}
           orgPreflight={connectWorkspace.orgPreflight}
+          runtimeUnavailable={connectWorkspace.runtimeUnavailable}
           onCopy={() => void responseInspector.copyJson()}
         />
       </section>

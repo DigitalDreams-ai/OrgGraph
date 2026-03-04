@@ -62,3 +62,17 @@ Minimum verification for this slice:
 - `pnpm --filter web build`
 - `pnpm --reporter=append-only --loglevel=info desktop:build`
 - one manual negative-path proof where the desktop API is unavailable and the UI reports runtime unavailability instead of fake tool-missing state
+
+## Current Checkpoint
+
+Implemented on `dna-org-sessions-runtime-status`:
+- `Org Sessions` now clears stale overview/session/preflight/tooling state when a refresh request fails instead of silently preserving prior values
+- the workspace now distinguishes:
+  - `runtime unavailable`
+  - `missing`
+  - `unknown`
+  rather than collapsing every failed refresh into fake tool/session facts
+- the Operator Rail now mirrors the same runtime-unavailable state instead of showing false `sf installed: no` and `cci installed: no` values when the desktop engine is unreachable
+
+Current local verification:
+- `pnpm --filter web build`

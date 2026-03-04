@@ -28,6 +28,7 @@ interface ConnectWorkspaceProps {
   toolingReady: boolean;
   browserSeeded: boolean;
   selectedAliasReady: boolean;
+  runtimeUnavailable: boolean;
   restoreAlias: string;
   loading: boolean;
   onRefreshOverview: () => void;
@@ -58,6 +59,27 @@ function formatTimestamp(value?: string): string {
 }
 
 export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
+  const sessionLabel = props.runtimeUnavailable && !props.orgSession && !props.orgStatus ? 'runtime unavailable' : props.sessionStatus;
+  const toolingLabel = props.runtimeUnavailable && !props.orgStatus ? 'unavailable' : props.toolingReady ? 'ready' : 'degraded';
+  const sfState = props.runtimeUnavailable && !props.orgStatus ? 'unavailable' : props.orgStatus?.sf?.installed ? 'installed' : props.orgStatus ? 'missing' : 'unknown';
+  const cciState = props.runtimeUnavailable && !props.orgStatus ? 'unavailable' : props.orgStatus?.cci?.installed ? 'installed' : props.orgStatus ? 'missing' : 'unknown';
+  const cciVersion = props.runtimeUnavailable && !props.orgStatus ? 'unavailable' : props.orgStatus?.cci?.version || 'n/a';
+  const sfMessage =
+    props.runtimeUnavailable && !props.orgStatus
+      ? 'Refresh Overview could not reach the local desktop runtime. Relaunch Orgumented or restore the packaged API before checking sf access again.'
+      : props.orgStatus?.sf?.message || 'Refresh the overview to validate local sf access.';
+  const cciMessage =
+    props.runtimeUnavailable && !props.orgStatus
+      ? 'Refresh Overview could not reach the local desktop runtime. Relaunch Orgumented or restore the packaged API before checking CCI again.'
+      : props.orgStatus?.cci?.message || 'Refresh the overview to validate local cci access.';
+  const readinessLabel = props.runtimeUnavailable && !props.orgPreflight ? 'unknown' : String(props.selectedAliasReady);
+  const browserSeededLabel = props.runtimeUnavailable && !props.orgPreflight ? 'unknown' : String(props.browserSeeded);
+  const sessionConnectedLabel =
+    props.runtimeUnavailable && !props.orgPreflight ? 'unknown' : String(props.orgPreflight?.checks?.sessionConnected ?? false);
+  const authenticatedLabel = props.runtimeUnavailable && !props.orgPreflight ? 'unknown' : props.orgPreflight?.checks?.aliasAuthenticated ? 'yes' : 'no';
+  const cciAliasLabel = props.runtimeUnavailable && !props.orgPreflight ? 'unknown' : props.orgPreflight?.checks?.cciAliasAvailable ? 'yes' : 'no';
+  const parsePathLabel = props.runtimeUnavailable && !props.orgPreflight ? 'unknown' : props.orgPreflight?.checks?.parsePathPresent ? 'yes' : 'no';
+
   return (
     <>
       <h2>Org Sessions</h2>
@@ -74,8 +96,8 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           <p className="panel-caption">Current session</p>
           <h3>Desktop auth state</h3>
           <div className="decision-meta">
-            <span className={`decision-badge ${props.sessionStatus === 'connected' ? 'good' : 'bad'}`}>
-              Session: {props.sessionStatus}
+            <span className={`decision-badge ${sessionLabel === 'connected' ? 'good' : sessionLabel === 'unknown' ? 'muted' : 'bad'}`}>
+              Session: {sessionLabel}
             </span>
             <span className="decision-badge muted">Active: {props.activeAlias || 'n/a'}</span>
           </div>
@@ -90,41 +112,41 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           <p className="panel-caption">Toolchain health</p>
           <h3>Local operator dependencies</h3>
           <div className="decision-meta">
-            <span className={`decision-badge ${props.toolingReady ? 'good' : 'bad'}`}>
-              Tooling ready: {String(props.toolingReady)}
+            <span className={`decision-badge ${toolingLabel === 'ready' ? 'good' : toolingLabel === 'degraded' ? 'bad' : 'muted'}`}>
+              Tooling status: {toolingLabel}
             </span>
             <span className={`decision-badge ${props.orgStatus?.cci?.versionPinned ? 'good' : 'muted'}`}>
               CCI pinned: {String(props.orgStatus?.cci?.versionPinned ?? false)}
             </span>
           </div>
-          <p><strong>sf CLI:</strong> {props.orgStatus?.sf?.installed ? 'installed' : 'missing'}</p>
-          <p>{props.orgStatus?.sf?.message || 'Refresh the overview to validate local sf access.'}</p>
-          <p><strong>CCI:</strong> {props.orgStatus?.cci?.installed ? 'installed' : 'missing'}</p>
-          <p><strong>Version:</strong> {props.orgStatus?.cci?.version || 'n/a'}</p>
-          <p>{props.orgStatus?.cci?.message || 'Refresh the overview to validate local cci access.'}</p>
+          <p><strong>sf CLI:</strong> {sfState}</p>
+          <p>{sfMessage}</p>
+          <p><strong>CCI:</strong> {cciState}</p>
+          <p><strong>Version:</strong> {cciVersion}</p>
+          <p>{cciMessage}</p>
         </article>
 
         <article className="sub-card">
           <p className="panel-caption">Selected alias</p>
           <h3>Readiness for attach</h3>
           <div className="decision-meta">
-            <span className={`decision-badge ${props.selectedAliasReady ? 'good' : 'muted'}`}>
-              Ready to connect: {String(props.selectedAliasReady)}
+            <span className={`decision-badge ${props.selectedAliasReady ? 'good' : props.runtimeUnavailable && !props.orgPreflight ? 'muted' : 'muted'}`}>
+              Ready to connect: {readinessLabel}
             </span>
             <span className={`decision-badge ${props.browserSeeded ? 'good' : 'muted'}`}>
-              Browser seeded: {String(props.browserSeeded)}
+              Browser seeded: {browserSeededLabel}
             </span>
             <span className={`decision-badge ${props.orgPreflight?.checks?.sessionConnected ? 'good' : 'muted'}`}>
-              Session connected: {String(props.orgPreflight?.checks?.sessionConnected ?? false)}
+              Session connected: {sessionConnectedLabel}
             </span>
           </div>
           <p><strong>Alias:</strong> {props.selectedAlias?.alias || props.orgPreflight?.alias || props.orgAlias}</p>
           <p><strong>Username:</strong> {props.selectedAlias?.username || 'n/a'}</p>
           <p><strong>Org ID:</strong> {props.selectedAlias?.orgId || 'n/a'}</p>
           <p><strong>Instance URL:</strong> {props.selectedAlias?.instanceUrl || 'n/a'}</p>
-          <p><strong>Authenticated in sf:</strong> {props.orgPreflight?.checks?.aliasAuthenticated ? 'yes' : 'no'}</p>
-          <p><strong>CCI alias available:</strong> {props.orgPreflight?.checks?.cciAliasAvailable ? 'yes' : 'no'}</p>
-          <p><strong>Parse path present:</strong> {props.orgPreflight?.checks?.parsePathPresent ? 'yes' : 'no'}</p>
+          <p><strong>Authenticated in sf:</strong> {authenticatedLabel}</p>
+          <p><strong>CCI alias available:</strong> {cciAliasLabel}</p>
+          <p><strong>Parse path present:</strong> {parsePathLabel}</p>
           <p className="muted">A missing parse path is a browser/retrieve warning, not a connect blocker on first contact.</p>
         </article>
 

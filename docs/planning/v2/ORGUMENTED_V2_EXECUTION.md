@@ -131,6 +131,7 @@ Current real-org checkpoint after PR #71:
 - the next real-org browser slice is to make metadata discovery name-first instead of type-first so operators can search for actual items like `Opportunity`, layouts, tabs, fields, and classes without already knowing the metadata type
 - the current unified-search branch compiles and packages cleanly, but packaged smoke is still blocked by the existing fixture bootstrap drift-budget failure (`objectNodeDelta=75 > 25`) before the desktop proof can advance
 - the next real-org session slice is to distinguish engine/runtime unavailability from actual `sf`, `cci`, or session failures so `Refresh Overview` stops presenting fake tool-missing state when the local desktop API cannot be reached
+- the current session-status branch now clears stale overview state on failed refreshes and renders `runtime unavailable` in Org Sessions and the Operator Rail instead of implying that `sf` or `cci` are actually missing when the desktop engine is unreachable
 
 ## Remaining Stage 1 Product Gates
 
