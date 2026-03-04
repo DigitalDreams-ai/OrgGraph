@@ -116,6 +116,7 @@ Immediate execution pressure:
 - preserve runtime convergence and packaged desktop parity while the handoff proof is captured
 - keep failure states actionable when local `sf`/`cci` auth prerequisites are missing
 - defer more fixture-benchmark iteration until real-org operator proof is materially stronger
+- reduce `Org Browser` dependence on metadata-type-first operator knowledge
 
 Current real-org checkpoint after PR #71:
 - local alias inventory and preflight succeed against real sandbox aliases on this machine
@@ -127,6 +128,7 @@ Current real-org checkpoint after PR #71:
 - `Org Browser` and `Refresh & Build` now assess retrieve handoff readiness from the latest retrieve result and fail closed in the desktop shell when alias, parse path, or metadata args are missing
 - the desktop `Org Sessions` client now preserves top-level `/org/*` payloads so `Refresh Overview` can show live tool, session, and preflight state instead of leaving stale `missing` or `unknown` placeholders after a successful backend response
 - the remaining gap is direct desktop-shell operator proof of that retrieve handoff against the packaged UI
+- the next real-org browser slice is to make metadata discovery name-first instead of type-first so operators can search for actual items like `Opportunity`, layouts, tabs, fields, and classes without already knowing the metadata type
 
 ## Remaining Stage 1 Product Gates
 
