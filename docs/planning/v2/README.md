@@ -77,6 +77,17 @@ Purpose:
 - structured pass/fail JSON output
 - runs typecheck, tests, build, desktop smoke, replay parity, scope check
 
+## Wave1 Baseline Artifacts
+
+1. `docs/planning/v2/WAVE1_BACKLOG.md`
+- deduplicated prioritized backlog with explicit wave assignment
+
+2. `docs/planning/v2/WAVE1_DEFECT_MATRIX.md`
+- severity-based defect ledger with wave ownership and verification gates
+
+3. `docs/planning/v2/WAVE1_FEATURE_GAP_MATRIX.md`
+- workflow capability gaps mapped to numbered waves and acceptance outcomes
+
 ## Reading Order
 
 Recommended order:
