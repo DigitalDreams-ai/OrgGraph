@@ -2,6 +2,9 @@
 
 Date: March 1, 2026
 
+Execution master plan:
+- `docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md`
+
 ## Current Objective
 
 The current execution objective is:
@@ -11,6 +14,9 @@ The current execution objective is:
 - prepare the product for real workflow adoption
 
 This is not a feature-sprawl phase.
+
+Execution branches should now follow:
+- `dna-wave<N>-<short-slice-name>`
 
 ## Current State Summary
 

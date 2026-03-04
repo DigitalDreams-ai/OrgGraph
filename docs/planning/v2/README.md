@@ -27,47 +27,52 @@ Purpose:
 - near-term and later-phase sequencing
 - current active priorities
 
-4. `docs/planning/v2/ORGUMENTED_V2_EXECUTION.md`
+4. `docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md`
+- authoritative completion plan organized as `wave1`, `wave2`, ...
+- full-scope sequencing across runtime, UX, quality, and release
+- acceptance gates and branch/PR convention per wave
+
+5. `docs/planning/v2/ORGUMENTED_V2_EXECUTION.md`
 - current execution focus
 - next major slices
 - verification bar
 - immediate planning and implementation sequence
 
-5. `docs/planning/v2/ORGUMENTED_V2_GOVERNANCE.md`
+6. `docs/planning/v2/ORGUMENTED_V2_GOVERNANCE.md`
 - success gates
 - kill-switches
 - risk summary
 - decision discipline
 
-6. `docs/planning/v2/ORGUMENTED_V2_LEXICON.md`
+7. `docs/planning/v2/ORGUMENTED_V2_LEXICON.md`
 - canonical terms
 - wording discipline
 - banned terms
 - precision rules for trusted outputs
 
-7. `docs/planning/v2/ORGUMENTED_V2_SOURCE_MAP.md`
+8. `docs/planning/v2/ORGUMENTED_V2_SOURCE_MAP.md`
 - which older planning files informed this set
 - where each topic was consolidated
 - what remains historical/reference-only
 
-8. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
+9. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
 - simplified agent operating model
 - primary-agent-first execution
 - optional verifier usage
 - merge and replay gates
 
-9. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_TASK_BOARD.md`
+10. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_TASK_BOARD.md`
 - lightweight execution board
 - current-slice visibility
 - optional verifier handoff
 - merge-readiness notes
 
-10. `docs/planning/v2/ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
+11. `docs/planning/v2/ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
 - Codex-native execution and handoff runbook
 - primary and verifier session flow
 - verification and recovery steps
 
-11. `scripts/verify-worker-branch.ps1`
+12. `scripts/verify-worker-branch.ps1`
 - verifier gate script
 - structured pass/fail JSON output
 - runs typecheck, tests, build, desktop smoke, replay parity, scope check
@@ -78,12 +83,13 @@ Recommended order:
 1. `ORGUMENTED_V2_STRATEGY.md`
 2. `ORGUMENTED_V2_ARCHITECTURE.md`
 3. `ORGUMENTED_V2_ROADMAP.md`
-4. `ORGUMENTED_V2_EXECUTION.md`
-5. `ORGUMENTED_V2_GOVERNANCE.md`
-6. `ORGUMENTED_V2_LEXICON.md`
-7. `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
-8. `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
-9. `ORGUMENTED_V2_SOURCE_MAP.md`
+4. `ORGUMENTED_V2_WAVES_100_PLAN.md`
+5. `ORGUMENTED_V2_EXECUTION.md`
+6. `ORGUMENTED_V2_GOVERNANCE.md`
+7. `ORGUMENTED_V2_LEXICON.md`
+8. `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
+9. `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
+10. `ORGUMENTED_V2_SOURCE_MAP.md`
 
 ## Default Execution Mode
 
