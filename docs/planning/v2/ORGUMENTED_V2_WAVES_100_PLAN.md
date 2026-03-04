@@ -268,3 +268,6 @@ Start with Wave1 and produce:
 - a defect matrix
 - a feature-gap matrix
 - explicit wave assignment for every remaining v2 item
+
+After Wave1 merges:
+- start Wave2 with `B001`, `B002`, and `B003` as first execution slice candidates
