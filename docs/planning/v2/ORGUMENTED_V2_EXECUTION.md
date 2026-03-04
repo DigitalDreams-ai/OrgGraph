@@ -126,6 +126,7 @@ Current real-org checkpoint after PR #70:
 - desktop `Org Sessions` now treats parse-path absence as a browser warning instead of a connect blocker on first contact
 - `Org Browser` and `Refresh & Build` now assess retrieve handoff readiness from the latest retrieve result and fail closed in the desktop shell when alias, parse path, or metadata args are missing
 - the remaining gap is direct desktop-shell operator proof of that retrieve handoff against the packaged UI
+- the active operator proof path should now be runnable from a single explicit desktop quickstart without benchmark/fixture detours
 
 ## Remaining Stage 1 Product Gates
 
