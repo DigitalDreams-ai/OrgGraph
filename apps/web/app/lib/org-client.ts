@@ -39,11 +39,15 @@ async function parseBoundaryResponse(res: Response): Promise<QueryResponse> {
   const text = await res.text();
 
   try {
-    const parsed = JSON.parse(text) as QueryResponse;
+    const parsed = JSON.parse(text) as QueryResponse & Record<string, unknown>;
+    const payload =
+      Object.prototype.hasOwnProperty.call(parsed, 'payload') && parsed.payload && typeof parsed.payload === 'object'
+        ? (parsed.payload as Record<string, unknown>)
+        : parsed;
     return {
       ok: typeof parsed.ok === 'boolean' ? parsed.ok : res.ok,
       statusCode: typeof parsed.statusCode === 'number' ? parsed.statusCode : res.status,
-      payload: parsed.payload,
+      payload,
       error: parsed.error
     };
   } catch {
