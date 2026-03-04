@@ -800,30 +800,56 @@ export class AskService {
       }
     } else if (plan.intent === 'automation') {
       operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.INTERSECT);
-      const object = plan.entities.object ?? 'Case';
-      const result = await this.analysis.automation(
-        object,
-        undefined,
-        false,
-        false,
-        includeLowConfidence
-      );
-      answer = result.explanation;
-      deterministicAnswer = result.explanation;
-      confidence = result.automations.length > 0 ? 0.82 : 0.58;
-      consistency = {
-        checked: consistencyCheck,
-        aligned: true,
-        reason: consistencyCheck
-          ? 'ask automation answer is sourced from /automation deterministic output'
-          : 'consistency check disabled'
-      };
-      if (result.automations.length === 0) {
-        reject(
-          'analysis.automation',
-          'NO_AUTOMATION_MATCH',
-          'no automation relation matched for requested object'
+      const object = plan.entities.object?.trim() || undefined;
+      const requestedFlowName = this.extractRequestedFlowName(input.query);
+      if (!object && requestedFlowName) {
+        const flowEvidenceSummary = this.buildFlowEvidenceSummary(requestedFlowName, citations);
+        answer = flowEvidenceSummary.explanation;
+        deterministicAnswer = flowEvidenceSummary.explanation;
+        confidence = flowEvidenceSummary.matchedCount > 0 ? 0.79 : 0.52;
+        executionTrace.push(
+          `automation.flowName=${requestedFlowName}`,
+          `automation.flowEvidence.matches=${String(flowEvidenceSummary.matchedCount)}`
         );
+        consistency = {
+          checked: consistencyCheck,
+          aligned: true,
+          reason: consistencyCheck
+            ? 'ask automation answer is sourced from flow evidence when object is not explicit'
+            : 'consistency check disabled'
+        };
+        if (flowEvidenceSummary.matchedCount === 0) {
+          reject(
+            'analysis.automation',
+            'NO_AUTOMATION_MATCH',
+            `no retrieved flow evidence matched ${requestedFlowName}`
+          );
+        }
+      } else {
+        const result = await this.analysis.automation(
+          object ?? 'Case',
+          undefined,
+          false,
+          false,
+          includeLowConfidence
+        );
+        answer = result.explanation;
+        deterministicAnswer = result.explanation;
+        confidence = result.automations.length > 0 ? 0.82 : 0.58;
+        consistency = {
+          checked: consistencyCheck,
+          aligned: true,
+          reason: consistencyCheck
+            ? 'ask automation answer is sourced from /automation deterministic output'
+            : 'consistency check disabled'
+        };
+        if (result.automations.length === 0) {
+          reject(
+            'analysis.automation',
+            'NO_AUTOMATION_MATCH',
+            'no automation relation matched for requested object'
+          );
+        }
       }
     } else if (plan.intent === 'impact') {
       operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.CONSTRAIN);
@@ -1096,6 +1122,55 @@ export class AskService {
     };
 
     return { response, proof };
+  }
+
+  private extractRequestedFlowName(query: string): string | undefined {
+    const flowMatch = query.match(/\bflow\s+([A-Za-z_][A-Za-z0-9_]*)\b/i);
+    return flowMatch?.[1];
+  }
+
+  private buildFlowEvidenceSummary(
+    flowName: string,
+    citations: AskResponse['citations']
+  ): { explanation: string; matchedCount: number } {
+    const normalizedFlowName = flowName.toLowerCase();
+    const flowEvidence = citations.filter((citation) => {
+      const sourceLower = citation.sourcePath.toLowerCase();
+      const snippetLower = citation.snippet.toLowerCase();
+      return sourceLower.includes(normalizedFlowName) || snippetLower.includes(normalizedFlowName);
+    });
+
+    if (flowEvidence.length === 0) {
+      return {
+        explanation: `no retrieved flow evidence matched ${flowName}.`,
+        matchedCount: 0
+      };
+    }
+
+    const referencedObjects = new Set<string>();
+    const triggerTypes = new Set<string>();
+    for (const citation of flowEvidence) {
+      for (const objectMatch of citation.snippet.matchAll(/<object>([^<]+)<\/object>/gi)) {
+        referencedObjects.add(objectMatch[1]);
+      }
+      for (const triggerMatch of citation.snippet.matchAll(/<recordTriggerType>([^<]+)<\/recordTriggerType>/gi)) {
+        triggerTypes.add(triggerMatch[1]);
+      }
+    }
+
+    const objectSummary =
+      referencedObjects.size > 0
+        ? `objects: ${[...referencedObjects].sort().join(', ')}`
+        : 'objects: not explicit in retrieved snippet';
+    const triggerSummary =
+      triggerTypes.size > 0
+        ? `trigger types: ${[...triggerTypes].sort().join(', ')}`
+        : 'trigger types: not explicit in retrieved snippet';
+
+    return {
+      explanation: `retrieved flow evidence found for ${flowName}; ${flowEvidence.length} citation(s); ${objectSummary}; ${triggerSummary}.`,
+      matchedCount: flowEvidence.length
+    };
   }
 
   private buildMetrics(input: {

@@ -37,6 +37,12 @@ function run(): void {
   assert.equal(autoPlan.intent, 'automation');
   assert.equal(autoPlan.entities.object, 'Opportunity');
 
+  const flowEvidencePlan = planner.plan(
+    'Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.'
+  );
+  assert.equal(flowEvidencePlan.intent, 'automation');
+  assert.equal(flowEvidencePlan.entities.object, undefined);
+
   const normalizedPermPlan = planner.plan('Who can edit object Opportunity?');
   assert.equal(normalizedPermPlan.intent, 'perms');
   assert.ok(normalizedPermPlan.rewriteRules?.includes('perm_who_can_edit'));
