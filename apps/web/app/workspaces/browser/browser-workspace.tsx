@@ -62,8 +62,34 @@ function formatTimestamp(value?: string): string {
   return new Date(parsed).toLocaleString();
 }
 
+function groupSearchResults(results: MetadataSearchResult[]): Array<{
+  type: string;
+  results: MetadataSearchResult[];
+}> {
+  const groups = new Map<string, MetadataSearchResult[]>();
+
+  for (const result of results) {
+    const current = groups.get(result.type) ?? [];
+    current.push(result);
+    groups.set(result.type, current);
+  }
+
+  return Array.from(groups.entries())
+    .map(([type, groupedResults]) => ({
+      type,
+      results: groupedResults.sort((left, right) => {
+        if (left.kind !== right.kind) {
+          return left.kind === 'type' ? -1 : 1;
+        }
+        return left.name.localeCompare(right.name);
+      })
+    }))
+    .sort((left, right) => left.type.localeCompare(right.type));
+}
+
 export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
   const retrieveHandoff = assessRetrieveHandoff(props.lastMetadataRetrieve);
+  const groupedSearchResults = groupSearchResults(props.metadataSearchResults);
 
   return (
     <>
@@ -101,13 +127,14 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
 
       <div className="field-grid">
         <div>
-          <label htmlFor="metadataSearch">Search Metadata Names</label>
+          <label htmlFor="metadataSearch">Search Org Files And Metadata</label>
           <input
             id="metadataSearch"
-            placeholder="Opportunity, layout, tab, class, flow..."
+            placeholder="Opportunity, Opportunity Layout, class name, tab, flow..."
             value={props.metadataSearch}
             onChange={(e) => props.setMetadataSearch(e.target.value)}
           />
+          <p className="muted input-hint">Search by the item you know first. Orgumented will show the metadata family after the match is found.</p>
         </div>
         <div>
           <label htmlFor="metadataMemberSearch">Browse Loaded Members</label>
@@ -165,41 +192,56 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
 
       {props.metadataSearch.trim().length > 0 ? (
         <article className="sub-card">
-          <p className="panel-caption">Unified search</p>
+          <p className="panel-caption">Explorer search</p>
           <h3>Matching metadata items</h3>
           <p className="muted">
-            Search by the actual item name first. The result tells you the metadata type after the match is found.
+            Search by the actual item name first. Results are grouped by metadata family so you can browse nearby matches instead of thinking in type-first API terms.
           </p>
-          {props.metadataSearchResults.length > 0 ? (
-            <ul className="ops-list">
-              {props.metadataSearchResults.map((result) => (
-                <li key={`${result.kind}:${result.type}:${result.name}`} className="ops-list-item">
-                  <div>
-                    <div className="decision-meta">
-                      <span className={`decision-badge ${result.kind === 'member' ? 'good' : 'muted'}`}>{result.kind}</span>
-                      <span className="decision-badge muted">{result.type}</span>
-                      <span className="decision-badge muted">matched {result.matchField}</span>
-                    </div>
-                    <p><strong>{result.name}</strong></p>
-                    <p className="muted">{result.kind === 'member' ? 'Specific retrievable member' : 'Metadata type folder'}</p>
-                  </div>
-                  <div className="ops-list-actions">
-                    <button type="button" onClick={() => props.onAddSearchResult(result)}>
-                      {result.kind === 'member' ? 'Add Member' : 'Add Type'}
+          {groupedSearchResults.length > 0 ? (
+            <div className="org-browser-frame org-browser-frame-search">
+              {groupedSearchResults.map((group) => (
+                <details key={group.type} open>
+                  <summary>
+                    <span>{group.type}</span>
+                    <span>{group.results.length} match{group.results.length === 1 ? '' : 'es'}</span>
+                  </summary>
+                  <div className="type-actions">
+                    <button type="button" onClick={() => props.onLoadMembers(group.type)}>
+                      Load Family
                     </button>
-                    <button type="button" className="ghost" onClick={() => props.onLoadMembers(result.type)}>
-                      Load Type
+                    <button type="button" className="ghost" onClick={() => props.onToggleType(group.type)}>
+                      {props.isTypeSelected(group.type) ? 'Remove Type' : 'Add Type'}
                     </button>
                   </div>
-                </li>
+                  <ul className="member-list explorer-list">
+                    {group.results.map((result) => (
+                      <li key={`${result.kind}:${result.type}:${result.name}`} className="explorer-item">
+                        <div className="explorer-item-copy">
+                          <strong>{result.name}</strong>
+                          <div className="decision-meta">
+                            <span className={`decision-badge ${result.kind === 'member' ? 'good' : 'muted'}`}>{result.kind}</span>
+                            <span className="decision-badge muted">{group.type}</span>
+                            <span className="decision-badge muted">matched {result.matchField}</span>
+                          </div>
+                        </div>
+                        <div className="ops-list-actions">
+                          <button type="button" onClick={() => props.onAddSearchResult(result)}>
+                            {result.kind === 'member' ? 'Add Item' : 'Add Type'}
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               ))}
-            </ul>
+            </div>
           ) : (
             <p className="muted">No metadata names matched this search yet. Try a broader item name like `Opportunity` or `layout`.</p>
           )}
         </article>
       ) : null}
 
+      <p className="panel-caption">Browse by metadata family</p>
       <div className="org-browser-frame">
         {(props.metadataCatalog?.types || []).map((typeRow) => {
           const membersPayload = props.metadataMembersByType[typeRow.type];

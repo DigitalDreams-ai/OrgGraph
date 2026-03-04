@@ -53,6 +53,7 @@ UI:
 - turn unified search results into grouped explorer sections
 - make the item label primary and metadata family secondary
 - keep type browsing visible as the fallback browse path
+- let operators add a matched item or family directly into the retrieve cart from the grouped explorer
 
 Engine:
 - preserve the current unified search endpoint unless a UI gap proves an engine contract change is necessary
@@ -69,3 +70,21 @@ Real-org proof after merge:
 - browse grouped results without thinking in metadata-type-first terms
 - add the intended item to the retrieve cart
 - retrieve and confirm the handoff remains visible in `Refresh & Build`
+
+## Current Checkpoint
+
+Implemented on `dna-org-browser-explorer-browse`:
+- unified metadata search now renders grouped explorer sections by metadata family
+- explorer rows emphasize the actual item name first and metadata family second
+- group headers expose `Load Family` and `Add Type` actions
+- matched members can be added directly into the retrieve cart from the explorer result list
+- the original family/type browser remains visible as the fallback browse path when search is empty
+
+Current local verification:
+- `pnpm --filter web build`
+- `pnpm --reporter=append-only --loglevel=info desktop:build`
+
+Known local blocker:
+- `pnpm --reporter=append-only --loglevel=info desktop:smoke:release` still fails on the pre-existing packaged runtime bootstrap drift-budget error:
+  - `Semantic drift budget exceeded: objectNodeDelta=75 > 25`
+- that blocker predates this explorer UI slice and does not come from the grouped-search changes

@@ -855,6 +855,27 @@ details summary {
   color: var(--ink-soft);
 }
 
+.input-hint {
+  margin-top: 0.35rem;
+}
+
+.org-browser-frame-search {
+  max-height: 480px;
+}
+
+.explorer-list {
+  padding-top: 0;
+}
+
+.explorer-item {
+  align-items: flex-start;
+}
+
+.explorer-item-copy {
+  display: grid;
+  gap: 0.35rem;
+}
+
 @media (max-width: 1280px) {
   .workspace-grid {
     grid-template-columns: 210px minmax(420px, 1fr);
