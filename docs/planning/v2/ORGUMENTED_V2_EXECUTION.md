@@ -135,7 +135,7 @@ Current real-org checkpoint after PR #71:
 - the desktop `Org Sessions` client now preserves top-level `/org/*` payloads so `Refresh Overview` can show live tool, session, and preflight state instead of leaving stale `missing` or `unknown` placeholders after a successful backend response
 - the remaining gap is direct desktop-shell operator proof of that retrieve handoff against the packaged UI
 - the next real-org browser slice is to make metadata discovery name-first instead of type-first so operators can search for actual items like `Opportunity`, layouts, tabs, fields, and classes without already knowing the metadata type
-- the current unified-search branch compiles and packages cleanly, but packaged smoke is still blocked by the existing fixture bootstrap drift-budget failure (`objectNodeDelta=75 > 25`) before the desktop proof can advance
+- packaged startup drift-budget failures are now being addressed in Wave2 by forcing rebaseline during ungrounded runtime bootstrap recovery
 - the next real-org session slice is to distinguish engine/runtime unavailability from actual `sf`, `cci`, or session failures so `Refresh Overview` stops presenting fake tool-missing state when the local desktop API cannot be reached
 - the current session-status branch now clears stale overview state on failed refreshes and renders `runtime unavailable` in Org Sessions and the Operator Rail instead of implying that `sf` or `cci` are actually missing when the desktop engine is unreachable
 - the next follow-on browser slice is to make those name-first results feel like a grouped explorer instead of a flat metadata API result list
