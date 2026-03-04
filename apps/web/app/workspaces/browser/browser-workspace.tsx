@@ -143,9 +143,9 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           <p className="panel-caption">Retrieval cart</p>
           <h3>Selected metadata</h3>
           <div className="decision-meta">
-            <span className="decision-badge muted">Types: {props.selectionSummary.typeCount}</span>
-            <span className="decision-badge muted">Members: {props.selectionSummary.memberCount}</span>
-            <span className="decision-badge muted">Visible types: {props.visibleCatalogTypes.length}</span>
+            <span className="decision-badge muted">Families: {props.selectionSummary.typeCount}</span>
+            <span className="decision-badge muted">Items: {props.selectionSummary.memberCount}</span>
+            <span className="decision-badge muted">Visible families: {props.visibleCatalogTypes.length}</span>
             <span className={`decision-badge ${props.metadataAutoRefresh ? 'good' : 'muted'}`}>
               Auto refresh: {String(props.metadataAutoRefresh)}
             </span>
@@ -201,10 +201,10 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
 
       <div className="action-row">
         <button type="button" onClick={props.onRefreshTypes} disabled={props.loading}>
-          {props.metadataSearch.trim().length > 0 ? 'Search Metadata' : 'Load Explorer'}
+          {props.metadataSearch.trim().length > 0 ? 'Search Explorer' : 'Load Explorer Tree'}
         </button>
         <button type="button" onClick={props.onRetrieveSelected} disabled={props.loading || props.selectionSummary.typeCount === 0}>
-          Retrieve Selected
+          Retrieve Checked
         </button>
         <button type="button" className="ghost" onClick={props.onOpenRefresh}>
           Open Refresh &amp; Build
@@ -216,6 +216,9 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           Clear Cart
         </button>
       </div>
+      <p className="muted">
+        Check a family to include everything nested under it. Check an individual item to include only that item.
+      </p>
 
       {props.metadataSearch.trim().length > 0 ? (
         <article className="sub-card">
@@ -233,16 +236,11 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                       checked={props.getTypeSelectionState(group.type) === 'all'}
                       indeterminate={props.getTypeSelectionState(group.type) === 'partial'}
                       label={group.type}
-                      hint={`${group.results.length} match${group.results.length === 1 ? '' : 'es'}`}
+                      hint={`${group.results.length} match${group.results.length === 1 ? '' : 'es'} • check to include this family`}
                       onChange={(checked) => props.onSetTypeSelected(group.type, checked)}
                     />
                     <span>{group.results.length} match{group.results.length === 1 ? '' : 'es'}</span>
                   </summary>
-                  <div className="type-actions">
-                    <button type="button" onClick={() => props.onLoadMembers(group.type)}>
-                      Load Family
-                    </button>
-                  </div>
                   <ul className="member-list explorer-list">
                     {group.results.map((result) => (
                       <li key={`${result.kind}:${result.type}:${result.name}`} className="explorer-item">
@@ -250,7 +248,11 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                           checked={result.kind === 'member' ? props.isMemberSelected(result.type, result.name) : props.getTypeSelectionState(result.type) === 'all'}
                           disabled={result.kind === 'member' && props.getTypeSelectionState(result.type) === 'all'}
                           label={result.name}
-                          hint={`${group.type} • matched ${result.matchField}`}
+                          hint={
+                            result.kind === 'member'
+                              ? `${group.type} • matched ${result.matchField} • check for only this item`
+                              : `${group.type} • check to include all nested items`
+                          }
                           onChange={(checked) =>
                             result.kind === 'member'
                               ? props.onSetMemberSelected(result.type, result.name, checked)
@@ -275,27 +277,29 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           const membersPayload = props.metadataMembersByType[typeRow.type];
           const members = membersPayload?.members || [];
           const typeSelectionState = props.getTypeSelectionState(typeRow.type);
+          const membersLoaded = Boolean(membersPayload);
+          const shouldAutoLoadMembers = typeRow.memberCount > 0 && !membersLoaded && props.metadataLoadingType !== typeRow.type && !props.loading;
           return (
-            <details key={typeRow.type}>
+            <details
+              key={typeRow.type}
+              onToggle={(event) => {
+                const detailsElement = event.currentTarget;
+                if (detailsElement.open && shouldAutoLoadMembers) {
+                  props.onLoadMembers(typeRow.type);
+                }
+              }}
+            >
               <summary>
                 <SelectionCheckbox
                   checked={typeSelectionState === 'all'}
                   indeterminate={typeSelectionState === 'partial'}
                   label={typeRow.type}
-                  hint={`${typeRow.memberCount} discoverable item${typeRow.memberCount === 1 ? '' : 's'}`}
+                  hint={`${typeRow.memberCount} discoverable item${typeRow.memberCount === 1 ? '' : 's'} • check to include this family`}
                   onChange={(checked) => props.onSetTypeSelected(typeRow.type, checked)}
                 />
                 <span>{typeRow.memberCount}</span>
               </summary>
-              <div className="type-actions">
-                <button
-                  type="button"
-                  onClick={() => props.onLoadMembers(typeRow.type)}
-                  disabled={props.loading || props.metadataLoadingType === typeRow.type}
-                >
-                  {props.metadataLoadingType === typeRow.type ? 'Loading...' : 'Load Members'}
-                </button>
-              </div>
+              {props.metadataLoadingType === typeRow.type ? <p className="muted">Loading family items...</p> : null}
               {members.length > 0 ? (
                 <ul className="member-list">
                   {members.map((member) => (
@@ -310,8 +314,10 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                     </li>
                   ))}
                 </ul>
+              ) : membersLoaded ? (
+                <p className="muted">No members returned for this family.</p>
               ) : (
-                <p className="muted">No members loaded.</p>
+                <p className="muted">Expand this family to load nested items.</p>
               )}
             </details>
           );

@@ -782,10 +782,17 @@ pre {
   list-style: none;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.65rem;
   padding: 0.55rem 0.65rem;
   font-weight: 600;
+}
+
+.org-browser-frame summary > span {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  color: #315886;
+  font-size: 0.8rem;
 }
 
 .org-browser-frame summary::-webkit-details-marker {
