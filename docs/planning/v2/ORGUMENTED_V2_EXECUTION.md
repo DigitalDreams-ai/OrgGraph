@@ -48,26 +48,38 @@ Still unresolved:
 - layout/accessibility has remaining card-boundary and density defects
 - release runbooks and clean-machine validation are not complete
 
-## Immediate Frontier (Next 4 Slices)
+## Regrouped 100% Completion Focus
+
+This execution plan is now anchored to the regrouped scorecard in:
+- `docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md`
+
+Short version:
+1. close runtime/session clarity debt
+2. finish browser/retrieve operator workflow parity
+3. deepen Ask grounding and packet quality
+4. close layout/accessibility defects
+5. burn down P0/P1 and finish release/operator proof
+
+## Immediate Frontier (Next Slices)
 
 1. Wave2 finish slice:
 - lock runtime-unavailable vs tool-missing behavior across remaining workspace surfaces
 - add explicit regression tests for readiness + org status surfaces
 
-2. Wave4 finish slice:
-- simplify Browser selection verbs to one checkbox model
-- make explorer behavior obvious for item/family inclusion
-
-3. Wave10 finish slice:
+2. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 
-4. Wave4 finish slice:
+3. Wave4 finish slice:
 - complete explorer-style browse parity and reduce action ambiguity in empty/partial catalog states
 
-5. Wave6 finish slice:
+4. Wave6 finish slice:
 - add regression coverage for explicit retrieved-flow asks (including real org naming patterns)
 - reduce generic automation fallback cases that bypass named-flow grounding
+
+5. Wave5 finish slice:
+- close retrieve -> refresh -> diff handoff proof gaps for real-org workflows
+- lock staged summaries and fail-closed guidance when handoff is incomplete
 
 6. Wave7 start slice:
 - improve decision-packet risk drivers and next actions for real-org review asks
