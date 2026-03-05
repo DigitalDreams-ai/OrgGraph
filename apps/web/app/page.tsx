@@ -111,6 +111,11 @@ export default function Page(): JSX.Element {
     askWorkspace.setAskQuery(query);
     setUiTab('ask');
   };
+  const openProofHistoryFromAsk = (): void => {
+    proofsWorkspace.syncFromAsk(askWorkspace.askProofId, askWorkspace.askReplayToken);
+    setUiTab('proofs');
+    void proofsWorkspace.runProofsRecent(parseOptionalInt(secondaryQueryRunner.limitRaw) ?? 20);
+  };
 
   useShellPreferences<UiTab>({
     uiTab,
@@ -209,7 +214,7 @@ export default function Page(): JSX.Element {
               onInspectAutomation={askShellActions.inspectAutomation}
               onInspectPermissions={askShellActions.inspectPermissions}
               onOpenProof={askShellActions.openProof}
-              onSaveToHistory={askShellActions.openProof}
+              onSaveToHistory={openProofHistoryFromAsk}
             />
           )}
 
