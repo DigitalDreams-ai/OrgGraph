@@ -147,6 +147,9 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
           <div className="decision-meta">
             <span className={`decision-badge ${props.trustTone(props.askTrust)}`}>Trust: {props.askTrust}</span>
             <span className="decision-badge muted">Confidence: {typeof props.askResult?.confidence === 'number' ? props.askResult.confidence : 'n/a'}</span>
+            {typeof props.askResult?.decisionPacket?.riskScore === 'number' ? (
+              <span className="decision-badge muted">Risk score: {props.askResult.decisionPacket.riskScore}</span>
+            ) : null}
             {props.askResult?.decisionPacket?.riskLevel ? (
               <span className="decision-badge muted">Risk: {props.askResult.decisionPacket.riskLevel}</span>
             ) : null}
@@ -170,6 +173,12 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
 
               <div>
                 <h4>Top risk drivers</h4>
+                <p className="muted">
+                  Evidence coverage: {props.askResult.decisionPacket.evidenceCoverage?.citationCount ?? 0} citations,
+                  permissions {props.askResult.decisionPacket.evidenceCoverage?.hasPermissionPaths ? 'yes' : 'no'},
+                  automation {props.askResult.decisionPacket.evidenceCoverage?.hasAutomationCoverage ? 'yes' : 'no'},
+                  impact {props.askResult.decisionPacket.evidenceCoverage?.hasImpactPaths ? 'yes' : 'no'}.
+                </p>
                 <ul className="proof-inline-list">
                   {(props.askResult.decisionPacket.topRiskDrivers || []).map((driver) => (
                     <li key={driver}>{driver}</li>
