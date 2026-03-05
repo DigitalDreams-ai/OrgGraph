@@ -820,7 +820,12 @@ export class AskService {
       }
     } else if (plan.intent === 'automation') {
       operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.INTERSECT);
-      const requestedFlowName = this.extractRequestedFlowName(input.query);
+      const requestedFlowNameFromQuery = this.extractRequestedFlowName(input.query);
+      const requestedFlowName =
+        requestedFlowNameFromQuery ??
+        (/\bflow\b/i.test(input.query)
+          ? this.inferRequestedFlowNameFromCitations(citationHits)
+          : undefined);
       const object = this.normalizeAutomationObject(plan.entities.object);
       if (requestedFlowName) {
         let flowEvidenceSummary = this.buildFlowEvidenceSummary(requestedFlowName, citationHits);
@@ -852,6 +857,9 @@ export class AskService {
         });
         executionTrace.push(
           `automation.flowName=${requestedFlowName}`,
+          requestedFlowNameFromQuery
+            ? 'automation.flowName.source=query'
+            : 'automation.flowName.source=citation',
           `automation.flowEvidence.matches=${String(flowEvidenceSummary.matchedCount)}`,
           `automation.packet.kind=${decisionPacket.kind}`,
           `automation.packet.risk=${decisionPacket.riskLevel}`
@@ -1171,10 +1179,10 @@ export class AskService {
 
   private extractRequestedFlowName(query: string): string | undefined {
     const strictMatch = query.match(
-      /\bflow\s+([A-Za-z0-9_\-\s]+?)(?=\s+(?:reads?|writes?|does|do|triggers?|updates?|references?)\b|[?.!,]|$)/i
+      /\bflow(?:\s+(?:named|called))?\s+([A-Za-z0-9_\-\s]+?)(?=\s+(?:reads?|writes?|does|do|triggers?|updates?|references?)\b|[?.!,]|$)/i
     );
     const fallbackMatch = query.match(
-      /\bflow\s+["'`]?(.+?)["'`]?(?=\s+(?:reads?|writes?|does|do|triggers?|updates?|references?)\b|[?.!,]|$)/i
+      /\bflow(?:\s+(?:named|called))?\s+["'`]?(.+?)["'`]?(?=\s+(?:reads?|writes?|does|do|triggers?|updates?|references?)\b|[?.!,]|$)/i
     );
     const candidates = [strictMatch?.[1], fallbackMatch?.[1]];
 
@@ -1196,7 +1204,7 @@ export class AskService {
       .trim()
       .replace(/^["'`]+|["'`]+$/g, '')
       .replace(/\s+/g, ' ')
-      .replace(/^(the|a|an)\s+/i, '')
+      .replace(/^(the|a|an|named|called)\s+/i, '')
       .trim();
     if (normalized.length === 0) {
       return undefined;
@@ -1205,6 +1213,43 @@ export class AskService {
       return undefined;
     }
     return normalized;
+  }
+
+  private inferRequestedFlowNameFromCitations(
+    evidenceHits: EvidenceSearchResult[]
+  ): string | undefined {
+    const scoreByFlow = new Map<string, number>();
+    for (const hit of evidenceHits) {
+      const source = hit.sourcePath.replace(/\\/g, '/');
+      const match = source.match(/\/flows\/([^/]+)\.flow-meta\.xml$/i);
+      const flowName = this.normalizeRequestedFlowName(match?.[1]);
+      if (!flowName) {
+        continue;
+      }
+      const next = (scoreByFlow.get(flowName) ?? 0) + Math.max(0.05, hit.score);
+      scoreByFlow.set(flowName, next);
+    }
+
+    if (scoreByFlow.size === 0) {
+      return undefined;
+    }
+
+    const ranked = [...scoreByFlow.entries()].sort((a, b) => b[1] - a[1]);
+    const [topName, topScore] = ranked[0];
+    const secondScore = ranked[1]?.[1] ?? 0;
+    const totalScore = ranked.reduce((sum, [, score]) => sum + score, 0);
+
+    if (topScore <= 0) {
+      return undefined;
+    }
+    if (topScore < secondScore * 1.15) {
+      return undefined;
+    }
+    if (topScore / totalScore < 0.45) {
+      return undefined;
+    }
+
+    return topName;
   }
 
   private normalizeAutomationObject(candidate?: string): string | undefined {

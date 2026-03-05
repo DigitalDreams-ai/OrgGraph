@@ -873,6 +873,29 @@ async function run(): Promise<void> {
     assert.equal(askFlowEvidenceQuoted.plan.entities.object, undefined);
     assert.doesNotMatch(askFlowEvidenceQuoted.deterministicAnswer, /no automation found for the/i);
 
+    const askFlowEvidenceCalledRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query:
+          'Based only on the latest retrieve, explain what Flow called Civil_Rights_Intake_Questionnaire reads and writes.'
+      })
+    });
+    assert.equal(
+      askFlowEvidenceCalledRes.status,
+      201,
+      'ask flow evidence (called flow name) should return 201'
+    );
+    const askFlowEvidenceCalled = (await askFlowEvidenceCalledRes.json()) as {
+      plan: { intent: string; entities: { object?: string } };
+      deterministicAnswer: string;
+      decisionPacket?: { targetLabel?: string };
+    };
+    assert.equal(askFlowEvidenceCalled.plan.intent, 'automation');
+    assert.equal(askFlowEvidenceCalled.plan.entities.object, undefined);
+    assert.doesNotMatch(askFlowEvidenceCalled.deterministicAnswer, /no automation found for the/i);
+    assert.equal(askFlowEvidenceCalled.decisionPacket?.targetLabel, 'Civil_Rights_Intake_Questionnaire');
+
     const askImpactRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
