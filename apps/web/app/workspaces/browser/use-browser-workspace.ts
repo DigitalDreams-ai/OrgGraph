@@ -227,6 +227,12 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     }
   }, [lastMetadataRetrieve, lastRetrievedSelections]);
 
+  useEffect(() => {
+    void refreshTypes('');
+    // Load family explorer on first open so operators can browse immediately.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function clearFilters(): void {
     setMetadataSearch('');
     setMetadataMemberSearch('');
