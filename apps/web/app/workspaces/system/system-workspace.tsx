@@ -194,8 +194,14 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
                 Changed: {String(props.metaAdaptResult.changed)}
               </span>
             </div>
-            <p><strong>Context path:</strong> {props.metaAdaptResult.contextPath}</p>
-            <p><strong>Audit artifact:</strong> {props.metaAdaptResult.auditArtifactPath}</p>
+            <p>
+              <strong>Context path:</strong>{' '}
+              <span className="path-value">{props.metaAdaptResult.contextPath}</span>
+            </p>
+            <p>
+              <strong>Audit artifact:</strong>{' '}
+              <span className="path-value">{props.metaAdaptResult.auditArtifactPath}</span>
+            </p>
           </article>
 
           <article className="sub-card">

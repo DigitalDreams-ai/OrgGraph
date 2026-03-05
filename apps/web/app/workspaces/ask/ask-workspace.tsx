@@ -223,7 +223,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
             <ul className="citation-list">
               {props.askCitations.map((citation, index) => (
                 <li key={`${citation.sourcePath || 'citation'}-${index}`} className="citation-item">
-                  <strong>{citation.sourcePath || `citation-${index + 1}`}</strong>
+                  <strong className="citation-source">{citation.sourcePath || `citation-${index + 1}`}</strong>
                   <span>score {typeof citation.score === 'number' ? citation.score : 'n/a'}</span>
                   <p>{citation.snippet || 'No snippet returned.'}</p>
                 </li>
