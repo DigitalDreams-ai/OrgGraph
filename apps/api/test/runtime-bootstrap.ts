@@ -169,6 +169,29 @@ async function assertBootstrapFailureReadiness(appDataRoot: string): Promise<voi
       /(runtime bootstrap failed|\"status\":\"failed\")/i,
       'ready payload should identify bootstrap failure'
     );
+
+    const orgStatusRes = await fetch(`${base}/org/status`);
+    assert.equal(orgStatusRes.status, 200, 'org status should remain reachable when bootstrap failed');
+    const orgStatusBody = (await orgStatusRes.json()) as {
+      integrationEnabled?: unknown;
+      sf?: { installed?: unknown };
+      cci?: { installed?: unknown };
+    };
+    assert.equal(
+      typeof orgStatusBody.integrationEnabled,
+      'boolean',
+      'org status should expose integration state even when ready is fail-closed'
+    );
+    assert.equal(
+      typeof orgStatusBody.sf?.installed,
+      'boolean',
+      'org status should continue surfacing sf tool status during bootstrap failure'
+    );
+    assert.equal(
+      typeof orgStatusBody.cci?.installed,
+      'boolean',
+      'org status should continue surfacing cci tool status during bootstrap failure'
+    );
   } finally {
     await app.close().catch(() => undefined);
     fs.rmSync(appDataRoot, { recursive: true, force: true });

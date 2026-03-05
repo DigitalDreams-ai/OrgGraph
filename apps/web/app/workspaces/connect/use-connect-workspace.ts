@@ -39,7 +39,9 @@ function textIncludesRuntimeUnavailable(value: string): boolean {
   const lowered = value.toLowerCase();
   return (
     lowered.includes('runtime unavailable') ||
+    lowered.includes('runtime not grounded') ||
     lowered.includes('runtime bootstrap failed') ||
+    lowered.includes('api unavailable') ||
     lowered.includes('failed to fetch') ||
     lowered.includes('networkerror') ||
     lowered.includes('econnrefused')
@@ -49,10 +51,6 @@ function textIncludesRuntimeUnavailable(value: string): boolean {
 function responseIndicatesRuntimeUnavailable(response: QueryResponse): boolean {
   if (response.ok) {
     return false;
-  }
-
-  if (typeof response.statusCode === 'number' && response.statusCode >= 500) {
-    return true;
   }
 
   const errorMessage = response.error?.message;
@@ -66,7 +64,16 @@ function responseIndicatesRuntimeUnavailable(response: QueryResponse): boolean {
       ? ((payload as { message: string }).message)
       : '';
 
-  return payloadMessage.length > 0 && textIncludesRuntimeUnavailable(payloadMessage);
+  if (payloadMessage.length > 0 && textIncludesRuntimeUnavailable(payloadMessage)) {
+    return true;
+  }
+
+  if (response.statusCode === 503) {
+    const combined = `${errorMessage ?? ''} ${payloadMessage}`.trim();
+    return combined.length > 0 && textIncludesRuntimeUnavailable(combined);
+  }
+
+  return false;
 }
 
 export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
