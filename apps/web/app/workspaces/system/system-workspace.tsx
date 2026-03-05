@@ -12,6 +12,7 @@ interface SystemWorkspaceProps {
   readyDetails: string;
   readyPayload: ReadyPayload | null;
   orgStatus: OrgStatusPayload | null;
+  runtimeUnavailable: boolean;
   metaContext: MetaContextPayload | null;
   metaAdaptResult: MetaAdaptPayload | null;
   loading: boolean;
@@ -182,6 +183,11 @@ function renderRelationMultipliers(payload: MetaContextPayload | null): JSX.Elem
 export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
   const runtimeIssues = deriveRuntimeIssues(props.healthStatus, props.readyStatus, props.readyPayload);
   const readyChecks = props.readyPayload?.checks;
+  const sfState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.sf?.installed ? 'installed' : 'missing';
+  const cciState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.installed ? 'installed' : 'missing';
+  const toolingMessage = props.runtimeUnavailable
+    ? 'Runtime is currently unreachable. Relaunch Orgumented desktop, then run Refresh Status before checking toolchain state.'
+    : props.orgStatus?.sf?.message || props.orgStatus?.cci?.message || 'Tooling messages look healthy.';
 
   return (
     <>
@@ -246,32 +252,48 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
         <article className="sub-card">
           <p className="panel-caption">Tooling status</p>
           <h3>Org connectivity</h3>
-          {props.orgStatus ? (
+          {props.orgStatus || props.runtimeUnavailable ? (
             <>
               <div className="decision-meta">
-                <span className={props.orgStatus.integrationEnabled ? 'decision-badge good' : 'decision-badge bad'}>
-                  Integration: {String(props.orgStatus.integrationEnabled)}
+                <span
+                  className={
+                    props.runtimeUnavailable
+                      ? 'decision-badge bad'
+                      : props.orgStatus?.integrationEnabled
+                        ? 'decision-badge good'
+                        : 'decision-badge bad'
+                  }
+                >
+                  Integration: {props.runtimeUnavailable ? 'unavailable' : String(props.orgStatus?.integrationEnabled)}
                 </span>
-                <span className="decision-badge muted">Auth: {props.orgStatus.authMode || 'n/a'}</span>
-                <span className={props.orgStatus.session?.status === 'connected' ? 'decision-badge good' : 'decision-badge muted'}>
-                  Session: {props.orgStatus.session?.status || 'unknown'}
+                <span className="decision-badge muted">Auth: {props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.authMode || 'n/a'}</span>
+                <span
+                  className={
+                    props.runtimeUnavailable
+                      ? 'decision-badge bad'
+                      : props.orgStatus?.session?.status === 'connected'
+                        ? 'decision-badge good'
+                        : 'decision-badge muted'
+                  }
+                >
+                  Session: {props.runtimeUnavailable ? 'runtime unavailable' : props.orgStatus?.session?.status || 'unknown'}
                 </span>
               </div>
               <div className="analysis-stat-grid">
                 <div className="packet-stat">
                   <span>sf</span>
-                  <strong>{props.orgStatus.sf?.installed ? 'installed' : 'missing'}</strong>
+                  <strong>{sfState}</strong>
                 </div>
                 <div className="packet-stat">
                   <span>cci</span>
-                  <strong>{props.orgStatus.cci?.installed ? 'installed' : 'missing'}</strong>
+                  <strong>{cciState}</strong>
                 </div>
                 <div className="packet-stat">
                   <span>Alias</span>
-                  <strong>{props.orgStatus.session?.activeAlias || props.orgStatus.alias || 'n/a'}</strong>
+                  <strong>{props.runtimeUnavailable ? 'n/a' : props.orgStatus?.session?.activeAlias || props.orgStatus?.alias || 'n/a'}</strong>
                 </div>
               </div>
-              <p>{props.orgStatus.sf?.message || props.orgStatus.cci?.message || 'Tooling messages look healthy.'}</p>
+              <p>{toolingMessage}</p>
             </>
           ) : (
             <p className="muted">Load Org Status to inspect CLI readiness and current session state.</p>

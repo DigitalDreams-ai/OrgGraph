@@ -103,6 +103,10 @@ export default function Page(): JSX.Element {
     runQuery: secondaryQueryRunner.runQuery,
     loadOrgStatus: () => connectWorkspace.loadToolStatus()
   });
+  const runtimeUnavailable =
+    connectWorkspace.runtimeUnavailable ||
+    shellRuntime.healthStatus === 'unreachable' ||
+    shellRuntime.readyStatus === 'unreachable';
 
   useShellPreferences<UiTab>({
     uiTab,
@@ -223,7 +227,7 @@ export default function Page(): JSX.Element {
               toolingReady={connectWorkspace.toolingReady}
               browserSeeded={connectWorkspace.browserSeeded}
               selectedAliasReady={connectWorkspace.selectedAliasReady}
-              runtimeUnavailable={connectWorkspace.runtimeUnavailable}
+              runtimeUnavailable={runtimeUnavailable}
               restoreAlias={connectWorkspace.restoreAlias}
               loading={secondaryQueryRunner.loading}
               onRefreshOverview={() => void connectWorkspace.refreshOverview()}
@@ -377,6 +381,7 @@ export default function Page(): JSX.Element {
               readyDetails={shellRuntime.readyDetails}
               readyPayload={shellRuntime.readyPayload}
               orgStatus={connectWorkspace.orgStatus}
+              runtimeUnavailable={runtimeUnavailable}
               metaContext={systemWorkspace.metaContext}
               metaAdaptResult={systemWorkspace.metaAdaptResult}
               loading={secondaryQueryRunner.loading}
@@ -403,7 +408,7 @@ export default function Page(): JSX.Element {
           orgSession={connectWorkspace.orgSession}
           orgStatus={connectWorkspace.orgStatus}
           orgPreflight={connectWorkspace.orgPreflight}
-          runtimeUnavailable={connectWorkspace.runtimeUnavailable}
+          runtimeUnavailable={runtimeUnavailable}
           onCopy={() => void responseInspector.copyJson()}
         />
       </section>

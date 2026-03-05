@@ -40,7 +40,7 @@ export function useAskWorkspace(options: UseAskWorkspaceOptions) {
   async function executeAskRequest(
     payload: RunAskRequestOptions,
     onSuccess?: (result: AskPayload) => void,
-    fallbackError = 'Ask failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.'
+    fallbackError = 'Ask failed before API response. Confirm Orgumented desktop runtime is running, then retry.'
   ): Promise<void> {
     options.setLoading(true);
     options.setCopied(false);
@@ -99,7 +99,7 @@ export function useAskWorkspace(options: UseAskWorkspaceOptions) {
       (parsed) => {
         setAskElaboration(parsed.answer || parsed.deterministicAnswer || 'No elaboration returned.');
       },
-      'Ask elaboration failed. Check API readiness, query format, and local runtime health.'
+      'Ask elaboration failed before API response. Confirm Orgumented desktop runtime is running, then retry.'
     );
   }
 

@@ -37,7 +37,7 @@ export function useSecondaryQueryRunner(options: SecondaryQueryRunnerOptions) {
       const fallback: QueryResponse = { ok: false, error: { message } };
       options.presentResponse(fallback);
       options.setErrorText(
-        'Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.'
+        'Request failed before API response. Confirm Orgumented desktop runtime is running, then retry.'
       );
       return null;
     } finally {
