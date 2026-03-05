@@ -607,6 +607,14 @@ button.ghost {
   color: var(--ink-soft);
 }
 
+.workflow-step-list {
+  margin: 0.3rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.35rem;
+  color: var(--ink-soft);
+}
+
 .proofs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));

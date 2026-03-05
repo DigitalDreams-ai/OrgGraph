@@ -308,14 +308,14 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     });
   }
 
-  async function refreshTypes(): Promise<void> {
+  async function refreshTypes(searchOverride?: string): Promise<void> {
     options.setLoading(true);
     options.setCopied(false);
     options.setErrorText('');
 
     try {
       const limit = parseOptionalInt(metadataLimitRaw) ?? 200;
-      const search = metadataSearch.trim();
+      const search = typeof searchOverride === 'string' ? searchOverride.trim() : metadataSearch.trim();
       if (!search) {
         setMetadataCatalogRequested(true);
       }
@@ -354,6 +354,13 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     } finally {
       options.setLoading(false);
     }
+  }
+
+  async function refreshExplorer(): Promise<void> {
+    setMetadataSearch('');
+    setMetadataMemberSearch('');
+    setMetadataSearchResults([]);
+    await refreshTypes('');
   }
 
   async function loadMembers(type: string): Promise<void> {
@@ -447,6 +454,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     clearFilters,
     clearSelections,
     refreshTypes,
+    refreshExplorer,
     loadMembers,
     toggleTypeSelection,
     toggleMemberSelection,
