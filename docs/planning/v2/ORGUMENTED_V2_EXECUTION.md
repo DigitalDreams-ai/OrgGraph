@@ -34,9 +34,10 @@ Materially true now:
 - flow grounding is stronger for reads/writes asks
 - proof history supports searchable labels and open-first artifact access
 - CI heavy Windows jobs are path-gated for minute efficiency
+- org-session refresh now only marks runtime unavailable on true runtime failures, so alias/preflight 4xx errors no longer masquerade as missing local tools
 
 Still unresolved:
-- runtime/tooling state clarity is not yet fully hardened in all failure paths
+- runtime/tooling state clarity still needs parity checks in non-connect workspaces
 - planner/compiler still needs deeper typed coverage beyond current query families
 - decision packet quality is not yet benchmark-accepted for approval use
 - explain/analyze workflows still depend too much on raw JSON in edge cases
@@ -46,7 +47,7 @@ Still unresolved:
 ## Immediate Frontier (Next 4 Slices)
 
 1. Wave2 finish slice:
-- close remaining runtime-unavailable vs tool-missing ambiguity
+- lock runtime-unavailable vs tool-missing behavior across remaining workspace surfaces
 - add explicit regression tests for readiness + org status surfaces
 
 2. Wave4 finish slice:

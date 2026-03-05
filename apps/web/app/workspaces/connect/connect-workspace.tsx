@@ -59,26 +59,26 @@ function formatTimestamp(value?: string): string {
 }
 
 export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
-  const sessionLabel = props.runtimeUnavailable && !props.orgSession && !props.orgStatus ? 'runtime unavailable' : props.sessionStatus;
-  const toolingLabel = props.runtimeUnavailable && !props.orgStatus ? 'unavailable' : props.toolingReady ? 'ready' : 'degraded';
-  const sfState = props.runtimeUnavailable && !props.orgStatus ? 'unavailable' : props.orgStatus?.sf?.installed ? 'installed' : props.orgStatus ? 'missing' : 'unknown';
-  const cciState = props.runtimeUnavailable && !props.orgStatus ? 'unavailable' : props.orgStatus?.cci?.installed ? 'installed' : props.orgStatus ? 'missing' : 'unknown';
-  const cciVersion = props.runtimeUnavailable && !props.orgStatus ? 'unavailable' : props.orgStatus?.cci?.version || 'n/a';
+  const sessionLabel = props.runtimeUnavailable ? 'runtime unavailable' : props.sessionStatus;
+  const toolingLabel = props.runtimeUnavailable ? 'unavailable' : props.toolingReady ? 'ready' : 'degraded';
+  const sfState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.sf?.installed ? 'installed' : props.orgStatus ? 'missing' : 'unknown';
+  const cciState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.installed ? 'installed' : props.orgStatus ? 'missing' : 'unknown';
+  const cciVersion = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.version || 'n/a';
   const sfMessage =
-    props.runtimeUnavailable && !props.orgStatus
+    props.runtimeUnavailable
       ? 'Refresh Overview could not reach the local desktop runtime. Relaunch Orgumented or restore the packaged API before checking sf access again.'
       : props.orgStatus?.sf?.message || 'Refresh the overview to validate local sf access.';
   const cciMessage =
-    props.runtimeUnavailable && !props.orgStatus
+    props.runtimeUnavailable
       ? 'Refresh Overview could not reach the local desktop runtime. Relaunch Orgumented or restore the packaged API before checking CCI again.'
       : props.orgStatus?.cci?.message || 'Refresh the overview to validate local cci access.';
-  const readinessLabel = props.runtimeUnavailable && !props.orgPreflight ? 'unknown' : String(props.selectedAliasReady);
-  const browserSeededLabel = props.runtimeUnavailable && !props.orgPreflight ? 'unknown' : String(props.browserSeeded);
+  const readinessLabel = props.runtimeUnavailable ? 'unknown' : String(props.selectedAliasReady);
+  const browserSeededLabel = props.runtimeUnavailable ? 'unknown' : String(props.browserSeeded);
   const sessionConnectedLabel =
-    props.runtimeUnavailable && !props.orgPreflight ? 'unknown' : String(props.orgPreflight?.checks?.sessionConnected ?? false);
-  const authenticatedLabel = props.runtimeUnavailable && !props.orgPreflight ? 'unknown' : props.orgPreflight?.checks?.aliasAuthenticated ? 'yes' : 'no';
-  const cciAliasLabel = props.runtimeUnavailable && !props.orgPreflight ? 'unknown' : props.orgPreflight?.checks?.cciAliasAvailable ? 'yes' : 'no';
-  const parsePathLabel = props.runtimeUnavailable && !props.orgPreflight ? 'unknown' : props.orgPreflight?.checks?.parsePathPresent ? 'yes' : 'no';
+    props.runtimeUnavailable ? 'unknown' : String(props.orgPreflight?.checks?.sessionConnected ?? false);
+  const authenticatedLabel = props.runtimeUnavailable ? 'unknown' : props.orgPreflight?.checks?.aliasAuthenticated ? 'yes' : 'no';
+  const cciAliasLabel = props.runtimeUnavailable ? 'unknown' : props.orgPreflight?.checks?.cciAliasAvailable ? 'yes' : 'no';
+  const parsePathLabel = props.runtimeUnavailable ? 'unknown' : props.orgPreflight?.checks?.parsePathPresent ? 'yes' : 'no';
 
   return (
     <>
@@ -130,7 +130,7 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           <p className="panel-caption">Selected alias</p>
           <h3>Readiness for attach</h3>
           <div className="decision-meta">
-            <span className={`decision-badge ${props.selectedAliasReady ? 'good' : props.runtimeUnavailable && !props.orgPreflight ? 'muted' : 'muted'}`}>
+            <span className={`decision-badge ${props.selectedAliasReady && !props.runtimeUnavailable ? 'good' : 'muted'}`}>
               Ready to connect: {readinessLabel}
             </span>
             <span className={`decision-badge ${props.browserSeeded ? 'good' : 'muted'}`}>
