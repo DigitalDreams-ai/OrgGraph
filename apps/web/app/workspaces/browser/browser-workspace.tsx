@@ -329,10 +329,10 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
 
       <div className="action-row">
         <button type="button" onClick={props.onRefreshTypes} disabled={props.loading}>
-          {props.metadataSearch.trim().length > 0 ? 'Search Explorer' : 'Load Explorer Tree'}
+          {props.metadataSearch.trim().length > 0 ? 'Search Names' : 'Refresh Explorer'}
         </button>
         <button type="button" onClick={props.onRetrieveSelected} disabled={props.loading || props.selectionSummary.typeCount === 0}>
-          Retrieve Checked
+          Retrieve Cart
         </button>
         <button type="button" className="ghost" onClick={props.onOpenRefresh}>
           Open Refresh &amp; Build
@@ -341,12 +341,11 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           Clear Filters
         </button>
         <button type="button" className="ghost" onClick={props.onClearSelections} disabled={props.selectionSummary.typeCount === 0}>
-          Clear Cart
+          Clear Selection
         </button>
       </div>
-      <p className="muted">
-        Check a family to include everything nested under it. Check an individual item to include only that item.
-      </p>
+      <p className="muted"><strong>Cart rule:</strong> every checked row is already in the cart.</p>
+      <p className="muted">Check a family to include everything nested under it. Check an individual item to include only that item.</p>
 
       {props.metadataSearch.trim().length > 0 ? (
         <article className="sub-card">
@@ -442,17 +441,18 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           );
         })}
         {props.metadataCatalogRequested && (props.metadataCatalog?.types || []).length === 0 ? (
-          <p className="muted">No metadata families were returned yet. Try `Load Explorer` again with `Force Refresh` enabled.</p>
+          <p className="muted">No metadata families were returned yet. Try `Refresh Explorer` again with `Force Refresh` enabled.</p>
         ) : null}
         {!props.metadataCatalogRequested ? (
-          <p className="muted">Click `Load Explorer` to browse live org metadata families before retrieving anything.</p>
+          <p className="muted">Click `Refresh Explorer` to browse live org metadata families before retrieving anything.</p>
         ) : null}
       </div>
 
       <div className="ops-grid">
         <article className="sub-card">
-          <p className="panel-caption">Structured cart</p>
+          <p className="panel-caption">Selection cart</p>
           <h3>Selected metadata</h3>
+          <p className="muted">Checked rows from search and browse appear here automatically.</p>
           {props.selectedMetadata.length > 0 ? (
             <ul className="selection-list">
               {props.selectedMetadata.map((selection) => (
@@ -468,7 +468,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                     </div>
                     <div className="ops-list-actions">
                       <button type="button" className="ghost" onClick={() => props.onRemoveType(selection.type)}>
-                        Remove Type
+                        Uncheck Family
                       </button>
                     </div>
                   </div>
