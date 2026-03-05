@@ -29,7 +29,7 @@ export function resolveQueryErrorMessage(data: QueryResponse): string {
     payloadErrorHint ||
     payloadError ||
     topError ||
-    'Request failed. Check API readiness, query format, and local runtime health. Use /ready and /metrics for diagnosis.'
+    'Request failed. Check inputs, alias/session state, and desktop API readiness.'
   );
 }
 

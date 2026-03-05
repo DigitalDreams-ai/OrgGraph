@@ -49,6 +49,8 @@ Materially true now:
 - org-session refresh now only marks runtime unavailable on true runtime failures, so alias/preflight 4xx errors no longer masquerade as missing local tools
 - org-session runtime-unavailable detection now ignores generic 5xx surfaces unless the payload explicitly indicates runtime/bootstrap unavailability
 - runtime-bootstrap failure regression now verifies `/org/status` remains reachable while `/ready` stays fail-closed
+- runtime-unavailable signaling is now shared across Connect, Operator Rail, and Settings/Diagnostics (shell reachability + connect runtime detection), reducing false tool-missing interpretation outside Org Sessions
+- fallback error copy now distinguishes API non-response failures from normal request-validation failures
 - session action labels now distinguish quick top-bar attach from explicit connect/switch controls in Org Sessions
 - Settings & Diagnostics now renders structured runtime triage cards (bootstrap/db/fixtures/evidence health + recovery checklist) and demotes raw readiness JSON to an optional details panel
 - Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs
