@@ -150,13 +150,16 @@ Current retrieval handoff behavior:
 - checking a family row stages that family for retrieve; checking an item row stages just that item
 - expanding a family row auto-loads nested members for tree-style browsing
 - browser actions now use checked-selection language:
-  - `Load Explorer Tree`
-  - `Search Explorer`
+  - `Search Names`
+  - `Refresh Explorer`
+  - `Load Visible Items`
   - `Retrieve Checked`
 - selected types and members are still removable directly in the workspace
 - the JSON cart payload remains available only as an advanced read-only preview
 - `Open Refresh & Build` moves directly from metadata selection into rebuild and drift review
 - `Refresh & Build` keeps the latest Browser retrieve visible as the current rebuild handoff instead of dropping that context at the tab switch
+- the latest retrieve handoff and checked selections persist across desktop relaunch so staged rebuild context is preserved
+- retrieve handoff now fails closed when the handoff alias does not match the current active alias
 - Browser retrieve `autoRefresh` now seeds the default rebuild intent inside `Refresh & Build`
 - `Refresh & Build` shows the staged workflow chain for:
   - Browser retrieve
