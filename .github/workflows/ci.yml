@@ -15,7 +15,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      run-heavy: ${{ steps.filter.outputs.heavy }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect runtime-impacting changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            heavy:
+              - 'apps/**'
+              - 'packages/**'
+              - 'scripts/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.npmrc'
+              - '.github/requirements-cumulusci.txt'
+              - '.github/workflows/ci.yml'
+
   validate:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.run-heavy == 'true'
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -115,8 +141,9 @@ jobs:
           if-no-files-found: error
 
   desktop-runtime-smoke:
+    if: needs.detect-changes.outputs.run-heavy == 'true'
     runs-on: windows-latest
-    needs: [validate]
+    needs: [detect-changes, validate]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -168,3 +195,13 @@ jobs:
             logs/desktop-release-smoke*
             logs/desktop-phase4-release.log
           if-no-files-found: ignore
+
+  docs-only-fast-pass:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.run-heavy != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: CI fast pass for docs/planning-only changes
+        run: |
+          echo "No runtime-impacting paths changed."
+          echo "Skipping heavy Windows validate + desktop smoke to conserve CI minutes."

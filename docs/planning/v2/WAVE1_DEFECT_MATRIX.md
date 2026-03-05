@@ -30,7 +30,7 @@ Purpose:
 | D009 | S2 | Proofs & History | History-first workflow still not universal; token fallback still appears in operator mental model | Partial productization of label-first history | Wave9 | History reopen/replay/export acceptance tests | Open |
 | D010 | S2 | Diagnostics | Raw JSON can still dominate certain troubleshooting flows | Missing high-level structured diagnostic synthesis in edge states | Wave8 | Structured diagnostics workflow tests | Open |
 | D011 | S2 | Runbooks | Operator instructions have had ambiguity in shell/command usage and expected cues | Documentation drift and fragmented runbook ownership | Wave12 | First-run operator validation checklist | Open |
-| D012 | S2 | CI Throughput | CI checks can consume high minutes and delay iteration | Redundant or heavy jobs without selective optimization | Wave11 | CI duration baseline vs optimized target | Open |
+| D012 | S2 | CI Throughput | CI checks can consume high minutes and delay iteration | Redundant or heavy jobs without selective optimization | Wave11 | CI duration baseline vs optimized target | In Progress |
 | D013 | S3 | Design Consistency | Visual hierarchy and spacing can vary across workspace cards | Incremental UI evolution without unified design pass | Wave10 | Design consistency checklist pass | Open |
 | D014 | S3 | Accessibility | Keyboard/focus behavior incomplete across some controls | Accessibility hardening not yet run end-to-end | Wave10 | Accessibility pass for core flows | Open |
 
