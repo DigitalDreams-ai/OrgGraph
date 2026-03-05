@@ -194,7 +194,8 @@ Authenticate locally, not in Docker:
 ```powershell
 sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default
 sf org display --target-org orgumented-sandbox --json
-cci org import orgumented-sandbox <sf-username>
+cd $env:APPDATA\Orgumented\sf-project
+cci org import orgumented-sandbox orgumented-sandbox
 cci org info orgumented-sandbox
 ```
 
