@@ -40,6 +40,7 @@ interface AnalyzeWorkspaceProps {
   onRunAutomation: () => void;
   onRunImpact: () => void;
   onRunSystemPermission: () => void;
+  onOpenAsk: (query: string) => void;
 }
 
 function formatPath(path: GraphStep[]): string {
@@ -382,6 +383,25 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               ? ['Increase `Limit` to review full automation coverage.']
               : [])
           ])}
+
+          <div className="sub-card">
+            <p className="panel-caption">Ask handoff</p>
+            <h3>Open decision packet workflow</h3>
+            <p className="muted">Move this deterministic automation context into Ask for policy-aware trust, proof, and replay artifacts.</p>
+            <div className="action-row">
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  props.onOpenAsk(
+                    `Based only on the latest retrieve, explain what automations update ${props.automationResult?.object} and what should be reviewed before approval.`
+                  )
+                }
+              >
+                Open Ask for Automation Scope
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
 
@@ -443,6 +463,25 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               ? ['Increase `Limit` to inspect full impact coverage.']
               : [])
           ])}
+
+          <div className="sub-card">
+            <p className="panel-caption">Ask handoff</p>
+            <h3>Open approval packet workflow</h3>
+            <p className="muted">Carry this deterministic impact context into Ask to generate an approval-ready packet with trust envelope and next actions.</p>
+            <div className="action-row">
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  props.onOpenAsk(
+                    `Based only on the latest retrieve, should we approve changing ${props.impactResult?.field}? Explain downstream automations and deterministic impact paths.`
+                  )
+                }
+              >
+                Open Ask for Impact Scope
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
 

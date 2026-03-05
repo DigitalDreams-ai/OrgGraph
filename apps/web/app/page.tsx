@@ -107,6 +107,10 @@ export default function Page(): JSX.Element {
     connectWorkspace.runtimeUnavailable ||
     shellRuntime.healthStatus === 'unreachable' ||
     shellRuntime.readyStatus === 'unreachable';
+  const openAskFromAnalyze = (query: string): void => {
+    askWorkspace.setAskQuery(query);
+    setUiTab('ask');
+  };
 
   useShellPreferences<UiTab>({
     uiTab,
@@ -349,6 +353,7 @@ export default function Page(): JSX.Element {
               onRunAutomation={() => void analyzeWorkspace.runAutomationAnalysis()}
               onRunImpact={() => void analyzeWorkspace.runImpactAnalysis()}
               onRunSystemPermission={() => void analyzeWorkspace.runSystemPermissionCheck()}
+              onOpenAsk={openAskFromAnalyze}
             />
           )}
 
