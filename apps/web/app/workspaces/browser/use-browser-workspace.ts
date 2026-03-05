@@ -219,6 +219,73 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     });
   }
 
+  function setMembersSelected(type: string, members: string[], selected: boolean): void {
+    const uniqueMembers = Array.from(
+      new Set(
+        members
+          .map((member) => member.trim())
+          .filter((member) => member.length > 0)
+      )
+    );
+    if (uniqueMembers.length === 0) {
+      return;
+    }
+
+    setMetadataSelected((current) => {
+      const idx = current.findIndex((entry) => entry.type === type);
+
+      if (selected) {
+        if (idx < 0) {
+          return [
+            ...current,
+            {
+              type,
+              members: uniqueMembers.sort((left, right) => left.localeCompare(right))
+            }
+          ];
+        }
+        const existing = current[idx];
+        if (!Array.isArray(existing.members)) {
+          return current;
+        }
+        const merged = Array.from(new Set([...existing.members, ...uniqueMembers])).sort((left, right) =>
+          left.localeCompare(right)
+        );
+        const next = [...current];
+        next[idx] = { type, members: merged };
+        return next;
+      }
+
+      if (idx < 0) {
+        return current;
+      }
+
+      const existing = current[idx];
+      if (!Array.isArray(existing.members)) {
+        const loadedMembers = metadataMembersByType[type]?.members?.map((member) => member.name) ?? [];
+        const remaining = loadedMembers
+          .filter((member) => !uniqueMembers.includes(member))
+          .sort((left, right) => left.localeCompare(right));
+        if (remaining.length === 0) {
+          return current.filter((entry) => entry.type !== type);
+        }
+        const next = [...current];
+        next[idx] = { type, members: remaining };
+        return next;
+      }
+
+      const remaining = existing.members
+        .filter((member) => !uniqueMembers.includes(member))
+        .sort((left, right) => left.localeCompare(right));
+      if (remaining.length === 0) {
+        return current.filter((entry) => entry.type !== type);
+      }
+      const next = [...current];
+      next[idx] = { type, members: remaining };
+      return next;
+    });
+  }
+
   async function refreshTypes(): Promise<void> {
     options.setLoading(true);
     options.setCopied(false);
@@ -361,6 +428,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     getTypeSelectionState,
     setTypeSelected,
     setMemberSelected,
+    setMembersSelected,
     retrieveSelected
   };
 }
