@@ -59,6 +59,7 @@ Materially true now:
 - session alias switch now reuses connect auth/bridge flow so missing CCI alias registrations are remediated during switch, not only during explicit connect
 - Settings & Diagnostics now renders structured runtime triage cards (bootstrap/db/fixtures/evidence health + recovery checklist) and demotes raw readiness JSON to an optional details panel
 - Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs
+- Analyze now includes one-click Ask handoff actions for automation and impact results so deterministic analysis context can be promoted directly into trust/proof decision packets
 - Operator Rail now includes a runtime-triage summary so common readiness failures can be diagnosed without opening raw JSON
 - Proofs & History now auto-selects a current label on history refresh so open/replay operations are label-first by default
 - wave10 density guardrails now widen card-grid minima and heading wrapping to reduce clipping/overlap in Ask, Analyze, Proofs, and Diagnostics
