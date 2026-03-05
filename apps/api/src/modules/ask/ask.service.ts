@@ -1153,20 +1153,41 @@ export class AskService {
   }
 
   private extractRequestedFlowName(query: string): string | undefined {
-    const flowMatch = query.match(
+    const strictMatch = query.match(
       /\bflow\s+([A-Za-z0-9_\-\s]+?)(?=\s+(?:reads?|writes?|does|do|triggers?|updates?|references?)\b|[?.!,]|$)/i
     );
-    if (!flowMatch?.[1]) {
+    const fallbackMatch = query.match(
+      /\bflow\s+["'`]?(.+?)["'`]?(?=\s+(?:reads?|writes?|does|do|triggers?|updates?|references?)\b|[?.!,]|$)/i
+    );
+    const candidates = [strictMatch?.[1], fallbackMatch?.[1]];
+
+    for (const candidate of candidates) {
+      const normalized = this.normalizeRequestedFlowName(candidate);
+      if (normalized) {
+        return normalized;
+      }
+    }
+
+    return undefined;
+  }
+
+  private normalizeRequestedFlowName(candidate: string | undefined): string | undefined {
+    if (!candidate) {
       return undefined;
     }
-    const candidate = flowMatch[1].trim().replace(/\s+/g, ' ');
-    if (candidate.length === 0) {
+    const normalized = candidate
+      .trim()
+      .replace(/^["'`]+|["'`]+$/g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/^(the|a|an)\s+/i, '')
+      .trim();
+    if (normalized.length === 0) {
       return undefined;
     }
-    if (new Set(['the', 'a', 'an', 'this', 'that']).has(candidate.toLowerCase())) {
+    if (new Set(['the', 'a', 'an', 'this', 'that']).has(normalized.toLowerCase())) {
       return undefined;
     }
-    return candidate;
+    return normalized;
   }
 
   private normalizeAutomationObject(candidate?: string): string | undefined {
