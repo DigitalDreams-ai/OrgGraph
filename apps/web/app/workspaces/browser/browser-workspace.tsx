@@ -295,8 +295,14 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
             placeholder="Opportunity, Opportunity Layout, class name, tab, flow..."
             value={props.metadataSearch}
             onChange={(e) => props.setMetadataSearch(e.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                props.onRefreshTypes();
+              }
+            }}
           />
-          <p className="muted input-hint">Search by the item you know first. Results are grouped by metadata family and every row can be selected with a checkbox.</p>
+          <p className="muted input-hint">Search by the item you know first. Press Enter or click Search to load matches grouped by metadata family.</p>
         </div>
         <div>
           <label htmlFor="metadataMemberSearch">Filter Loaded Members</label>
@@ -337,7 +343,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           onClick={props.onRefreshTypes}
           disabled={props.loading || props.metadataSearch.trim().length === 0}
         >
-          Search Names
+          Search
         </button>
         <button
           type="button"
@@ -345,7 +351,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           onClick={props.onRefreshExplorer}
           disabled={props.loading}
         >
-          Refresh Explorer
+          Browse All
         </button>
         <button
           type="button"
@@ -353,10 +359,10 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           onClick={props.onLoadVisibleMembers}
           disabled={props.loading || props.visibleCatalogTypes.length === 0}
         >
-          Load Visible Items
+          Load Trees
         </button>
         <button type="button" onClick={props.onRetrieveSelected} disabled={props.loading || props.selectionSummary.typeCount === 0}>
-          Retrieve Checked
+          Retrieve Cart
         </button>
         <button type="button" className="ghost" onClick={props.onOpenRefresh}>
           Open Refresh &amp; Build
@@ -371,9 +377,9 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       <article className="sub-card">
         <p className="panel-caption">Quick workflow</p>
         <ol className="workflow-step-list">
-          <li>Search names or refresh explorer families.</li>
+          <li>Search by name or click Browse All to load every family.</li>
           <li>Check any row you want in the retrieve cart (family, folder, or single item).</li>
-          <li>Run <strong>Retrieve Checked</strong>, then continue in <strong>Refresh &amp; Build</strong>.</li>
+          <li>Run <strong>Retrieve Cart</strong>, then continue in <strong>Refresh &amp; Build</strong>.</li>
         </ol>
       </article>
       <p className="muted"><strong>Cart rule:</strong> every checked row is already in the cart.</p>
@@ -437,7 +443,14 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
               ))}
             </div>
           ) : (
-            <p className="muted">No metadata names matched this search yet. Try a broader item name like `Opportunity`, `layout`, or an Apex class name.</p>
+            <div>
+              <p className="muted">No metadata names matched this search yet. Try `Opportunity`, `layout`, a field API name, or an Apex class name.</p>
+              <div className="action-row">
+                <button type="button" className="ghost" onClick={props.onRefreshExplorer} disabled={props.loading}>
+                  Browse All Families
+                </button>
+              </div>
+            </div>
           )}
         </article>
       ) : null}
@@ -488,7 +501,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           <p className="muted">No metadata families were returned yet. Try `Refresh Explorer` again with `Force Refresh` enabled.</p>
         ) : null}
         {!props.metadataCatalogRequested ? (
-          <p className="muted">Click `Refresh Explorer` to browse live org metadata families before retrieving anything.</p>
+          <p className="muted">Click `Browse All` to load live metadata families before retrieving anything.</p>
         ) : null}
       </div>
 
