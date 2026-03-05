@@ -259,6 +259,7 @@ export default function Page(): JSX.Element {
               metadataSearchResults={browserWorkspace.metadataSearchResults}
               metadataMembersByType={browserWorkspace.metadataMembersByType}
               metadataLoadingType={browserWorkspace.metadataLoadingType}
+              metadataWarnings={browserWorkspace.metadataWarnings}
               metadataSelectionsPreview={browserWorkspace.metadataSelectionsPreview}
               selectedMetadata={browserWorkspace.selectedMetadata}
               selectionSummary={browserWorkspace.selectionSummary}

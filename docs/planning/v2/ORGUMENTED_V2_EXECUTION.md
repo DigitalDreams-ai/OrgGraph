@@ -31,6 +31,7 @@ Materially true now:
 - real-org session attach/switch and selective retrieve path is materially functional
 - org browser supports name-first search and grouped explorer/tree selection
 - org browser now uses explicit cart language (`checked row = in cart`) with simpler explorer/retrieve actions
+- org browser metadata search now matches normalized naming patterns (for example, spaced query text against compact/underscored metadata names), and discovery warnings are shown directly in workspace cards
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
 - refresh handoff is staged and fail-closed from browser selections
 - flow grounding now prioritizes explicit flow-name asks over weak object-token inference (prevents false `no automation found for the` fallbacks)
@@ -60,11 +61,14 @@ Still unresolved:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 
-4. Wave6 finish slice:
+4. Wave4 finish slice:
+- complete explorer-style browse parity and reduce action ambiguity in empty/partial catalog states
+
+5. Wave6 finish slice:
 - add regression coverage for explicit retrieved-flow asks (including real org naming patterns)
 - reduce generic automation fallback cases that bypass named-flow grounding
 
-5. Wave7 start slice:
+6. Wave7 start slice:
 - improve decision-packet risk drivers and next actions for real-org review asks
 - capture acceptance benchmark evidence with proof/replay IDs
 

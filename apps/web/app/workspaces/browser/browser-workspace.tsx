@@ -27,6 +27,7 @@ interface BrowserWorkspaceProps {
   metadataSearchResults: MetadataSearchResult[];
   metadataMembersByType: Record<string, MetadataMembersPayload>;
   metadataLoadingType: string;
+  metadataWarnings: string[];
   metadataSelectionsPreview: string;
   selectedMetadata: MetadataSelection[];
   selectionSummary: MetadataSelectionSummary;
@@ -346,6 +347,17 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       </div>
       <p className="muted"><strong>Cart rule:</strong> every checked row is already in the cart.</p>
       <p className="muted">Check a family to include everything nested under it. Check an individual item to include only that item.</p>
+      {props.metadataWarnings.length > 0 ? (
+        <article className="sub-card">
+          <p className="panel-caption">Discovery warnings</p>
+          <h3>Why results may be incomplete</h3>
+          <ul className="citation-list">
+            {props.metadataWarnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        </article>
+      ) : null}
 
       {props.metadataSearch.trim().length > 0 ? (
         <article className="sub-card">
