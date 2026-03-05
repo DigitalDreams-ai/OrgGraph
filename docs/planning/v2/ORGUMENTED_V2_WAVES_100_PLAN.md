@@ -1,7 +1,7 @@
 # Orgumented v2 100% Completion Plan
 
 Date: March 5, 2026  
-Status: active execution master plan
+Status: active execution master plan (regrouped)
 
 This is the single execution plan for full Stage 1 completion of Orgumented desktop:
 - core runtime and deterministic trust contract
@@ -11,6 +11,30 @@ This is the single execution plan for full Stage 1 completion of Orgumented desk
 - proof/history usability
 - design/layout/accessibility
 - bug burn-down and release readiness
+
+## 100% Scorecard Pillars
+
+Every wave contributes to one or more pillars. "100%" is reached only when every pillar is green:
+
+1. Core runtime integrity:
+- packaged desktop startup is deterministic and fail-closed
+- runtime and tool status are never conflated
+
+2. Core workflow completeness:
+- Sessions, Browser, Refresh/Build, Ask, Analyze, Proofs/History, Diagnostics are production-safe
+- no operator dependence on raw JSON for normal workflows
+
+3. Planner/packet quality:
+- grounded Ask responses avoid weak generic fallback
+- decision packets are trusted review artifacts with actionable next steps
+
+4. UX/design/layout quality:
+- no clipping/overflow defects in supported desktop viewports
+- consistent labels, action semantics, and focus behavior
+
+5. Defect/release discipline:
+- P0/P1 defects closed and held stable
+- release checklist, rollback path, and clean-machine operator proof completed
 
 ## Definition Of 100%
 
@@ -73,6 +97,16 @@ Orgumented is 100% complete for v2 scope only when all conditions below are true
 | wave12 | release readiness and operator proof | B014, B019 | Open | Clean-machine runbook pass + rollback proof |
 | wave13 | post-100 stabilization | B024 | Open | No P0/P1 regressions during hold window |
 
+## Pillar To Wave Map
+
+| Pillar | Owning Waves | Completion Signal |
+|---|---|---|
+| Core runtime integrity | wave2, wave3, wave12 | packaged runtime + session/toolchain parity proven |
+| Core workflow completeness | wave3, wave4, wave5, wave8, wave9 | all Stage 1 workflows pass runbook paths |
+| Planner/packet quality | wave6, wave7 | grounded Ask + approval-grade packet benchmark pass |
+| UX/design/layout quality | wave10 | no clipping/overflow and action semantics locked |
+| Defect/release discipline | wave11, wave12, wave13 | P0/P1 zero, release evidence complete, stabilization clean |
+
 ## wave1 - Baseline Lock And Triage
 
 Objective:
@@ -98,6 +132,7 @@ Exit:
 - `pnpm desktop:build`
 - `pnpm desktop:smoke:release`
 - manual packaged startup proof without ambiguous tool-missing false states
+- desktop startup does not fail from avoidable bootstrap drift conditions
 
 ## wave3 - Session And Toolchain Reliability
 
@@ -112,6 +147,7 @@ Scope:
 Exit:
 - real-org connect/switch/preflight pass in packaged desktop
 - explicit remediation commands for auth/tool/alias failures
+- top-bar attach and session workspace actions remain semantically distinct
 
 ## wave4 - Org Browser Explorer Completion
 
@@ -126,6 +162,7 @@ Scope:
 Exit:
 - operator can search/browse/retrieve without metadata-type-first workflow
 - empty/unseeded states still produce actionable discovery behavior
+- checkbox semantics are uniform across search results and explorer tree nodes
 
 ## wave5 - Refresh/Build Production Handoff
 
@@ -140,6 +177,7 @@ Scope:
 Exit:
 - real-org end-to-end handoff pass in packaged desktop
 - no raw JSON required for common rebuild workflow
+- operator-facing staged summaries remain stable across relaunch
 
 ## wave6 - Ask Planner/Compiler Depth
 
@@ -154,6 +192,7 @@ Scope:
 Exit:
 - planner/integration/replay tests pass for selected families
 - measurable fallback-rate reduction on real metadata asks
+- explicit named metadata asks do not degrade to weak stop-word object inference
 
 ## wave7 - Decision Packet Quality
 
@@ -168,6 +207,7 @@ Scope:
 Exit:
 - benchmark packet accepted for real review scenario
 - proof/trust envelope remains deterministic and replayable
+- packet cites deterministic reads/writes/impact paths with minimal manual interpretation
 
 ## wave8 - Explain/Analyze Depth
 
@@ -182,6 +222,7 @@ Scope:
 Exit:
 - core analysis tasks complete through card actions
 - deterministic equivalence preserved for same context
+- operator can diagnose common permission/automation/map failures without raw JSON as primary UI
 
 ## wave9 - Proofs/History Productization
 
@@ -195,6 +236,7 @@ Scope:
 
 Exit:
 - operator can run history-first proof workflows without token bookkeeping
+- labels and replay/open/export remain stable across restarts
 
 ## wave10 - Design/Layout/Accessibility Hardening
 
@@ -209,6 +251,7 @@ Scope:
 Exit:
 - zero known clipping defects in Stage 1 surfaces
 - accessibility baseline pass for Ask/Sessions/Browser/Refresh
+- long paths, identifiers, and JSON blocks wrap/scroll without card breakage
 
 ## wave11 - Bug Burn-Down And CI Quality Lock
 
@@ -223,6 +266,7 @@ Scope:
 Exit:
 - P0/P1 = zero and stable for one cycle
 - CI remains strict on runtime-impacting changes
+- CI minutes remain controlled with path-gating and selective heavy-job execution
 
 ## wave12 - Release Readiness And Operator Proof
 
@@ -237,6 +281,7 @@ Scope:
 Exit:
 - release candidate checklist fully green
 - non-author operator runbook pass with evidence
+- real-org quickstart and org-browser proof runbooks pass on clean machine
 
 ## wave13 - Stabilization Window
 
@@ -251,6 +296,14 @@ Scope:
 Exit:
 - no unresolved P0/P1 during stabilization window
 - Stage 2 decision recorded through governance process
+
+## Immediate Branch Queue (Regrouped)
+
+1. `dna-wave10-visual-boundary-final`: finish remaining clipping/overflow issues in Ask/Analyze/Diagnostics cards.
+2. `dna-wave4-browser-tree-selection-final`: complete checkbox-first tree selection parity and selection clarity.
+3. `dna-wave6-ask-grounding-family-expansion`: deepen named metadata grounding for real org flow/object/field asks.
+4. `dna-wave5-refresh-handoff-proof`: complete real-org retrieve -> refresh -> diff operator proof path.
+5. `dna-wave7-decision-packet-quality-baseline`: raise packet quality for approval workflows with measurable acceptance.
 
 ## Cross-Wave Non-Negotiable Gates
 
