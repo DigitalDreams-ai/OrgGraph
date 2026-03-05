@@ -1059,12 +1059,16 @@ export class OrgService {
                 .sort((a, b) => a.localeCompare(b))
             );
           }
-          return {
-            source: 'metadata_api',
-            refreshedAt: parsed.refreshedAt ?? refreshedAt,
-            typeMembers,
-            warnings
-          };
+          if (typeMembers.size === 0 && this.countMetadataMembers(typeMembers) === 0) {
+            warnings.push(`live metadata cache was empty; refreshing from org: ${cachePath}`);
+          } else {
+            return {
+              source: 'metadata_api',
+              refreshedAt: parsed.refreshedAt ?? refreshedAt,
+              typeMembers,
+              warnings
+            };
+          }
         }
       } catch {
         warnings.push(`live metadata cache unreadable: ${cachePath}`);
@@ -1110,23 +1114,27 @@ export class OrgService {
       typeMembers.set(metadataType, members);
     }
 
-    try {
-      fs.writeFileSync(
-        cachePath,
-        JSON.stringify(
-          {
-            refreshedAt,
-            types: Array.from(typeMembers.entries())
-              .map(([type, members]) => ({ type, members }))
-              .sort((a, b) => a.type.localeCompare(b.type))
-          },
-          null,
-          2
-        ),
-        'utf8'
-      );
-    } catch {
-      warnings.push(`live metadata cache write failed: ${cachePath}`);
+    if (typeMembers.size === 0 && this.countMetadataMembers(typeMembers) === 0) {
+      warnings.push('live metadata discovery returned no entries; cache not updated');
+    } else {
+      try {
+        fs.writeFileSync(
+          cachePath,
+          JSON.stringify(
+            {
+              refreshedAt,
+              types: Array.from(typeMembers.entries())
+                .map(([type, members]) => ({ type, members }))
+                .sort((a, b) => a.type.localeCompare(b.type))
+            },
+            null,
+            2
+          ),
+          'utf8'
+        );
+      } catch {
+        warnings.push(`live metadata cache write failed: ${cachePath}`);
+      }
     }
 
     return {
