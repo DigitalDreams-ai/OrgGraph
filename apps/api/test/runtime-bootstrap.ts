@@ -26,7 +26,7 @@ function applyBootstrapEnv(root: string, appDataRoot: string): void {
   process.env.ASK_DEFAULT_MODE = 'deterministic';
 }
 
-function seedStaleSemanticSnapshot(appDataRoot: string): void {
+function seedStaleSemanticSnapshot(appDataRoot: string, sourcePath: string): void {
   const snapshotPath = path.join(appDataRoot, 'refresh', 'semantic-snapshot.json');
   fs.mkdirSync(path.dirname(snapshotPath), { recursive: true });
   fs.writeFileSync(
@@ -36,7 +36,7 @@ function seedStaleSemanticSnapshot(appDataRoot: string): void {
         snapshotId: 'stale_snapshot_bootstrap_test',
         fingerprint: 'stale-bootstrap-fingerprint',
         generatedAt: new Date(0).toISOString(),
-        sourcePath: path.join(appDataRoot, 'sf-project', 'force-app', 'main', 'default'),
+        sourcePath,
         nodeCount: 25000,
         edgeCount: 40000,
         nodeDigest: 'stale-node-digest',
@@ -186,8 +186,17 @@ async function run(): Promise<void> {
   const staleSnapshotAppDataRoot = path.join(root, 'data', 'runtime-bootstrap-rebaseline-test');
   fs.rmSync(staleSnapshotAppDataRoot, { recursive: true, force: true });
   applyBootstrapEnv(root, staleSnapshotAppDataRoot);
-  seedStaleSemanticSnapshot(staleSnapshotAppDataRoot);
+  seedStaleSemanticSnapshot(
+    staleSnapshotAppDataRoot,
+    path.join(staleSnapshotAppDataRoot, 'sf-project', 'force-app', 'main', 'default')
+  );
   await assertReadyOnly(staleSnapshotAppDataRoot);
+
+  const staleFixtureSnapshotAppDataRoot = path.join(root, 'data', 'runtime-bootstrap-fixture-stale-test');
+  fs.rmSync(staleFixtureSnapshotAppDataRoot, { recursive: true, force: true });
+  applyBootstrapEnv(root, staleFixtureSnapshotAppDataRoot);
+  seedStaleSemanticSnapshot(staleFixtureSnapshotAppDataRoot, path.join(root, 'fixtures', 'permissions'));
+  await assertReadyOnly(staleFixtureSnapshotAppDataRoot);
 
   const failedBootstrapAppDataRoot = path.join(root, 'data', 'runtime-bootstrap-failure-test');
   fs.rmSync(failedBootstrapAppDataRoot, { recursive: true, force: true });

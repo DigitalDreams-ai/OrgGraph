@@ -12,8 +12,8 @@ Purpose:
 
 | Gap ID | Workflow | Missing Capability | Why It Matters | Target Wave | Acceptance Outcome | Status |
 |---|---|---|---|---|---|---|
-| G001 | Runtime | Fully converged packaged and local behavior contract | Prevent hidden regression between dev and operator runtime | Wave2 | No known packaged vs local behavioral divergence for core paths | Open |
-| G002 | Runtime | Deterministic bootstrap resilience for real-org operator startup | Operators must not hit startup abort loops | Wave2 | Startup consistently reaches ready state under supported baseline | Open |
+| G001 | Runtime | Fully converged packaged and local behavior contract | Prevent hidden regression between dev and operator runtime | Wave2 | No known packaged vs local behavioral divergence for core paths | In Progress |
+| G002 | Runtime | Deterministic bootstrap resilience for real-org operator startup | Operators must not hit startup abort loops | Wave2 | Startup consistently reaches ready state under supported baseline | In Progress |
 | G003 | Org Sessions | Robust connect/switch/restore state machine | Session flow is foundational for all org workflows | Wave3 | Connect/switch/restore/disconnect validated end-to-end | Open |
 | G004 | Org Sessions | Actionable remediation for tool/auth/session/preflight failures | Reduces operator confusion and support burden | Wave3 | Every failure state includes direct next action | Open |
 | G005 | Org Browser | True explorer-style browsing by names and families | Matches expected org-browser mental model | Wave4 | User can browse and search by real metadata names | Open |
