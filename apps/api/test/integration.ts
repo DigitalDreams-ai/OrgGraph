@@ -783,6 +783,33 @@ async function run(): Promise<void> {
     assert.match(askFlowEvidenceSpaced.deterministicAnswer, /retrieved flow evidence found/i);
     assert.doesNotMatch(askFlowEvidenceSpaced.deterministicAnswer, /no automation found for/i);
 
+    const askFlowEvidenceTargetedRetryRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query:
+          'Based only on the latest retrieve, explain what Flow Opportunity Stage Sync reads and writes with deterministic evidence citations.',
+        maxCitations: 1
+      })
+    });
+    assert.equal(
+      askFlowEvidenceTargetedRetryRes.status,
+      201,
+      'ask flow evidence targeted retry should return 201'
+    );
+    const askFlowEvidenceTargetedRetry = (await askFlowEvidenceTargetedRetryRes.json()) as {
+      plan: { intent: string; entities: { object?: string } };
+      deterministicAnswer: string;
+      executionTrace?: string[];
+    };
+    assert.equal(askFlowEvidenceTargetedRetry.plan.intent, 'automation');
+    assert.equal(askFlowEvidenceTargetedRetry.plan.entities.object, undefined);
+    assert.match(askFlowEvidenceTargetedRetry.deterministicAnswer, /retrieved flow evidence found/i);
+    assert.doesNotMatch(
+      askFlowEvidenceTargetedRetry.deterministicAnswer,
+      /no retrieved flow evidence matched/i
+    );
+
     const askFlowEvidenceCivilRightsRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

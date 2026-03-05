@@ -585,13 +585,7 @@ export class AskService {
     }
     citationHits = this.dedupeCitations(citationHits);
 
-    const citations = citationHits.map((hit) => ({
-      id: hit.id,
-      sourcePath: hit.sourcePath,
-      sourceType: hit.sourceType,
-      snippet: hit.chunkText.slice(0, 240),
-      score: hit.score
-    }));
+    let citations = this.mapCitationHits(citationHits);
 
     let answer = 'No deterministic plan matched the query.';
     let deterministicAnswer = answer;
@@ -804,7 +798,24 @@ export class AskService {
       const requestedFlowName = this.extractRequestedFlowName(input.query);
       const object = this.normalizeAutomationObject(plan.entities.object);
       if (requestedFlowName) {
-        const flowEvidenceSummary = this.buildFlowEvidenceSummary(requestedFlowName, citationHits);
+        let flowEvidenceSummary = this.buildFlowEvidenceSummary(requestedFlowName, citationHits);
+        if (flowEvidenceSummary.matchedCount === 0) {
+          const targetedFlowHits = this.dedupeCitations(
+            this.evidence.search(`flow ${requestedFlowName}`, Math.max(12, maxCitations * 4))
+          );
+          if (targetedFlowHits.length > 0) {
+            citationHits = this.dedupeCitations([...citationHits, ...targetedFlowHits]).slice(
+              0,
+              Math.max(maxCitations, targetedFlowHits.length)
+            );
+            citations = this.mapCitationHits(citationHits);
+            flowEvidenceSummary = this.buildFlowEvidenceSummary(requestedFlowName, citationHits);
+            executionTrace.push(
+              `automation.flowEvidence.retry=targeted-name`,
+              `automation.flowEvidence.retryHits=${String(targetedFlowHits.length)}`
+            );
+          }
+        }
         answer = flowEvidenceSummary.explanation;
         deterministicAnswer = flowEvidenceSummary.explanation;
         confidence = flowEvidenceSummary.matchedCount > 0 ? 0.79 : 0.52;
@@ -1257,6 +1268,24 @@ export class AskService {
     variants.add(lower.replace(/[-\s]+/g, '_'));
     variants.add(lower.replace(/[_\s-]+/g, ''));
     return [...variants].filter((value) => value.length > 0);
+  }
+
+  private mapCitationHits(
+    citationHits: EvidenceSearchResult[]
+  ): Array<{
+    id: string;
+    sourcePath: string;
+    sourceType: string;
+    snippet: string;
+    score: number;
+  }> {
+    return citationHits.map((hit) => ({
+      id: hit.id,
+      sourcePath: hit.sourcePath,
+      sourceType: hit.sourceType,
+      snippet: hit.chunkText.slice(0, 240),
+      score: hit.score
+    }));
   }
 
   private compactFlowToken(value: string): string {
