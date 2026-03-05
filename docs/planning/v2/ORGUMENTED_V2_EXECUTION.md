@@ -52,6 +52,7 @@ Materially true now:
 - Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs
 - Operator Rail now includes a runtime-triage summary so common readiness failures can be diagnosed without opening raw JSON
 - Proofs & History now auto-selects a current label on history refresh so open/replay operations are label-first by default
+- wave10 density guardrails now widen card-grid minima and heading wrapping to reduce clipping/overlap in Ask, Analyze, Proofs, and Diagnostics
 
 Still unresolved:
 - runtime/tooling state clarity still needs parity checks in non-connect workspaces
@@ -59,7 +60,7 @@ Still unresolved:
 - decision packet quality is not yet benchmark-accepted for approval use
 - explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
 - proofs/history still needs full label-first lifecycle closure beyond current baseline auto-selection
-- layout/accessibility has remaining card-boundary and density defects
+- layout/accessibility still needs final visual QA lock after latest density guardrail pass
 - release runbooks and clean-machine validation are not complete
 
 Operational note:

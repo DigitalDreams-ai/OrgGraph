@@ -137,8 +137,10 @@ jobs:
           name: desktop-packaged-runtime
           path: |
             apps/desktop/src-tauri/runtime/**
-            apps/desktop/src-tauri/target/release/**
+            apps/desktop/src-tauri/target/release/orgumented-desktop.exe
+            apps/desktop/src-tauri/target/release/runtime/**
           if-no-files-found: error
+          retention-days: 1
 
   desktop-runtime-smoke:
     if: needs.detect-changes.outputs.run-heavy == 'true'
@@ -195,6 +197,7 @@ jobs:
             logs/desktop-release-smoke*
             logs/desktop-phase4-release.log
           if-no-files-found: ignore
+          retention-days: 3
 
   docs-only-fast-pass:
     needs: [detect-changes]
