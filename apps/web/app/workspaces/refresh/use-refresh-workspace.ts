@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import type { QueryResponse } from '../../lib/ask-client';
 import { runOrgRetrieve } from '../../lib/org-client';
 import { getRefreshDiff, runRefresh } from '../../lib/refresh-client';
+import { assessRetrieveHandoff } from '../browser/retrieve-handoff';
 import type {
   OrgRetrieveRunView,
   RefreshDiffView,
+  RefreshRetrieveSelectionView,
   RefreshRetrieveHandoffView,
   RefreshRunView
 } from './types';
@@ -14,6 +16,7 @@ import type {
 interface UseRefreshWorkspaceOptions {
   orgAlias: string;
   retrieveHandoff: RefreshRetrieveHandoffView | null;
+  retrieveSelections: RefreshRetrieveSelectionView[];
   presentResponse: (response: QueryResponse) => void;
   resolveErrorMessage: (response: QueryResponse) => string;
   setLoading: (loading: boolean) => void;
@@ -194,13 +197,48 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
     options.setLoading(true);
     options.setCopied(false);
     options.setErrorText('');
+    const retrieveHandoff = assessRetrieveHandoff(options.retrieveHandoff);
+
+    if (orgRunRetrieve && retrieveHandoff.state !== 'ready') {
+      const message = `Org retrieve blocked until Browser handoff is ready. ${retrieveHandoff.reasons[0] ?? 'Complete a Browser retrieve first.'}`;
+      const response: QueryResponse = {
+        ok: false,
+        statusCode: 400,
+        error: {
+          message
+        }
+      };
+      options.presentResponse(response);
+      options.setErrorText(message);
+      setLastOrgRetrieveRun(null);
+      options.setLoading(false);
+      return;
+    }
+
+    if (orgRunRetrieve && options.retrieveSelections.length === 0) {
+      const message =
+        'Org retrieve blocked because no staged metadata selections were found. In Org Browser, check items and run Retrieve Checked first.';
+      const response: QueryResponse = {
+        ok: false,
+        statusCode: 400,
+        error: {
+          message
+        }
+      };
+      options.presentResponse(response);
+      options.setErrorText(message);
+      setLastOrgRetrieveRun(null);
+      options.setLoading(false);
+      return;
+    }
 
     try {
       const result = await runOrgRetrieve({
         alias: options.orgAlias,
         runAuth: orgRunAuth,
         runRetrieve: orgRunRetrieve,
-        autoRefresh: orgAutoRefresh
+        autoRefresh: orgAutoRefresh,
+        selections: orgRunRetrieve ? options.retrieveSelections : undefined
       });
       options.presentResponse(result);
       if (result.ok === false) {

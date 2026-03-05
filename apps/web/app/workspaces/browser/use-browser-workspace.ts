@@ -38,6 +38,13 @@ function buildSelectionSummary(selections: MetadataSelection[]): MetadataSelecti
   };
 }
 
+function cloneSelections(selections: MetadataSelection[]): MetadataSelection[] {
+  return selections.map((selection) => ({
+    type: selection.type,
+    members: Array.isArray(selection.members) ? [...selection.members] : undefined
+  }));
+}
+
 function parseMetadataRetrieve(response: QueryResponse): MetadataRetrieveResultView | null {
   if (!response.payload || typeof response.payload !== 'object' || Array.isArray(response.payload)) {
     return null;
@@ -78,6 +85,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const [metadataLoadingType, setMetadataLoadingType] = useState('');
   const [metadataSelected, setMetadataSelected] = useState<MetadataSelection[]>([]);
   const [lastMetadataRetrieve, setLastMetadataRetrieve] = useState<MetadataRetrieveResultView | null>(null);
+  const [lastRetrievedSelections, setLastRetrievedSelections] = useState<MetadataSelection[]>([]);
   const [metadataCatalogRequested, setMetadataCatalogRequested] = useState(false);
 
   const metadataSelectionsPreview = useMemo(() => JSON.stringify(metadataSelected, null, 2), [metadataSelected]);
@@ -371,10 +379,11 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     options.setLoading(true);
     options.setCopied(false);
     options.setErrorText('');
+    const selectionSnapshot = cloneSelections(metadataSelected);
 
     try {
       const result = await retrieveOrgMetadata({
-        selections: metadataSelected,
+        selections: selectionSnapshot,
         autoRefresh: metadataAutoRefresh
       });
       options.presentResponse(result);
@@ -382,6 +391,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
         options.setErrorText(options.resolveErrorMessage(result));
       } else {
         setLastMetadataRetrieve(parseMetadataRetrieve(result));
+        setLastRetrievedSelections(selectionSnapshot);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected metadata retrieve failure';
@@ -414,6 +424,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     selectionSummary,
     visibleCatalogTypes,
     lastMetadataRetrieve,
+    lastRetrievedSelections,
     metadataCatalogRequested,
     clearFilters,
     clearSelections,

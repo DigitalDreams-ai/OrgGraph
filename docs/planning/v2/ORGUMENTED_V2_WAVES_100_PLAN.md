@@ -56,7 +56,7 @@ Orgumented is 100% complete for v2 scope only when all of the following are true
 | wave2 | runtime convergence | B001, B002 | In Progress |
 | wave3 | sessions and toolchain reliability | B004, B005 | In Progress |
 | wave4 | org browser explorer | B006, B007 | In Progress |
-| wave5 | retrieve -> refresh handoff | B008 | Open |
+| wave5 | retrieve -> refresh handoff | B008 | In Progress |
 | wave6 | ask planner/compiler depth | B003, B009 | Open |
 | wave7 | decision-packet quality | B010, B017 | Open |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | Open |
