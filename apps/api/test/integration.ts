@@ -758,6 +758,12 @@ async function run(): Promise<void> {
     const askFlowEvidence = (await askFlowEvidenceRes.json()) as {
       plan: { intent: string; entities: { object?: string } };
       deterministicAnswer: string;
+      decisionPacket?: {
+        kind?: string;
+        focus?: string;
+        targetLabel?: string;
+        changeImpact?: { summary?: string };
+      };
     };
     assert.equal(askFlowEvidence.plan.intent, 'automation');
     assert.equal(askFlowEvidence.plan.entities.object, undefined);
@@ -765,6 +771,11 @@ async function run(): Promise<void> {
     assert.match(askFlowEvidence.deterministicAnswer, /writes:/i);
     assert.match(askFlowEvidence.deterministicAnswer, /Opportunity\.StageName/i);
     assert.doesNotMatch(askFlowEvidence.deterministicAnswer, /no automation found for/i);
+    assert.equal(askFlowEvidence.decisionPacket?.kind, 'high_risk_change_review');
+    assert.equal(askFlowEvidence.decisionPacket?.focus, 'breakage');
+    assert.equal(askFlowEvidence.decisionPacket?.targetLabel, 'OpportunityStageSync');
+    assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /reads:/i);
+    assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /writes:/i);
 
     const askFlowEvidenceSpacedRes = await fetch(`${base}/ask`, {
       method: 'POST',
@@ -827,6 +838,7 @@ async function run(): Promise<void> {
     const askFlowEvidenceCivilRights = (await askFlowEvidenceCivilRightsRes.json()) as {
       plan: { intent: string; entities: { object?: string } };
       deterministicAnswer: string;
+      decisionPacket?: { summary?: string };
     };
     assert.equal(askFlowEvidenceCivilRights.plan.intent, 'automation');
     assert.equal(askFlowEvidenceCivilRights.plan.entities.object, undefined);
@@ -835,6 +847,10 @@ async function run(): Promise<void> {
       /no retrieved flow evidence matched Civil_Rights_Intake_Questionnaire/i
     );
     assert.doesNotMatch(askFlowEvidenceCivilRights.deterministicAnswer, /no automation found for the/i);
+    assert.match(
+      askFlowEvidenceCivilRights.decisionPacket?.summary ?? '',
+      /not grounded by the current retrieve evidence/i
+    );
 
     const askFlowEvidenceQuotedRes = await fetch(`${base}/ask`, {
       method: 'POST',

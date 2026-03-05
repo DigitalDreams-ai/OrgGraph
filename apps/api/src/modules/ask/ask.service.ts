@@ -39,6 +39,15 @@ import type {
   AskTrustLevel
 } from './ask.types';
 
+interface FlowEvidenceSummary {
+  explanation: string;
+  matchedCount: number;
+  readFields: string[];
+  writeFields: string[];
+  referencedObjects: string[];
+  triggerTypes: string[];
+}
+
 @Injectable()
 export class AskService {
   private static readonly LLM_MIN_CONFIDENCE = 0.6;
@@ -835,9 +844,17 @@ export class AskService {
         answer = flowEvidenceSummary.explanation;
         deterministicAnswer = flowEvidenceSummary.explanation;
         confidence = flowEvidenceSummary.matchedCount > 0 ? 0.79 : 0.52;
+        decisionPacket = this.buildAutomationFlowDecisionPacket({
+          flowName: requestedFlowName,
+          summary: flowEvidenceSummary,
+          citationCount: citations.length,
+          user: plan.entities.user
+        });
         executionTrace.push(
           `automation.flowName=${requestedFlowName}`,
-          `automation.flowEvidence.matches=${String(flowEvidenceSummary.matchedCount)}`
+          `automation.flowEvidence.matches=${String(flowEvidenceSummary.matchedCount)}`,
+          `automation.packet.kind=${decisionPacket.kind}`,
+          `automation.packet.risk=${decisionPacket.riskLevel}`
         );
         consistency = {
           checked: consistencyCheck,
@@ -1216,7 +1233,7 @@ export class AskService {
   private buildFlowEvidenceSummary(
     flowName: string,
     evidenceHits: EvidenceSearchResult[]
-  ): { explanation: string; matchedCount: number } {
+  ): FlowEvidenceSummary {
     const flowNameVariants = this.buildFlowNameVariants(flowName);
     const flowEvidence = evidenceHits.filter((hit) => {
       const sourceLower = hit.sourcePath.toLowerCase();
@@ -1235,7 +1252,11 @@ export class AskService {
     if (flowEvidence.length === 0) {
       return {
         explanation: `no retrieved flow evidence matched ${flowName}.`,
-        matchedCount: 0
+        matchedCount: 0,
+        readFields: [],
+        writeFields: [],
+        referencedObjects: [],
+        triggerTypes: []
       };
     }
 
@@ -1290,10 +1311,108 @@ export class AskService {
         : 'trigger types: not explicit in retrieved snippet';
     const readSummary = this.describeFieldSet(readFields, 'reads');
     const writeSummary = this.describeFieldSet(writeFields, 'writes');
+    const readFieldList = [...readFields].sort((a, b) => a.localeCompare(b));
+    const writeFieldList = [...writeFields].sort((a, b) => a.localeCompare(b));
+    const referencedObjectList = [...referencedObjects].sort((a, b) => a.localeCompare(b));
+    const triggerTypeList = [...triggerTypes].sort((a, b) => a.localeCompare(b));
 
     return {
       explanation: `retrieved flow evidence found for ${flowName}; ${flowEvidence.length} citation(s); ${readSummary}; ${writeSummary}; ${objectSummary}; ${triggerSummary}.`,
-      matchedCount: flowEvidence.length
+      matchedCount: flowEvidence.length,
+      readFields: readFieldList,
+      writeFields: writeFieldList,
+      referencedObjects: referencedObjectList,
+      triggerTypes: triggerTypeList
+    };
+  }
+
+  private buildAutomationFlowDecisionPacket(input: {
+    flowName: string;
+    summary: FlowEvidenceSummary;
+    citationCount: number;
+    user?: string;
+  }): AskDecisionPacket {
+    const coverageScore = Math.min(1, input.citationCount / 6);
+    const hasReads = input.summary.readFields.length > 0;
+    const hasWrites = input.summary.writeFields.length > 0;
+    const baseRisk =
+      0.38 +
+      (hasWrites ? 0.2 : 0.05) +
+      (hasReads ? 0.14 : 0.05) +
+      (input.summary.matchedCount === 0 ? 0.28 : 0) +
+      (1 - coverageScore) * 0.18;
+    const riskScore = Number(Math.min(1, Math.max(0.05, baseRisk)).toFixed(3));
+    const riskLevel: AskDecisionPacket['riskLevel'] =
+      riskScore >= 0.7 ? 'high' : riskScore >= 0.4 ? 'medium' : 'low';
+    const readSummary = this.describeFieldSet(new Set(input.summary.readFields), 'reads');
+    const writeSummary = this.describeFieldSet(new Set(input.summary.writeFields), 'writes');
+    const objectSummary =
+      input.summary.referencedObjects.length > 0
+        ? `objects: ${input.summary.referencedObjects.join(', ')}`
+        : 'objects: not explicit in retrieved snippet';
+    const targetField =
+      input.summary.writeFields[0] ??
+      input.summary.readFields[0] ??
+      input.summary.referencedObjects[0] ??
+      input.flowName;
+
+    return {
+      kind: 'high_risk_change_review',
+      focus: 'breakage',
+      targetLabel: input.flowName,
+      targetType: 'object',
+      summary:
+        input.summary.matchedCount > 0
+          ? `Flow ${input.flowName} read/write summary grounded by ${input.summary.matchedCount} citation(s).`
+          : `Flow ${input.flowName} is not grounded by the current retrieve evidence yet.`,
+      riskScore,
+      riskLevel,
+      evidenceCoverage: {
+        citationCount: input.citationCount,
+        hasPermissionPaths: false,
+        hasAutomationCoverage: input.summary.matchedCount > 0,
+        hasImpactPaths: hasReads || hasWrites
+      },
+      topRiskDrivers: [
+        `${input.summary.matchedCount} citation(s) matched the requested flow`,
+        writeSummary,
+        readSummary,
+        objectSummary
+      ],
+      permissionImpact: {
+        user: input.user ?? 'n/a',
+        summary:
+          'Permission paths are not part of this flow read/write ask. Run a permission ask next if approval depends on actor access.',
+        granted: false,
+        pathCount: 0,
+        principalCount: 0,
+        warnings: ['permission coverage not evaluated in flow read/write packet']
+      },
+      automationImpact: {
+        summary: input.summary.explanation,
+        automationCount: input.summary.matchedCount,
+        topAutomationNames: [input.flowName]
+      },
+      changeImpact: {
+        summary: `${readSummary}; ${writeSummary}.`,
+        impactPathCount: input.summary.readFields.length + input.summary.writeFields.length,
+        topImpactedSources:
+          input.summary.writeFields.slice(0, 2).concat(input.summary.readFields.slice(0, 1))
+      },
+      nextActions: [
+        {
+          label: 'Inspect write targets',
+          rationale: writeSummary
+        },
+        {
+          label: 'Inspect read conditions',
+          rationale: readSummary
+        },
+        {
+          label: 'Run permission check',
+          rationale: `Ask who can edit ${targetField} before approving downstream changes.`
+        }
+      ]
     };
   }
 
