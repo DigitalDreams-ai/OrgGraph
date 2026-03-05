@@ -32,7 +32,7 @@ export function assessRetrieveHandoff(
     const actual = handoff.alias.trim().toLowerCase();
     if (expected && actual && expected !== actual) {
       reasons.push(
-        `Retrieve alias '${handoff.alias}' does not match active alias '${expectedAlias}'. Re-run Retrieve Checked for the active org.`
+        `Retrieve alias '${handoff.alias}' does not match active alias '${expectedAlias}'. Re-run Retrieve Cart for the active org.`
       );
     }
   }

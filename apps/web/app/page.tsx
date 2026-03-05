@@ -314,6 +314,7 @@ export default function Page(): JSX.Element {
               onRunRefresh={() => void refreshWorkspace.runRefreshNow()}
               onRunDiff={() => void refreshWorkspace.runDiff()}
               onRunOrgRetrieve={() => void refreshWorkspace.runOrgRetrieveNow()}
+              onOpenBrowser={() => setUiTab('browser')}
             />
           )}
 

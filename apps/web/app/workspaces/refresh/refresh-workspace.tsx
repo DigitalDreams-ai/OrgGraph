@@ -33,6 +33,7 @@ interface RefreshWorkspaceProps {
   onRunRefresh: () => void;
   onRunDiff: () => void;
   onRunOrgRetrieve: () => void;
+  onOpenBrowser: () => void;
 }
 
 function formatTimestamp(value?: string): string {
@@ -104,6 +105,13 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
               ) : (
                 <p className="muted">This retrieve is ready to seed rebuild review in `Refresh & Build`.</p>
               )}
+              {retrieveHandoff.state !== 'ready' || stagedSelectionCount === 0 ? (
+                <div className="action-row">
+                  <button type="button" className="ghost" onClick={props.onOpenBrowser}>
+                    Open Org Browser
+                  </button>
+                </div>
+              ) : null}
               {props.retrieveHandoff.refresh ? (
                 <p>
                   <strong>Retrieve refresh counts:</strong> {props.retrieveHandoff.refresh.nodeCount} nodes,{' '}
@@ -163,7 +171,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
                   : 'No browser retrieve handoff captured yet.'}
             </p>
             {props.retrieveHandoff && stagedSelectionCount === 0 ? (
-              <p><strong>Blocked:</strong> no staged metadata selections were saved with the handoff.</p>
+              <p><strong>Blocked:</strong> no staged metadata selections were saved with the handoff. Open Org Browser and run Retrieve Cart.</p>
             ) : null}
           </li>
           <li>
@@ -306,7 +314,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
           {stagedSelectionCount === 0 ? (
             <li>
               <strong>Fail closed.</strong> No staged metadata selections found. Go to `Org Browser`, check items, and
-              run `Retrieve Checked`.
+              run `Retrieve Cart`.
             </li>
           ) : null}
         </ul>
