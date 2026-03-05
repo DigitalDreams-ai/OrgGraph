@@ -317,6 +317,45 @@ async function run(): Promise<void> {
       liveSearch.results.some((result) => result.type === 'Layout' && result.name === 'Opportunity-Opportunity Layout')
     );
 
+    const liveSearchCachePath = path.join(path.dirname(parsePath), 'metadata-live-search-cache.json');
+    fs.writeFileSync(
+      liveSearchCachePath,
+      JSON.stringify(
+        {
+          refreshedAt: new Date().toISOString(),
+          types: []
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+    const listMetadataCallsBeforeEmptyCacheRetry = toolAdapter.calls.filter(
+      (call) => call.command === 'sf' && call.args[0] === 'org' && call.args[1] === 'list' && call.args[2] === 'metadata'
+    ).length;
+    const liveSearchAfterEmptyCache = await service.metadataSearch({
+      search: 'Opportunity',
+      refresh: false,
+      limit: 50
+    });
+    const listMetadataCallsAfterEmptyCacheRetry = toolAdapter.calls.filter(
+      (call) => call.command === 'sf' && call.args[0] === 'org' && call.args[1] === 'list' && call.args[2] === 'metadata'
+    ).length;
+    assert.ok(
+      liveSearchAfterEmptyCache.results.some(
+        (result) => result.type === 'Layout' && result.name === 'Opportunity-Opportunity Layout'
+      ),
+      'search should recover from stale empty live cache by re-querying org metadata'
+    );
+    assert.ok(
+      listMetadataCallsAfterEmptyCacheRetry > listMetadataCallsBeforeEmptyCacheRetry,
+      'empty live cache should trigger fresh sf metadata listing'
+    );
+    assert.ok(
+      liveSearchAfterEmptyCache.warnings.some((warning) => warning.includes('cache was empty')),
+      'response should surface warning when stale empty cache is bypassed'
+    );
+
     const flowTypeSearch = await service.metadataSearch({
       search: 'flow',
       refresh: true,

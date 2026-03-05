@@ -33,6 +33,7 @@ Materially true now:
 - org browser now uses explicit cart language (`checked row = in cart`) with simpler explorer/retrieve actions
 - org browser action row now separates `Search Names` from `Refresh Explorer`, and a quick workflow block clarifies checkbox-first selection from search/browse into retrieve cart
 - org browser metadata search now matches normalized naming patterns (for example, spaced query text against compact/underscored metadata names), and discovery warnings are shown directly in workspace cards
+- org browser now bypasses stale empty live-metadata cache artifacts and re-queries org metadata discovery so search/browse recover automatically after prior failed discovery runs
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
 - wave10 follow-up now enforces larger card-grid minimum widths and path-specific wrapping classes, reducing truncation in decision packets, citations, mapping diagnostics, and diagnostics artifacts
 - refresh handoff is staged and fail-closed from browser selections
