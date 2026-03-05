@@ -164,6 +164,7 @@ Current real-org checkpoint after PR #71:
 - the current Wave3 restore-hardening follow-up now derives restore targets from the last successful `connect`/`switch` audit event, preventing disconnected fallback aliases from masking the true restorable session after relaunch or failed switch attempts
 - the current Wave4 browser-search follow-up now keeps zero-member metadata families visible in live catalog/search responses so name-first queries like `layout` or `flow` remain predictable even before those families have retrieved members locally
 - the current Wave10 layout-hardening slice now uses more resilient auto-fit card grids and stricter long-text wrapping to prevent clipped packet, diagnostics, and evidence content in constrained desktop work areas
+- the current Wave6 flow-grounding slice now treats flow-name asks as first-class metadata questions by accepting spaced/underscored flow names and deriving explicit `reads`/`writes` summaries from retrieved flow evidence instead of falling back to generic automation-not-found phrasing
 
 ## Remaining Stage 1 Product Gates
 
