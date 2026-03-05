@@ -44,6 +44,7 @@ Materially true now:
 - review decision packets now include explicit `riskScore` and `evidenceCoverage` signals to improve approval-workflow readability
 - proof history supports searchable labels and open-first artifact access
 - CI heavy Windows jobs are path-gated for minute efficiency
+- PR Autofill now runs on `opened/reopened` only (not every push), and Actions retention now includes an automated cleanup workflow that prunes older completed runs per workflow
 - org-session refresh now only marks runtime unavailable on true runtime failures, so alias/preflight 4xx errors no longer masquerade as missing local tools
 - org-session runtime-unavailable detection now ignores generic 5xx surfaces unless the payload explicitly indicates runtime/bootstrap unavailability
 - runtime-bootstrap failure regression now verifies `/org/status` remains reachable while `/ready` stays fail-closed
@@ -111,6 +112,7 @@ Short version:
 8. Wave11 finish slice:
 - complete P0/P1 burn-down lock and regression gates
 - keep CI strict while preserving minute-efficiency controls
+- keep Actions storage bounded with automated run-retention pruning and short artifact retention defaults
 
 ## Execution Cadence (Mandatory)
 

@@ -2,7 +2,7 @@ name: PR Autofill
 
 on:
   pull_request_target:
-    types: [opened, reopened, synchronize]
+    types: [opened, reopened]
 
 permissions:
   contents: read
