@@ -144,6 +144,7 @@ Current real-org checkpoint after PR #71:
 - the current live-discovery follow-up now loads metadata families from the live org before any local parse tree is seeded, uses checkbox selection instead of mixed add/remove verbs, and keeps long paths/IDs readable inside the desktop cards instead of clipping
 - the current tree-selection follow-up now uses one checkbox-first selection model across search and browse, auto-loads nested family members on expand, and stages retrieval through explicit checked-selection actions (`Load Explorer Tree`, `Search Explorer`, `Retrieve Checked`)
 - the current Wave3 connect-hardening slice now scaffolds a CCI-compatible local project context for alias bridging, aligns bridge commands to deterministic `cci org import <sf-alias> <cci-alias>` semantics, and emits explicit remediation commands with the local sf-project path instead of warning-only dead ends
+- the current Wave3 restore-hardening follow-up now derives restore targets from the last successful `connect`/`switch` audit event, preventing disconnected fallback aliases from masking the true restorable session after relaunch or failed switch attempts
 
 ## Remaining Stage 1 Product Gates
 
