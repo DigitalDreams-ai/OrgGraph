@@ -63,6 +63,18 @@ function renderWarnings(warnings: string[]): JSX.Element | null {
   );
 }
 
+function renderActionChecklist(title: string, actions: string[]): JSX.Element {
+  return (
+    <div className="sub-card">
+      <p className="panel-caption">Operator actions</p>
+      <h3>{title}</h3>
+      <ul className="analysis-list">
+        {actions.length > 0 ? actions.map((action) => <li key={action}>{action}</li>) : <li>No follow-up actions required.</li>}
+      </ul>
+    </div>
+  );
+}
+
 export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
   return (
     <>
@@ -214,6 +226,21 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
             </ul>
           </div>
 
+          {renderActionChecklist('Permission triage', [
+            ...(props.permissionsResult.mappingStatus !== 'resolved'
+              ? ['Run `Diagnose User Mapping` to repair or refresh principal mapping before approval.']
+              : []),
+            ...(!props.permissionsResult.granted
+              ? ['Inspect `Permission paths` and confirm object/field coverage before making changes.']
+              : ['Permission coverage is already granted for the selected target.']),
+            ...(props.permissionsResult.truncated
+              ? ['Increase `Limit` and rerun to inspect the complete permission path set.']
+              : []),
+            ...(props.permissionsResult.warnings.length > 0
+              ? ['Resolve warning items listed below before treating this result as final.']
+              : [])
+          ])}
+
           <div className="sub-card analysis-grid-full">
             <p className="panel-caption">Deterministic path evidence</p>
             <h3>Permission paths</h3>
@@ -278,6 +305,18 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
             </ul>
           </div>
 
+          {renderActionChecklist('Mapping recovery', [
+            ...(!props.permissionDiagnosis.mapExists
+              ? ['Run an org retrieve plus Refresh Semantic State to generate a user principal map.']
+              : []),
+            ...(props.permissionDiagnosis.stale
+              ? ['Mapping is stale. Refresh semantic state before permission analysis.']
+              : ['Mapping is fresh enough for deterministic permission checks.']),
+            ...(props.permissionDiagnosis.warnings.length > 0
+              ? ['Address mapping warnings before relying on map-driven permission verdicts.']
+              : [])
+          ])}
+
           {renderWarnings(props.permissionDiagnosis.warnings)}
         </div>
       ) : null}
@@ -331,6 +370,18 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               )}
             </ul>
           </div>
+
+          {renderActionChecklist('Automation triage', [
+            ...(props.automationResult.automations.length === 0
+              ? [
+                  'No deterministic automation matched. Check object name, then rerun with lower confidence if needed.',
+                  'Use Ask with the same object context if you need broader policy-aware impact explanation.'
+                ]
+              : ['Inspect returned automations before approving schema or logic changes.']),
+            ...(props.automationResult.truncated
+              ? ['Increase `Limit` to review full automation coverage.']
+              : [])
+          ])}
         </div>
       ) : null}
 
@@ -383,6 +434,15 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               )}
             </ul>
           </div>
+
+          {renderActionChecklist('Impact triage', [
+            ...(props.impactResult.paths.length === 0
+              ? ['No deterministic impact path matched. Confirm field API name and retrieve latest metadata before rerun.']
+              : ['Inspect each returned impact path and validate downstream automations before change approval.']),
+            ...(props.impactResult.truncated
+              ? ['Increase `Limit` to inspect full impact coverage.']
+              : [])
+          ])}
         </div>
       ) : null}
 
@@ -432,6 +492,18 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               )}
             </ul>
           </div>
+
+          {renderActionChecklist('System permission triage', [
+            ...(!props.systemPermissionResult.granted
+              ? ['Permission is not granted through deterministic paths. Validate profile/permset assignments before approval.']
+              : ['System permission is granted through deterministic evidence paths.']),
+            ...(props.systemPermissionResult.truncated
+              ? ['Increase `Limit` if you need complete path coverage.']
+              : []),
+            ...(props.systemPermissionResult.warnings.length > 0
+              ? ['Resolve warning items before treating this system-permission check as final.']
+              : [])
+          ])}
 
           {renderWarnings(props.systemPermissionResult.warnings)}
         </div>

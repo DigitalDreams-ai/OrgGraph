@@ -375,6 +375,7 @@ export default function Page(): JSX.Element {
               healthStatus={shellRuntime.healthStatus}
               readyStatus={shellRuntime.readyStatus}
               readyDetails={shellRuntime.readyDetails}
+              readyPayload={shellRuntime.readyPayload}
               orgStatus={connectWorkspace.orgStatus}
               metaContext={systemWorkspace.metaContext}
               metaAdaptResult={systemWorkspace.metaAdaptResult}
@@ -391,6 +392,7 @@ export default function Page(): JSX.Element {
           responseText={responseInspector.responseText}
           errorText={responseInspector.errorText}
           readyDetails={shellRuntime.readyDetails}
+          readyPayload={shellRuntime.readyPayload}
           askSummary={askWorkspace.askSummary}
           askTrust={askWorkspace.askTrust}
           askResult={askWorkspace.askResult}

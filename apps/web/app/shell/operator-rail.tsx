@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReadyPayload } from './use-shell-runtime';
 import type { AskPayload } from '../workspaces/ask/types';
 import type { OrgPreflightPayload, OrgSessionPayload, OrgStatusPayload } from '../workspaces/connect/types';
 
@@ -8,6 +9,7 @@ interface OperatorRailProps {
   responseText: string;
   errorText: string;
   readyDetails: string;
+  readyPayload: ReadyPayload | null;
   askSummary: string;
   askTrust: string;
   askResult: AskPayload | null;
@@ -22,10 +24,39 @@ interface OperatorRailProps {
   onCopy: () => void;
 }
 
+function deriveRuntimeTriage(readyPayload: ReadyPayload | null): string[] {
+  const checks = readyPayload?.checks;
+  if (!checks) {
+    if (readyPayload?.message) {
+      return [readyPayload.message];
+    }
+    return ['Run Refresh Status to load runtime readiness checks.'];
+  }
+
+  const notes: string[] = [];
+  if (checks.bootstrap?.ok === false) {
+    notes.push(`Bootstrap failed: ${checks.bootstrap.message || checks.bootstrap.status || 'unknown status'}`);
+  }
+  if (checks.db?.ok === false) {
+    notes.push(`Graph not grounded: nodes ${checks.db.nodeCount ?? 0}, edges ${checks.db.edgeCount ?? 0}.`);
+  }
+  if (checks.fixtures?.ok === false) {
+    notes.push('Fixtures path missing. Run retrieve + refresh.');
+  }
+  if (checks.evidence?.ok === false) {
+    notes.push('Evidence index missing. Run refresh and Ask once.');
+  }
+  if (notes.length === 0) {
+    notes.push('Runtime checks healthy.');
+  }
+  return notes;
+}
+
 export function OperatorRail(props: OperatorRailProps): JSX.Element {
   const sessionLabel = props.runtimeUnavailable ? 'runtime unavailable' : props.sessionStatus;
   const sfInstalledLabel = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.sf?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
   const cciInstalledLabel = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
+  const runtimeTriage = deriveRuntimeTriage(props.readyPayload);
 
   return (
     <aside className="right-rail panel">
@@ -59,6 +90,15 @@ export function OperatorRail(props: OperatorRailProps): JSX.Element {
         <p><strong>Auth Mode:</strong> {props.orgSession?.authMode || props.orgStatus?.authMode || 'sf_cli_keychain'}</p>
         <p><strong>sf Installed:</strong> {sfInstalledLabel}</p>
         <p><strong>CCI Installed:</strong> {cciInstalledLabel}</p>
+      </div>
+
+      <div className="sub-card">
+        <h3>Runtime Triage</h3>
+        <ul className="analysis-list">
+          {runtimeTriage.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
       </div>
 
       {props.orgPreflight?.issues && props.orgPreflight.issues.length > 0 ? (
