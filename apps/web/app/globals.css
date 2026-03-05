@@ -381,6 +381,7 @@ button.ghost {
 .selection-toggle-copy small {
   overflow-wrap: anywhere;
   word-break: break-word;
+  line-height: 1.35;
 }
 
 .panel-caption {
@@ -455,7 +456,7 @@ button.ghost {
 
 .decision-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 0.8rem;
 }
 
@@ -495,7 +496,7 @@ button.ghost {
 
 .packet-stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 0.6rem;
 }
 
