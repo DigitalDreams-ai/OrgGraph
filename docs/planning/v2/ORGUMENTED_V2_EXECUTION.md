@@ -70,28 +70,41 @@ Short version:
 
 ## Immediate Frontier (Next Slices)
 
-1. Wave2 finish slice:
-- lock runtime-unavailable vs tool-missing behavior across remaining workspace surfaces
-- add explicit regression tests for readiness + org status surfaces
-
-2. Wave10 finish slice:
-- close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
-- lock viewport and long-string rendering tests
-
-3. Wave4 finish slice:
-- complete explorer-style browse parity and reduce action ambiguity in empty/partial catalog states
-
-4. Wave6 finish slice:
-- add regression coverage for explicit retrieved-flow asks (including real org naming patterns)
-- reduce generic automation fallback cases that bypass named-flow grounding
-
-5. Wave5 finish slice:
+1. Wave5 finish slice:
 - close retrieve -> refresh -> diff handoff proof gaps for real-org workflows
 - lock staged summaries and fail-closed guidance when handoff is incomplete
 
-6. Wave7 start slice:
+2. Wave2 finish slice:
+- lock runtime-unavailable vs tool-missing behavior across remaining workspace surfaces
+- add explicit regression tests for readiness + org status surfaces
+
+3. Wave7 start slice:
 - improve decision-packet risk drivers and next actions for real-org review asks
 - capture acceptance benchmark evidence with proof/replay IDs
+
+4. Wave8 start slice:
+- deepen structured diagnostics/analysis cards for primary operator triage
+- reduce raw JSON dependence in permission/automation/impact/map workflows
+
+5. Wave10 finish slice:
+- close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
+- lock viewport and long-string rendering tests
+
+6. Wave11 finish slice:
+- complete P0/P1 burn-down lock and regression gates
+- keep CI strict while preserving minute-efficiency controls
+
+## Execution Cadence (Mandatory)
+
+After every commit, execute this loop before starting the next slice:
+1. update impacted docs and project-memory records
+2. continue with the next best scoped step on the same wave/slice
+3. create a PR when that coherent section is complete
+4. monitor CI to completion
+5. if CI fails, fix immediately and re-run
+6. when CI succeeds, merge, sync main, and open the next wave branch
+
+Do not start a new phase on the same branch after merge. Use one branch per coherent wave slice.
 
 ## Remaining Stage 1 Product Gates
 
