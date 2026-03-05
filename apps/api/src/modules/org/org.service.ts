@@ -225,10 +225,8 @@ export class OrgService {
     const session = this.sessionStatus();
     const activeAlias = session.activeAlias || this.resolveActiveAlias();
     const entries = this.readSessionAuditEntries(limit);
-    const restoreAlias =
-      session.status === 'disconnected'
-        ? activeAlias || entries.find((entry) => entry.action === 'connect' || entry.action === 'switch')?.alias
-        : undefined;
+    const lastConnectedAlias = entries.find((entry) => entry.action === 'connect' || entry.action === 'switch')?.alias;
+    const restoreAlias = session.status === 'disconnected' ? lastConnectedAlias || activeAlias : undefined;
 
     return {
       authMode,
