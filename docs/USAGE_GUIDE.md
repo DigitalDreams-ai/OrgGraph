@@ -179,10 +179,13 @@ Current `Explain & Analyze` behavior:
 - `Automation` shows matched automations, relation coverage, and confidence-scored evidence
 - `Impact` shows deterministic impact paths, relation coverage, and score/confidence summaries
 - `System Permission` shows grant verdict, mapping status, and grant paths without requiring raw JSON inspection
+- each analyze mode now includes a structured operator action checklist for fast triage and next-step guidance
 - the `Raw JSON Inspector` remains available only as a secondary debugging surface
 
 Current `Settings & Diagnostics` behavior:
 - runtime health and readiness appear as structured workspace summaries
+- runtime diagnostics now include explicit check cards for bootstrap, graph grounding, fixtures, and evidence health
+- runtime diagnostics now include an operator recovery checklist derived from failing checks
 - org tooling status shows:
   - integration enabled
   - auth mode

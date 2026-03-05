@@ -34,8 +34,8 @@ Purpose:
 | B012 | P1 | UX/Layout | Remove clipping/overflow/truncation defects across cards/rails/workspaces | Wave10 | No known clipping defects at supported desktop viewport targets | In Progress |
 | B013 | P1 | Quality | Burn down all critical/high Stage 1 defects to zero | Wave11 | P0/P1 defect matrix count reaches zero and stays stable for one cycle | Open |
 | B014 | P1 | Release | Finalize release checklist, rollback path, and operator machine validation | Wave12 | Release candidate checklist fully green with evidence artifacts | Open |
-| B015 | P2 | Analyze | Deepen explain/analyze workflows to reduce raw JSON dependency | Wave8 | Core analyze tasks complete using structured cards/actions | Open |
-| B016 | P2 | Diagnostics | Improve diagnostics readability and operator actionability under failure | Wave8 | Runtime/tool/semantic failure states map to direct operator actions | Open |
+| B015 | P2 | Analyze | Deepen explain/analyze workflows to reduce raw JSON dependency | Wave8 | Core analyze tasks complete using structured cards/actions | In Progress |
+| B016 | P2 | Diagnostics | Improve diagnostics readability and operator actionability under failure | Wave8 | Runtime/tool/semantic failure states map to direct operator actions | In Progress |
 | B017 | P2 | Benchmark | Replace fixture-only benchmark narrative with stronger real-org scenario evidence | Wave7 | Real-org benchmark artifact set published and reproducible | Open |
 | B018 | P2 | CI Cost | Continue reducing GitHub Actions minute burn without losing required trust gates | Wave11 | CI runtime reduced while validate + desktop smoke integrity remains intact | In Progress |
 | B019 | P2 | Docs | Consolidate runbooks to explicit, assumption-free operator steps | Wave12 | New operator runbooks pass first-run validation by non-author operator | Open |

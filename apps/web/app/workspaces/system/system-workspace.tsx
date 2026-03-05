@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReadyPayload } from '../../shell/use-shell-runtime';
 import type { OrgStatusPayload } from '../connect/types';
 import type { MetaAdaptPayload, MetaContextPayload } from './types';
 
@@ -9,6 +10,7 @@ interface SystemWorkspaceProps {
   healthStatus: string;
   readyStatus: string;
   readyDetails: string;
+  readyPayload: ReadyPayload | null;
   orgStatus: OrgStatusPayload | null;
   metaContext: MetaContextPayload | null;
   metaAdaptResult: MetaAdaptPayload | null;
@@ -17,6 +19,13 @@ interface SystemWorkspaceProps {
   onRunMetaAdapt: () => void;
   onLoadOrgStatus: () => void;
 }
+
+type RuntimeIssue = {
+  code: string;
+  severity: 'error' | 'warning';
+  message: string;
+  remediation: string;
+};
 
 function formatTimestamp(value?: string): string {
   if (!value) {
@@ -48,6 +57,109 @@ function renderIntentBreakdown(title: string, values: Record<string, number>): J
   );
 }
 
+function deriveRuntimeIssues(
+  healthStatus: string,
+  readyStatus: string,
+  readyPayload: ReadyPayload | null
+): RuntimeIssue[] {
+  const issues: RuntimeIssue[] = [];
+
+  if (healthStatus === 'unreachable') {
+    issues.push({
+      code: 'HEALTH_UNREACHABLE',
+      severity: 'error',
+      message: 'Desktop API health endpoint is unreachable.',
+      remediation: 'Relaunch Orgumented desktop and run Refresh Status once the API process is back.'
+    });
+  }
+
+  if (readyStatus === 'unreachable') {
+    issues.push({
+      code: 'READY_UNREACHABLE',
+      severity: 'error',
+      message: 'Desktop API readiness endpoint is unreachable.',
+      remediation: 'Restart Orgumented desktop to restore packaged API readiness checks.'
+    });
+  } else if (readyStatus.startsWith('http_')) {
+    issues.push({
+      code: 'READY_HTTP_FAILURE',
+      severity: 'error',
+      message: `Readiness returned ${readyStatus}.`,
+      remediation: 'Use Refresh & Build to rebuild semantic state, then rerun Refresh Status.'
+    });
+  }
+
+  const checks = readyPayload?.checks;
+  const bootstrap = checks?.bootstrap;
+  const db = checks?.db;
+  const fixtures = checks?.fixtures;
+  const evidence = checks?.evidence;
+
+  if (bootstrap?.ok === false) {
+    issues.push({
+      code: 'BOOTSTRAP_FAILED',
+      severity: 'error',
+      message: bootstrap.message || `Runtime bootstrap state is ${bootstrap.status || 'failed'}.`,
+      remediation: 'Open Refresh & Build and run Refresh Semantic State to reground runtime bootstrap.'
+    });
+  }
+
+  if (db?.ok === false) {
+    issues.push({
+      code: 'GRAPH_NOT_GROUNDED',
+      severity: 'error',
+      message: `Graph store is not grounded (nodes ${db.nodeCount ?? 0}, edges ${db.edgeCount ?? 0}).`,
+      remediation: 'Run Refresh Semantic State after a successful metadata retrieve to repopulate the graph.'
+    });
+  }
+
+  if (fixtures?.ok === false) {
+    issues.push({
+      code: 'FIXTURES_MISSING',
+      severity: 'warning',
+      message: `Fixtures source path is not present (${fixtures.sourcePath || 'n/a'}).`,
+      remediation: 'Run Org Browser retrieve, then Refresh Semantic State to regenerate the parse tree.'
+    });
+  }
+
+  if (evidence?.ok === false) {
+    issues.push({
+      code: 'EVIDENCE_MISSING',
+      severity: 'warning',
+      message: `Evidence index path is missing or empty (${evidence.indexPath || 'n/a'}).`,
+      remediation: 'Run Refresh Semantic State and Ask once to regenerate deterministic evidence artifacts.'
+    });
+  }
+
+  if (!checks && readyPayload?.message) {
+    issues.push({
+      code: 'READY_MESSAGE_ONLY',
+      severity: 'warning',
+      message: readyPayload.message,
+      remediation: 'Rerun Refresh Status and inspect runtime logs if the issue persists.'
+    });
+  }
+
+  return issues;
+}
+
+function renderRuntimeActionChecklist(issues: RuntimeIssue[]): JSX.Element {
+  const actions = Array.from(new Set(issues.map((issue) => issue.remediation)));
+  return (
+    <article className="sub-card">
+      <p className="panel-caption">Triage actions</p>
+      <h3>Operator recovery checklist</h3>
+      <ul className="analysis-list">
+        {actions.length > 0 ? (
+          actions.map((action) => <li key={action}>{action}</li>)
+        ) : (
+          <li>Runtime checks are healthy. No recovery action needed.</li>
+        )}
+      </ul>
+    </article>
+  );
+}
+
 function renderRelationMultipliers(payload: MetaContextPayload | null): JSX.Element {
   const multipliers = payload?.context.relationMultipliers ?? {};
   const entries = Object.entries(multipliers);
@@ -68,6 +180,9 @@ function renderRelationMultipliers(payload: MetaContextPayload | null): JSX.Elem
 }
 
 export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
+  const runtimeIssues = deriveRuntimeIssues(props.healthStatus, props.readyStatus, props.readyPayload);
+  const readyChecks = props.readyPayload?.checks;
+
   return (
     <>
       <h2>Settings &amp; Diagnostics</h2>
@@ -85,7 +200,47 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
               Ready: {props.readyStatus}
             </span>
           </div>
-          <pre>{props.readyDetails || 'No readiness detail available yet.'}</pre>
+          <div className="analysis-stat-grid">
+            <div className="packet-stat">
+              <span>Bootstrap</span>
+              <strong>{readyChecks?.bootstrap?.ok === true ? 'ok' : readyChecks?.bootstrap?.ok === false ? 'failed' : 'unknown'}</strong>
+              {readyChecks?.bootstrap?.status ? <p>{readyChecks.bootstrap.status}</p> : null}
+            </div>
+            <div className="packet-stat">
+              <span>Graph store</span>
+              <strong>{readyChecks?.db?.ok === true ? 'grounded' : readyChecks?.db?.ok === false ? 'empty' : 'unknown'}</strong>
+              {typeof readyChecks?.db?.nodeCount === 'number' && typeof readyChecks?.db?.edgeCount === 'number' ? (
+                <p>
+                  {readyChecks.db.nodeCount} nodes, {readyChecks.db.edgeCount} edges
+                </p>
+              ) : null}
+            </div>
+            <div className="packet-stat">
+              <span>Fixtures</span>
+              <strong>{readyChecks?.fixtures?.ok === true ? 'present' : readyChecks?.fixtures?.ok === false ? 'missing' : 'unknown'}</strong>
+            </div>
+            <div className="packet-stat">
+              <span>Evidence</span>
+              <strong>{readyChecks?.evidence?.ok === true ? 'present' : readyChecks?.evidence?.ok === false ? 'missing' : 'unknown'}</strong>
+            </div>
+          </div>
+          {runtimeIssues.length > 0 ? (
+            <ul className="issue-list">
+              {runtimeIssues.map((issue) => (
+                <li key={issue.code}>
+                  <strong>{issue.severity.toUpperCase()}:</strong> {issue.message}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">All runtime readiness checks passed. Structured diagnostics are healthy.</p>
+          )}
+          {props.readyDetails ? (
+            <details>
+              <summary>Raw readiness JSON</summary>
+              <pre>{props.readyDetails}</pre>
+            </details>
+          ) : null}
         </article>
 
         <article className="sub-card">
@@ -123,6 +278,8 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
           )}
         </article>
       </div>
+
+      {renderRuntimeActionChecklist(runtimeIssues)}
 
       <label className="check-row" htmlFor="metaDryRun">
         <input id="metaDryRun" type="checkbox" checked={props.metaDryRun} onChange={(e) => props.setMetaDryRun(e.target.checked)} />

@@ -48,12 +48,15 @@ Materially true now:
 - org-session runtime-unavailable detection now ignores generic 5xx surfaces unless the payload explicitly indicates runtime/bootstrap unavailability
 - runtime-bootstrap failure regression now verifies `/org/status` remains reachable while `/ready` stays fail-closed
 - session action labels now distinguish quick top-bar attach from explicit connect/switch controls in Org Sessions
+- Settings & Diagnostics now renders structured runtime triage cards (bootstrap/db/fixtures/evidence health + recovery checklist) and demotes raw readiness JSON to an optional details panel
+- Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs
+- Operator Rail now includes a runtime-triage summary so common readiness failures can be diagnosed without opening raw JSON
 
 Still unresolved:
 - runtime/tooling state clarity still needs parity checks in non-connect workspaces
 - planner/compiler still needs deeper typed coverage beyond current query families
 - decision packet quality is not yet benchmark-accepted for approval use
-- explain/analyze workflows still depend too much on raw JSON in edge cases
+- explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
 - layout/accessibility has remaining card-boundary and density defects
 - release runbooks and clean-machine validation are not complete
 
@@ -90,11 +93,15 @@ Short version:
 - deepen structured diagnostics/analysis cards for primary operator triage
 - reduce raw JSON dependence in permission/automation/impact/map workflows
 
-5. Wave10 finish slice:
+5. Wave8 follow-on slice:
+- add edge-state structured diagnostics tests and telemetry summaries for failure correlation
+- close remaining raw-JSON-only diagnostic paths
+
+6. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 
-6. Wave11 finish slice:
+7. Wave11 finish slice:
 - complete P0/P1 burn-down lock and regression gates
 - keep CI strict while preserving minute-efficiency controls
 
