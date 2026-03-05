@@ -269,6 +269,7 @@ export default function Page(): JSX.Element {
               loading={secondaryQueryRunner.loading}
               onRefreshTypes={() => void browserWorkspace.refreshTypes()}
               onRefreshExplorer={() => void browserWorkspace.refreshExplorer()}
+              onLoadVisibleMembers={() => void browserWorkspace.loadVisibleMembers()}
               onClearFilters={browserWorkspace.clearFilters}
               onClearSelections={browserWorkspace.clearSelections}
               onLoadMembers={(type) => void browserWorkspace.loadMembers(type)}

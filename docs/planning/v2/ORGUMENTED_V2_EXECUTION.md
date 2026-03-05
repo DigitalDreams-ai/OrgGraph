@@ -32,6 +32,7 @@ Materially true now:
 - org browser supports name-first search and grouped explorer/tree selection
 - org browser now uses explicit cart language (`checked row = in cart`) with simpler explorer/retrieve actions
 - org browser action row now separates `Search Names` from `Refresh Explorer`, and a quick workflow block clarifies checkbox-first selection from search/browse into retrieve cart
+- org browser now includes `Load Visible Items` to preload member trees for visible families in one pass (up to 20 families) instead of requiring per-family expansion clicks
 - org browser metadata search now matches normalized naming patterns (for example, spaced query text against compact/underscored metadata names), and discovery warnings are shown directly in workspace cards
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
 - wave10 follow-up now enforces larger card-grid minimum widths and path-specific wrapping classes, reducing truncation in decision packets, citations, mapping diagnostics, and diagnostics artifacts
