@@ -49,13 +49,15 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
 
       <div className="action-row">
         <button type="button" onClick={props.onListRecent} disabled={props.loading}>Refresh History</button>
-        <button type="button" onClick={props.onGetProof} disabled={props.loading || !props.proofId.trim()}>Open Selected Proof</button>
+        <button type="button" onClick={props.onGetProof} disabled={props.loading || !props.proofId.trim()}>
+          Open Selected Label
+        </button>
         <button
           type="button"
           onClick={props.onReplay}
           disabled={props.loading || (!props.proofId.trim() && !props.replayToken.trim())}
         >
-          Replay Selected Proof
+          Replay Selected Label
         </button>
         <button type="button" onClick={props.onExportMetrics} disabled={props.loading}>Export Metrics</button>
       </div>
@@ -71,10 +73,7 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
             <p className="muted">
               {props.selectedRecentProof?.subtitle || `Trust ${props.selectedProof?.trustLevel || 'unknown'} • ${props.selectedProof?.snapshotId || 'snapshot n/a'}`}
             </p>
-            <div className="decision-meta">
-              <span className="decision-badge muted">Proof: {props.proofId || 'n/a'}</span>
-              <span className="decision-badge muted">Replay: {props.replayToken || 'n/a'}</span>
-            </div>
+            <p className="muted">Tokens stay in the advanced section and are not required for normal history workflows.</p>
           </>
         ) : (
           <p className="muted">Select a recent decision artifact to inspect proof, replay parity, or trust history.</p>
@@ -106,10 +105,10 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
                   </div>
                   <div className="proof-list-actions">
                     <button type="button" className="ghost" onClick={() => props.onOpenRecentProof(proof)}>
-                      Open Artifact
+                      Open Label
                     </button>
                     <button type="button" className="ghost" onClick={() => props.onReplayRecentProof(proof)}>
-                      Replay
+                      Replay Label
                     </button>
                   </div>
                 </li>
