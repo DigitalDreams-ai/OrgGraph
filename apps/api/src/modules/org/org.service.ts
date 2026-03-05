@@ -167,7 +167,7 @@ export class OrgService {
         code: 'CCI_ALIAS_NOT_CONNECTED',
         severity: 'warning',
         message: `Alias ${alias} not found in cci org registry.`,
-        remediation: `Run 'cci org import ${alias} <sf-username>' locally after sf keychain login.`
+        remediation: this.buildCciAliasRemediation(alias, projectPath)
       });
     }
     if (session.status !== 'connected') {
@@ -294,7 +294,7 @@ export class OrgService {
           code: 'CCI_ALIAS_NOT_CONNECTED',
           severity: 'warning',
           message: `Alias ${alias} is not present in the cci org registry.`,
-          remediation: `Run 'cci org import ${alias} <sf-username>' locally after sf login.`
+          remediation: this.buildCciAliasRemediation(alias, projectPath)
         });
       }
     }
@@ -676,25 +676,37 @@ export class OrgService {
       return;
     }
 
+    try {
+      await this.orgToolAdapter.ensureCciProjectScaffold(projectPath);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `cci scaffold unavailable for alias ${alias}: ${reason}. ${this.buildCciAliasRemediation(alias, projectPath)}`
+      );
+      return;
+    }
+
     const cciAliasCheck = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
     if (cciAliasCheck.exitCode === 0) {
       return;
     }
 
-    const username = this.orgToolAdapter.extractSfUsername(sfAliasCheck.stdout);
-    if (!username) {
-      this.logger.warn(`sf alias ${alias} authenticated but username resolution failed for optional cci import`);
-      return;
-    }
+    const username = this.orgToolAdapter.extractSfUsername(sfAliasCheck.stdout) ?? alias;
 
     const cciImport = await this.orgToolAdapter.importAliasIntoCci(alias, username, projectPath);
     if (cciImport.exitCode !== 0) {
       const err = (cciImport.stderr || cciImport.stdout || '').toLowerCase();
       if (!err.includes('already exists')) {
-        this.logger.warn(`cci import skipped for alias ${alias}: ${cciImport.stderr || cciImport.stdout || 'unknown cci import failure'}`);
+        this.logger.warn(
+          `cci import skipped for alias ${alias}: ${cciImport.stderr || cciImport.stdout || 'unknown cci import failure'}. ${this.buildCciAliasRemediation(alias, projectPath)}`
+        );
         return;
       }
     }
+  }
+
+  private buildCciAliasRemediation(alias: string, projectPath: string): string {
+    return `Run from '${projectPath}': cci org import ${alias} ${alias}; then verify with 'cci org info ${alias}' and click Refresh Overview.`;
   }
 
   async metadataCatalog(input: {

@@ -29,6 +29,10 @@ class StubToolAdapter {
     this.calls.push({ command: 'cci', args: ['version'], cwd });
   }
 
+  async ensureCciProjectScaffold(cwd: string) {
+    this.calls.push({ command: 'cci-scaffold', args: ['git-init', 'cumulusci-yml'], cwd });
+  }
+
   async displayOrg(alias: string, cwd: string) {
     const args = ['org', 'display', '--target-org', alias, '--json'];
     this.calls.push({ command: 'sf', args, cwd });
@@ -61,7 +65,7 @@ class StubToolAdapter {
   }
 
   async importAliasIntoCci(alias: string, username: string, cwd: string) {
-    const args = ['org', 'import', alias, username];
+    const args = ['org', 'import', alias, alias];
     this.calls.push({ command: 'cci', args, cwd });
     return this.ok();
   }

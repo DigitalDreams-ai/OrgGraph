@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { existsSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { AppConfigService } from '../../config/app-config.service';
@@ -38,6 +38,27 @@ export class OrgToolAdapterService {
     }
   }
 
+  async ensureCciProjectScaffold(cwd: string): Promise<void> {
+    const cciConfigPath = path.join(cwd, 'cumulusci.yml');
+    if (!existsSync(cciConfigPath)) {
+      writeFileSync(
+        cciConfigPath,
+        ['project:', '  name: orgumented-runtime'].join('\n').concat('\n'),
+        'utf8'
+      );
+    }
+
+    const gitProbe = await this.probe('git', ['rev-parse', '--is-inside-work-tree'], cwd);
+    if (gitProbe.exitCode === 0 && gitProbe.stdout.toLowerCase().includes('true')) {
+      return;
+    }
+
+    const gitInit = await this.probe('git', ['init'], cwd);
+    if (gitInit.exitCode !== 0) {
+      throw new Error(gitInit.stderr || gitInit.stdout || 'git init failed for CCI project scaffold');
+    }
+  }
+
   async displayOrg(alias: string, cwd: string): Promise<CommandResult> {
     return this.runSf(['org', 'display', '--target-org', alias, '--json'], cwd, 30_000);
   }
@@ -54,10 +75,37 @@ export class OrgToolAdapterService {
   }
 
   async importAliasIntoCci(alias: string, username: string, cwd: string): Promise<CommandResult> {
-    return this.commandRunner.run(this.cciCommand(), ['org', 'import', alias, username], {
-      cwd,
-      timeoutMs: 60_000
-    });
+    const trimmedAlias = alias.trim();
+    const trimmedUsername = username.trim();
+    const attempts: string[][] = [['org', 'import', trimmedAlias, trimmedAlias]];
+    if (trimmedUsername.length > 0 && trimmedUsername.toLowerCase() !== trimmedAlias.toLowerCase()) {
+      attempts.push(['org', 'import', trimmedUsername, trimmedAlias]);
+    }
+
+    let lastResult: CommandResult | undefined;
+    for (const args of attempts) {
+      const result = await this.commandRunner.run(this.cciCommand(), args, {
+        cwd,
+        timeoutMs: 60_000
+      });
+      lastResult = result;
+      if (result.exitCode === 0) {
+        return result;
+      }
+      const err = (result.stderr || result.stdout || '').toLowerCase();
+      if (err.includes('already exists')) {
+        return result;
+      }
+    }
+
+    return (
+      lastResult ?? {
+        exitCode: 1,
+        stdout: '',
+        stderr: 'cci org import failed',
+        elapsedMs: 0
+      }
+    );
   }
 
   async retrieveMetadata(alias: string, metadataArgs: string[], cwd: string): Promise<void> {
