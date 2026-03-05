@@ -31,6 +31,7 @@ Materially true now:
 - real-org session attach/switch and selective retrieve path is materially functional
 - org browser supports name-first search and grouped explorer/tree selection
 - org browser now uses explicit cart language (`checked row = in cart`) with simpler explorer/retrieve actions
+- desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
 - refresh handoff is staged and fail-closed from browser selections
 - flow grounding is stronger for reads/writes asks
 - proof history supports searchable labels and open-first artifact access
