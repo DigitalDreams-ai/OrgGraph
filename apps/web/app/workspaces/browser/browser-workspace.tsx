@@ -36,6 +36,7 @@ interface BrowserWorkspaceProps {
   metadataCatalogRequested: boolean;
   loading: boolean;
   onRefreshTypes: () => void;
+  onRefreshExplorer: () => void;
   onClearFilters: () => void;
   onClearSelections: () => void;
   onLoadMembers: (type: string) => void;
@@ -329,11 +330,23 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       </div>
 
       <div className="action-row">
-        <button type="button" onClick={props.onRefreshTypes} disabled={props.loading}>
-          {props.metadataSearch.trim().length > 0 ? 'Search Names' : 'Refresh Explorer'}
+        <button
+          type="button"
+          onClick={props.onRefreshTypes}
+          disabled={props.loading || props.metadataSearch.trim().length === 0}
+        >
+          Search Names
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          onClick={props.onRefreshExplorer}
+          disabled={props.loading}
+        >
+          Refresh Explorer
         </button>
         <button type="button" onClick={props.onRetrieveSelected} disabled={props.loading || props.selectionSummary.typeCount === 0}>
-          Retrieve Cart
+          Retrieve Checked
         </button>
         <button type="button" className="ghost" onClick={props.onOpenRefresh}>
           Open Refresh &amp; Build
@@ -345,6 +358,14 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           Clear Selection
         </button>
       </div>
+      <article className="sub-card">
+        <p className="panel-caption">Quick workflow</p>
+        <ol className="workflow-step-list">
+          <li>Search names or refresh explorer families.</li>
+          <li>Check any row you want in the retrieve cart (family, folder, or single item).</li>
+          <li>Run <strong>Retrieve Checked</strong>, then continue in <strong>Refresh &amp; Build</strong>.</li>
+        </ol>
+      </article>
       <p className="muted"><strong>Cart rule:</strong> every checked row is already in the cart.</p>
       <p className="muted">Check a family to include everything nested under it. Check an individual item to include only that item.</p>
       {props.metadataWarnings.length > 0 ? (

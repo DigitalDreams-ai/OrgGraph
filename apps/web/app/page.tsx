@@ -268,6 +268,7 @@ export default function Page(): JSX.Element {
               metadataCatalogRequested={browserWorkspace.metadataCatalogRequested}
               loading={secondaryQueryRunner.loading}
               onRefreshTypes={() => void browserWorkspace.refreshTypes()}
+              onRefreshExplorer={() => void browserWorkspace.refreshExplorer()}
               onClearFilters={browserWorkspace.clearFilters}
               onClearSelections={browserWorkspace.clearSelections}
               onLoadMembers={(type) => void browserWorkspace.loadMembers(type)}
