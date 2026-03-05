@@ -7,6 +7,7 @@ import { stableId } from '../../common/ids';
 import { resolveRefreshStatePath } from '../../common/path';
 import { AppConfigService } from '../../config/app-config.service';
 import { EvidenceStoreService } from '../evidence/evidence-store.service';
+import type { EvidenceSearchResult } from '../evidence/evidence.types';
 import { LlmService } from '../llm/llm.service';
 import { PlannerService } from '../planner/planner.service';
 import { QueriesService } from '../queries/queries.service';
@@ -803,7 +804,7 @@ export class AskService {
       const object = plan.entities.object?.trim() || undefined;
       const requestedFlowName = this.extractRequestedFlowName(input.query);
       if (!object && requestedFlowName) {
-        const flowEvidenceSummary = this.buildFlowEvidenceSummary(requestedFlowName, citations);
+        const flowEvidenceSummary = this.buildFlowEvidenceSummary(requestedFlowName, citationHits);
         answer = flowEvidenceSummary.explanation;
         deterministicAnswer = flowEvidenceSummary.explanation;
         confidence = flowEvidenceSummary.matchedCount > 0 ? 0.79 : 0.52;
@@ -1125,19 +1126,39 @@ export class AskService {
   }
 
   private extractRequestedFlowName(query: string): string | undefined {
-    const flowMatch = query.match(/\bflow\s+([A-Za-z_][A-Za-z0-9_]*)\b/i);
-    return flowMatch?.[1];
+    const flowMatch = query.match(
+      /\bflow\s+([A-Za-z0-9_\-\s]+?)(?=\s+(?:reads?|writes?|does|do|triggers?|updates?|references?)\b|[?.!,]|$)/i
+    );
+    if (!flowMatch?.[1]) {
+      return undefined;
+    }
+    const candidate = flowMatch[1].trim().replace(/\s+/g, ' ');
+    if (candidate.length === 0) {
+      return undefined;
+    }
+    if (new Set(['the', 'a', 'an', 'this', 'that']).has(candidate.toLowerCase())) {
+      return undefined;
+    }
+    return candidate;
   }
 
   private buildFlowEvidenceSummary(
     flowName: string,
-    citations: AskResponse['citations']
+    evidenceHits: EvidenceSearchResult[]
   ): { explanation: string; matchedCount: number } {
-    const normalizedFlowName = flowName.toLowerCase();
-    const flowEvidence = citations.filter((citation) => {
-      const sourceLower = citation.sourcePath.toLowerCase();
-      const snippetLower = citation.snippet.toLowerCase();
-      return sourceLower.includes(normalizedFlowName) || snippetLower.includes(normalizedFlowName);
+    const flowNameVariants = this.buildFlowNameVariants(flowName);
+    const flowEvidence = evidenceHits.filter((hit) => {
+      const sourceLower = hit.sourcePath.toLowerCase();
+      const chunkLower = hit.chunkText.toLowerCase();
+      const compactSource = this.compactFlowToken(sourceLower);
+      const compactChunk = this.compactFlowToken(chunkLower);
+      return flowNameVariants.some((variant) => {
+        if (sourceLower.includes(variant) || chunkLower.includes(variant)) {
+          return true;
+        }
+        const compactVariant = this.compactFlowToken(variant);
+        return compactSource.includes(compactVariant) || compactChunk.includes(compactVariant);
+      });
     });
 
     if (flowEvidence.length === 0) {
@@ -1149,12 +1170,42 @@ export class AskService {
 
     const referencedObjects = new Set<string>();
     const triggerTypes = new Set<string>();
-    for (const citation of flowEvidence) {
-      for (const objectMatch of citation.snippet.matchAll(/<object>([^<]+)<\/object>/gi)) {
-        referencedObjects.add(objectMatch[1]);
+    const readFields = new Set<string>();
+    const writeFields = new Set<string>();
+
+    for (const hit of flowEvidence) {
+      const chunk = hit.chunkText;
+      const chunkObjects = this.collectTagValues(chunk, 'object');
+      for (const objectName of chunkObjects) {
+        referencedObjects.add(objectName);
       }
-      for (const triggerMatch of citation.snippet.matchAll(/<recordTriggerType>([^<]+)<\/recordTriggerType>/gi)) {
-        triggerTypes.add(triggerMatch[1]);
+      for (const trigger of this.collectTagValues(chunk, 'recordTriggerType')) {
+        triggerTypes.add(trigger);
+      }
+      for (const trigger of this.collectTagValues(chunk, 'triggerType')) {
+        triggerTypes.add(trigger);
+      }
+
+      for (const field of this.collectFieldsFromSectionTag(chunk, 'inputAssignments')) {
+        this.addFlowField(writeFields, field, chunkObjects);
+      }
+      for (const field of this.collectFieldsFromSectionTag(chunk, 'assignmentItems')) {
+        this.addFlowField(writeFields, field, chunkObjects);
+      }
+      for (const assignmentRef of this.collectTagValues(chunk, 'assignToReference')) {
+        this.addFlowField(writeFields, assignmentRef, chunkObjects);
+      }
+
+      for (const field of this.collectFieldsFromSectionTag(chunk, 'filters')) {
+        this.addFlowField(readFields, field, chunkObjects);
+      }
+      for (const reference of this.collectTagValues(chunk, 'leftValueReference')) {
+        this.addFlowField(readFields, reference, chunkObjects);
+      }
+      for (const expression of this.collectTagValues(chunk, 'expression')) {
+        for (const token of expression.matchAll(/\b([A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*)\b/g)) {
+          this.addFlowField(readFields, token[1], chunkObjects);
+        }
       }
     }
 
@@ -1166,11 +1217,87 @@ export class AskService {
       triggerTypes.size > 0
         ? `trigger types: ${[...triggerTypes].sort().join(', ')}`
         : 'trigger types: not explicit in retrieved snippet';
+    const readSummary = this.describeFieldSet(readFields, 'reads');
+    const writeSummary = this.describeFieldSet(writeFields, 'writes');
 
     return {
-      explanation: `retrieved flow evidence found for ${flowName}; ${flowEvidence.length} citation(s); ${objectSummary}; ${triggerSummary}.`,
+      explanation: `retrieved flow evidence found for ${flowName}; ${flowEvidence.length} citation(s); ${readSummary}; ${writeSummary}; ${objectSummary}; ${triggerSummary}.`,
       matchedCount: flowEvidence.length
     };
+  }
+
+  private buildFlowNameVariants(flowName: string): string[] {
+    const lower = flowName.toLowerCase().trim();
+    const variants = new Set<string>([lower]);
+    variants.add(lower.replace(/\s+/g, '_'));
+    variants.add(lower.replace(/_/g, ' '));
+    variants.add(lower.replace(/[-\s]+/g, '_'));
+    variants.add(lower.replace(/[_\s-]+/g, ''));
+    return [...variants].filter((value) => value.length > 0);
+  }
+
+  private compactFlowToken(value: string): string {
+    return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  private collectTagValues(chunk: string, tagName: string): string[] {
+    const values = new Set<string>();
+    const pattern = new RegExp(`<${tagName}>([^<]+)</${tagName}>`, 'gi');
+    for (const match of chunk.matchAll(pattern)) {
+      const value = match[1].trim();
+      if (value.length > 0) {
+        values.add(value);
+      }
+    }
+    return [...values];
+  }
+
+  private collectFieldsFromSectionTag(chunk: string, sectionTag: string): string[] {
+    const fields = new Set<string>();
+    const sectionPattern = new RegExp(
+      `<${sectionTag}>([\\s\\S]{0,280}?)</${sectionTag}>`,
+      'gi'
+    );
+    for (const section of chunk.matchAll(sectionPattern)) {
+      const sectionBody = section[1];
+      for (const fieldMatch of sectionBody.matchAll(/<field>([^<]+)<\/field>/gi)) {
+        const value = fieldMatch[1].trim();
+        if (value.length > 0) {
+          fields.add(value);
+        }
+      }
+    }
+    return [...fields];
+  }
+
+  private addFlowField(target: Set<string>, rawValue: string, objects: string[]): void {
+    const normalized = rawValue.trim().replace(/^\{!/, '').replace(/\}$/, '');
+    if (normalized.length === 0) {
+      return;
+    }
+    if (/[^A-Za-z0-9_.]/.test(normalized)) {
+      return;
+    }
+    if (normalized.includes('.')) {
+      target.add(normalized);
+      return;
+    }
+    if (objects.length === 1) {
+      target.add(`${objects[0]}.${normalized}`);
+      return;
+    }
+    target.add(normalized);
+  }
+
+  private describeFieldSet(fields: Set<string>, label: string): string {
+    if (fields.size === 0) {
+      return `${label}: not explicit in retrieved flow evidence`;
+    }
+    const sorted = [...fields].sort((a, b) => a.localeCompare(b));
+    const visible = sorted.slice(0, 6);
+    const remaining = sorted.length - visible.length;
+    const suffix = remaining > 0 ? ` (+${remaining} more)` : '';
+    return `${label}: ${visible.join(', ')}${suffix}`;
   }
 
   private buildMetrics(input: {
