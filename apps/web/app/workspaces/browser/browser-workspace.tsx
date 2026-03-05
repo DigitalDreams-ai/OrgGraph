@@ -42,6 +42,7 @@ interface BrowserWorkspaceProps {
   isMemberSelected: (type: string, member: string) => boolean;
   onSetTypeSelected: (type: string, selected: boolean) => void;
   onSetMemberSelected: (type: string, member: string, selected: boolean) => void;
+  onSetMembersSelected: (type: string, members: string[], selected: boolean) => void;
   onRemoveType: (type: string) => void;
   onRemoveMember: (type: string, member: string) => void;
   onRetrieveSelected: () => void;
@@ -117,9 +118,136 @@ function groupSearchResults(results: MetadataSearchResult[]): Array<{
     .sort((left, right) => left.type.localeCompare(right.type));
 }
 
+interface MemberTreeNode {
+  key: string;
+  label: string;
+  memberNames: string[];
+  children: MemberTreeNode[];
+  isLeaf: boolean;
+}
+
+interface MutableMemberTreeNode {
+  key: string;
+  label: string;
+  memberNames: Set<string>;
+  children: Map<string, MutableMemberTreeNode>;
+  isLeaf: boolean;
+}
+
+function splitMemberPath(member: string): string[] {
+  if (member.includes('/')) {
+    return member.split('/').filter((part) => part.length > 0);
+  }
+  if (member.includes('.')) {
+    return member.split('.').filter((part) => part.length > 0);
+  }
+  return [member];
+}
+
+function buildMemberTree(memberNames: string[]): MemberTreeNode[] {
+  const root = new Map<string, MutableMemberTreeNode>();
+
+  for (const memberName of memberNames) {
+    const segments = splitMemberPath(memberName);
+    if (segments.length === 0) {
+      continue;
+    }
+    let current = root;
+    const pathParts: string[] = [];
+    for (let index = 0; index < segments.length; index += 1) {
+      const segment = segments[index];
+      pathParts.push(segment);
+      const nodeKey = pathParts.join('/');
+      let node = current.get(segment);
+      if (!node) {
+        node = {
+          key: nodeKey,
+          label: segment,
+          memberNames: new Set<string>(),
+          children: new Map<string, MutableMemberTreeNode>(),
+          isLeaf: false
+        };
+        current.set(segment, node);
+      }
+      node.memberNames.add(memberName);
+      if (index === segments.length - 1) {
+        node.isLeaf = true;
+      }
+      current = node.children;
+    }
+  }
+
+  const finalize = (nodes: Map<string, MutableMemberTreeNode>): MemberTreeNode[] =>
+    Array.from(nodes.values())
+      .sort((left, right) => left.label.localeCompare(right.label))
+      .map((node) => ({
+        key: node.key,
+        label: node.label,
+        memberNames: Array.from(node.memberNames).sort((left, right) => left.localeCompare(right)),
+        children: finalize(node.children),
+        isLeaf: node.isLeaf
+      }));
+
+  return finalize(root);
+}
+
 export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
   const retrieveHandoff = assessRetrieveHandoff(props.lastMetadataRetrieve);
   const groupedSearchResults = groupSearchResults(props.metadataSearchResults);
+  const nodeSelectionState = (
+    type: string,
+    memberNames: string[]
+  ): 'none' | 'partial' | 'all' => {
+    if (memberNames.length === 0) {
+      return 'none';
+    }
+    const selectedCount = memberNames.reduce(
+      (total, memberName) => total + (props.isMemberSelected(type, memberName) ? 1 : 0),
+      0
+    );
+    if (selectedCount === 0) {
+      return 'none';
+    }
+    if (selectedCount === memberNames.length) {
+      return 'all';
+    }
+    return 'partial';
+  };
+  const renderMemberTreeNodes = (
+    type: string,
+    nodes: MemberTreeNode[],
+    typeSelectionState: 'none' | 'partial' | 'all'
+  ): JSX.Element[] =>
+    nodes.map((node) => {
+      const selectionState = nodeSelectionState(type, node.memberNames);
+      return (
+        <li key={`${type}:${node.key}`}>
+          <SelectionCheckbox
+            checked={selectionState === 'all'}
+            indeterminate={selectionState === 'partial'}
+            disabled={typeSelectionState === 'all'}
+            label={node.label}
+            hint={
+              typeSelectionState === 'all'
+                ? 'included via family selection'
+                : node.isLeaf
+                  ? 'select this single item'
+                  : `${node.memberNames.length} nested item(s) • check to include this folder`
+            }
+            onChange={(checked) =>
+              node.isLeaf && node.memberNames.length === 1
+                ? props.onSetMemberSelected(type, node.memberNames[0], checked)
+                : props.onSetMembersSelected(type, node.memberNames, checked)
+            }
+          />
+          {node.children.length > 0 ? (
+            <ul className="member-list member-tree-children">
+              {renderMemberTreeNodes(type, node.children, typeSelectionState)}
+            </ul>
+          ) : null}
+        </li>
+      );
+    });
 
   return (
     <>
@@ -276,6 +404,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
         {(props.metadataCatalog?.types || []).map((typeRow) => {
           const membersPayload = props.metadataMembersByType[typeRow.type];
           const members = membersPayload?.members || [];
+          const memberTree = buildMemberTree(members.map((member) => member.name));
           const typeSelectionState = props.getTypeSelectionState(typeRow.type);
           const membersLoaded = Boolean(membersPayload);
           const shouldAutoLoadMembers = typeRow.memberCount > 0 && !membersLoaded && props.metadataLoadingType !== typeRow.type && !props.loading;
@@ -301,18 +430,8 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
               </summary>
               {props.metadataLoadingType === typeRow.type ? <p className="muted">Loading family items...</p> : null}
               {members.length > 0 ? (
-                <ul className="member-list">
-                  {members.map((member) => (
-                    <li key={`${typeRow.type}:${member.name}`}>
-                      <SelectionCheckbox
-                        checked={props.isMemberSelected(typeRow.type, member.name)}
-                        disabled={typeSelectionState === 'all'}
-                        label={member.name}
-                        hint={typeSelectionState === 'all' ? 'included via family selection' : 'select this single item'}
-                        onChange={(checked) => props.onSetMemberSelected(typeRow.type, member.name, checked)}
-                      />
-                    </li>
-                  ))}
+                <ul className="member-list member-tree-root">
+                  {renderMemberTreeNodes(typeRow.type, memberTree, typeSelectionState)}
                 </ul>
               ) : membersLoaded ? (
                 <p className="muted">No members returned for this family.</p>

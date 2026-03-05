@@ -825,6 +825,17 @@ pre {
   background: #f8fbff;
 }
 
+.member-tree-root > li,
+.member-tree-children > li {
+  display: block;
+}
+
+.member-tree-children {
+  margin-top: 0.35rem;
+  padding: 0.25rem 0 0.15rem 0.75rem;
+  border-left: 1px dashed #c6d6ee;
+}
+
 .selection-toggle {
   display: flex;
   align-items: flex-start;

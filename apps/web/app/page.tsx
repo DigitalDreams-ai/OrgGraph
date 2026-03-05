@@ -273,6 +273,7 @@ export default function Page(): JSX.Element {
               getTypeSelectionState={browserWorkspace.getTypeSelectionState}
               onSetTypeSelected={browserWorkspace.setTypeSelected}
               onSetMemberSelected={browserWorkspace.setMemberSelected}
+              onSetMembersSelected={browserWorkspace.setMembersSelected}
               onRemoveType={browserWorkspace.removeTypeSelection}
               onRemoveMember={browserWorkspace.removeMemberSelection}
               onRetrieveSelected={() => void browserWorkspace.retrieveSelected()}
