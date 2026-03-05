@@ -201,7 +201,8 @@ Auth is delegated to Salesforce CLI keychain sessions.
 ```bash
 sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default
 sf org display --target-org orgumented-sandbox --json
-cci org import orgumented-sandbox <sf-username>
+cd %APPDATA%\Orgumented\sf-project
+cci org import orgumented-sandbox orgumented-sandbox
 cci org info orgumented-sandbox
 ```
 

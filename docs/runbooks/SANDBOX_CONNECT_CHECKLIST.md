@@ -16,8 +16,9 @@
   - `sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default`
 - [ ] Verify:
   - `sf org display --target-org orgumented-sandbox --json`
-- [ ] Import alias into cci:
-  - `cci org import orgumented-sandbox <sf-username>`
+- [ ] Import alias into cci (run from Orgumented sf-project path):
+  - `cd %APPDATA%\Orgumented\sf-project`
+  - `cci org import orgumented-sandbox orgumented-sandbox`
 - [ ] Verify cci alias:
   - `cci org info orgumented-sandbox`
 

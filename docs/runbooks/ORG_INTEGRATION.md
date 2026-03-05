@@ -23,8 +23,9 @@ Primary direction:
 1. Ensure the local runtime has `sf` CLI and `cci` installed.
 2. Authenticate locally in the same operator environment where Orgumented desktop/runtime will run:
    - `sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default`
-3. Bridge the `sf` alias into the local CCI org registry:
-   - `cci org import orgumented-sandbox <sf-username>`
+3. Bridge the `sf` alias into the local CCI org registry (run from the Orgumented sf-project path):
+   - `cd %APPDATA%\Orgumented\sf-project`
+   - `cci org import orgumented-sandbox orgumented-sandbox`
 4. Validate both tools locally:
    - `sf org display --target-org orgumented-sandbox --json`
    - `cci org info orgumented-sandbox`

@@ -214,7 +214,10 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
 sf org login web --alias ${props.orgAlias} --instance-url https://test.salesforce.com --set-default
 
 # 2) Bridge alias into CCI registry
-cci org import ${props.orgAlias} <sf-username>`}</pre>
+# run from the local Orgumented sf project path
+cd "%APPDATA%\\Orgumented\\sf-project"
+cci org import ${props.orgAlias} ${props.orgAlias}
+cci org info ${props.orgAlias}`}</pre>
           <p><strong>Restore alias:</strong> {props.restoreAlias || props.orgSessionHistory?.restoreAlias || 'n/a'}</p>
         </article>
 
