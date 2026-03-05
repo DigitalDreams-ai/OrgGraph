@@ -801,9 +801,9 @@ export class AskService {
       }
     } else if (plan.intent === 'automation') {
       operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.INTERSECT);
-      const object = plan.entities.object?.trim() || undefined;
       const requestedFlowName = this.extractRequestedFlowName(input.query);
-      if (!object && requestedFlowName) {
+      const object = this.normalizeAutomationObject(plan.entities.object);
+      if (requestedFlowName) {
         const flowEvidenceSummary = this.buildFlowEvidenceSummary(requestedFlowName, citationHits);
         answer = flowEvidenceSummary.explanation;
         deterministicAnswer = flowEvidenceSummary.explanation;
@@ -1140,6 +1140,29 @@ export class AskService {
       return undefined;
     }
     return candidate;
+  }
+
+  private normalizeAutomationObject(candidate?: string): string | undefined {
+    if (!candidate) {
+      return undefined;
+    }
+    const normalized = candidate.trim();
+    if (normalized.length === 0) {
+      return undefined;
+    }
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(normalized)) {
+      return undefined;
+    }
+    if (this.isAutomationObjectStopWord(normalized)) {
+      return undefined;
+    }
+    return normalized;
+  }
+
+  private isAutomationObjectStopWord(candidate: string): boolean {
+    return new Set(['the', 'a', 'an', 'latest', 'this', 'that', 'my', 'our']).has(
+      candidate.toLowerCase()
+    );
   }
 
   private buildFlowEvidenceSummary(
