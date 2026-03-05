@@ -18,6 +18,7 @@
 
 ## Runbooks
 - [Desktop Dev Runtime](./runbooks/DESKTOP_DEV_RUNTIME.md)
+- [Real Org Desktop Quickstart](./runbooks/REAL_ORG_DESKTOP_QUICKSTART.md)
 - [Human Benchmark Quickstart](./runbooks/HUMAN_BENCHMARK_QUICKSTART.md)
 - [Human Benchmark Capture](./runbooks/HUMAN_BENCHMARK_CAPTURE.md)
 - [Onboarding First Success](./runbooks/ONBOARDING_FIRST_SUCCESS.md)
