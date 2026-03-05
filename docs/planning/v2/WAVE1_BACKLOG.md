@@ -25,8 +25,8 @@ Purpose:
 | B003 | P0 | Determinism | Lock replay parity for high-risk query family after planner hardening | Wave6 | Replay parity assertions pass for repeated benchmark asks | Open |
 | B004 | P1 | Sessions | Make connect/switch/restore flows deterministic across restart cycles | Wave3 | Session history and restore behave identically after app relaunch | In Progress |
 | B005 | P1 | Sessions | Resolve CCI alias registry mismatch workflow (`alias not found`) with actionable next steps | Wave3 | Operator gets exact remediation path; no ambiguous warning-only dead end | In Progress |
-| B006 | P1 | Browser | Complete explorer-style metadata browsing with tree parity to expected org-browser mental model | Wave4 | Operator can browse families and members without type-first workflow | Open |
-| B007 | P1 | Browser | Ensure search-by-name returns predictable results when catalog is unseeded | Wave4 | Name search works with live metadata discovery and clear empty-state behavior | Open |
+| B006 | P1 | Browser | Complete explorer-style metadata browsing with tree parity to expected org-browser mental model | Wave4 | Operator can browse families and members without type-first workflow | In Progress |
+| B007 | P1 | Browser | Ensure search-by-name returns predictable results when catalog is unseeded | Wave4 | Name search works with live metadata discovery and clear empty-state behavior | In Progress |
 | B008 | P1 | Refresh/Build | Make retrieve -> refresh -> diff -> org-retrieve handoff product-grade | Wave5 | End-to-end handoff works without raw JSON reliance | Open |
 | B009 | P1 | Ask | Improve flow/object/field grounding quality for real metadata questions | Wave6 | No low-value generic fallback for grounded metadata asks | Open |
 | B010 | P1 | Decision Packets | Raise packet usefulness for approval decisions (risk drivers, reads/writes, next actions) | Wave7 | Benchmark packet accepted as primary review artifact in runbook scenario | Open |

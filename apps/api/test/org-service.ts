@@ -302,6 +302,10 @@ async function run(): Promise<void> {
     const liveCatalog = await service.metadataCatalog({ refresh: true, limit: 50 });
     assert.equal(liveCatalog.source, 'metadata_api');
     assert.ok(liveCatalog.types.some((item) => item.type === 'Layout'));
+    assert.ok(
+      liveCatalog.types.some((item) => item.type === 'Flow' && item.memberCount === 0),
+      'expected zero-member metadata families to remain visible in catalog'
+    );
 
     const liveSearch = await service.metadataSearch({
       search: 'Opportunity',
@@ -311,6 +315,16 @@ async function run(): Promise<void> {
     assert.equal(liveSearch.source, 'metadata_api');
     assert.ok(
       liveSearch.results.some((result) => result.type === 'Layout' && result.name === 'Opportunity-Opportunity Layout')
+    );
+
+    const flowTypeSearch = await service.metadataSearch({
+      search: 'flow',
+      refresh: true,
+      limit: 50
+    });
+    assert.ok(
+      flowTypeSearch.results.some((result) => result.kind === 'type' && result.type === 'Flow'),
+      'expected type-name search to return zero-member families'
     );
 
     const liveMembers = await service.metadataMembers({

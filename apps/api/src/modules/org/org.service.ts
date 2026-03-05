@@ -1072,9 +1072,7 @@ export class OrgService {
         )
       ).sort((a, b) => a.localeCompare(b));
 
-      if (members.length > 0) {
-        typeMembers.set(metadataType, members);
-      }
+      typeMembers.set(metadataType, members);
     }
 
     try {
