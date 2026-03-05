@@ -1,7 +1,7 @@
 # Orgumented v2 100% Completion Plan
 
 Date: March 5, 2026  
-Status: active execution master plan (regrouped)
+Status: active execution master plan (regrouped, refreshed)
 
 This is the single execution plan for full Stage 1 completion of Orgumented desktop:
 - core runtime and deterministic trust contract
@@ -11,6 +11,41 @@ This is the single execution plan for full Stage 1 completion of Orgumented desk
 - proof/history usability
 - design/layout/accessibility
 - bug burn-down and release readiness
+
+## Regroup Refresh (Current Truth)
+
+The following are now true in main and should not be re-planned as open:
+
+1. Wave6 grounding hardening:
+- explicit flow-name asks use stronger evidence-grounding paths
+- constrained-citation cases are covered by targeted regression
+
+2. Wave4 browser resilience:
+- stale empty live metadata cache is bypassed and re-queried
+- browser includes one-click visible-family member preload (`Load Visible Items`)
+
+3. Wave10 boundary hardening:
+- major clipping/overflow defects in core Ask/Analyze/Diagnostics surfaces were reduced with stronger grid minima and wrapping rules
+
+Remaining work is now primarily around:
+- wave2 runtime convergence closure
+- wave5 retrieve -> refresh proof closure
+- wave7 packet quality acceptance
+- wave8 diagnostics/analyze depth
+- wave11/12 defect + release discipline
+
+## 100% Domain Matrix
+
+| Domain | 100% Definition | Current | Remaining |
+|---|---|---|---|
+| runtime core | packaged startup deterministic, fail-closed, no ambiguous status | mostly in place | close wave2 runtime/tooling parity gaps and startup drift edge cases |
+| sessions/browser/retrieve | connect/switch/restore deterministic and browser parity delivered | materially functional | complete wave5 handoff proof and final browser parity checks |
+| ask/planner | grounded metadata asks with replay-safe proof | improved | finish deeper typed coverage and fallback elimination in wave6 |
+| decision packets | approval-grade, trusted by workflow | partial | wave7 acceptance benchmark and packet quality gates |
+| analyze/diagnostics | structured triage without JSON dependency | partial | wave8 card/action depth and synthesis improvements |
+| proofs/history | label-first reopen/replay/export as primary flow | near complete | close remaining universal history-first path gaps |
+| design/layout/a11y | no clipping + keyboard/focus baseline | improved | complete wave10 accessibility and final visual consistency pass |
+| defects/ci/release | P0/P1 zero, stable CI, release+rollback proven | in progress | wave11 burn-down + wave12 clean-machine/operator proof |
 
 ## 100% Scorecard Pillars
 
@@ -86,9 +121,9 @@ Orgumented is 100% complete for v2 scope only when all conditions below are true
 | wave1 | baseline lock and triage | B001-B024 mapped | Complete | Maintain drift-free docs |
 | wave2 | runtime convergence | B001, B002 | In Progress | Distinguish runtime unreachable vs tool missing everywhere |
 | wave3 | sessions and toolchain reliability | B004, B005 | In Progress | Clear CCI bridge status and deterministic restore behavior |
-| wave4 | org browser explorer | B006, B007 | In Progress | Final checkbox/tree semantics and empty-state clarity |
+| wave4 | org browser explorer | B006, B007 | In Progress (late) | Final parity validation pass after cache-recovery + bulk-load additions |
 | wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |
-| wave6 | ask planner/compiler depth | B003, B009 | In Progress | Replay-safe metadata grounding beyond generic fallback |
+| wave6 | ask planner/compiler depth | B003, B009 | In Progress | Replay-safe grounding expansion for additional metadata families |
 | wave7 | decision-packet quality | B010, B017 | Open | Approval-quality packet benchmark evidence |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | Open | Structured triage without raw JSON dependence |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first reopen/replay/export complete |
@@ -299,11 +334,12 @@ Exit:
 
 ## Immediate Branch Queue (Regrouped)
 
-1. `dna-wave10-visual-boundary-final`: finish remaining clipping/overflow issues in Ask/Analyze/Diagnostics cards.
-2. `dna-wave4-browser-tree-selection-final`: complete checkbox-first tree selection parity and selection clarity.
-3. `dna-wave6-ask-grounding-family-expansion`: deepen named metadata grounding for real org flow/object/field asks.
-4. `dna-wave5-refresh-handoff-proof`: complete real-org retrieve -> refresh -> diff operator proof path.
-5. `dna-wave7-decision-packet-quality-baseline`: raise packet quality for approval workflows with measurable acceptance.
+1. `dna-wave5-handoff-proof-guard`: close real-org retrieve -> refresh -> diff handoff proof and fail-closed guidance gaps.
+2. `dna-wave2-startup-drift-recovery`: finish packaged runtime startup/drift parity hardening.
+3. `dna-wave7-decision-packet-quality-baseline`: raise packet quality to approval-workflow acceptance.
+4. `dna-wave8-analyze-diagnostics-structured-cards`: reduce raw JSON dependence in diagnose/analyze paths.
+5. `dna-wave10-accessibility-focus-pass`: finish keyboard/focus/accessibility baseline across core workspaces.
+6. `dna-wave11-p0p1-burn-down-lock`: close and lock critical/high defects with stable CI evidence.
 
 ## Cross-Wave Non-Negotiable Gates
 
