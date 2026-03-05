@@ -730,7 +730,7 @@ async function run(): Promise<void> {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         query:
-          'Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.'
+          'Based only on the latest retrieve, explain what Flow OpportunityStageSync reads and writes.'
       })
     });
     assert.equal(askFlowEvidenceRes.status, 201, 'ask flow evidence should return 201');
@@ -740,7 +740,28 @@ async function run(): Promise<void> {
     };
     assert.equal(askFlowEvidence.plan.intent, 'automation');
     assert.equal(askFlowEvidence.plan.entities.object, undefined);
+    assert.match(askFlowEvidence.deterministicAnswer, /reads:/i);
+    assert.match(askFlowEvidence.deterministicAnswer, /writes:/i);
+    assert.match(askFlowEvidence.deterministicAnswer, /Opportunity\.StageName/i);
     assert.doesNotMatch(askFlowEvidence.deterministicAnswer, /no automation found for/i);
+
+    const askFlowEvidenceSpacedRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query:
+          'Based only on the latest retrieve, explain what Flow Opportunity Stage Sync reads and writes.'
+      })
+    });
+    assert.equal(askFlowEvidenceSpacedRes.status, 201, 'ask flow evidence (spaced name) should return 201');
+    const askFlowEvidenceSpaced = (await askFlowEvidenceSpacedRes.json()) as {
+      plan: { intent: string; entities: { object?: string } };
+      deterministicAnswer: string;
+    };
+    assert.equal(askFlowEvidenceSpaced.plan.intent, 'automation');
+    assert.equal(askFlowEvidenceSpaced.plan.entities.object, undefined);
+    assert.match(askFlowEvidenceSpaced.deterministicAnswer, /retrieved flow evidence found/i);
+    assert.doesNotMatch(askFlowEvidenceSpaced.deterministicAnswer, /no automation found for/i);
 
     const askImpactRes = await fetch(`${base}/ask`, {
       method: 'POST',

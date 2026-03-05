@@ -43,6 +43,12 @@ function run(): void {
   assert.equal(flowEvidencePlan.intent, 'automation');
   assert.equal(flowEvidencePlan.entities.object, undefined);
 
+  const flowEvidenceSpacedPlan = planner.plan(
+    'Based only on the latest retrieve, explain what Flow Opportunity Stage Sync reads and writes.'
+  );
+  assert.equal(flowEvidenceSpacedPlan.intent, 'automation');
+  assert.equal(flowEvidenceSpacedPlan.entities.object, undefined);
+
   const normalizedPermPlan = planner.plan('Who can edit object Opportunity?');
   assert.equal(normalizedPermPlan.intent, 'perms');
   assert.ok(normalizedPermPlan.rewriteRules?.includes('perm_who_can_edit'));
