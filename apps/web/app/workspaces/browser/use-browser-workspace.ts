@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { QueryResponse } from '../../lib/ask-client';
 import {
   getOrgMetadataCatalog,
@@ -87,6 +87,97 @@ function extractWarnings(payload: unknown): string[] {
 }
 
 const MAX_VISIBLE_MEMBER_LOAD_TYPES = 20;
+const RETRIEVE_HANDOFF_STORAGE_KEY = 'orgumented.browser.retrieve-handoff.v1';
+
+interface StoredRetrieveHandoffState {
+  handoff: MetadataRetrieveResultView | null;
+  selections: MetadataSelection[];
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+}
+
+function isMetadataSelection(value: unknown): value is MetadataSelection {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  const candidate = value as { type?: unknown; members?: unknown };
+  if (typeof candidate.type !== 'string' || candidate.type.trim().length === 0) {
+    return false;
+  }
+  if (candidate.members !== undefined && !isStringArray(candidate.members)) {
+    return false;
+  }
+  return true;
+}
+
+function isMetadataRetrieveResultView(value: unknown): value is MetadataRetrieveResultView {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  const candidate = value as {
+    alias?: unknown;
+    status?: unknown;
+    parsePath?: unknown;
+    metadataArgs?: unknown;
+    autoRefresh?: unknown;
+    completedAt?: unknown;
+    refresh?: unknown;
+  };
+  if (typeof candidate.alias !== 'string') {
+    return false;
+  }
+  if (typeof candidate.status !== 'string') {
+    return false;
+  }
+  if (typeof candidate.parsePath !== 'string') {
+    return false;
+  }
+  if (!isStringArray(candidate.metadataArgs)) {
+    return false;
+  }
+  if (typeof candidate.autoRefresh !== 'boolean') {
+    return false;
+  }
+  if (typeof candidate.completedAt !== 'string') {
+    return false;
+  }
+  if (candidate.refresh === undefined) {
+    return true;
+  }
+  if (!candidate.refresh || typeof candidate.refresh !== 'object' || Array.isArray(candidate.refresh)) {
+    return false;
+  }
+  const refresh = candidate.refresh as { nodeCount?: unknown; edgeCount?: unknown; evidenceCount?: unknown };
+  return (
+    typeof refresh.nodeCount === 'number' &&
+    typeof refresh.edgeCount === 'number' &&
+    typeof refresh.evidenceCount === 'number'
+  );
+}
+
+function parseStoredRetrieveHandoff(raw: string | null): StoredRetrieveHandoffState | null {
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as { handoff?: unknown; selections?: unknown };
+    const handoff =
+      parsed.handoff === null
+        ? null
+        : isMetadataRetrieveResultView(parsed.handoff)
+          ? parsed.handoff
+          : null;
+    const selections = Array.isArray(parsed.selections)
+      ? parsed.selections.filter(isMetadataSelection)
+      : [];
+    return { handoff, selections };
+  } catch {
+    return null;
+  }
+}
 
 export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const [metadataSearch, setMetadataSearch] = useState('');
@@ -110,6 +201,31 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     () => (metadataCatalog?.types ?? []).map((entry) => entry.type),
     [metadataCatalog]
   );
+
+  useEffect(() => {
+    try {
+      const stored = parseStoredRetrieveHandoff(localStorage.getItem(RETRIEVE_HANDOFF_STORAGE_KEY));
+      if (!stored) {
+        return;
+      }
+      setLastMetadataRetrieve(stored.handoff);
+      setLastRetrievedSelections(stored.selections);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const persisted: StoredRetrieveHandoffState = {
+        handoff: lastMetadataRetrieve,
+        selections: cloneSelections(lastRetrievedSelections)
+      };
+      localStorage.setItem(RETRIEVE_HANDOFF_STORAGE_KEY, JSON.stringify(persisted));
+    } catch {
+      // ignore
+    }
+  }, [lastMetadataRetrieve, lastRetrievedSelections]);
 
   function clearFilters(): void {
     setMetadataSearch('');
