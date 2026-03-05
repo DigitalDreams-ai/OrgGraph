@@ -49,7 +49,8 @@ function formatTimestamp(value?: string): string {
 }
 
 export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
-  const retrieveHandoff = assessRetrieveHandoff(props.retrieveHandoff);
+  const expectedAlias = props.activeAlias || props.selectedAlias;
+  const retrieveHandoff = assessRetrieveHandoff(props.retrieveHandoff, expectedAlias);
   const stagedSelectionCount = props.retrieveSelections.length;
   const orgRetrieveBlocked =
     props.orgRunRetrieve && (retrieveHandoff.state !== 'ready' || stagedSelectionCount === 0);

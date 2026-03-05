@@ -197,7 +197,7 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
     options.setLoading(true);
     options.setCopied(false);
     options.setErrorText('');
-    const retrieveHandoff = assessRetrieveHandoff(options.retrieveHandoff);
+    const retrieveHandoff = assessRetrieveHandoff(options.retrieveHandoff, options.orgAlias);
 
     if (orgRunRetrieve && retrieveHandoff.state !== 'ready') {
       const message = `Org retrieve blocked until Browser handoff is ready. ${retrieveHandoff.reasons[0] ?? 'Complete a Browser retrieve first.'}`;

@@ -195,7 +195,8 @@ function buildMemberTree(memberNames: string[]): MemberTreeNode[] {
 }
 
 export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
-  const retrieveHandoff = assessRetrieveHandoff(props.lastMetadataRetrieve);
+  const expectedAlias = props.activeAlias || props.selectedAlias;
+  const retrieveHandoff = assessRetrieveHandoff(props.lastMetadataRetrieve, expectedAlias);
   const groupedSearchResults = groupSearchResults(props.metadataSearchResults);
   const nodeSelectionState = (
     type: string,

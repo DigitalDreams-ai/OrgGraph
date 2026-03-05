@@ -9,7 +9,10 @@ export interface RetrieveHandoffAssessment {
   reasons: string[];
 }
 
-export function assessRetrieveHandoff(handoff: MetadataRetrieveResultView | null): RetrieveHandoffAssessment {
+export function assessRetrieveHandoff(
+  handoff: MetadataRetrieveResultView | null,
+  expectedAlias?: string
+): RetrieveHandoffAssessment {
   if (!handoff) {
     return {
       state: 'missing',
@@ -23,6 +26,15 @@ export function assessRetrieveHandoff(handoff: MetadataRetrieveResultView | null
   }
   if (!handoff.alias) {
     reasons.push('Retrieve result did not report the active alias.');
+  }
+  if (expectedAlias && handoff.alias) {
+    const expected = expectedAlias.trim().toLowerCase();
+    const actual = handoff.alias.trim().toLowerCase();
+    if (expected && actual && expected !== actual) {
+      reasons.push(
+        `Retrieve alias '${handoff.alias}' does not match active alias '${expectedAlias}'. Re-run Retrieve Checked for the active org.`
+      );
+    }
   }
   if (!handoff.parsePath) {
     reasons.push('Retrieve result did not report a parse path.');
