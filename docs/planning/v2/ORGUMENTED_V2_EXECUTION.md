@@ -39,6 +39,7 @@ Materially true now:
 - org browser now auto-loads explorer families on first open and uses simpler action labels (`Search`, `Browse All`, `Load Trees`, `Retrieve Cart`) with Enter-to-search support
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
 - wave10 follow-up now enforces larger card-grid minimum widths and path-specific wrapping classes, reducing truncation in decision packets, citations, mapping diagnostics, and diagnostics artifacts
+- wave10 follow-up now hardens Ask proof/context and citation rendering with explicit path-value wrapping, snippet scroll bounds, and denser auto-fit minima to reduce clipping in mid-width desktop layouts
 - refresh handoff is staged and fail-closed from browser selections
 - refresh handoff now also fails closed on alias mismatch and persists latest retrieve/selections across relaunch
 - flow grounding now prioritizes explicit flow-name asks over weak object-token inference (prevents false `no automation found for the` fallbacks)
