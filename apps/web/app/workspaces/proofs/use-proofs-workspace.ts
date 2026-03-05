@@ -196,6 +196,11 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     setReplayToken(proof.replayToken);
   }
 
+  async function openRecentProof(proof: RecentProofItem): Promise<void> {
+    useRecentProof(proof);
+    await runProofLookupById(proof.proofId);
+  }
+
   async function replayRecentProof(proof: RecentProofItem): Promise<void> {
     useRecentProof(proof);
     options.setLoading(true);
@@ -259,15 +264,14 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     }
   }
 
-  async function runProofLookup(): Promise<void> {
-    if (!proofId.trim()) return;
-
+  async function runProofLookupById(nextProofId: string): Promise<void> {
+    if (!nextProofId.trim()) return;
     options.setLoading(true);
     options.setCopied(false);
     options.setErrorText('');
 
     try {
-      const result = await getAskProof(proofId.trim());
+      const result = await getAskProof(nextProofId.trim());
       options.presentResponse(result);
       if (result.ok === false) {
         options.setErrorText(options.resolveErrorMessage(result));
@@ -289,6 +293,10 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     } finally {
       options.setLoading(false);
     }
+  }
+
+  async function runProofLookup(): Promise<void> {
+    await runProofLookupById(proofId.trim());
   }
 
   async function runReplay(): Promise<void> {
@@ -359,6 +367,7 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     replayResult,
     metricsExport,
     useRecentProof,
+    openRecentProof,
     replayRecentProof,
     syncFromAsk,
     runProofsRecent,
