@@ -30,7 +30,7 @@ Purpose:
 | G016 | Design/Layout | Cross-workspace visual and layout consistency | Improves reliability, readability, and trust | Wave10 | Layout/design checklist green across all workspaces | Open |
 | G017 | Accessibility | Keyboard and focus compliance for core operations | Required quality baseline for production usage | Wave10 | Accessibility checks pass for critical workflows | Open |
 | G018 | Quality | Zero critical/high defect state with regression protection | Required for production confidence | Wave11 | Critical/high defect count reaches zero with test lock | Open |
-| G019 | CI/Release | Efficient but strict CI gate architecture | Maintains safety while controlling iteration cost | Wave11 | CI optimization delivered without gate reduction | Open |
+| G019 | CI/Release | Efficient but strict CI gate architecture | Maintains safety while controlling iteration cost | Wave11 | CI optimization delivered without gate reduction | In Progress |
 | G020 | Runbooks | Assumption-free operator quickstart + troubleshooting | Enables repeatable onboarding and field usage | Wave12 | Runbooks validated by clean-machine operator run | Open |
 | G021 | Release Ops | Release and rollback discipline for packaged desktop | Reduces production deployment risk | Wave12 | Release checklist and rollback proof complete | Open |
 | G022 | Stabilization | Post-release hotfix window before Stage 2 expansion | Protects quality and trust before scope growth | Wave13 | Stabilization exit criteria satisfied | Open |

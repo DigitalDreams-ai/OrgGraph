@@ -169,6 +169,7 @@ Current real-org checkpoint after PR #71:
 - the current Wave6 flow-grounding slice now treats flow-name asks as first-class metadata questions by accepting spaced/underscored flow names and deriving explicit `reads`/`writes` summaries from retrieved flow evidence instead of falling back to generic automation-not-found phrasing
 - the current Wave5 refresh-handoff slice now carries staged Browser selections into `Run Org Retrieve` and fails closed in the UI when retrieve handoff context or staged selections are missing, replacing opaque `400 metadata selections required` backend failures with direct operator guidance
 - the current Wave2 bootstrap follow-up now regression-tests stale drift-heavy snapshots against both retrieved-org and fixture source paths so packaged startup keeps rebaseline recovery deterministic instead of tripping drift-budget startup aborts
+- the current Wave11 CI-efficiency slice now gates heavy Windows validate/smoke jobs behind repo-path change detection so docs/planning-only PRs use a fast pass while runtime-impacting changes still run full trust checks
 
 ## Remaining Stage 1 Product Gates
 
