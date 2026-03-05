@@ -123,6 +123,7 @@ Current Ask-first behavior:
 
 Current `Proofs & History` behavior:
 - recent proof history loads directly in the workspace as labeled decision entries
+- refreshing history auto-selects a current label so proof/replay actions can run without manual token entry
 - opening a history entry makes that labeled artifact the active proof context
 - proof lookup shows structured artifact details instead of requiring raw JSON inspection
 - replay shows parity status for:
@@ -130,7 +131,7 @@ Current `Proofs & History` behavior:
   - `corePayloadMatched`
   - `metricsMatched`
 - metrics export shows summary counts by snapshot and provider
-- raw `proofId` and `replayToken` fields remain available only as an advanced fallback for debugging
+- raw `proofId` and `replayToken` fields remain available only in the advanced fallback section for debugging
 
 Current `Org Sessions` behavior:
 - `Refresh Overview` re-syncs tool status, session state, alias inventory, and preflight in one pass

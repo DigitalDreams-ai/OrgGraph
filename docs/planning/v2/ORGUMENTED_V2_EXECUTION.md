@@ -51,12 +51,14 @@ Materially true now:
 - Settings & Diagnostics now renders structured runtime triage cards (bootstrap/db/fixtures/evidence health + recovery checklist) and demotes raw readiness JSON to an optional details panel
 - Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs
 - Operator Rail now includes a runtime-triage summary so common readiness failures can be diagnosed without opening raw JSON
+- Proofs & History now auto-selects a current label on history refresh so open/replay operations are label-first by default
 
 Still unresolved:
 - runtime/tooling state clarity still needs parity checks in non-connect workspaces
 - planner/compiler still needs deeper typed coverage beyond current query families
 - decision packet quality is not yet benchmark-accepted for approval use
 - explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
+- proofs/history still needs full label-first lifecycle closure beyond current baseline auto-selection
 - layout/accessibility has remaining card-boundary and density defects
 - release runbooks and clean-machine validation are not complete
 
@@ -93,15 +95,19 @@ Short version:
 - deepen structured diagnostics/analysis cards for primary operator triage
 - reduce raw JSON dependence in permission/automation/impact/map workflows
 
-5. Wave8 follow-on slice:
+5. Wave9 start slice:
+- complete label-first proof lifecycle (open/replay/export) without token-first dependence in normal workflows
+- keep token fields strictly advanced/debug while preserving replay parity checks
+
+6. Wave8 follow-on slice:
 - add edge-state structured diagnostics tests and telemetry summaries for failure correlation
 - close remaining raw-JSON-only diagnostic paths
 
-6. Wave10 finish slice:
+7. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 
-7. Wave11 finish slice:
+8. Wave11 finish slice:
 - complete P0/P1 burn-down lock and regression gates
 - keep CI strict while preserving minute-efficiency controls
 

@@ -251,7 +251,19 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
         options.setErrorText(options.resolveErrorMessage(result));
         setRecentProofs([]);
       } else {
-        setRecentProofs(parseRecentProofs(result));
+        const nextRecentProofs = parseRecentProofs(result);
+        setRecentProofs(nextRecentProofs);
+
+        if (nextRecentProofs.length === 0) {
+          return;
+        }
+
+        const hasSelection = nextRecentProofs.some((item) => item.proofId === proofId);
+        const fallbackSelection = hasSelection ? nextRecentProofs.find((item) => item.proofId === proofId) : nextRecentProofs[0];
+        if (fallbackSelection) {
+          setProofId(fallbackSelection.proofId);
+          setReplayToken(fallbackSelection.replayToken);
+        }
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected recent proofs failure';
