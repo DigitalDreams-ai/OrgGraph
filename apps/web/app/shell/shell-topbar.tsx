@@ -18,7 +18,14 @@ export function ShellTopbar(props: ShellTopbarProps): JSX.Element {
       <div className="topbar-actions">
         <button type="button" onClick={props.onRefreshStatus} disabled={props.loading}>Refresh Status</button>
         <button type="button" onClick={props.onRunPreflight} disabled={props.loading}>Preflight</button>
-        <button type="button" onClick={props.onConnectOrg} disabled={props.loading}>Connect Org</button>
+        <button
+          type="button"
+          onClick={props.onConnectOrg}
+          disabled={props.loading}
+          title="Quick attach using the selected alias from Org Sessions."
+        >
+          Attach Active Alias
+        </button>
       </div>
     </header>
   );
