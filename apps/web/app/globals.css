@@ -360,6 +360,8 @@ button.ghost {
 .sub-card p,
 .sub-card strong,
 .sub-card span,
+.sub-card h3,
+.sub-card h4,
 .brand-sub,
 .decision-answer,
 .hero-metric strong,
@@ -428,7 +430,7 @@ button.ghost {
 
 .launch-stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
   gap: 0.6rem;
   margin-top: 0.8rem;
 }
@@ -460,7 +462,7 @@ button.ghost {
 
 .decision-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
   gap: 0.8rem;
 }
 
@@ -500,7 +502,7 @@ button.ghost {
 
 .packet-stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 0.6rem;
 }
 
@@ -623,7 +625,7 @@ button.ghost {
 
 .proofs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
   gap: 0.8rem;
 }
 
@@ -680,7 +682,7 @@ button.ghost {
 
 .analysis-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
   gap: 0.8rem;
 }
 
@@ -690,7 +692,7 @@ button.ghost {
 
 .analysis-stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 0.6rem;
   margin: 0.65rem 0;
 }
@@ -721,12 +723,12 @@ button.ghost {
 }
 
 .analysis-chip-list {
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
 }
 
 .ops-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
   gap: 0.8rem;
   margin-bottom: 0.8rem;
 }
