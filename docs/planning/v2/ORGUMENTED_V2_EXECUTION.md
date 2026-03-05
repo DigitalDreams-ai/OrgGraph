@@ -38,6 +38,7 @@ Materially true now:
 - proof history supports searchable labels and open-first artifact access
 - CI heavy Windows jobs are path-gated for minute efficiency
 - org-session refresh now only marks runtime unavailable on true runtime failures, so alias/preflight 4xx errors no longer masquerade as missing local tools
+- session action labels now distinguish quick top-bar attach from explicit connect/switch controls in Org Sessions
 
 Still unresolved:
 - runtime/tooling state clarity still needs parity checks in non-connect workspaces

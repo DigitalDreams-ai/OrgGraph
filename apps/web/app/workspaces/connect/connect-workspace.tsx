@@ -166,13 +166,16 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
 
       <div className="action-row">
         <button type="button" onClick={props.onRefreshOverview} disabled={props.loading}>Refresh Overview</button>
-        <button type="button" onClick={() => props.onConnectExistingAlias()} disabled={props.loading}>Connect Selected</button>
-        <button type="button" onClick={() => props.onSwitchAlias()} disabled={props.loading}>Switch Selected</button>
+        <button type="button" onClick={() => props.onConnectExistingAlias()} disabled={props.loading}>Attach Selected Alias</button>
+        <button type="button" onClick={() => props.onSwitchAlias()} disabled={props.loading}>Switch Active Alias</button>
         <button type="button" onClick={props.onRestoreLastSession} disabled={props.loading || !props.restoreAlias}>
           Restore Last Session
         </button>
         <button type="button" className="ghost" onClick={props.onDisconnect} disabled={props.loading}>Disconnect</button>
       </div>
+      <p className="muted">
+        `Attach Active Alias` in the top bar runs the same attach action against the currently selected alias. Use the buttons here when you need explicit connect/switch control.
+      </p>
 
       <div className="action-row">
         <button type="button" className="ghost" onClick={props.onLoadAliases} disabled={props.loading}>Load Aliases</button>
@@ -276,7 +279,7 @@ cci org info ${props.orgAlias}`}</pre>
                       Inspect
                     </button>
                     <button type="button" onClick={() => props.onConnectExistingAlias(entry.alias)}>
-                      Connect
+                      Attach
                     </button>
                     <button type="button" className="ghost" onClick={() => props.onSwitchAlias(entry.alias)}>
                       Switch
