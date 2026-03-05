@@ -33,7 +33,7 @@ Materially true now:
 - org browser now uses explicit cart language (`checked row = in cart`) with simpler explorer/retrieve actions
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
 - refresh handoff is staged and fail-closed from browser selections
-- flow grounding is stronger for reads/writes asks
+- flow grounding now prioritizes explicit flow-name asks over weak object-token inference (prevents false `no automation found for the` fallbacks)
 - proof history supports searchable labels and open-first artifact access
 - CI heavy Windows jobs are path-gated for minute efficiency
 - org-session refresh now only marks runtime unavailable on true runtime failures, so alias/preflight 4xx errors no longer masquerade as missing local tools
@@ -60,7 +60,11 @@ Still unresolved:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 
-4. Wave7 start slice:
+4. Wave6 finish slice:
+- add regression coverage for explicit retrieved-flow asks (including real org naming patterns)
+- reduce generic automation fallback cases that bypass named-flow grounding
+
+5. Wave7 start slice:
 - improve decision-packet risk drivers and next actions for real-org review asks
 - capture acceptance benchmark evidence with proof/replay IDs
 

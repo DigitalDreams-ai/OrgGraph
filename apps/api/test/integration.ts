@@ -763,6 +763,31 @@ async function run(): Promise<void> {
     assert.match(askFlowEvidenceSpaced.deterministicAnswer, /retrieved flow evidence found/i);
     assert.doesNotMatch(askFlowEvidenceSpaced.deterministicAnswer, /no automation found for/i);
 
+    const askFlowEvidenceCivilRightsRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query:
+          'Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.'
+      })
+    });
+    assert.equal(
+      askFlowEvidenceCivilRightsRes.status,
+      201,
+      'ask flow evidence (civil rights flow) should return 201'
+    );
+    const askFlowEvidenceCivilRights = (await askFlowEvidenceCivilRightsRes.json()) as {
+      plan: { intent: string; entities: { object?: string } };
+      deterministicAnswer: string;
+    };
+    assert.equal(askFlowEvidenceCivilRights.plan.intent, 'automation');
+    assert.equal(askFlowEvidenceCivilRights.plan.entities.object, undefined);
+    assert.match(
+      askFlowEvidenceCivilRights.deterministicAnswer,
+      /no retrieved flow evidence matched Civil_Rights_Intake_Questionnaire/i
+    );
+    assert.doesNotMatch(askFlowEvidenceCivilRights.deterministicAnswer, /no automation found for the/i);
+
     const askImpactRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
