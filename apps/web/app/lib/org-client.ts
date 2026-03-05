@@ -10,6 +10,7 @@ interface OrgRetrievePayload {
   runAuth?: boolean;
   runRetrieve?: boolean;
   autoRefresh?: boolean;
+  selections?: MetadataSelection[];
 }
 
 interface MetadataCatalogPayload {

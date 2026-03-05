@@ -3,6 +3,7 @@
 import type {
   OrgRetrieveRunView,
   RefreshDiffView,
+  RefreshRetrieveSelectionView,
   RefreshRetrieveHandoffView,
   RefreshRunView
 } from './types';
@@ -12,6 +13,7 @@ interface RefreshWorkspaceProps {
   activeAlias: string;
   selectedAlias: string;
   retrieveHandoff: RefreshRetrieveHandoffView | null;
+  retrieveSelections: RefreshRetrieveSelectionView[];
   refreshMode: 'incremental' | 'full';
   setRefreshMode: (value: 'incremental' | 'full') => void;
   fromSnapshot: string;
@@ -48,6 +50,9 @@ function formatTimestamp(value?: string): string {
 
 export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
   const retrieveHandoff = assessRetrieveHandoff(props.retrieveHandoff);
+  const stagedSelectionCount = props.retrieveSelections.length;
+  const orgRetrieveBlocked =
+    props.orgRunRetrieve && (retrieveHandoff.state !== 'ready' || stagedSelectionCount === 0);
 
   return (
     <>
@@ -66,6 +71,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
           <p><strong>Org retrieve auth:</strong> {String(props.orgRunAuth)}</p>
           <p><strong>Org retrieve metadata:</strong> {String(props.orgRunRetrieve)}</p>
           <p><strong>Auto refresh:</strong> {String(props.orgAutoRefresh)}</p>
+          <p><strong>Staged metadata selections:</strong> {stagedSelectionCount}</p>
         </article>
 
         <article className="sub-card">
@@ -155,6 +161,9 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
                   ? `Latest retrieve is not safe to treat as rebuild input yet. ${retrieveHandoff.reasons[0]}`
                   : 'No browser retrieve handoff captured yet.'}
             </p>
+            {props.retrieveHandoff && stagedSelectionCount === 0 ? (
+              <p><strong>Blocked:</strong> no staged metadata selections were saved with the handoff.</p>
+            ) : null}
           </li>
           <li>
             <div className="decision-meta">
@@ -253,6 +262,10 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
       ) : null}
 
       <h3>Org Retrieve Pipeline</h3>
+      <p className="muted">
+        This action now runs against the checked metadata selections staged in `Org Browser`. If no staged selections
+        exist, the action fails closed before sending a request.
+      </p>
       <div className="field-grid">
         <label className="check-row" htmlFor="orgRunAuth">
           <input id="orgRunAuth" type="checkbox" checked={props.orgRunAuth} onChange={(e) => props.setOrgRunAuth(e.target.checked)} />
@@ -278,10 +291,25 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
         </label>
       </div>
       <div className="action-row">
-        <button type="button" onClick={props.onRunOrgRetrieve} disabled={props.loading}>
+        <button type="button" onClick={props.onRunOrgRetrieve} disabled={props.loading || orgRetrieveBlocked}>
           Run Org Retrieve
         </button>
       </div>
+      {orgRetrieveBlocked ? (
+        <ul className="issue-list">
+          {retrieveHandoff.state !== 'ready' ? (
+            <li>
+              <strong>Fail closed.</strong> Browser handoff is not ready. {retrieveHandoff.reasons[0]}
+            </li>
+          ) : null}
+          {stagedSelectionCount === 0 ? (
+            <li>
+              <strong>Fail closed.</strong> No staged metadata selections found. Go to `Org Browser`, check items, and
+              run `Retrieve Checked`.
+            </li>
+          ) : null}
+        </ul>
+      ) : null}
 
       {props.lastOrgRetrieveRun ? (
         <article className="sub-card">

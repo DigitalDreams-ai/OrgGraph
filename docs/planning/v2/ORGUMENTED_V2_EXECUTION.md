@@ -167,6 +167,7 @@ Current real-org checkpoint after PR #71:
 - the current Wave4 browser-search follow-up now keeps zero-member metadata families visible in live catalog/search responses so name-first queries like `layout` or `flow` remain predictable even before those families have retrieved members locally
 - the current Wave10 layout-hardening slice now uses more resilient auto-fit card grids and stricter long-text wrapping to prevent clipped packet, diagnostics, and evidence content in constrained desktop work areas
 - the current Wave6 flow-grounding slice now treats flow-name asks as first-class metadata questions by accepting spaced/underscored flow names and deriving explicit `reads`/`writes` summaries from retrieved flow evidence instead of falling back to generic automation-not-found phrasing
+- the current Wave5 refresh-handoff slice now carries staged Browser selections into `Run Org Retrieve` and fails closed in the UI when retrieve handoff context or staged selections are missing, replacing opaque `400 metadata selections required` backend failures with direct operator guidance
 
 ## Remaining Stage 1 Product Gates
 

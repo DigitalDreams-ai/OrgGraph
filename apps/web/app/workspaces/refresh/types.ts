@@ -1,8 +1,9 @@
 'use client';
 
-import type { MetadataRetrieveResultView } from '../browser/types';
+import type { MetadataRetrieveResultView, MetadataSelection } from '../browser/types';
 
 export type RefreshRetrieveHandoffView = MetadataRetrieveResultView;
+export type RefreshRetrieveSelectionView = MetadataSelection;
 
 export interface RefreshRunView {
   snapshotId: string;
