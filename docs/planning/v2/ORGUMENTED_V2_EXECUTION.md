@@ -52,6 +52,7 @@ Materially true now:
 - runtime-unavailable signaling is now shared across Connect, Operator Rail, and Settings/Diagnostics (shell reachability + connect runtime detection), reducing false tool-missing interpretation outside Org Sessions
 - fallback error copy now distinguishes API non-response failures from normal request-validation failures
 - session action labels now distinguish quick top-bar attach from explicit connect/switch controls in Org Sessions
+- session alias switch now reuses connect auth/bridge flow so missing CCI alias registrations are remediated during switch, not only during explicit connect
 - Settings & Diagnostics now renders structured runtime triage cards (bootstrap/db/fixtures/evidence health + recovery checklist) and demotes raw readiness JSON to an optional details panel
 - Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs
 - Operator Rail now includes a runtime-triage summary so common readiness failures can be diagnosed without opening raw JSON

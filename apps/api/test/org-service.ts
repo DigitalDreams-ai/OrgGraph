@@ -7,6 +7,7 @@ import { OrgService } from '../src/modules/org/org.service';
 class StubToolAdapter {
   calls: Array<{ command: string; args: string[]; cwd?: string }> = [];
   inaccessibleAliases = new Set<string>();
+  cciAliases = new Set<string>(['orgumented-sandbox']);
 
   private ok(stdout = '{"status":"ok"}') {
     return { exitCode: 0, stdout, stderr: '', elapsedMs: 12 };
@@ -65,12 +66,16 @@ class StubToolAdapter {
   async cciOrgInfo(alias: string, cwd: string) {
     const args = ['org', 'info', alias];
     this.calls.push({ command: 'cci', args, cwd });
-    return this.ok();
+    if (this.cciAliases.has(alias)) {
+      return this.ok();
+    }
+    return { exitCode: 1, stdout: '', stderr: `Alias ${alias} not found`, elapsedMs: 12 };
   }
 
   async importAliasIntoCci(alias: string, username: string, cwd: string) {
     const args = ['org', 'import', alias, alias];
     this.calls.push({ command: 'cci', args, cwd });
+    this.cciAliases.add(alias);
     return this.ok();
   }
 
@@ -233,9 +238,21 @@ async function run(): Promise<void> {
     assert.equal(restoreAfterRestart.entries[0].action, 'switch_failed');
     assert.equal(restoreAfterRestart.entries[1].action, 'connect');
 
+    toolAdapter.cciAliases.delete('orgumented-sandbox');
+    const cciImportCallsBeforeSwitch = toolAdapter.calls.filter(
+      (call) => call.command === 'cci' && call.args[0] === 'org' && call.args[1] === 'import'
+    ).length;
     const switched = await restartedService.switchSessionAlias('orgumented-sandbox');
     assert.equal(switched.status, 'connected');
     assert.equal(switched.activeAlias, 'orgumented-sandbox');
+    const cciImportCallsAfterSwitch = toolAdapter.calls.filter(
+      (call) => call.command === 'cci' && call.args[0] === 'org' && call.args[1] === 'import'
+    ).length;
+    assert.equal(
+      cciImportCallsAfterSwitch,
+      cciImportCallsBeforeSwitch + 1,
+      'switch should bridge alias into cci when alias is missing'
+    );
 
     const disconnected = restartedService.disconnectSession();
     assert.equal(disconnected.status, 'disconnected');
