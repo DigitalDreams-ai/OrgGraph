@@ -112,6 +112,11 @@ export class OrgService {
     if (cciProbe.exitCode === 0) {
       const cciAliasCheck = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
       cciAliasAvailable = cciAliasCheck.exitCode === 0;
+      if (aliasAuthenticated && !cciAliasAvailable) {
+        await this.runAuth(alias, projectPath);
+        const cciAliasRetry = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
+        cciAliasAvailable = cciAliasRetry.exitCode === 0;
+      }
     }
 
     const issues: OrgPreflightResponse['issues'] = [];
@@ -287,6 +292,11 @@ export class OrgService {
     } else {
       const cciInfo = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
       cciAvailable = cciInfo.exitCode === 0;
+      if (sfAccessible && !cciAvailable) {
+        await this.runAuth(alias, projectPath);
+        const cciInfoRetry = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
+        cciAvailable = cciInfoRetry.exitCode === 0;
+      }
       if (sfAccessible && !cciAvailable) {
         issues.push({
           code: 'CCI_ALIAS_NOT_CONNECTED',
