@@ -1,9 +1,26 @@
 # Orgumented v2 Execution
 
-Date: March 1, 2026
+Date: March 4, 2026
 
 Execution master plan:
 - `docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md`
+
+## Wave Sequence
+
+Execution order to reach 100% is fixed to:
+- wave1 baseline lock
+- wave2 runtime convergence
+- wave3 sessions and toolchain reliability
+- wave4 org browser explorer completion
+- wave5 refresh and build handoff completion
+- wave6 ask planner/compiler depth
+- wave7 decision-packet quality
+- wave8 explain/analyze workflow depth
+- wave9 proofs/history productization
+- wave10 design/layout/accessibility hardening
+- wave11 bug burn-down and quality lock
+- wave12 release readiness and operator proof
+- wave13 stabilization window before Stage 2 decisions
 
 ## Current Objective
 

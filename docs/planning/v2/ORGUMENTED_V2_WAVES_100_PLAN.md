@@ -3,271 +3,319 @@
 Date: March 4, 2026  
 Status: active execution master plan
 
+This is the single completion plan for all Stage 1 product areas: core runtime, workflows, planner/compiler, decision packets, proofs/history, UI quality, defects, release, and stabilization.
+
 ## Definition Of 100%
 
-Orgumented is considered 100% complete for the current v2 scope when all of the following are true:
+Orgumented is 100% complete for v2 scope only when all of the following are true at once:
 
-1. Product runtime is desktop-first and converged:
-- packaged desktop is the primary operator path
-- no runtime-critical dependence on standalone web/dev-server assumptions
-- no Docker dependency in runtime/release/operator workflow
+1. Core runtime:
+- packaged desktop is primary and converged with local verification behavior
+- no runtime dependence on Docker or browser-era route assumptions
+- readiness fails closed when runtime is not grounded
 
-2. Deterministic trust contract is intact:
-- same snapshot + query + policy returns same answer, proof ID class, and replay integrity
-- proof artifacts are persisted, discoverable by label/history, and replay-verifiable
-- fail-closed behavior is explicit for all core operator paths
+2. Deterministic trust contract:
+- same snapshot + query + policy returns deterministic answer/proof/replay behavior
+- proof artifacts are persisted, replay-verifiable, and operator-accessible
+- no hidden fallback from constrained paths to unconstrained logic
 
-3. Stage 1 workflow parity is product-grade:
-- Sessions
-- Browser
-- Refresh & Build
+3. Stage 1 workflow completeness:
+- Org Sessions
+- Org Browser
+- Refresh and Build
 - Ask
-- Explain & Analyze
-- Proofs & History
-- Settings & Diagnostics
+- Explain and Analyze
+- Proofs and History
+- Settings and Diagnostics
 
-4. UX quality and stability bar is met:
-- no clipping/overflow/truncation defects on supported desktop sizes
-- predictable action language (no ambiguous add/retrieve semantics)
-- critical and high-severity bug backlog for Stage 1 paths is zero
+4. UX and design quality:
+- no clipping/overflow/truncation on supported desktop viewport targets
+- predictable labels and interaction semantics
+- keyboard/focus/accessibility baseline is met
 
-5. Release and operability are proven:
+5. Quality and release:
+- P0/P1 defect backlog is zero
 - CI gates are green and cost-controlled
 - Windows packaging and smoke checks are stable
-- runbooks are explicit, operator-readable, and validated on real org flow
+- runbooks are explicit and validated on a real-org workflow
 
-## Wave Cadence Rules
+## Wave Operating Rules
 
-- One coherent branch per wave.
-- One PR per wave.
-- No mixed-purpose scope creep.
-- Every wave has explicit acceptance gates.
-- If deterministic replay parity regresses, stop and fix before continuing.
-- After each merge: update docs and project-memory before starting the next wave.
+- One coherent branch per wave: `dna-wave<N>-<slice-name>`.
+- One coherent PR per wave.
+- No mixed-scope PRs.
+- Every wave has explicit acceptance gates and proof artifacts.
+- If replay parity regresses, stop and fix before continuing.
+- After every merge: update docs and project-memory before next branch.
 
-## Wave1 - Baseline Lock And Backlog Triage
+## Wave Progress Snapshot
 
-Goal:
-- freeze current v2 baseline and create one prioritized execution backlog for all remaining v2 work
+| Wave | Theme | Primary Backlog IDs | Status |
+|---|---|---|---|
+| wave1 | baseline lock and triage | B001-B024 mapped | Complete |
+| wave2 | runtime convergence | B001, B002 | In Progress |
+| wave3 | sessions and toolchain reliability | B004, B005 | In Progress |
+| wave4 | org browser explorer | B006, B007 | In Progress |
+| wave5 | retrieve -> refresh handoff | B008 | Open |
+| wave6 | ask planner/compiler depth | B003, B009 | Open |
+| wave7 | decision-packet quality | B010, B017 | Open |
+| wave8 | analyze and diagnostics depth | B015, B016, B022 | Open |
+| wave9 | proofs/history productization | B011 | Open |
+| wave10 | design/layout/accessibility | B012, B020, B021 | In Progress |
+| wave11 | bug burn-down and CI quality lock | B013, B018, B023 | Open |
+| wave12 | release readiness and operator proof | B014, B019 | Open |
+| wave13 | post-100 stabilization | B024 | Open |
 
-Scope:
-- confirm canonical planning files and link this wave plan from control surfaces
-- create a single defect list grouped by severity and workspace
-- create a single feature gap list grouped by workflow
+## wave1 - Baseline Lock And Backlog Triage
 
-Acceptance Gates:
-- backlog files are deduplicated, prioritized, and linked from v2 README
-- each open item has owner wave target and pass/fail criteria
-- no unresolved planning drift across v2 core docs
+Objective:
+- freeze baseline and create one deduplicated completion backlog
 
-## Wave2 - Runtime Convergence Finalization
+Deliverables:
+- `WAVE1_BACKLOG.md`
+- `WAVE1_DEFECT_MATRIX.md`
+- `WAVE1_FEATURE_GAP_MATRIX.md`
 
-Goal:
-- remove remaining runtime divergence between packaged desktop and local dev verification paths
+Done when:
+- every open item has wave assignment and pass/fail gate
+- no planning drift across v2 control files
 
-Scope:
-- startup/bootstrap parity
-- runtime readiness and fail-closed health signaling
-- deterministic fixture/real-org startup behavior contract
+## wave2 - Runtime Convergence Finalization
 
-Acceptance Gates:
+Objective:
+- remove remaining packaged-vs-local runtime divergence
+
+In scope:
+- bootstrap grounding and drift-budget handling
+- readiness signaling and fail-closed runtime state
+- explicit disambiguation of runtime failure vs tool failure
+
+Acceptance gates:
 - `pnpm --filter api test`
 - `pnpm --filter web build`
 - `pnpm desktop:build`
 - `pnpm desktop:smoke:release`
-- no known runtime-only behavior that differs between packaged and local runtime
 
-## Wave3 - Org Session Reliability And Toolchain Detection
+Proof artifacts:
+- packaged smoke log with ready pass
+- manual packaged launch pass note
 
-Goal:
-- make org connect/switch/refresh deterministic and operator-readable
+## wave3 - Org Session Reliability And Toolchain Detection
 
-Scope:
-- sf/cci detection and status messaging
-- session restore/switch/connect/disconnect consistency
-- preflight accuracy and actionable failure states
+Objective:
+- make connect/switch/restore/preflight deterministic and actionable
 
-Acceptance Gates:
-- real-org connect flow succeeds end-to-end on packaged desktop
-- missing tool, auth, and runtime-unavailable states are clearly distinguished
-- no stale or contradictory session/tool status cards after refresh
+In scope:
+- `sf`/`cci` detection messaging
+- deterministic restore target across restart cycles
+- CCI alias remediation with exact operator commands
 
-## Wave4 - Org Browser Explorer Completion
+Acceptance gates:
+- real-org connect/switch/preflight succeeds in packaged desktop
+- runtime-unavailable, auth-missing, and tooling-missing states are distinct
 
-Goal:
-- complete name-first explorer retrieval workflow with intuitive selection semantics
+Proof artifacts:
+- real-org connect runbook pass
+- session-history/restore validation evidence
 
-Scope:
-- searchable explorer by actual metadata item name
-- tree/family browsing with consistent checkbox semantics
-- cart/retrieve flow clarity and handoff to Refresh & Build
+## wave4 - Org Browser Explorer Completion
 
-Acceptance Gates:
-- operator can search and retrieve by file/metadata name without type-first knowledge
-- tree/family selection includes nested members deterministically
-- retrieve handoff into Refresh & Build is visible and trusted
+Objective:
+- ship a name-first explorer workflow that matches operator expectations
 
-## Wave5 - Refresh & Build Production Workflow
+In scope:
+- search by actual metadata item name
+- browse by metadata family with checkbox-first selection
+- deterministic nested member load and retrieve staging
 
-Goal:
-- make rebuild/diff/org-retrieve workflow production-grade and explainable
+Acceptance gates:
+- operator can find/retrieve metadata without type-first API knowledge
+- unseeded catalog states still provide predictable search behavior
 
-Scope:
-- staged handoff visibility
-- default behavior and guardrails
-- fail-closed behavior on invalid or incomplete handoffs
+Proof artifacts:
+- browser explorer scenario log
+- retrieve-ready handoff record
 
-Acceptance Gates:
-- common rebuild path completes from Browser handoff without raw JSON dependence
-- drift and summary surfaces are readable and bounded
-- failure states include direct next actions
+## wave5 - Refresh And Build Production Workflow
 
-## Wave6 - Ask Planner And Compiler Depth
+Objective:
+- make retrieve -> refresh -> diff -> org-retrieve first-class and fail-closed
 
-Goal:
-- materially reduce fragile regex routing and increase typed semantic planning depth
+In scope:
+- handoff visibility from Browser
+- staged workflow summaries and guardrails
+- actionable failure states for incomplete handoffs
 
-Scope:
-- planner intent/entity extraction hardening
-- query family stability for real metadata workflows
-- deterministic flow/object/permission intent grounding
+Acceptance gates:
+- no raw JSON required for common rebuild workflow
+- end-to-end handoff works for real-org retrieval scenario
 
-Acceptance Gates:
-- planner and integration tests cover high-value query families
-- replay and proof stability remain green
-- measurable reduction in known misroutes and low-value fallback answers
+Proof artifacts:
+- end-to-end handoff replay proof
+- rebuild/diff summary screenshots and logs
 
-## Wave7 - Decision Packet Quality
+## wave6 - Ask Planner And Compiler Depth
 
-Goal:
-- make packet outputs consistently useful for architecture decisions
+Objective:
+- materially improve typed planning and reduce fragile regex dominance
 
-Scope:
-- tighten risk drivers, evidence linking, and next-action relevance
-- improve confidence/trust explanation quality without relaxing constraints
-- preserve citation determinism and proof context integrity
+In scope:
+- intent/entity extraction hardening
+- metadata-family routing coverage for real asks
+- stable rule IDs and deterministic compile traces
 
-Acceptance Gates:
-- selected real-org scenarios produce usable short answers + actionable next steps
-- packet sections avoid clipping/overflow and remain readable at supported layouts
-- no packet output without provenance-linked evidence
+Acceptance gates:
+- planner + integration + replay tests for selected families pass
+- measurable reduction in weak generic fallback responses
 
-## Wave8 - Explain & Analyze Workflow Depth
+Proof artifacts:
+- query-family benchmark before/after results
+- replay parity outputs for repeated asks
 
-Goal:
-- ensure explain/analyze surfaces are decision-support tools, not debug-only views
+## wave7 - Decision Packet Quality
 
-Scope:
-- structured cards and summaries for permission, automation, impact, and map diagnostics
-- deterministic summary generation contracts
-- remove dependency on raw JSON for primary operator tasks
+Objective:
+- make packets reliable primary artifacts for architecture decisions
 
-Acceptance Gates:
-- key analyze workflows complete using primary UI cards and actions
-- raw JSON remains optional secondary inspection only
-- deterministic answer equivalence preserved for same input context
+In scope:
+- risk-driver quality
+- reads/writes/change-impact synthesis
+- actionable next-step relevance
 
-## Wave9 - Proofs & History Productization
+Acceptance gates:
+- selected real-org review scenarios produce usable packets
+- packets retain provenance and deterministic trust envelope
 
-Goal:
-- make proof/replay lookup label-first and audit-ready
+Proof artifacts:
+- benchmark packet acceptance notes
+- proof IDs and replay tokens for accepted scenarios
 
-Scope:
+## wave8 - Explain And Analyze Workflow Depth
+
+Objective:
+- elevate analyze from debug surface to operator decision surface
+
+In scope:
+- structured permission, automation, impact, and map diagnosis cards
+- deterministic summaries
+- raw JSON as secondary only
+
+Acceptance gates:
+- key analysis tasks complete through primary cards/actions
+- same input context preserves deterministic answer equivalence
+
+Proof artifacts:
+- analyze runbook scenario results
+- before/after structured output comparison
+
+## wave9 - Proofs And History Productization
+
+Objective:
+- complete label-first proof lifecycle for audit and collaboration
+
+In scope:
 - labeled history navigation
-- proof reopen, replay, and export ergonomics
-- trust envelope continuity across session restarts
+- reopen/replay/export stability
+- trust-envelope continuity across restart
 
-Acceptance Gates:
-- operator can reopen and validate prior packets without manual token bookkeeping
-- replay verification remains deterministic
-- proof/history actions are stable in packaged desktop runtime
+Acceptance gates:
+- operator can reopen/replay from history without token bookkeeping
+- packaged desktop parity maintained for proof/history paths
 
-## Wave10 - Design, Layout, And Accessibility Hardening
+Proof artifacts:
+- history-first replay pass logs
+- export/reopen verification notes
 
-Goal:
-- complete design and layout polish across all workspaces
+## wave10 - Design, Layout, And Accessibility Hardening
 
-Scope:
-- overflow, clipping, spacing, and responsive desktop breakpoints
-- long-path and dense-content rendering rules
-- keyboard accessibility and focus behavior for critical actions
+Objective:
+- finish design/layout polish and remove readability defects across workspaces
 
-Acceptance Gates:
-- no known clipping/overflow defects in core workflow cards and rails
-- content wraps within bounds on supported viewport sizes
-- accessibility checks pass for key forms and controls
+In scope:
+- overflow/clipping/wrapping fixes
+- spacing and hierarchy normalization
+- keyboard and focus behavior for critical controls
 
-## Wave11 - Bug Burn-Down And Quality Lock
+Acceptance gates:
+- zero known clipping/overflow issues in Stage 1 surfaces
+- accessibility checks pass for Ask/Sessions/Browser/Refresh
 
-Goal:
-- drive Stage 1 defects to release bar
+Proof artifacts:
+- viewport visual QA checklist
+- accessibility test output notes
 
-Scope:
-- critical/high bug burn-down
+## wave11 - Bug Burn-Down And Quality Lock
+
+Objective:
+- close critical/high defects and lock regressions with tests
+
+In scope:
+- P0/P1 burn-down
 - flaky test elimination
-- regression tests for every fixed high-impact bug
+- regression tests for fixed high-impact defects
 
-Acceptance Gates:
-- zero open critical/high defects in Stage 1 workflows
-- test flake rate for core suites at or near zero
-- regression suite includes all fixed P0/P1 classes
+Acceptance gates:
+- P0/P1 count reaches zero and holds for one full cycle
+- CI quality gates stable with low flake rate
 
-## Wave12 - Release Readiness And Operator Proof
+Proof artifacts:
+- defect matrix closure report
+- regression suite additions mapped to defects
 
-Goal:
-- prove production-readiness with real operator runbooks and evidence
+## wave12 - Release Readiness And Operator Proof
 
-Scope:
-- release checklist and rollback procedure
-- operator quickstart and troubleshooting runbooks
-- final real-org validation sweep
+Objective:
+- prove production readiness with operator-validated runbooks
 
-Acceptance Gates:
-- release checklist complete with evidence artifacts
-- operator runbooks verified on clean machine flow
-- CI checks green on release candidate branch
+In scope:
+- release checklist and rollback
+- clean-machine quickstart validation
+- final real-org end-to-end validation sweep
 
-## Wave13 - Post-100% Stabilization Window
+Acceptance gates:
+- release candidate checks all green
+- runbooks are explicit, unambiguous, and validated by non-author operator
 
-Goal:
-- protect quality immediately after 100% mark before Stage 2 expansion
+Proof artifacts:
+- release checklist artifact set
+- operator validation form/results
 
-Scope:
-- short stabilization period for real usage feedback
-- hotfix path only, no scope expansion
-- Stage 2 entry review against v2 governance rules
+## wave13 - Post-100 Stabilization Window
 
-Acceptance Gates:
-- no unresolved P0/P1 regressions from release usage
-- Stage 2 expansion decision documented through v2 decision discipline
+Objective:
+- protect quality after completion and before any Stage 2 expansion
+
+In scope:
+- hotfix-only changes
+- no scope expansion
+- Stage 2 entry decision review
+
+Acceptance gates:
+- no unresolved P0/P1 regressions during stabilization window
+- Stage 2 decision documented through v2 governance process
+
+Proof artifacts:
+- stabilization runlog
+- Stage 2 go/no-go decision record
 
 ## Cross-Wave Non-Negotiable Gates
 
-Run for every wave with runtime or semantic impact:
-
+For any runtime or semantic-impact wave:
 1. `pnpm --filter api test`
 2. `pnpm --filter web build`
 3. `pnpm desktop:build`
 4. `pnpm desktop:smoke:release`
 
-Additional for semantic changes:
+For planner/semantic changes also require:
 - replay parity assertions
 - proof integrity assertions
-- fail-closed behavior assertions
+- fail-closed assertions
 
-## Branch And PR Convention
+## Branch/PR Rules
 
-- Branch format: `dna-wave<N>-<short-slice-name>`
-- PR title format: `<type>(wave<N>): <scope outcome>`
-- Merge rule: merge only when required checks are green and wave acceptance gates are explicitly met
-
-## Immediate Next Wave
-
-Start with Wave1 and produce:
-- a single prioritized backlog
-- a defect matrix
-- a feature-gap matrix
-- explicit wave assignment for every remaining v2 item
-
-After Wave1 merges:
-- start Wave2 with `B001`, `B002`, and `B003` as first execution slice candidates
+- Branch: `dna-wave<N>-<short-slice-name>`
+- PR title: `<type>(wave<N>): <scope outcome>`
+- Merge only when:
+- required checks are green
+- wave acceptance gates are met
+- docs and project-memory are updated
