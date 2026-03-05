@@ -13,6 +13,8 @@ import type {
   RefreshRunView
 } from './types';
 
+const REFRESH_WORKFLOW_STORAGE_KEY = 'orgumented.refresh.workflow-state.v1';
+
 interface UseRefreshWorkspaceOptions {
   orgAlias: string;
   retrieveHandoff: RefreshRetrieveHandoffView | null;
@@ -124,6 +126,44 @@ function parseOrgRetrieveRun(response: QueryResponse): OrgRetrieveRunView | null
   };
 }
 
+function parseStoredRefreshWorkflowState(raw: string | null): {
+  fromSnapshot?: string;
+  toSnapshot?: string;
+  lastRefreshRun?: RefreshRunView | null;
+  lastDiffRun?: RefreshDiffView | null;
+  lastOrgRetrieveRun?: OrgRetrieveRunView | null;
+} | null {
+  if (!raw) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return null;
+    }
+    return {
+      fromSnapshot: typeof parsed.fromSnapshot === 'string' ? parsed.fromSnapshot : undefined,
+      toSnapshot: typeof parsed.toSnapshot === 'string' ? parsed.toSnapshot : undefined,
+      lastRefreshRun:
+        parsed.lastRefreshRun && typeof parsed.lastRefreshRun === 'object' && !Array.isArray(parsed.lastRefreshRun)
+          ? (parsed.lastRefreshRun as RefreshRunView)
+          : null,
+      lastDiffRun:
+        parsed.lastDiffRun && typeof parsed.lastDiffRun === 'object' && !Array.isArray(parsed.lastDiffRun)
+          ? (parsed.lastDiffRun as RefreshDiffView)
+          : null,
+      lastOrgRetrieveRun:
+        parsed.lastOrgRetrieveRun &&
+        typeof parsed.lastOrgRetrieveRun === 'object' &&
+        !Array.isArray(parsed.lastOrgRetrieveRun)
+          ? (parsed.lastOrgRetrieveRun as OrgRetrieveRunView)
+          : null
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
   const [refreshMode, setRefreshMode] = useState<'incremental' | 'full'>('incremental');
   const [fromSnapshot, setFromSnapshot] = useState('');
@@ -136,12 +176,55 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
   const [lastOrgRetrieveRun, setLastOrgRetrieveRun] = useState<OrgRetrieveRunView | null>(null);
 
   useEffect(() => {
+    try {
+      const stored = parseStoredRefreshWorkflowState(localStorage.getItem(REFRESH_WORKFLOW_STORAGE_KEY));
+      if (!stored) {
+        return;
+      }
+      if (stored.fromSnapshot !== undefined) {
+        setFromSnapshot(stored.fromSnapshot);
+      }
+      if (stored.toSnapshot !== undefined) {
+        setToSnapshot(stored.toSnapshot);
+      }
+      if (stored.lastRefreshRun !== undefined) {
+        setLastRefreshRun(stored.lastRefreshRun);
+      }
+      if (stored.lastDiffRun !== undefined) {
+        setLastDiffRun(stored.lastDiffRun);
+      }
+      if (stored.lastOrgRetrieveRun !== undefined) {
+        setLastOrgRetrieveRun(stored.lastOrgRetrieveRun);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
     if (!options.retrieveHandoff) {
       return;
     }
 
     setOrgAutoRefresh(options.retrieveHandoff.autoRefresh);
   }, [options.retrieveHandoff]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        REFRESH_WORKFLOW_STORAGE_KEY,
+        JSON.stringify({
+          fromSnapshot,
+          toSnapshot,
+          lastRefreshRun,
+          lastDiffRun,
+          lastOrgRetrieveRun
+        })
+      );
+    } catch {
+      // ignore
+    }
+  }, [fromSnapshot, toSnapshot, lastRefreshRun, lastDiffRun, lastOrgRetrieveRun]);
 
   async function runRefreshNow(): Promise<void> {
     options.setLoading(true);
@@ -217,7 +300,7 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
 
     if (orgRunRetrieve && options.retrieveSelections.length === 0) {
       const message =
-        'Org retrieve blocked because no staged metadata selections were found. In Org Browser, check items and run Retrieve Checked first.';
+        'Org retrieve blocked because no staged metadata selections were found. In Org Browser, check items and run Retrieve Cart first.';
       const response: QueryResponse = {
         ok: false,
         statusCode: 400,

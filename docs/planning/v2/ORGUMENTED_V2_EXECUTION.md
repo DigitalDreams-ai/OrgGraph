@@ -32,7 +32,7 @@ Materially true now:
 - real-org session attach/switch and selective retrieve path is materially functional
 - org browser supports name-first search and grouped explorer/tree selection
 - org browser now uses explicit cart language (`checked row = in cart`) with simpler explorer/retrieve actions
-- org browser action row now separates `Search Names` from `Refresh Explorer`, and a quick workflow block clarifies checkbox-first selection from search/browse into retrieve cart
+- org browser action row now uses direct operator language (`Search`, `Browse All`, `Load Trees`, `Retrieve Cart`) and a quick workflow block clarifies checkbox-first selection from search/browse into retrieve cart
 - org browser now includes `Load Visible Items` to preload member trees for visible families in one pass (up to 20 families) instead of requiring per-family expansion clicks
 - org browser metadata search now matches normalized naming patterns (for example, spaced query text against compact/underscored metadata names), and discovery warnings are shown directly in workspace cards
 - org browser now bypasses stale empty live-metadata cache artifacts and re-queries org metadata discovery so search/browse recover automatically after prior failed discovery runs
