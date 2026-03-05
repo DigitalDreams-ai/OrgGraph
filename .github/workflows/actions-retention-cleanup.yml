@@ -26,7 +26,7 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
 
-            const workflows = await github.paginate(
+            const workflowPages = await github.paginate(
               github.rest.actions.listRepoWorkflows,
               {
                 owner,
@@ -35,6 +35,9 @@ jobs:
               },
               (response) => response.data.workflows
             );
+            const workflows = workflowPages
+              .flat()
+              .filter((workflow) => workflow && Number.isFinite(workflow.id));
 
             let deleted = 0;
 
