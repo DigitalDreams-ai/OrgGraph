@@ -124,6 +124,10 @@ As of March 1, 2026:
 ### Priority 5: Policy-aware approval support
 - only after packet quality and workflow adoption improve
 
+### Priority 6: Execution stability over platform churn
+- no restart and no architecture re-opening while Stage 1 completion is achievable on current desktop model
+- apply module-level rebuild only when objective triggers are met (see `ORGUMENTED_V2_PIVOT_LOCK.md`)
+
 ## What Not To Do
 
 Do not:
@@ -132,14 +136,16 @@ Do not:
 - pursue governance or enforcement claims before workflow proof exists
 - custom-build substrate for its own sake
 
-## Near-Term Roadmap Sequence
+## Near-Term Roadmap Sequence (Locked)
 
-1. stabilize desktop runtime convergence
-2. strengthen planner/compiler depth
-3. finish Stage 1 desktop workflow parity
-4. improve decision-packet quality and workflow fit
-5. prove measurable workflow lift
-6. begin policy-aware approval support
+1. close runtime/session reliability (wave2 + wave3)
+2. close org browser and retrieve-handoff parity (wave4 + wave5)
+3. strengthen Ask grounding and packet quality (wave6 + wave7)
+4. close structured analyze/proofs workflows (wave8 + wave9)
+5. finish layout/accessibility hardening (wave10)
+6. complete defect/CI/release discipline (wave11 + wave12)
+7. run stabilization hold (wave13)
+8. only then evaluate policy-aware approval support expansion
 
 ## Later Sequence
 

@@ -4,6 +4,7 @@ Date: March 5, 2026
 
 Execution master:
 - `docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md`
+- `docs/planning/v2/ORGUMENTED_V2_PIVOT_LOCK.md`
 
 ## Wave Sequence
 
@@ -79,37 +80,58 @@ Short version:
 4. close layout/accessibility defects
 5. burn down P0/P1 and finish release/operator proof
 
+## Locked Sequence (No Churn)
+
+Mandatory order for active slices:
+1. wave2 + wave3 reliability closure
+2. wave4 + wave5 workflow parity closure
+3. wave6 + wave7 grounding + packet quality
+4. wave8 + wave9 structured analysis + proof lifecycle closure
+5. wave10 layout/accessibility closure
+6. wave11 + wave12 defect/release closure
+7. wave13 stabilization hold
+
+Rules:
+- no full restart while this sequence remains feasible
+- no Stage 2 expansion while Stage 1 gates remain open
+- fixture-only evidence does not close Stage 1 completion gates
+
 ## Immediate Frontier (Next Slices)
 
-1. Wave5 finish slice:
-- close retrieve -> refresh -> diff handoff proof gaps for real-org workflows
-- lock staged summaries and fail-closed guidance when handoff is incomplete
-
-2. Wave2 finish slice:
+1. Wave2 finish slice:
 - lock runtime-unavailable vs tool-missing behavior across remaining workspace surfaces
 - add explicit regression tests for readiness + org status surfaces
 
-3. Wave7 start slice:
+2. Wave3 finish slice:
+- close CCI alias remediation and restore/switch deterministic behavior
+
+3. Wave4 finish slice:
+- close final explorer/search parity checks on real-org metadata discovery
+
+4. Wave5 finish slice:
+- close retrieve -> refresh -> diff handoff proof gaps for real-org workflows
+- lock staged summaries and fail-closed guidance when handoff is incomplete
+
+5. Wave6 start slice:
+- expand grounded metadata-family coverage and fallback elimination
+
+6. Wave7 start slice:
 - improve decision-packet risk drivers and next actions for real-org review asks
 - capture acceptance benchmark evidence with proof/replay IDs
 
-4. Wave8 start slice:
+7. Wave8 start slice:
 - deepen structured diagnostics/analysis cards for primary operator triage
 - reduce raw JSON dependence in permission/automation/impact/map workflows
 
-5. Wave9 start slice:
+8. Wave9 start slice:
 - complete label-first proof lifecycle (open/replay/export) without token-first dependence in normal workflows
 - keep token fields strictly advanced/debug while preserving replay parity checks
 
-6. Wave8 follow-on slice:
-- add edge-state structured diagnostics tests and telemetry summaries for failure correlation
-- close remaining raw-JSON-only diagnostic paths
-
-7. Wave10 finish slice:
+9. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 
-8. Wave11 finish slice:
+10. Wave11 finish slice:
 - complete P0/P1 burn-down lock and regression gates
 - keep CI strict while preserving minute-efficiency controls
 - keep Actions storage bounded with automated run-retention pruning and short artifact retention defaults
