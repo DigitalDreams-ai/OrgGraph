@@ -159,15 +159,15 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
               <div className="packet-stat-grid">
                 <div className="packet-stat">
                   <span>Workflow</span>
-                  <strong>{props.askResult.decisionPacket.focus || 'review'}</strong>
+                  <strong className="packet-value">{props.askResult.decisionPacket.focus || 'review'}</strong>
                 </div>
                 <div className="packet-stat">
                   <span>Target</span>
-                  <strong>{props.askResult.decisionPacket.targetLabel || 'n/a'}</strong>
+                  <strong className="packet-value">{props.askResult.decisionPacket.targetLabel || 'n/a'}</strong>
                 </div>
                 <div className="packet-stat">
                   <span>Permission model</span>
-                  <strong>{props.askResult.decisionPacket.permissionImpact?.user || 'n/a'}</strong>
+                  <strong className="packet-value path-value">{props.askResult.decisionPacket.permissionImpact?.user || 'n/a'}</strong>
                 </div>
               </div>
 
@@ -189,17 +189,17 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
               <div className="packet-stat-grid">
                 <div className="packet-stat">
                   <span>Permissions</span>
-                  <strong>{props.askResult.decisionPacket.permissionImpact?.pathCount ?? 'n/a'} paths</strong>
+                  <strong className="packet-value">{props.askResult.decisionPacket.permissionImpact?.pathCount ?? 'n/a'} paths</strong>
                   <p>{props.askResult.decisionPacket.permissionImpact?.summary || 'No permission summary returned.'}</p>
                 </div>
                 <div className="packet-stat">
                   <span>Automation</span>
-                  <strong>{props.askResult.decisionPacket.automationImpact?.automationCount ?? 'n/a'} items</strong>
+                  <strong className="packet-value">{props.askResult.decisionPacket.automationImpact?.automationCount ?? 'n/a'} items</strong>
                   <p>{props.askResult.decisionPacket.automationImpact?.summary || 'No automation summary returned.'}</p>
                 </div>
                 <div className="packet-stat">
                   <span>Change impact</span>
-                  <strong>{props.askResult.decisionPacket.changeImpact?.impactPathCount ?? 'n/a'} paths</strong>
+                  <strong className="packet-value">{props.askResult.decisionPacket.changeImpact?.impactPathCount ?? 'n/a'} paths</strong>
                   <p>{props.askResult.decisionPacket.changeImpact?.summary || 'No impact summary returned.'}</p>
                 </div>
               </div>
@@ -219,10 +219,10 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
           <p className="panel-caption">Proof context</p>
           <h3>Why this answer is trusted</h3>
           <p><strong>Workflow:</strong> {props.askResult?.decisionPacket?.kind || props.askResult?.decisionPacket?.focus || 'standard ask'}</p>
-          <p><strong>Policy:</strong> {props.askResult?.policy?.policyId || 'n/a'}</p>
-          <p><strong>Proof ID:</strong> {props.askProofId || 'n/a'}</p>
-          <p><strong>Replay token:</strong> {props.askReplayToken || 'n/a'}</p>
-          <p><strong>Snapshot:</strong> {props.askResult?.proof?.snapshotId || 'n/a'}</p>
+          <p><strong>Policy:</strong> <span className="path-value">{props.askResult?.policy?.policyId || 'n/a'}</span></p>
+          <p><strong>Proof ID:</strong> <span className="path-value">{props.askProofId || 'n/a'}</span></p>
+          <p><strong>Replay token:</strong> <span className="path-value">{props.askReplayToken || 'n/a'}</span></p>
+          <p><strong>Snapshot:</strong> <span className="path-value">{props.askResult?.proof?.snapshotId || 'n/a'}</span></p>
         </article>
 
         <article className="sub-card decision-card">
@@ -234,7 +234,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                 <li key={`${citation.sourcePath || 'citation'}-${index}`} className="citation-item">
                   <strong className="citation-source">{citation.sourcePath || `citation-${index + 1}`}</strong>
                   <span>score {typeof citation.score === 'number' ? citation.score : 'n/a'}</span>
-                  <p>{citation.snippet || 'No snippet returned.'}</p>
+                  <p className="citation-snippet">{citation.snippet || 'No snippet returned.'}</p>
                 </li>
               ))}
             </ul>
