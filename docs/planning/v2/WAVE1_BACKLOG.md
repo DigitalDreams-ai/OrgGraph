@@ -31,7 +31,7 @@ Purpose:
 | B009 | P1 | Ask | Improve flow/object/field grounding quality for real metadata questions | Wave6 | No low-value generic fallback for grounded metadata asks | Open |
 | B010 | P1 | Decision Packets | Raise packet usefulness for approval decisions (risk drivers, reads/writes, next actions) | Wave7 | Benchmark packet accepted as primary review artifact in runbook scenario | Open |
 | B011 | P1 | Proofs/History | Complete label-first proof access; remove token-bookkeeping dependency from primary path | Wave9 | Operator can reopen and replay by label/history alone | Open |
-| B012 | P1 | UX/Layout | Remove clipping/overflow/truncation defects across cards/rails/workspaces | Wave10 | No known clipping defects at supported desktop viewport targets | Open |
+| B012 | P1 | UX/Layout | Remove clipping/overflow/truncation defects across cards/rails/workspaces | Wave10 | No known clipping defects at supported desktop viewport targets | In Progress |
 | B013 | P1 | Quality | Burn down all critical/high Stage 1 defects to zero | Wave11 | P0/P1 defect matrix count reaches zero and stays stable for one cycle | Open |
 | B014 | P1 | Release | Finalize release checklist, rollback path, and operator machine validation | Wave12 | Release candidate checklist fully green with evidence artifacts | Open |
 | B015 | P2 | Analyze | Deepen explain/analyze workflows to reduce raw JSON dependency | Wave8 | Core analyze tasks complete using structured cards/actions | Open |
