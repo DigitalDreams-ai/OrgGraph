@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import type {
   MetricsExportView,
   ProofArtifactView,
@@ -22,11 +23,23 @@ interface ProofsWorkspaceProps {
   onGetProof: () => void;
   onReplay: () => void;
   onExportMetrics: () => void;
-  onUseRecentProof: (proof: RecentProofItem) => void;
+  onOpenRecentProof: (proof: RecentProofItem) => void;
   onReplayRecentProof: (proof: RecentProofItem) => void;
 }
 
 export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
+  const [historySearch, setHistorySearch] = useState('');
+  const filteredRecentProofs = useMemo(() => {
+    const search = historySearch.trim().toLowerCase();
+    if (!search) {
+      return props.recentProofs;
+    }
+    return props.recentProofs.filter((proof) => {
+      const haystack = `${proof.label} ${proof.subtitle} ${proof.query}`.toLowerCase();
+      return haystack.includes(search);
+    });
+  }, [historySearch, props.recentProofs]);
+
   return (
     <>
       <h2>Proofs &amp; History</h2>
@@ -72,9 +85,16 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
         <article className="sub-card">
           <p className="panel-caption">History labels</p>
           <h3>Latest decision artifacts</h3>
-          {props.recentProofs.length > 0 ? (
+          <label htmlFor="historySearch">Search History Labels</label>
+          <input
+            id="historySearch"
+            placeholder="Opportunity.StageName, approval, proof id prefix..."
+            value={historySearch}
+            onChange={(event) => setHistorySearch(event.target.value)}
+          />
+          {filteredRecentProofs.length > 0 ? (
             <ul className="proof-list">
-              {props.recentProofs.slice(0, 5).map((proof) => (
+              {filteredRecentProofs.slice(0, 20).map((proof) => (
                 <li
                   key={proof.proofId}
                   className={`proof-list-item ${props.proofId === proof.proofId ? 'active' : ''}`.trim()}
@@ -85,8 +105,8 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
                     <p><strong>Trust:</strong> {proof.trustLevel} <strong>Snapshot:</strong> {proof.snapshotId}</p>
                   </div>
                   <div className="proof-list-actions">
-                    <button type="button" className="ghost" onClick={() => props.onUseRecentProof(proof)}>
-                      Open
+                    <button type="button" className="ghost" onClick={() => props.onOpenRecentProof(proof)}>
+                      Open Artifact
                     </button>
                     <button type="button" className="ghost" onClick={() => props.onReplayRecentProof(proof)}>
                       Replay
@@ -95,6 +115,8 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
                 </li>
               ))}
             </ul>
+          ) : props.recentProofs.length > 0 ? (
+            <p className="muted">No history labels matched this search yet.</p>
           ) : (
             <p className="muted">Open this workspace to load recent decision history automatically, or use “Refresh History” if the runtime changed.</p>
           )}

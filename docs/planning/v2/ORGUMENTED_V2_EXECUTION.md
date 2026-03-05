@@ -170,6 +170,7 @@ Current real-org checkpoint after PR #71:
 - the current Wave5 refresh-handoff slice now carries staged Browser selections into `Run Org Retrieve` and fails closed in the UI when retrieve handoff context or staged selections are missing, replacing opaque `400 metadata selections required` backend failures with direct operator guidance
 - the current Wave2 bootstrap follow-up now regression-tests stale drift-heavy snapshots against both retrieved-org and fixture source paths so packaged startup keeps rebaseline recovery deterministic instead of tripping drift-budget startup aborts
 - the current Wave11 CI-efficiency slice now gates heavy Windows validate/smoke jobs behind repo-path change detection so docs/planning-only PRs use a fast pass while runtime-impacting changes still run full trust checks
+- the current Wave9 history-first slice now adds searchable proof history labels and direct `Open Artifact` actions so operators can inspect proofs from history entries without manually copying proof IDs first
 
 ## Remaining Stage 1 Product Gates
 

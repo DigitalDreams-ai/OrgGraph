@@ -360,7 +360,7 @@ export default function Page(): JSX.Element {
               onGetProof={() => void proofsWorkspace.runProofLookup()}
               onReplay={() => void proofsWorkspace.runReplay()}
               onExportMetrics={() => void proofsWorkspace.runMetricsExport()}
-              onUseRecentProof={proofsWorkspace.useRecentProof}
+              onOpenRecentProof={(proof) => void proofsWorkspace.openRecentProof(proof)}
               onReplayRecentProof={(proof) => void proofsWorkspace.replayRecentProof(proof)}
             />
           )}
