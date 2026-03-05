@@ -23,9 +23,9 @@ interface OperatorRailProps {
 }
 
 export function OperatorRail(props: OperatorRailProps): JSX.Element {
-  const sessionLabel = props.runtimeUnavailable && !props.orgSession && !props.orgStatus ? 'runtime unavailable' : props.sessionStatus;
-  const sfInstalledLabel = props.runtimeUnavailable && !props.orgStatus ? 'unavailable' : props.orgStatus?.sf?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
-  const cciInstalledLabel = props.runtimeUnavailable && !props.orgStatus ? 'unavailable' : props.orgStatus?.cci?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
+  const sessionLabel = props.runtimeUnavailable ? 'runtime unavailable' : props.sessionStatus;
+  const sfInstalledLabel = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.sf?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
+  const cciInstalledLabel = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
 
   return (
     <aside className="right-rail panel">

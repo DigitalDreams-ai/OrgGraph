@@ -35,6 +35,40 @@ function readPayload<T>(response: QueryResponse): T | null {
   return response.payload ? (response.payload as T) : null;
 }
 
+function textIncludesRuntimeUnavailable(value: string): boolean {
+  const lowered = value.toLowerCase();
+  return (
+    lowered.includes('runtime unavailable') ||
+    lowered.includes('runtime bootstrap failed') ||
+    lowered.includes('failed to fetch') ||
+    lowered.includes('networkerror') ||
+    lowered.includes('econnrefused')
+  );
+}
+
+function responseIndicatesRuntimeUnavailable(response: QueryResponse): boolean {
+  if (response.ok) {
+    return false;
+  }
+
+  if (typeof response.statusCode === 'number' && response.statusCode >= 500) {
+    return true;
+  }
+
+  const errorMessage = response.error?.message;
+  if (typeof errorMessage === 'string' && textIncludesRuntimeUnavailable(errorMessage)) {
+    return true;
+  }
+
+  const payload = response.payload;
+  const payloadMessage =
+    payload && typeof payload === 'object' && typeof (payload as { message?: unknown }).message === 'string'
+      ? ((payload as { message: string }).message)
+      : '';
+
+  return payloadMessage.length > 0 && textIncludesRuntimeUnavailable(payloadMessage);
+}
+
 export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   const [orgAlias, setOrgAlias] = useState('orgumented-sandbox');
   const [orgSession, setOrgSession] = useState<OrgSessionPayload | null>(null);
@@ -46,7 +80,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
 
   const aliasInventory = orgAliases?.aliases ?? [];
   const activeAlias = orgSession?.activeAlias || orgStatus?.session?.activeAlias || orgStatus?.alias || orgAlias;
-  const sessionStatus = runtimeUnavailable && !orgSession && !orgStatus ? 'runtime unavailable' : orgSession?.status || orgStatus?.session?.status || 'unknown';
+  const sessionStatus = runtimeUnavailable ? 'runtime unavailable' : orgSession?.status || orgStatus?.session?.status || 'unknown';
   const restoreAlias = orgSessionHistory?.restoreAlias || (sessionStatus === 'disconnected' ? activeAlias : '');
   const recentSessionEvents = orgSessionHistory?.entries ?? [];
   const selectedAlias = useMemo<OrgAliasSummary | null>(
@@ -78,6 +112,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       }
       if (response.ok === false) {
         options.setErrorText(options.resolveErrorMessage(response));
+        setRuntimeUnavailable(responseIndicatesRuntimeUnavailable(response));
       } else {
         setRuntimeUnavailable(false);
       }
@@ -115,9 +150,9 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     setOrgAliases(aliasesPayload);
     setOrgPreflight(preflightPayload);
 
-    const failedResponse = [statusResponse, sessionResponse, aliasesResponse, preflightResponse, historyResponse].find(
-      (response) => response.ok === false
-    );
+    const responses = [statusResponse, sessionResponse, aliasesResponse, preflightResponse, historyResponse];
+    const failedResponse = responses.find((response) => response.ok === false);
+    const runtimeUnavailableDetected = responses.some((response) => response.ok === false && responseIndicatesRuntimeUnavailable(response));
 
     const overviewResponse: QueryResponse = {
       ok: !failedResponse,
@@ -137,7 +172,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     }
     if (failedResponse) {
       options.setErrorText(options.resolveErrorMessage(failedResponse));
-      setRuntimeUnavailable(true);
+      setRuntimeUnavailable(runtimeUnavailableDetected);
     } else {
       setRuntimeUnavailable(false);
     }
