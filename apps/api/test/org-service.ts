@@ -6,6 +6,7 @@ import { OrgService } from '../src/modules/org/org.service';
 
 class StubToolAdapter {
   calls: Array<{ command: string; args: string[]; cwd?: string }> = [];
+  inaccessibleAliases = new Set<string>();
 
   private ok(stdout = '{"status":"ok"}') {
     return { exitCode: 0, stdout, stderr: '', elapsedMs: 12 };
@@ -36,6 +37,9 @@ class StubToolAdapter {
   async displayOrg(alias: string, cwd: string) {
     const args = ['org', 'display', '--target-org', alias, '--json'];
     this.calls.push({ command: 'sf', args, cwd });
+    if (this.inaccessibleAliases.has(alias)) {
+      return { exitCode: 1, stdout: '', stderr: `No authorization information found for ${alias}.`, elapsedMs: 12 };
+    }
     return this.ok('{"result":{"username":"user@example.com","id":"00Dxx0000000001","instanceUrl":"https://example.my.salesforce.com"}}');
   }
 
@@ -213,21 +217,38 @@ async function run(): Promise<void> {
     assert.equal(connected.status, 'connected');
     assert.equal(connected.activeAlias, 'orgumented-sandbox');
 
-    const switched = await service.switchSessionAlias('orgumented-sandbox');
+    toolAdapter.inaccessibleAliases.add('invalid-alias');
+    await assert.rejects(
+      service.switchSessionAlias('invalid-alias'),
+      (error: unknown) => {
+        const response = (error as { response?: { details?: { code?: string } } }).response;
+        return response?.details?.code === 'SF_SESSION_SWITCH_DENIED';
+      }
+    );
+
+    const restartedService = new OrgService(fakeConfig as never, fakePaths as never, fakeIngestion as never, toolAdapter as never);
+    const restoreAfterRestart = restartedService.sessionHistory(5);
+    assert.equal(restoreAfterRestart.activeAlias, 'orgumented-sandbox');
+    assert.equal(restoreAfterRestart.restoreAlias, 'orgumented-sandbox');
+    assert.equal(restoreAfterRestart.entries[0].action, 'switch_failed');
+    assert.equal(restoreAfterRestart.entries[1].action, 'connect');
+
+    const switched = await restartedService.switchSessionAlias('orgumented-sandbox');
     assert.equal(switched.status, 'connected');
     assert.equal(switched.activeAlias, 'orgumented-sandbox');
 
-    const disconnected = service.disconnectSession();
+    const disconnected = restartedService.disconnectSession();
     assert.equal(disconnected.status, 'disconnected');
     assert.equal(disconnected.activeAlias, 'orgumented-sandbox');
 
-    const sessionHistory = service.sessionHistory(5);
+    const sessionHistory = restartedService.sessionHistory(6);
     assert.equal(sessionHistory.activeAlias, 'orgumented-sandbox');
     assert.equal(sessionHistory.restoreAlias, 'orgumented-sandbox');
-    assert.equal(sessionHistory.entries.length, 3);
+    assert.equal(sessionHistory.entries.length, 4);
     assert.equal(sessionHistory.entries[0].action, 'disconnect');
     assert.equal(sessionHistory.entries[1].action, 'switch');
-    assert.equal(sessionHistory.entries[2].action, 'connect');
+    assert.equal(sessionHistory.entries[2].action, 'switch_failed');
+    assert.equal(sessionHistory.entries[3].action, 'connect');
 
     const result = await service.retrieveAndRefresh({
       selections: [{ type: 'CustomObject', members: ['Account'] }]
