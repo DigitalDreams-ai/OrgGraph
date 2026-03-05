@@ -20,6 +20,7 @@ async function run(): Promise<void> {
     'semantic-snapshot.integration.json'
   );
   const metaContextPath = path.join(workspaceRoot, 'data', 'meta', 'context.integration.json');
+  fs.mkdirSync(path.join(workspaceRoot, 'data'), { recursive: true });
   const sfParseFixturePath = fs.mkdtempSync(path.join(workspaceRoot, 'data', 'tmp-sf-parse-'));
 
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
