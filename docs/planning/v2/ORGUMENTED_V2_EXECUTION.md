@@ -41,6 +41,7 @@ Materially true now:
 - refresh handoff now also fails closed on alias mismatch and persists latest retrieve/selections across relaunch
 - flow grounding now prioritizes explicit flow-name asks over weak object-token inference (prevents false `no automation found for the` fallbacks)
 - flow grounding now adds deterministic targeted evidence retry for explicit flow-name asks when first-pass evidence ranking misses the named flow
+- review decision packets now include explicit `riskScore` and `evidenceCoverage` signals to improve approval-workflow readability
 - proof history supports searchable labels and open-first artifact access
 - CI heavy Windows jobs are path-gated for minute efficiency
 - org-session refresh now only marks runtime unavailable on true runtime failures, so alias/preflight 4xx errors no longer masquerade as missing local tools

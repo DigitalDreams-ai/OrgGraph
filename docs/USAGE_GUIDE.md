@@ -119,6 +119,7 @@ Current Ask-first behavior:
 - the desktop app opens on `Ask`
 - raw JSON is available only through the `Raw JSON Inspector`
 - the default answer shape is a decision packet, not a raw endpoint payload
+- review decision packets expose explicit risk score and evidence-coverage signals in the primary card view
 
 Current `Proofs & History` behavior:
 - recent proof history loads directly in the workspace as labeled decision entries

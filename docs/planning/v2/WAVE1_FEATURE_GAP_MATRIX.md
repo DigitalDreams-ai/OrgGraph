@@ -22,8 +22,8 @@ Purpose:
 | G008 | Refresh & Build | Product-grade staged workflow with clear summaries | Core operator workflow for semantic rebuild and drift review | Wave5 | Rebuild/diff/retrieve path is clear and repeatable | In Progress |
 | G009 | Ask Planner | Deep typed query planning beyond regex-heavy routing | Needed for trust, accuracy, and Stage 1 credibility | Wave6 | Planner accuracy improvement proven on target query families | In Progress |
 | G010 | Ask Planner | Strong metadata intent grounding (flow/object/field/action) | Avoids generic or misleading answers | Wave6 | Metadata-specific asks consistently grounded to evidence | In Progress |
-| G011 | Decision Packets | High-value approval-ready packet quality | Packets must be operational artifacts, not demos | Wave7 | Benchmark packet accepted in review workflow test | Open |
-| G012 | Decision Packets | Better reads/writes/change-impact synthesis for retrieved metadata | Enables admin/dev practical impact analysis | Wave7 | Packet includes consistent reads/writes/impact narrative | Open |
+| G011 | Decision Packets | High-value approval-ready packet quality | Packets must be operational artifacts, not demos | Wave7 | Benchmark packet accepted in review workflow test | In Progress |
+| G012 | Decision Packets | Better reads/writes/change-impact synthesis for retrieved metadata | Enables admin/dev practical impact analysis | Wave7 | Packet includes consistent reads/writes/impact narrative | In Progress |
 | G013 | Explain & Analyze | Structured operator flows for permissions/automation/impact/map | Reduces dependency on raw JSON inspection | Wave8 | Core analysis tasks complete via primary UI cards | Open |
 | G014 | Diagnostics | Structured diagnostics triage for runtime/tool/semantic issues | Faster and safer incident triage | Wave8 | Diagnostics cards provide actionable triage paths | Open |
 | G015 | Proofs & History | Label-first proof/replay lifecycle completion | Supports auditability and team collaboration | Wave9 | History-first proof operations are complete and stable | In Progress |

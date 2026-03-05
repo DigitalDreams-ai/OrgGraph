@@ -29,7 +29,7 @@ Purpose:
 | B007 | P1 | Browser | Ensure search-by-name returns predictable results when catalog is unseeded | Wave4 | Name search works with live metadata discovery and clear empty-state behavior | In Progress |
 | B008 | P1 | Refresh/Build | Make retrieve -> refresh -> diff -> org-retrieve handoff product-grade | Wave5 | End-to-end handoff works without raw JSON reliance | In Progress |
 | B009 | P1 | Ask | Improve flow/object/field grounding quality for real metadata questions | Wave6 | No low-value generic fallback for grounded metadata asks | In Progress |
-| B010 | P1 | Decision Packets | Raise packet usefulness for approval decisions (risk drivers, reads/writes, next actions) | Wave7 | Benchmark packet accepted as primary review artifact in runbook scenario | Open |
+| B010 | P1 | Decision Packets | Raise packet usefulness for approval decisions (risk drivers, reads/writes, next actions) | Wave7 | Benchmark packet accepted as primary review artifact in runbook scenario | In Progress |
 | B011 | P1 | Proofs/History | Complete label-first proof access; remove token-bookkeeping dependency from primary path | Wave9 | Operator can reopen and replay by label/history alone | In Progress |
 | B012 | P1 | UX/Layout | Remove clipping/overflow/truncation defects across cards/rails/workspaces | Wave10 | No known clipping defects at supported desktop viewport targets | In Progress |
 | B013 | P1 | Quality | Burn down all critical/high Stage 1 defects to zero | Wave11 | P0/P1 defect matrix count reaches zero and stays stable for one cycle | Open |
