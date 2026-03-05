@@ -61,7 +61,8 @@ function seedStaleSemanticSnapshot(appDataRoot: string): void {
 async function assertReadyAndAsk(appDataRoot: string): Promise<void> {
   const app = await NestFactory.create(AppModule, { logger: false });
   const runtimeBootstrap = app.get(RuntimeBootstrapService);
-  await runtimeBootstrap.ensureRuntimeReady();
+  const bootstrapReady = await runtimeBootstrap.ensureRuntimeReady();
+  assert.equal(bootstrapReady, true, 'bootstrap should succeed for baseline fixtures');
   await app.listen(0);
 
   try {
@@ -107,7 +108,7 @@ async function assertReadyAndAsk(appDataRoot: string): Promise<void> {
       'review query should not be refused for missing grounding'
     );
   } finally {
-    await app.close();
+    await app.close().catch(() => undefined);
     fs.rmSync(appDataRoot, { recursive: true, force: true });
   }
 }
@@ -115,7 +116,8 @@ async function assertReadyAndAsk(appDataRoot: string): Promise<void> {
 async function assertReadyOnly(appDataRoot: string): Promise<void> {
   const app = await NestFactory.create(AppModule, { logger: false });
   const runtimeBootstrap = app.get(RuntimeBootstrapService);
-  await runtimeBootstrap.ensureRuntimeReady();
+  const bootstrapReady = await runtimeBootstrap.ensureRuntimeReady();
+  assert.equal(bootstrapReady, true, 'bootstrap should succeed when stale snapshot requires rebaseline');
   await app.listen(0);
 
   try {
@@ -135,7 +137,40 @@ async function assertReadyOnly(appDataRoot: string): Promise<void> {
     assert.ok(readyBody.checks.db.edgeCount > 0, 'bootstrap should create graph edges');
     assert.equal(readyBody.checks.evidence.ok, true, 'bootstrap should create evidence index');
   } finally {
-    await app.close();
+    await app.close().catch(() => undefined);
+    fs.rmSync(appDataRoot, { recursive: true, force: true });
+  }
+}
+
+async function assertBootstrapFailureReadiness(appDataRoot: string): Promise<void> {
+  const app = await NestFactory.create(AppModule, { logger: false });
+  const runtimeBootstrap = app.get(RuntimeBootstrapService);
+  const bootstrapReady = await runtimeBootstrap.ensureRuntimeReady();
+  assert.equal(bootstrapReady, false, 'bootstrap should fail when fixtures path is missing');
+  await app.listen(0);
+
+  try {
+    const addr = app.getHttpServer().address();
+    const port = typeof addr === 'string' ? 0 : addr.port;
+    const base = `http://127.0.0.1:${port}`;
+
+    const healthRes = await fetch(`${base}/health`);
+    assert.equal(healthRes.status, 200, 'health should still report API process availability');
+
+    const readyRes = await fetch(`${base}/ready`);
+    assert.equal(readyRes.status, 503, 'ready should fail closed when bootstrap failed');
+    const readyBody = (await readyRes.json()) as {
+      checks?: { bootstrap?: { status?: string; ok?: boolean } };
+      message?: string;
+      statusCode?: number;
+    };
+    assert.match(
+      JSON.stringify(readyBody),
+      /(runtime bootstrap failed|\"status\":\"failed\")/i,
+      'ready payload should identify bootstrap failure'
+    );
+  } finally {
+    await app.close().catch(() => undefined);
     fs.rmSync(appDataRoot, { recursive: true, force: true });
   }
 }
@@ -154,10 +189,20 @@ async function run(): Promise<void> {
   seedStaleSemanticSnapshot(staleSnapshotAppDataRoot);
   await assertReadyOnly(staleSnapshotAppDataRoot);
 
+  const failedBootstrapAppDataRoot = path.join(root, 'data', 'runtime-bootstrap-failure-test');
+  fs.rmSync(failedBootstrapAppDataRoot, { recursive: true, force: true });
+  applyBootstrapEnv(root, failedBootstrapAppDataRoot);
+  process.env.PERMISSIONS_FIXTURES_PATH = path.join(root, 'fixtures', 'missing-runtime-bootstrap-fixtures');
+  await assertBootstrapFailureReadiness(failedBootstrapAppDataRoot);
+
   console.log('runtime bootstrap test passed');
 }
 
 run().catch((error) => {
-  console.error(error);
+  if (error instanceof Error) {
+    console.error(error.stack ?? error.message);
+  } else {
+    console.error('runtime bootstrap test failed with non-error rejection', error);
+  }
   process.exit(1);
 });

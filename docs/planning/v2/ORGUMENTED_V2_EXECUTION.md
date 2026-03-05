@@ -138,6 +138,7 @@ Current real-org checkpoint after PR #71:
 - packaged startup drift-budget failures are now being addressed in Wave2 by forcing rebaseline during ungrounded runtime bootstrap recovery
 - the next real-org session slice is to distinguish engine/runtime unavailability from actual `sf`, `cci`, or session failures so `Refresh Overview` stops presenting fake tool-missing state when the local desktop API cannot be reached
 - the current session-status branch now clears stale overview state on failed refreshes and renders `runtime unavailable` in Org Sessions and the Operator Rail instead of implying that `sf` or `cci` are actually missing when the desktop engine is unreachable
+- runtime readiness now includes explicit bootstrap-state checks, and `/ready` fails closed with `runtime bootstrap failed` when startup bootstrap cannot ground the runtime
 - the next follow-on browser slice is to make those name-first results feel like a grouped explorer instead of a flat metadata API result list
 - the current explorer slice now groups name-first matches by metadata family, emphasizes actual item names before metadata type labels, and lets operators add a member or family directly into the retrieve cart from the grouped explorer surface
 - the current live-discovery follow-up now loads metadata families from the live org before any local parse tree is seeded, uses checkbox selection instead of mixed add/remove verbs, and keeps long paths/IDs readable inside the desktop cards instead of clipping
