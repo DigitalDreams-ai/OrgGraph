@@ -1,0 +1,80 @@
+name: Actions Retention Cleanup
+
+on:
+  schedule:
+    - cron: "15 4 * * *"
+  workflow_dispatch:
+    inputs:
+      keep_runs_per_workflow:
+        description: "Number of most-recent completed runs to keep per workflow"
+        required: false
+        default: "30"
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete older completed workflow runs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const keepRuns = Number(context.payload.inputs?.keep_runs_per_workflow || '30');
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const workflows = await github.paginate(
+              github.rest.actions.listRepoWorkflows,
+              {
+                owner,
+                repo,
+                per_page: 100
+              },
+              (response) => response.data.workflows
+            );
+
+            let deleted = 0;
+
+            for (const workflow of workflows) {
+              let page = 1;
+              let seen = 0;
+
+              while (true) {
+                const { data } = await github.rest.actions.listWorkflowRuns({
+                  owner,
+                  repo,
+                  workflow_id: workflow.id,
+                  per_page: 100,
+                  page,
+                  status: 'completed'
+                });
+
+                if (!data.workflow_runs.length) {
+                  break;
+                }
+
+                for (const run of data.workflow_runs) {
+                  seen += 1;
+                  if (seen <= keepRuns) {
+                    continue;
+                  }
+
+                  await github.rest.actions.deleteWorkflowRun({
+                    owner,
+                    repo,
+                    run_id: run.id
+                  });
+                  deleted += 1;
+                }
+
+                if (data.workflow_runs.length < 100) {
+                  break;
+                }
+                page += 1;
+              }
+            }
+
+            core.info(`Retention cleanup complete. Deleted ${deleted} completed workflow runs.`);
