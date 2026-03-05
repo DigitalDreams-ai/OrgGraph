@@ -727,6 +727,7 @@ export class OrgService {
       includeSearchOnlyTypes: false
     });
     const search = input.search?.trim().toLowerCase();
+    const normalizedSearch = this.normalizeMetadataSearchValue(search ?? '');
     const limit = input.limit ?? 200;
     const warnings: string[] = [...index.warnings];
     let types = Array.from(index.typeMembers.entries())
@@ -738,11 +739,11 @@ export class OrgService {
 
     if (search) {
       types = types.filter((item) => {
-        if (item.type.toLowerCase().includes(search)) {
+        if (this.matchesMetadataSearch(item.type, search, normalizedSearch)) {
           return true;
         }
         const members = index.typeMembers.get(item.type) ?? [];
-        return members.some((member) => member.toLowerCase().includes(search));
+        return members.some((member) => this.matchesMetadataSearch(member, search, normalizedSearch));
       });
     }
 
@@ -773,6 +774,7 @@ export class OrgService {
     });
     const warnings: string[] = [...index.warnings];
     const search = input.search?.trim().toLowerCase();
+    const normalizedSearch = this.normalizeMetadataSearchValue(search ?? '');
     const limit = input.limit ?? 1000;
     const selectedType = input.type.trim();
     const rawMembers = index.typeMembers.get(selectedType) ?? [];
@@ -781,7 +783,7 @@ export class OrgService {
     }
     let members = rawMembers;
     if (search) {
-      members = members.filter((member) => member.toLowerCase().includes(search));
+      members = members.filter((member) => this.matchesMetadataSearch(member, search, normalizedSearch));
     }
     const limited = members.slice(0, limit).map((name) => ({ name }));
     if (members.length > limit) {
@@ -809,6 +811,7 @@ export class OrgService {
     });
     const warnings: string[] = [...index.warnings];
     const search = input.search.trim().toLowerCase();
+    const normalizedSearch = this.normalizeMetadataSearchValue(search);
     const limit = input.limit ?? 200;
     const results: Array<{
       kind: 'type' | 'member';
@@ -819,20 +822,20 @@ export class OrgService {
     }> = [];
 
     for (const [type, members] of index.typeMembers.entries()) {
-      const typeLower = type.toLowerCase();
-      if (typeLower.includes(search)) {
+      const typeScore = this.computeMetadataSearchScore(type, search, normalizedSearch);
+      if (typeScore !== null) {
         results.push({
           kind: 'type',
           type,
           name: type,
           matchField: 'type',
-          score: typeLower === search ? 0 : typeLower.startsWith(search) ? 1 : 2
+          score: typeScore
         });
       }
 
       for (const member of members) {
-        const memberLower = member.toLowerCase();
-        if (!memberLower.includes(search)) {
+        const memberScore = this.computeMetadataSearchScore(member, search, normalizedSearch);
+        if (memberScore === null) {
           continue;
         }
         results.push({
@@ -840,7 +843,7 @@ export class OrgService {
           type,
           name: member,
           matchField: 'member',
-          score: memberLower === search ? 0 : memberLower.startsWith(search) ? 1 : 2
+          score: memberScore
         });
       }
     }
@@ -970,9 +973,23 @@ export class OrgService {
     const parsePath = this.runtimePaths.sfParsePath();
     const projectPath = this.runtimePaths.sfProjectPath();
     const alias = this.resolveActiveAlias();
-    const liveIndex = await this.loadLiveMetadataIndex(alias, projectPath, parsePath, input.refresh, input.includeSearchOnlyTypes);
+    const liveIndex = this.configService.sfIntegrationEnabled()
+      ? await this.loadLiveMetadataIndex(
+          alias,
+          projectPath,
+          parsePath,
+          input.refresh,
+          input.includeSearchOnlyTypes
+        )
+      : {
+          source: 'metadata_api' as const,
+          refreshedAt: new Date().toISOString(),
+          typeMembers: new Map<string, string[]>(),
+          warnings: []
+        };
+    const liveMemberCount = this.countMetadataMembers(liveIndex.typeMembers);
 
-    if (liveIndex.typeMembers.size > 0) {
+    if (liveMemberCount > 0) {
       return liveIndex;
     }
 
@@ -992,6 +1009,14 @@ export class OrgService {
       typeMembers: liveIndex.typeMembers,
       warnings: [...liveIndex.warnings, ...localIndex.warnings]
     };
+  }
+
+  private countMetadataMembers(typeMembers: Map<string, string[]>): number {
+    let total = 0;
+    for (const members of typeMembers.values()) {
+      total += members.length;
+    }
+    return total;
   }
 
   private async loadLiveMetadataIndex(
@@ -1252,6 +1277,52 @@ export class OrgService {
       return 'source_api_error';
     }
     return 'retrieve_command_error';
+  }
+
+  private normalizeMetadataSearchValue(value: string): string {
+    return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  private matchesMetadataSearch(value: string, search: string, normalizedSearch: string): boolean {
+    return this.computeMetadataSearchScore(value, search, normalizedSearch) !== null;
+  }
+
+  private computeMetadataSearchScore(
+    value: string,
+    search: string,
+    normalizedSearch: string
+  ): number | null {
+    const valueLower = value.toLowerCase();
+    let score: number | null = null;
+
+    if (valueLower === search) {
+      score = 0;
+    } else if (valueLower.startsWith(search)) {
+      score = 1;
+    } else if (valueLower.includes(search)) {
+      score = 2;
+    }
+
+    if (normalizedSearch.length < 2) {
+      return score;
+    }
+
+    const normalizedValue = this.normalizeMetadataSearchValue(valueLower);
+    if (normalizedValue.length === 0) {
+      return score;
+    }
+
+    if (normalizedValue === normalizedSearch) {
+      return score === null ? 0.5 : Math.min(score, 0.5);
+    }
+    if (normalizedValue.startsWith(normalizedSearch)) {
+      return score === null ? 1.5 : Math.min(score, 1.5);
+    }
+    if (normalizedValue.includes(normalizedSearch)) {
+      return score === null ? 2.5 : Math.min(score, 2.5);
+    }
+
+    return score;
   }
 
   private resolveActiveAlias(): string {

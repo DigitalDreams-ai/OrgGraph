@@ -73,6 +73,19 @@ function parseMetadataRetrieve(response: QueryResponse): MetadataRetrieveResultV
   };
 }
 
+function extractWarnings(payload: unknown): string[] {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return [];
+  }
+  const warnings = (payload as { warnings?: unknown }).warnings;
+  if (!Array.isArray(warnings)) {
+    return [];
+  }
+  return warnings
+    .map((warning) => (typeof warning === 'string' ? warning.trim() : ''))
+    .filter((warning) => warning.length > 0);
+}
+
 export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const [metadataSearch, setMetadataSearch] = useState('');
   const [metadataMemberSearch, setMetadataMemberSearch] = useState('');
@@ -83,6 +96,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const [metadataSearchResults, setMetadataSearchResults] = useState<MetadataSearchResult[]>([]);
   const [metadataMembersByType, setMetadataMembersByType] = useState<Record<string, MetadataMembersPayload>>({});
   const [metadataLoadingType, setMetadataLoadingType] = useState('');
+  const [metadataWarnings, setMetadataWarnings] = useState<string[]>([]);
   const [metadataSelected, setMetadataSelected] = useState<MetadataSelection[]>([]);
   const [lastMetadataRetrieve, setLastMetadataRetrieve] = useState<MetadataRetrieveResultView | null>(null);
   const [lastRetrievedSelections, setLastRetrievedSelections] = useState<MetadataSelection[]>([]);
@@ -324,8 +338,10 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
       if (search) {
         const payload = result.payload as MetadataSearchPayload | null;
         setMetadataSearchResults(Array.isArray(payload?.results) ? payload.results : []);
+        setMetadataWarnings(extractWarnings(payload));
       } else {
         setMetadataSearchResults([]);
+        setMetadataWarnings(extractWarnings(result.payload));
       }
       if (!search && result.payload) {
         setMetadataCatalog(result.payload as MetadataCatalogPayload);
@@ -363,6 +379,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
           ...current,
           [type]: result.payload as MetadataMembersPayload
         }));
+        setMetadataWarnings(extractWarnings(result.payload));
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected metadata members failure';
@@ -419,6 +436,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     metadataSearchResults,
     metadataMembersByType,
     metadataLoadingType,
+    metadataWarnings,
     metadataSelectionsPreview,
     selectedMetadata: metadataSelected,
     selectionSummary,

@@ -20,8 +20,10 @@ async function run(): Promise<void> {
     'semantic-snapshot.integration.json'
   );
   const metaContextPath = path.join(workspaceRoot, 'data', 'meta', 'context.integration.json');
+  const sfParseFixturePath = fs.mkdtempSync(path.join(workspaceRoot, 'data', 'tmp-sf-parse-'));
 
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+  fs.cpSync(path.join(workspaceRoot, 'fixtures', 'permissions'), sfParseFixturePath, { recursive: true });
   if (fs.existsSync(dbPath)) {
     fs.rmSync(dbPath, { force: true });
   }
@@ -47,6 +49,7 @@ async function run(): Promise<void> {
   process.env.EVIDENCE_INDEX_PATH = evidencePath;
   process.env.SEMANTIC_SNAPSHOT_PATH = semanticSnapshotPath;
   process.env.META_CONTEXT_PATH = metaContextPath;
+  process.env.SF_PARSE_PATH = sfParseFixturePath;
   process.env.SF_INTEGRATION_ENABLED = 'false';
   process.env.ASK_DEFAULT_MODE = 'deterministic';
   process.env.LLM_ENABLED = 'true';
@@ -392,6 +395,23 @@ async function run(): Promise<void> {
 
     const metadataSearchRes = await fetch(`${base}/org/metadata/catalog?q=case&limit=50`);
     assert.equal(metadataSearchRes.status, 200, 'metadata catalog search should return 200');
+
+    const metadataSearchByNameRes = await fetch(
+      `${base}/org/metadata/search?q=opportunity%20stage%20sync&limit=50`
+    );
+    assert.equal(metadataSearchByNameRes.status, 200, 'metadata name search should return 200');
+    const metadataSearchByNameBody = (await metadataSearchByNameRes.json()) as {
+      totalResults: number;
+      warnings?: string[];
+      results: Array<{ kind: string; type: string; name: string }>;
+    };
+    assert.ok(metadataSearchByNameBody.totalResults > 0, 'metadata name search should return at least one result');
+    assert.ok(
+      metadataSearchByNameBody.results.some(
+        (item) => item.kind === 'member' && item.type === 'Flow' && item.name === 'OpportunityStageSync'
+      ),
+      'metadata search should match normalized flow name query'
+    );
 
     const metadataMembersRes = await fetch(
       `${base}/org/metadata/members?type=CustomObject&q=Account&limit=50`
@@ -1393,6 +1413,9 @@ async function run(): Promise<void> {
     }
     if (fs.existsSync(metaContextPath)) {
       fs.rmSync(metaContextPath, { force: true });
+    }
+    if (fs.existsSync(sfParseFixturePath)) {
+      fs.rmSync(sfParseFixturePath, { recursive: true, force: true });
     }
   }
 }
