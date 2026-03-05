@@ -37,6 +37,7 @@ interface BrowserWorkspaceProps {
   loading: boolean;
   onRefreshTypes: () => void;
   onRefreshExplorer: () => void;
+  onLoadVisibleMembers: () => void;
   onClearFilters: () => void;
   onClearSelections: () => void;
   onLoadMembers: (type: string) => void;
@@ -345,6 +346,14 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
         >
           Refresh Explorer
         </button>
+        <button
+          type="button"
+          className="ghost"
+          onClick={props.onLoadVisibleMembers}
+          disabled={props.loading || props.visibleCatalogTypes.length === 0}
+        >
+          Load Visible Items
+        </button>
         <button type="button" onClick={props.onRetrieveSelected} disabled={props.loading || props.selectionSummary.typeCount === 0}>
           Retrieve Checked
         </button>
@@ -368,6 +377,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       </article>
       <p className="muted"><strong>Cart rule:</strong> every checked row is already in the cart.</p>
       <p className="muted">Check a family to include everything nested under it. Check an individual item to include only that item.</p>
+      <p className="muted">Use <strong>Load Visible Items</strong> to preload member trees for the visible families without opening each one manually.</p>
       {props.metadataWarnings.length > 0 ? (
         <article className="sub-card">
           <p className="panel-caption">Discovery warnings</p>

@@ -86,6 +86,8 @@ function extractWarnings(payload: unknown): string[] {
     .filter((warning) => warning.length > 0);
 }
 
+const MAX_VISIBLE_MEMBER_LOAD_TYPES = 20;
+
 export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const [metadataSearch, setMetadataSearch] = useState('');
   const [metadataMemberSearch, setMetadataMemberSearch] = useState('');
@@ -363,6 +365,15 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     await refreshTypes('');
   }
 
+  async function requestMembers(type: string, search: string): Promise<QueryResponse> {
+    return getOrgMetadataMembers({
+      type,
+      q: search,
+      limit: parseOptionalInt(metadataLimitRaw) ?? 1000,
+      refresh: metadataForceRefresh
+    });
+  }
+
   async function loadMembers(type: string): Promise<void> {
     options.setLoading(true);
     options.setCopied(false);
@@ -370,12 +381,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     setMetadataLoadingType(type);
 
     try {
-      const result = await getOrgMetadataMembers({
-        type,
-        q: metadataMemberSearch,
-        limit: parseOptionalInt(metadataLimitRaw) ?? 1000,
-        refresh: metadataForceRefresh
-      });
+      const result = await requestMembers(type, metadataMemberSearch);
       options.presentResponse(result);
       if (result.ok === false) {
         options.setErrorText(options.resolveErrorMessage(result));
@@ -393,6 +399,67 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
       const fallback: QueryResponse = { ok: false, error: { message } };
       options.presentResponse(fallback);
       options.setErrorText('Metadata members request failed. Check API readiness and local runtime health.');
+    } finally {
+      setMetadataLoadingType('');
+      options.setLoading(false);
+    }
+  }
+
+  async function loadVisibleMembers(): Promise<void> {
+    const visibleTypes = (metadataCatalog?.types ?? [])
+      .filter((entry) => entry.memberCount > 0)
+      .map((entry) => entry.type);
+    if (visibleTypes.length === 0) {
+      return;
+    }
+
+    const selectedTypes = visibleTypes.slice(0, MAX_VISIBLE_MEMBER_LOAD_TYPES);
+    const aggregatedWarnings: string[] = [];
+    let hadFailures = false;
+
+    options.setLoading(true);
+    options.setCopied(false);
+    options.setErrorText('');
+
+    try {
+      for (const type of selectedTypes) {
+        setMetadataLoadingType(type);
+        try {
+          const result = await requestMembers(type, '');
+          options.presentResponse(result);
+          if (result.ok === false) {
+            hadFailures = true;
+            aggregatedWarnings.push(`${type}: ${options.resolveErrorMessage(result)}`);
+            continue;
+          }
+          if (result.payload) {
+            setMetadataMembersByType((current) => ({
+              ...current,
+              [type]: result.payload as MetadataMembersPayload
+            }));
+            aggregatedWarnings.push(...extractWarnings(result.payload));
+          }
+        } catch (error) {
+          hadFailures = true;
+          const message = error instanceof Error ? error.message : 'Unexpected metadata members failure';
+          aggregatedWarnings.push(`${type}: ${message}`);
+        }
+      }
+
+      if (visibleTypes.length > selectedTypes.length) {
+        aggregatedWarnings.push(
+          `Loaded ${selectedTypes.length} family trees (limit=${MAX_VISIBLE_MEMBER_LOAD_TYPES}). Refine search or increase catalog limit to load additional families.`
+        );
+      }
+      if (hadFailures) {
+        options.setErrorText('Some metadata families failed to load. Check discovery warnings for details.');
+      }
+      if (aggregatedWarnings.length > 0) {
+        const uniqueWarnings = Array.from(
+          new Set(aggregatedWarnings.map((warning) => warning.trim()).filter((warning) => warning.length > 0))
+        );
+        setMetadataWarnings(uniqueWarnings);
+      }
     } finally {
       setMetadataLoadingType('');
       options.setLoading(false);
@@ -455,6 +522,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     clearSelections,
     refreshTypes,
     refreshExplorer,
+    loadVisibleMembers,
     loadMembers,
     toggleTypeSelection,
     toggleMemberSelection,
