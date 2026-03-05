@@ -660,7 +660,14 @@ export class AskService {
           : plan.reviewWorkflow.focus === 'breakage'
             ? `Change review for ${targetLabel}: ${recommendedAction}.`
             : `High-risk change review for ${targetLabel}: ${recommendedAction}.`;
+      const evidenceCoverage = {
+        citationCount: citations.length,
+        hasPermissionPaths: perms.totalPaths > 0,
+        hasAutomationCoverage: automations.totalAutomations > 0,
+        hasImpactPaths: impact.totalPaths > 0
+      };
       const topRiskDrivers = [
+        `${citations.length} citation(s) ground this decision packet`,
         `${impact.totalPaths} impact path(s) reference ${targetLabel}`,
         `${automations.totalAutomations} automation item(s) touch ${object}`,
         perms.granted
@@ -684,13 +691,22 @@ export class AskService {
           rationale: impact.explanation
         }
       ];
+      if (citations.length < 3) {
+        nextActions.unshift({
+          label: 'Retrieve broader metadata scope',
+          rationale:
+            'only limited citations grounded this packet. Retrieve adjacent metadata families and rerun Ask before approval.'
+        });
+      }
       decisionPacket = {
         kind: 'high_risk_change_review',
         focus: plan.reviewWorkflow.focus,
         targetLabel,
         targetType: plan.reviewWorkflow.targetType,
         summary,
+        riskScore: reviewRiskScore,
         riskLevel,
+        evidenceCoverage,
         topRiskDrivers,
         permissionImpact: {
           user,

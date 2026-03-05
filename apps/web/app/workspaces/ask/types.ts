@@ -9,7 +9,14 @@ export type AskPayload = {
     targetLabel?: string;
     targetType?: string;
     summary?: string;
+    riskScore?: number;
     riskLevel?: string;
+    evidenceCoverage?: {
+      citationCount?: number;
+      hasPermissionPaths?: boolean;
+      hasAutomationCoverage?: boolean;
+      hasImpactPaths?: boolean;
+    };
     topRiskDrivers?: string[];
     permissionImpact?: {
       user?: string;

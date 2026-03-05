@@ -98,7 +98,14 @@ export interface AskDecisionPacket {
   targetLabel: string;
   targetType: 'field' | 'object';
   summary: string;
+  riskScore: number;
   riskLevel: 'low' | 'medium' | 'high';
+  evidenceCoverage: {
+    citationCount: number;
+    hasPermissionPaths: boolean;
+    hasAutomationCoverage: boolean;
+    hasImpactPaths: boolean;
+  };
   topRiskDrivers: string[];
   permissionImpact: {
     user: string;

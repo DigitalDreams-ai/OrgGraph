@@ -893,8 +893,15 @@ async function run(): Promise<void> {
         kind: string;
         focus: string;
         targetLabel: string;
+        riskScore: number;
         riskLevel: string;
         summary: string;
+        evidenceCoverage: {
+          citationCount: number;
+          hasPermissionPaths: boolean;
+          hasAutomationCoverage: boolean;
+          hasImpactPaths: boolean;
+        };
         topRiskDrivers: string[];
         permissionImpact: { user: string; summary: string; pathCount: number };
         automationImpact: { summary: string; automationCount: number };
@@ -912,8 +919,13 @@ async function run(): Promise<void> {
     assert.equal(askReview.decisionPacket?.kind, 'high_risk_change_review');
     assert.equal(askReview.decisionPacket?.focus, 'approval');
     assert.equal(askReview.decisionPacket?.targetLabel, 'Opportunity.StageName');
+    assert.equal(typeof askReview.decisionPacket?.riskScore, 'number');
     assert.ok(['low', 'medium', 'high'].includes(String(askReview.decisionPacket?.riskLevel)));
     assert.match(String(askReview.decisionPacket?.summary ?? ''), /High-risk change review/i);
+    assert.equal(typeof askReview.decisionPacket?.evidenceCoverage.citationCount, 'number');
+    assert.equal(typeof askReview.decisionPacket?.evidenceCoverage.hasPermissionPaths, 'boolean');
+    assert.equal(typeof askReview.decisionPacket?.evidenceCoverage.hasAutomationCoverage, 'boolean');
+    assert.equal(typeof askReview.decisionPacket?.evidenceCoverage.hasImpactPaths, 'boolean');
     assert.ok((askReview.decisionPacket?.topRiskDrivers.length ?? 0) >= 3);
     assert.equal(askReview.decisionPacket?.permissionImpact.user, 'jane@example.com');
     assert.equal(typeof askReview.decisionPacket?.permissionImpact.pathCount, 'number');
@@ -932,6 +944,7 @@ async function run(): Promise<void> {
     const askReviewRepeat = (await askReviewRepeatRes.json()) as {
       proof: { proofId: string; replayToken: string };
       decisionPacket?: {
+        riskScore: number;
         summary: string;
         riskLevel: string;
         topRiskDrivers: string[];
@@ -939,6 +952,7 @@ async function run(): Promise<void> {
     };
     assert.equal(askReviewRepeat.proof.proofId, askReview.proof.proofId);
     assert.equal(askReviewRepeat.proof.replayToken, askReview.proof.replayToken);
+    assert.equal(askReviewRepeat.decisionPacket?.riskScore, askReview.decisionPacket?.riskScore);
     assert.equal(askReviewRepeat.decisionPacket?.summary, askReview.decisionPacket?.summary);
     assert.equal(askReviewRepeat.decisionPacket?.riskLevel, askReview.decisionPacket?.riskLevel);
     assert.deepEqual(
@@ -962,6 +976,7 @@ async function run(): Promise<void> {
       decisionPacket?: {
         focus: string;
         targetLabel: string;
+        riskScore: number;
         summary: string;
         topRiskDrivers: string[];
       };
@@ -972,6 +987,7 @@ async function run(): Promise<void> {
     assert.equal(askReviewVariant.plan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
     assert.equal(askReviewVariant.decisionPacket?.focus, askReview.decisionPacket?.focus);
     assert.equal(askReviewVariant.decisionPacket?.targetLabel, askReview.decisionPacket?.targetLabel);
+    assert.equal(askReviewVariant.decisionPacket?.riskScore, askReview.decisionPacket?.riskScore);
     assert.equal(askReviewVariant.decisionPacket?.summary, askReview.decisionPacket?.summary);
     assert.deepEqual(
       askReviewVariant.decisionPacket?.topRiskDrivers,
