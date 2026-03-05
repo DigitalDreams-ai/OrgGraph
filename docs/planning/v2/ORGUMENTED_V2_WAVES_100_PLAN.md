@@ -12,6 +12,9 @@ This is the single execution plan for full Stage 1 completion of Orgumented desk
 - design/layout/accessibility
 - bug burn-down and release readiness
 
+Execution lock companion:
+- `docs/planning/v2/ORGUMENTED_V2_PIVOT_LOCK.md`
+
 ## Regroup Refresh (Current Truth)
 
 The following are now true in main and should not be re-planned as open:
@@ -104,6 +107,14 @@ Orgumented is 100% complete for v2 scope only when all conditions below are true
 - CI trust gates are green and cost-controlled
 - Windows package + smoke are stable
 - runbooks are explicit and validated by a non-author operator
+
+## Pivot Lock Rules
+
+Mandatory:
+1. no full-restart program while current desktop architecture can still satisfy Stage 1 gates
+2. no Docker/web-runtime reintroduction in runtime/release/operator flow
+3. no Stage 2/3/4 expansion while Stage 1 waves remain open
+4. fixture-only evidence cannot close Stage 1 completion claims
 
 ## Operating Rules
 
@@ -334,12 +345,12 @@ Exit:
 
 ## Immediate Branch Queue (Regrouped)
 
-1. `dna-wave5-handoff-proof-guard`: close real-org retrieve -> refresh -> diff handoff proof and fail-closed guidance gaps.
-2. `dna-wave2-startup-drift-recovery`: finish packaged runtime startup/drift parity hardening.
-3. `dna-wave7-decision-packet-quality-baseline`: raise packet quality to approval-workflow acceptance.
-4. `dna-wave8-analyze-diagnostics-structured-cards`: reduce raw JSON dependence in diagnose/analyze paths.
-5. `dna-wave10-accessibility-focus-pass`: finish keyboard/focus/accessibility baseline across core workspaces.
-6. `dna-wave11-p0p1-burn-down-lock`: close and lock critical/high defects with stable CI evidence.
+1. `dna-wave2-startup-drift-recovery`: finish packaged runtime startup/drift parity hardening.
+2. `dna-wave3-session-toolchain-reliability`: close deterministic connect/switch/restore and CCI remediation gaps.
+3. `dna-wave4-browser-parity-closeout`: finish explorer/search parity on real-org workflows.
+4. `dna-wave5-handoff-proof-guard`: close real-org retrieve -> refresh -> diff handoff proof and fail-closed guidance gaps.
+5. `dna-wave6-grounding-expansion`: deepen grounded Ask coverage and reduce weak fallback paths.
+6. `dna-wave7-decision-packet-quality-baseline`: raise packet quality to approval-workflow acceptance.
 
 ## Cross-Wave Non-Negotiable Gates
 

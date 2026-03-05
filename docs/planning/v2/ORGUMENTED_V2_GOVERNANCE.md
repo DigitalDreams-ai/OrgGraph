@@ -90,6 +90,11 @@ Pause and correct if:
 - a custom subsystem lands without measurable lift criteria
 - core desktop workflows fail to reach parity even though Stage 1 strategy depends on them
 
+Rebuild escalation policy:
+- do not trigger full restart from delivery frustration alone
+- allow module-level rebuild only when two consecutive slices in the same domain fail acceptance and defect/cycle-time trends do not improve
+- allow full rebuild only after matrix re-score and explicit recommendation, with deterministic/proof contract risk documented
+
 ## Decision Discipline
 
 Before major structural change:
@@ -97,6 +102,10 @@ Before major structural change:
 - use the decision matrix
 - justify refactor vs module rebuild vs full rebuild numerically
 - define acceptance gates before coding
+
+Scope lock:
+- no Stage 2/3/4 expansion while Stage 1 wave gates are incomplete
+- no architecture re-open (Docker/web runtime paths) without explicit matrix-driven decision
 
 For agent execution:
 - default to one primary agent and use one verifier only when an independent pass adds value
@@ -120,6 +129,8 @@ No meaningful runtime change is complete without:
 - build validation
 - desktop smoke proof
 - documentation alignment
+
+Stage 1 completion evidence must include real-org workflow proof for core operator paths; fixture-only evidence is not sufficient for completion claims.
 
 No semantic-runtime change is complete without:
 - replay parity protection

@@ -44,35 +44,40 @@ Purpose:
 - risk summary
 - decision discipline
 
-7. `docs/planning/v2/ORGUMENTED_V2_LEXICON.md`
+7. `docs/planning/v2/ORGUMENTED_V2_PIVOT_LOCK.md`
+- locked no-restart execution decision
+- mandatory wave order for Stage 1 closure
+- objective module-rebuild/full-rebuild triggers
+
+8. `docs/planning/v2/ORGUMENTED_V2_LEXICON.md`
 - canonical terms
 - wording discipline
 - banned terms
 - precision rules for trusted outputs
 
-8. `docs/planning/v2/ORGUMENTED_V2_SOURCE_MAP.md`
+9. `docs/planning/v2/ORGUMENTED_V2_SOURCE_MAP.md`
 - which older planning files informed this set
 - where each topic was consolidated
 - what remains historical/reference-only
 
-9. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
+10. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
 - simplified agent operating model
 - primary-agent-first execution
 - optional verifier usage
 - merge and replay gates
 
-10. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_TASK_BOARD.md`
+11. `docs/planning/v2/ORGUMENTED_V2_MULTI_AGENT_TASK_BOARD.md`
 - lightweight execution board
 - current-slice visibility
 - optional verifier handoff
 - merge-readiness notes
 
-11. `docs/planning/v2/ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
+12. `docs/planning/v2/ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
 - Codex-native execution and handoff runbook
 - primary and verifier session flow
 - verification and recovery steps
 
-12. `scripts/verify-worker-branch.ps1`
+13. `scripts/verify-worker-branch.ps1`
 - verifier gate script
 - structured pass/fail JSON output
 - runs typecheck, tests, build, desktop smoke, replay parity, scope check
@@ -97,10 +102,11 @@ Recommended order:
 4. `ORGUMENTED_V2_WAVES_100_PLAN.md`
 5. `ORGUMENTED_V2_EXECUTION.md`
 6. `ORGUMENTED_V2_GOVERNANCE.md`
-7. `ORGUMENTED_V2_LEXICON.md`
-8. `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
-9. `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
-10. `ORGUMENTED_V2_SOURCE_MAP.md`
+7. `ORGUMENTED_V2_PIVOT_LOCK.md`
+8. `ORGUMENTED_V2_LEXICON.md`
+9. `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
+10. `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
+11. `ORGUMENTED_V2_SOURCE_MAP.md`
 
 ## Default Execution Mode
 

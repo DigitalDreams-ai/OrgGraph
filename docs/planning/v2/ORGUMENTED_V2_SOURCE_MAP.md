@@ -85,7 +85,8 @@ If a future contributor wants the shortest reliable starting point, use:
 4. `docs/planning/v2/ORGUMENTED_V2_ROADMAP.md`
 5. `docs/planning/v2/ORGUMENTED_V2_EXECUTION.md`
 6. `docs/planning/v2/ORGUMENTED_V2_GOVERNANCE.md`
-7. `docs/planning/v2/ORGUMENTED_V2_LEXICON.md`
+7. `docs/planning/v2/ORGUMENTED_V2_PIVOT_LOCK.md`
+8. `docs/planning/v2/ORGUMENTED_V2_LEXICON.md`
 
 ## Consolidation Rule
 

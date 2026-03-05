@@ -34,6 +34,7 @@ Purpose:
 | G020 | Runbooks | Assumption-free operator quickstart + troubleshooting | Enables repeatable onboarding and field usage | Wave12 | Runbooks validated by clean-machine operator run | In Progress |
 | G021 | Release Ops | Release and rollback discipline for packaged desktop | Reduces production deployment risk | Wave12 | Release checklist and rollback proof complete | Open |
 | G022 | Stabilization | Post-release hotfix window before Stage 2 expansion | Protects quality and trust before scope growth | Wave13 | Stabilization exit criteria satisfied | Open |
+| G023 | Governance | Locked no-restart execution policy with objective rebuild triggers | Prevents churn and preserves progress toward Stage 1 gates | Wave11 | Pivot-lock rules are codified and used as active execution policy | In Progress |
 
 ## Mapping Rule
 
