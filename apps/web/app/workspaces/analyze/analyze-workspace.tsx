@@ -263,7 +263,7 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
                 <strong>{props.permissionDiagnosis.staleThresholdHours}</strong>
               </div>
             </div>
-            <p>{props.permissionDiagnosis.mapPath}</p>
+            <p className="path-value">{props.permissionDiagnosis.mapPath}</p>
           </div>
 
           <div className="sub-card">

@@ -33,6 +33,7 @@ Materially true now:
 - org browser now uses explicit cart language (`checked row = in cart`) with simpler explorer/retrieve actions
 - org browser metadata search now matches normalized naming patterns (for example, spaced query text against compact/underscored metadata names), and discovery warnings are shown directly in workspace cards
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
+- wave10 follow-up now enforces larger card-grid minimum widths and path-specific wrapping classes, reducing truncation in decision packets, citations, mapping diagnostics, and diagnostics artifacts
 - refresh handoff is staged and fail-closed from browser selections
 - flow grounding now prioritizes explicit flow-name asks over weak object-token inference (prevents false `no automation found for the` fallbacks)
 - proof history supports searchable labels and open-first artifact access
@@ -47,6 +48,9 @@ Still unresolved:
 - explain/analyze workflows still depend too much on raw JSON in edge cases
 - layout/accessibility has remaining card-boundary and density defects
 - release runbooks and clean-machine validation are not complete
+
+Operational note:
+- desktop smoke should run after desktop build completes; running both in parallel can produce a false process-exit readiness failure
 
 ## Regrouped 100% Completion Focus
 
