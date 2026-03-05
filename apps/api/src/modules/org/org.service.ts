@@ -415,6 +415,7 @@ export class OrgService {
         details: { code: 'SF_SESSION_SWITCH_DENIED' }
       });
     }
+    await this.runAuth(alias, projectPath);
     const switchedAt = new Date().toISOString();
     this.writeSessionState({
       status: 'connected',
