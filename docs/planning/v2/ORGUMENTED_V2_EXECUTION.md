@@ -29,6 +29,7 @@ Materially true now:
 - desktop runtime is Windows-native Tauri + Next + Nest
 - Docker is out of runtime/release/operator flow
 - `/ready` remains fail-closed when bootstrap grounding fails
+- runtime bootstrap now retries once on semantic-drift-budget startup failures after clearing stale semantic state artifacts, then remains fail-closed if recovery still fails
 - real-org session attach/switch and selective retrieve path is materially functional
 - org browser supports name-first search and grouped explorer/tree selection
 - org browser now uses explicit cart language (`checked row = in cart`) with simpler explorer/retrieve actions
