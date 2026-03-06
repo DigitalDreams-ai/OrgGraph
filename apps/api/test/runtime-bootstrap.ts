@@ -155,11 +155,11 @@ async function assertBootstrapRetriesDriftBudgetFailure(appDataRoot: string): Pr
     options
   ) => {
     attempts += 1;
-    rebaselineFlags.push(options.rebaseline === true);
+    rebaselineFlags.push(options?.rebaseline === true);
     if (attempts === 1) {
       throw new Error('Semantic drift budget exceeded: simulated stale bootstrap baseline');
     }
-    return originalRefresh(options);
+    return originalRefresh(options ?? {});
   };
 
   const bootstrapReady = await runtimeBootstrap.ensureRuntimeReady();
