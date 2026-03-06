@@ -16,8 +16,8 @@ Purpose:
 | G002 | Runtime | Deterministic bootstrap resilience for real-org operator startup | Operators must not hit startup abort loops | Wave2 | Startup consistently reaches ready state under supported baseline | In Progress |
 | G003 | Org Sessions | Robust connect/switch/restore state machine | Session flow is foundational for all org workflows | Wave3 | Connect/switch/restore/disconnect validated end-to-end | In Progress |
 | G004 | Org Sessions | Actionable remediation for tool/auth/session/preflight failures | Reduces operator confusion and support burden | Wave3 | Every failure state includes direct next action | In Progress |
-| G005 | Org Browser | True explorer-style browsing by names and families | Matches expected org-browser mental model | Wave4 | User can browse and search by real metadata names | In Progress |
-| G006 | Org Browser | Deterministic checkbox selection model across search and browse | Reduces interaction ambiguity and retrieval errors | Wave4 | Single selection model works in all browser states | In Progress |
+| G005 | Org Browser | True explorer-style browsing by names and families | Matches expected org-browser mental model | Wave4 | User can browse and search by real metadata names | Complete |
+| G006 | Org Browser | Deterministic checkbox selection model across search and browse | Reduces interaction ambiguity and retrieval errors | Wave4 | Single selection model works in all browser states | Complete |
 | G007 | Browser + Refresh | First-class retrieve handoff workflow | Retrieval must flow directly into rebuild/compare actions | Wave5 | Retrieve handoff visible, valid, and executable without JSON | In Progress |
 | G008 | Refresh & Build | Product-grade staged workflow with clear summaries | Core operator workflow for semantic rebuild and drift review | Wave5 | Rebuild/diff/retrieve path is clear and repeatable | In Progress |
 | G009 | Ask Planner | Deep typed query planning beyond regex-heavy routing | Needed for trust, accuracy, and Stage 1 credibility | Wave6 | Planner accuracy improvement proven on target query families | In Progress |

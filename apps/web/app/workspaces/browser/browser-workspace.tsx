@@ -359,7 +359,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           onClick={props.onLoadVisibleMembers}
           disabled={props.loading || props.visibleCatalogTypes.length === 0}
         >
-          Load Trees
+          Load Visible Items
         </button>
         <button type="button" onClick={props.onRetrieveSelected} disabled={props.loading || props.selectionSummary.typeCount === 0}>
           Retrieve Cart

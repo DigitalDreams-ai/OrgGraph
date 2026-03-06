@@ -42,7 +42,7 @@ Remaining work is now primarily around:
 | Domain | 100% Definition | Current | Remaining |
 |---|---|---|---|
 | runtime core | packaged startup deterministic, fail-closed, no ambiguous status | mostly in place | close wave2 runtime/tooling parity gaps and startup drift edge cases |
-| sessions/browser/retrieve | connect/switch/restore deterministic and browser parity delivered | materially functional | complete wave5 handoff proof and final browser parity checks |
+| sessions/browser/retrieve | connect/switch/restore deterministic and browser parity delivered | materially functional | complete wave5 handoff proof and lock end-to-end rebuild workflow parity |
 | ask/planner | grounded metadata asks with replay-safe proof | improved | finish deeper typed coverage and fallback elimination in wave6 |
 | decision packets | approval-grade, trusted by workflow | partial | wave7 acceptance benchmark and packet quality gates |
 | analyze/diagnostics | structured triage without JSON dependency | partial | wave8 card/action depth and synthesis improvements |
@@ -132,7 +132,7 @@ Mandatory:
 | wave1 | baseline lock and triage | B001-B024 mapped | Complete | Maintain drift-free docs |
 | wave2 | runtime convergence | B001, B002 | In Progress | Distinguish runtime unreachable vs tool missing everywhere |
 | wave3 | sessions and toolchain reliability | B004, B005 | In Progress | Clear CCI bridge status and deterministic restore behavior |
-| wave4 | org browser explorer | B006, B007 | In Progress (late) | Final parity validation pass after cache-recovery + bulk-load additions |
+| wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
 | wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |
 | wave6 | ask planner/compiler depth | B003, B009 | In Progress | Replay-safe grounding expansion for additional metadata families |
 | wave7 | decision-packet quality | B010, B017 | Open | Approval-quality packet benchmark evidence |
@@ -347,10 +347,9 @@ Exit:
 
 1. `dna-wave2-startup-drift-recovery`: finish packaged runtime startup/drift parity hardening.
 2. `dna-wave3-session-toolchain-reliability`: close deterministic connect/switch/restore and CCI remediation gaps.
-3. `dna-wave4-browser-parity-closeout`: finish explorer/search parity on real-org workflows.
-4. `dna-wave5-handoff-proof-guard`: close real-org retrieve -> refresh -> diff handoff proof and fail-closed guidance gaps.
-5. `dna-wave6-grounding-expansion`: deepen grounded Ask coverage and reduce weak fallback paths.
-6. `dna-wave7-decision-packet-quality-baseline`: raise packet quality to approval-workflow acceptance.
+3. `dna-wave5-handoff-proof-guard`: close real-org retrieve -> refresh -> diff handoff proof and fail-closed guidance gaps.
+4. `dna-wave6-grounding-expansion`: deepen grounded Ask coverage and reduce weak fallback paths.
+5. `dna-wave7-decision-packet-quality-baseline`: raise packet quality to approval-workflow acceptance.
 
 ## Cross-Wave Non-Negotiable Gates
 

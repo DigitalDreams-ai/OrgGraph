@@ -33,11 +33,12 @@ Materially true now:
 - real-org session attach/switch and selective retrieve path is materially functional
 - org browser supports name-first search and grouped explorer/tree selection
 - org browser now uses explicit cart language (`checked row = in cart`) with simpler explorer/retrieve actions
-- org browser action row now uses direct operator language (`Search`, `Browse All`, `Load Trees`, `Retrieve Cart`) and a quick workflow block clarifies checkbox-first selection from search/browse into retrieve cart
+- org browser action row now uses direct operator language (`Search`, `Browse All`, `Load Visible Items`, `Retrieve Cart`) and a quick workflow block clarifies checkbox-first selection from search/browse into retrieve cart
 - org browser now includes `Load Visible Items` to preload member trees for visible families in one pass (up to 20 families) instead of requiring per-family expansion clicks
 - org browser metadata search now matches normalized naming patterns (for example, spaced query text against compact/underscored metadata names), and discovery warnings are shown directly in workspace cards
 - org browser now bypasses stale empty live-metadata cache artifacts and re-queries org metadata discovery so search/browse recover automatically after prior failed discovery runs
-- org browser now auto-loads explorer families on first open and uses simpler action labels (`Search`, `Browse All`, `Load Trees`, `Retrieve Cart`) with Enter-to-search support
+- org browser now auto-loads explorer families on first open and uses simpler action labels (`Search`, `Browse All`, `Load Visible Items`, `Retrieve Cart`) with Enter-to-search support
+- wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
 - wave10 follow-up now enforces larger card-grid minimum widths and path-specific wrapping classes, reducing truncation in decision packets, citations, mapping diagnostics, and diagnostics artifacts
 - wave10 follow-up now hardens Ask proof/context and citation rendering with explicit path-value wrapping, snippet scroll bounds, and denser auto-fit minima to reduce clipping in mid-width desktop layouts
@@ -125,33 +126,30 @@ Rules:
 2. Wave3 finish slice:
 - close CCI alias remediation and restore/switch deterministic behavior
 
-3. Wave4 finish slice:
-- close final explorer/search parity checks on real-org metadata discovery
-
-4. Wave5 finish slice:
+3. Wave5 finish slice:
 - close retrieve -> refresh -> diff handoff proof gaps for real-org workflows
 - lock staged summaries and fail-closed guidance when handoff is incomplete
 
-5. Wave6 start slice:
+4. Wave6 start slice:
 - expand grounded metadata-family coverage and fallback elimination
 
-6. Wave7 start slice:
+5. Wave7 start slice:
 - improve decision-packet risk drivers and next actions for real-org review asks
 - capture acceptance benchmark evidence with proof/replay IDs
 
-7. Wave8 start slice:
+6. Wave8 start slice:
 - deepen structured diagnostics/analysis cards for primary operator triage
 - reduce raw JSON dependence in permission/automation/impact/map workflows
 
-8. Wave9 start slice:
+7. Wave9 start slice:
 - complete label-first proof lifecycle (open/replay/export) without token-first dependence in normal workflows
 - keep token fields strictly advanced/debug while preserving replay parity checks
 
-9. Wave10 finish slice:
+8. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 
-10. Wave11 finish slice:
+9. Wave11 finish slice:
 - complete P0/P1 burn-down lock and regression gates
 - keep CI strict while preserving minute-efficiency controls
 - keep Actions storage bounded with automated run-retention pruning and short artifact retention defaults
