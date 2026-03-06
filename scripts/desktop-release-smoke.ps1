@@ -239,14 +239,38 @@ $sessionConnectStatus = 'skipped-no-aliases'
 $sessionSwitchStatus = 'skipped'
 $sessionConnectAlias = $null
 $sessionSwitchAlias = $null
+$launchAttemptsUsed = 0
 
 try {
   Stop-PackagedProcesses
   Wait-PortReleased -LocalPort 3100
 
-  $desktopProcess = Start-Process -FilePath $exePath -WorkingDirectory (Split-Path $exePath) -RedirectStandardOutput $stdoutLog -RedirectStandardError $stderrLog -PassThru
+  $launchAttempts = [Math]::Max(1, [int]($env:ORGUMENTED_DESKTOP_SMOKE_LAUNCH_ATTEMPTS ?? '2'))
+  $launchRetryDelaySeconds = [Math]::Max(1, [int]($env:ORGUMENTED_DESKTOP_SMOKE_LAUNCH_RETRY_DELAY_SECONDS ?? '2'))
 
-  Wait-ForReady -Url 'http://127.0.0.1:3100/ready' -DesktopProcess $desktopProcess -StdoutLogPath $stdoutLog -StderrLogPath $stderrLog
+  for ($launchAttempt = 1; $launchAttempt -le $launchAttempts; $launchAttempt += 1) {
+    Remove-Item $stdoutLog, $stderrLog -ErrorAction SilentlyContinue
+    $desktopProcess = Start-Process -FilePath $exePath -WorkingDirectory (Split-Path $exePath) -RedirectStandardOutput $stdoutLog -RedirectStandardError $stderrLog -PassThru
+    $launchAttemptsUsed = $launchAttempt
+    try {
+      Wait-ForReady -Url 'http://127.0.0.1:3100/ready' -DesktopProcess $desktopProcess -StdoutLogPath $stdoutLog -StderrLogPath $stderrLog
+      break
+    } catch {
+      $message = $_.Exception.Message
+      $canRetry = $launchAttempt -lt $launchAttempts -and $message -like '*exited before readiness*'
+      if (-not $canRetry) {
+        throw
+      }
+
+      Write-Host "Packaged desktop exited before readiness on launch attempt $launchAttempt of $launchAttempts. Retrying..."
+      if ($desktopProcess -and -not $desktopProcess.HasExited) {
+        Stop-Process -Id $desktopProcess.Id -Force -ErrorAction SilentlyContinue
+      }
+      Stop-PackagedProcesses
+      Wait-PortReleased -LocalPort 3100
+      Start-Sleep -Seconds $launchRetryDelaySeconds
+    }
+  }
 
   $health = Invoke-JsonGet -Url 'http://127.0.0.1:3100/health' -ArtifactPath $healthArtifact
   if ($health.status -ne 'ok') {
@@ -424,6 +448,7 @@ try {
     sessionSwitchStatus = $sessionSwitchStatus
     sessionSwitchAlias = $sessionSwitchAlias
     sessionRestoreStatus = $sessionRestoreStatus
+    launchAttemptsUsed = $launchAttemptsUsed
     artifacts = $artifacts
   } | ConvertTo-Json -Depth 8 | Set-Content -Path $resultArtifact
 
