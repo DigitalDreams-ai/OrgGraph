@@ -269,8 +269,9 @@ async function assertBootstrapFailureReadiness(appDataRoot: string): Promise<voi
     assert.equal(orgStatusRes.status, 200, 'org status should remain reachable when bootstrap failed');
     const orgStatusBody = (await orgStatusRes.json()) as {
       integrationEnabled?: unknown;
-      sf?: { installed?: unknown };
-      cci?: { installed?: unknown };
+      sf?: { installed?: unknown; message?: unknown };
+      cci?: { installed?: unknown; message?: unknown };
+      session?: { status?: unknown };
     };
     assert.equal(
       typeof orgStatusBody.integrationEnabled,
@@ -287,6 +288,54 @@ async function assertBootstrapFailureReadiness(appDataRoot: string): Promise<voi
       'boolean',
       'org status should continue surfacing cci tool status during bootstrap failure'
     );
+    assert.equal(
+      typeof orgStatusBody.sf?.message,
+      'string',
+      'org status should include sf message surface during bootstrap failure'
+    );
+    assert.equal(
+      typeof orgStatusBody.cci?.message,
+      'string',
+      'org status should include cci message surface during bootstrap failure'
+    );
+    assert.equal(
+      typeof orgStatusBody.session?.status,
+      'string',
+      'org status should still expose session status during bootstrap failure'
+    );
+
+    const preflightRes = await fetch(`${base}/org/preflight?alias=orgumented-sandbox`);
+    assert.equal(preflightRes.status, 200, 'org preflight should remain reachable when bootstrap failed');
+    const preflightBody = (await preflightRes.json()) as {
+      checks?: {
+        sfInstalled?: unknown;
+        cciInstalled?: unknown;
+        aliasAuthenticated?: unknown;
+        parsePathPresent?: unknown;
+      };
+      issues?: unknown;
+    };
+    assert.equal(
+      typeof preflightBody.checks?.sfInstalled,
+      'boolean',
+      'org preflight should continue surfacing sf check during bootstrap failure'
+    );
+    assert.equal(
+      typeof preflightBody.checks?.cciInstalled,
+      'boolean',
+      'org preflight should continue surfacing cci check during bootstrap failure'
+    );
+    assert.equal(
+      typeof preflightBody.checks?.aliasAuthenticated,
+      'boolean',
+      'org preflight should continue surfacing alias auth check during bootstrap failure'
+    );
+    assert.equal(
+      typeof preflightBody.checks?.parsePathPresent,
+      'boolean',
+      'org preflight should continue surfacing parse-path check during bootstrap failure'
+    );
+    assert.equal(Array.isArray(preflightBody.issues), true, 'org preflight should return structured issue list');
   } finally {
     await app.close().catch(() => undefined);
     fs.rmSync(appDataRoot, { recursive: true, force: true });
