@@ -1105,6 +1105,10 @@ async function run(): Promise<void> {
       askReview.decisionPacket?.topRiskDrivers.some((driver) => driver.toLowerCase().includes('top impact source')),
       'review packet should include top impact spotlight in risk drivers'
     );
+    assert.ok(
+      askReview.decisionPacket?.topRiskDrivers.some((driver) => driver.toLowerCase().includes('top citation source')),
+      'review packet should include top citation source spotlight in risk drivers'
+    );
     if (topAutomationName) {
       assert.ok(
         askReview.decisionPacket?.topRiskDrivers.some((driver) => driver.includes(topAutomationName)),
@@ -1137,6 +1141,15 @@ async function run(): Promise<void> {
         'impact action rationale should reference top impacted sources'
       );
     }
+    const reviewCitationAction = askReview.decisionPacket?.nextActions.find(
+      (action) => action.label === 'Inspect citation sources'
+    );
+    assert.ok(reviewCitationAction, 'review packet should include citation-source action');
+    assert.match(
+      reviewCitationAction?.rationale ?? '',
+      /validate decision grounding/i,
+      'citation-source action should explain grounding validation intent'
+    );
 
     const askReviewRepeatRes = await fetch(`${base}/ask`, {
       method: 'POST',

@@ -57,6 +57,7 @@ Materially true now:
 - flow read/write decision packets now emit `targetType: flow`, richer risk drivers (read/write/object/trigger coverage), and explicit ungrounded-flow remediation actions (`Retrieve flow metadata`, `Increase evidence coverage`)
 - review decision packets now include explicit `riskScore` and `evidenceCoverage` signals to improve approval-workflow readability
 - review decision packets now surface explicit top automation names and top impact sources directly inside risk drivers and next-action rationales, with deterministic integration assertions
+- review decision packets now spotlight top citation source files and add an explicit `Inspect citation sources` action so operators can verify grounding evidence without raw JSON detours
 - phase17 benchmark guards now fail closed on review-packet specificity (spotlighted automation/impact drivers + source-specific next-action rationale) in prepare/human/verify/status tooling
 - proof history supports searchable labels and open-first artifact access
 - Ask `Save to history` now executes a true history handoff (sync proof identifiers, switch to Proofs, and refresh recent proof labels) instead of duplicating `Open proof`
