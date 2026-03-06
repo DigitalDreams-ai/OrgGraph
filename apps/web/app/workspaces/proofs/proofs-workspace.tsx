@@ -49,17 +49,24 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
 
       <div className="action-row">
         <button type="button" onClick={props.onListRecent} disabled={props.loading}>Refresh History</button>
-        <button type="button" onClick={props.onGetProof} disabled={props.loading || !props.proofId.trim()}>
-          Open Selected Label
+        <button
+          type="button"
+          onClick={props.onGetProof}
+          disabled={props.loading || (!props.selectedRecentProof?.proofId && !props.proofId.trim())}
+        >
+          Open Selected History
         </button>
         <button
           type="button"
           onClick={props.onReplay}
-          disabled={props.loading || (!props.proofId.trim() && !props.replayToken.trim())}
+          disabled={
+            props.loading ||
+            (!props.selectedRecentProof?.proofId && !props.proofId.trim() && !props.replayToken.trim())
+          }
         >
-          Replay Selected Label
+          Replay Selected History
         </button>
-        <button type="button" onClick={props.onExportMetrics} disabled={props.loading}>Export Metrics</button>
+        <button type="button" onClick={props.onExportMetrics} disabled={props.loading}>Export Trust History</button>
       </div>
 
       <article className="sub-card">
@@ -87,7 +94,7 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
           <label htmlFor="historySearch">Search History Labels</label>
           <input
             id="historySearch"
-            placeholder="Opportunity.StageName, approval, proof id prefix..."
+            placeholder="Opportunity.StageName, approval, flow name..."
             value={historySearch}
             onChange={(event) => setHistorySearch(event.target.value)}
           />
@@ -132,8 +139,6 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
                 <span className="decision-badge muted">Policy: {props.selectedProof.policyId}</span>
                 <span className="decision-badge muted">Trace: {props.selectedProof.traceLevel}</span>
               </div>
-              <p><strong>Proof ID:</strong> {props.selectedProof.proofId}</p>
-              <p><strong>Replay Token:</strong> {props.selectedProof.replayToken}</p>
               <p><strong>Snapshot:</strong> {props.selectedProof.snapshotId}</p>
               <p><strong>Generated:</strong> {props.selectedProof.generatedAt || 'n/a'}</p>
               <p><strong>Deterministic answer:</strong> {props.selectedProof.deterministicAnswer || 'n/a'}</p>
@@ -144,7 +149,7 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
               <p><strong>Derivation edges:</strong> {props.selectedProof.derivationEdgeCount}</p>
             </>
           ) : (
-            <p className="muted">Run “Get Proof” to load the selected proof artifact into a structured view.</p>
+            <p className="muted">Select a history label, then run “Open Selected History” to load a structured proof view.</p>
           )}
         </article>
 
@@ -166,7 +171,7 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
               <p><strong>Replayed answer:</strong> {props.replayResult.replayed.deterministicAnswer || 'n/a'}</p>
             </>
           ) : (
-            <p className="muted">Run “Replay Proof” to compare the stored proof against a fresh deterministic replay.</p>
+            <p className="muted">Select a history label, then run “Replay Selected History” to compare deterministic replay parity.</p>
           )}
         </article>
 
@@ -200,7 +205,7 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
               </div>
             </>
           ) : (
-            <p className="muted">Run “Export Metrics” to inspect trust history by snapshot and provider.</p>
+            <p className="muted">Run “Export Trust History” to inspect trust history by snapshot and provider.</p>
           )}
         </article>
       </div>
@@ -208,6 +213,10 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
       <details>
         <summary>Advanced token lookup</summary>
         <p className="muted">Keep raw proof identifiers available for debugging and parity checks, but do not treat them as the primary workflow.</p>
+        <p className="muted">
+          Selected proof IDs: <span className="path-value">{props.selectedProof?.proofId || props.proofId || 'n/a'}</span> • replay token:{' '}
+          <span className="path-value">{props.selectedProof?.replayToken || props.replayToken || 'n/a'}</span>
+        </p>
         <div className="field-grid">
           <div>
             <label htmlFor="proofId">Proof ID</label>

@@ -61,6 +61,7 @@ Materially true now:
 - phase17 benchmark guards now fail closed on review-packet specificity (spotlighted automation/impact drivers + source-specific next-action rationale) in prepare/human/verify/status tooling
 - proof history supports searchable labels and open-first artifact access
 - Ask `Save to history` now executes a true history handoff (sync proof identifiers, switch to Proofs, and refresh recent proof labels) instead of duplicating `Open proof`
+- Proofs & History action row now defaults to label-first wording (`Open/Replay Selected History`), while raw token lookup stays in advanced details with explicit fail-closed guidance when no selection is present
 - CI heavy Windows jobs are path-gated for minute efficiency
 - PR Autofill now runs on `opened/reopened` only (not every push), and Actions retention now includes an automated cleanup workflow that prunes older completed runs per workflow
 - CI now runs packaged desktop smoke in the same Windows validate job (instead of cross-job runtime artifact handoff), reducing Actions artifact storage pressure without dropping trust gates
