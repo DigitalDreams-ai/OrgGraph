@@ -47,6 +47,7 @@ Materially true now:
 - `Refresh & Build` now shows explicit staged selection previews (family/member scope) from Browser handoff, reducing retrieve-cart ambiguity without raw JSON
 - Browser retrieve failures now clear persisted handoff/selections and fail closed in Refresh instead of silently reusing stale retrieve context
 - refresh diff now auto-seeds `from/to` snapshot IDs from recent refresh runs and fails closed when snapshot inputs are missing or identical
+- refresh diff now also fails closed when the latest refresh snapshot source path does not match the current Browser handoff parse path, preventing cross-handoff drift comparisons
 - flow grounding now prioritizes explicit flow-name asks over weak object-token inference (prevents false `no automation found for the` fallbacks)
 - flow grounding now adds deterministic targeted evidence retry for explicit flow-name asks when first-pass evidence ranking misses the named flow
 - flow grounding now tolerates quoted/article-prefixed flow references (for example `Flow "the X" reads and writes`) and keeps explicit-flow asks off the generic object fallback path

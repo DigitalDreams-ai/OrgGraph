@@ -9,6 +9,7 @@ export interface RefreshRunView {
   snapshotId: string;
   mode: string;
   skipped: boolean;
+  sourcePath: string;
   nodeCount: number;
   edgeCount: number;
   evidenceCount: number;

@@ -50,6 +50,7 @@ function parseRefreshRun(response: QueryResponse): RefreshRunView | null {
     snapshotId: String(payload.snapshotId ?? ''),
     mode: String(payload.mode ?? ''),
     skipped: payload.skipped === true,
+    sourcePath: String(payload.sourcePath ?? ''),
     nodeCount: Number(payload.nodeCount ?? 0),
     edgeCount: Number(payload.edgeCount ?? 0),
     evidenceCount: Number(payload.evidenceCount ?? 0),
@@ -58,6 +59,28 @@ function parseRefreshRun(response: QueryResponse): RefreshRunView | null {
     driftSummary: String(driftEvaluation.summary ?? ''),
     driftViolationCount: Number(driftEvaluation.violationCount ?? 0)
   };
+}
+
+function normalizeRuntimePath(value: string): string {
+  return value
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/\/+/g, '/')
+    .replace(/\/$/, '')
+    .toLowerCase();
+}
+
+function refreshSourceMatchesHandoff(
+  refreshRun: RefreshRunView | null,
+  retrieveHandoff: RefreshRetrieveHandoffView | null
+): boolean {
+  if (!refreshRun || !retrieveHandoff) {
+    return true;
+  }
+  if (!refreshRun.sourcePath || !retrieveHandoff.parsePath) {
+    return false;
+  }
+  return normalizeRuntimePath(refreshRun.sourcePath) === normalizeRuntimePath(retrieveHandoff.parsePath);
 }
 
 function parseRefreshDiff(response: QueryResponse): RefreshDiffView | null {
@@ -294,6 +317,23 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
     options.setLoading(true);
     options.setCopied(false);
     options.setErrorText('');
+
+    if (!refreshSourceMatchesHandoff(lastRefreshRun, options.retrieveHandoff)) {
+      const message =
+        'Diff blocked because the latest Refresh snapshot source path does not match the current Browser handoff parse path. Run Retrieve Cart and Refresh again before diff.';
+      const response: QueryResponse = {
+        ok: false,
+        statusCode: 400,
+        error: {
+          message
+        }
+      };
+      options.presentResponse(response);
+      options.setErrorText(message);
+      setLastDiffRun(null);
+      options.setLoading(false);
+      return;
+    }
 
     const from = fromSnapshot.trim();
     const to = toSnapshot.trim();

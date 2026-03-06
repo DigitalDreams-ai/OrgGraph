@@ -49,6 +49,22 @@ function formatTimestamp(value?: string): string {
   return new Date(parsed).toLocaleString();
 }
 
+function normalizeRuntimePath(value: string): string {
+  return value
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/\/+/g, '/')
+    .replace(/\/$/, '')
+    .toLowerCase();
+}
+
+function pathsMatch(left?: string, right?: string): boolean {
+  if (!left || !right) {
+    return false;
+  }
+  return normalizeRuntimePath(left) === normalizeRuntimePath(right);
+}
+
 export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
   const expectedAlias = props.activeAlias || props.selectedAlias;
   const retrieveHandoff = assessRetrieveHandoff(props.retrieveHandoff, expectedAlias);
@@ -57,6 +73,11 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
     props.orgRunRetrieve && (retrieveHandoff.state !== 'ready' || stagedSelectionCount === 0);
   const stagedSelectionPreview = props.retrieveSelections.slice(0, 6);
   const stagedSelectionOverflow = Math.max(stagedSelectionCount - stagedSelectionPreview.length, 0);
+  const refreshSourceParity =
+    props.lastRefreshRun && props.retrieveHandoff
+      ? pathsMatch(props.lastRefreshRun.sourcePath, props.retrieveHandoff.parsePath)
+      : null;
+  const diffBlockedBySourceParity = refreshSourceParity === false;
 
   return (
     <>
@@ -175,11 +196,23 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
                 <span className={`decision-badge ${props.lastRefreshRun.skipped ? 'muted' : 'good'}`}>
                   Skipped: {String(props.lastRefreshRun.skipped)}
                 </span>
+                {props.retrieveHandoff ? (
+                  <span className={`decision-badge ${refreshSourceParity ? 'good' : 'bad'}`}>
+                    Handoff source match: {String(refreshSourceParity)}
+                  </span>
+                ) : null}
               </div>
               <p><strong>Snapshot:</strong> {props.lastRefreshRun.snapshotId}</p>
+              <p><strong>Source path:</strong> {props.lastRefreshRun.sourcePath || 'n/a'}</p>
               <p><strong>Counts:</strong> {props.lastRefreshRun.nodeCount} nodes, {props.lastRefreshRun.edgeCount} edges, {props.lastRefreshRun.evidenceCount} evidence</p>
               <p><strong>Meaning change:</strong> {props.lastRefreshRun.meaningChangeSummary || 'n/a'}</p>
               <p><strong>Drift summary:</strong> {props.lastRefreshRun.driftSummary || 'n/a'}</p>
+              {diffBlockedBySourceParity && props.retrieveHandoff ? (
+                <p>
+                  <strong>Fail closed:</strong> refresh source path does not match current Browser handoff parse
+                  path. Run `Retrieve Cart` and `Run Refresh` again before diff.
+                </p>
+              ) : null}
             </>
           ) : (
             <p className="muted">Run Refresh to capture the latest semantic rebuild summary.</p>
@@ -286,6 +319,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
           onClick={props.onRunDiff}
           disabled={
             props.loading ||
+            diffBlockedBySourceParity ||
             props.fromSnapshot.trim().length === 0 ||
             props.toSnapshot.trim().length === 0 ||
             props.fromSnapshot.trim() === props.toSnapshot.trim()
@@ -298,6 +332,15 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
         Run Refresh to auto-fill the latest snapshot pair for diff. Diff stays fail-closed until both snapshot IDs
         are present and distinct.
       </p>
+      {diffBlockedBySourceParity && props.retrieveHandoff ? (
+        <ul className="issue-list">
+          <li>
+            <strong>Fail closed.</strong> Latest refresh source path (`{props.lastRefreshRun?.sourcePath || 'n/a'}`)
+            does not match Browser handoff parse path (`{props.retrieveHandoff.parsePath}`). Re-run `Retrieve Cart`
+            and `Run Refresh` before diff.
+          </li>
+        </ul>
+      ) : null}
 
       {props.lastDiffRun ? (
         <article className="sub-card">
