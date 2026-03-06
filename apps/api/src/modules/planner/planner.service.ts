@@ -98,6 +98,19 @@ export class PlannerService {
       if (this.overlapsEmailRange(index, match[0].length, emailRanges)) {
         continue;
       }
+      const tokenEnd = index + match[0].length;
+      const trailing = input.slice(tokenEnd, tokenEnd + 10).toLowerCase();
+      const firstSegment = match[1].toLowerCase();
+      const secondSegment = match[2].toLowerCase();
+      if ((firstSegment === 'flow' && secondSegment === 'meta') || secondSegment === 'xml') {
+        continue;
+      }
+      if (
+        secondSegment === 'flow' &&
+        (trailing.startsWith('-meta.xml') || trailing.startsWith('.meta.xml'))
+      ) {
+        continue;
+      }
       return match[0];
     }
     return undefined;

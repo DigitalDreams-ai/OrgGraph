@@ -1200,10 +1200,24 @@ export class AskService {
     if (!candidate) {
       return undefined;
     }
-    const normalized = candidate
+    let normalized = candidate
       .trim()
       .replace(/^["'`]+|["'`]+$/g, '')
       .replace(/\s+/g, ' ')
+      .replace(/^(the|a|an|named|called)\s+/i, '')
+      .trim();
+    const normalizedPath = normalized.replace(/\\/g, '/');
+    const flowPathMatch = normalizedPath.match(/(?:^|\/)flows\/([^/]+)$/i);
+    if (flowPathMatch?.[1]) {
+      normalized = flowPathMatch[1];
+    } else if (normalizedPath.includes('/')) {
+      normalized = normalizedPath.split('/').pop() ?? normalized;
+    }
+    normalized = normalized
+      .replace(/\.flow-meta\.xml$/i, '')
+      .replace(/\.flow$/i, '')
+      .replace(/^["'`]+|["'`]+$/g, '')
+      .replace(/[.,;:!?]+$/g, '')
       .replace(/^(the|a|an|named|called)\s+/i, '')
       .trim();
     if (normalized.length === 0) {
