@@ -57,6 +57,7 @@ Materially true now:
 - flow asks now fail closed with explicit `flow-name-unresolved` remediation when no exact flow API name can be resolved, preventing generic `no automation found ...` fallback responses
 - flow read/write asks now emit structured breakage decision packets (with explicit reads/writes summaries and deterministic next actions), not only free-form deterministic text
 - flow read/write decision packets now emit `targetType: flow`, richer risk drivers (read/write/object/trigger coverage), and explicit ungrounded-flow remediation actions (`Retrieve flow metadata`, `Increase evidence coverage`)
+- flow read/write decision packets now also spotlight top citation source files and include an explicit `Inspect citation sources` next action for evidence-grounding review
 - review decision packets now include explicit `riskScore` and `evidenceCoverage` signals to improve approval-workflow readability
 - review decision packets now surface explicit top automation names and top impact sources directly inside risk drivers and next-action rationales, with deterministic integration assertions
 - review decision packets now spotlight top citation source files and add an explicit `Inspect citation sources` action so operators can verify grounding evidence without raw JSON detours

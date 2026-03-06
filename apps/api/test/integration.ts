@@ -781,6 +781,7 @@ async function run(): Promise<void> {
         focus?: string;
         targetLabel?: string;
         targetType?: string;
+        topRiskDrivers?: string[];
         changeImpact?: { summary?: string };
         nextActions?: Array<{ label?: string }>;
       };
@@ -795,10 +796,20 @@ async function run(): Promise<void> {
     assert.equal(askFlowEvidence.decisionPacket?.focus, 'breakage');
     assert.equal(askFlowEvidence.decisionPacket?.targetLabel, 'OpportunityStageSync');
     assert.equal(askFlowEvidence.decisionPacket?.targetType, 'flow');
+    assert.ok(
+      (askFlowEvidence.decisionPacket?.topRiskDrivers ?? []).some((item) =>
+        /top citation sources:/i.test(item)
+      )
+    );
     assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /reads:/i);
     assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /writes:/i);
     assert.ok(
       (askFlowEvidence.decisionPacket?.nextActions ?? []).some((item) => item.label === 'Run permission check')
+    );
+    assert.ok(
+      (askFlowEvidence.decisionPacket?.nextActions ?? []).some(
+        (item) => item.label === 'Inspect citation sources'
+      )
     );
 
     const askFlowEvidenceSpacedRes = await fetch(`${base}/ask`, {
@@ -883,6 +894,11 @@ async function run(): Promise<void> {
     assert.ok(
       (askFlowEvidenceCivilRights.decisionPacket?.nextActions ?? []).some(
         (item) => item.label === 'Retrieve flow metadata'
+      )
+    );
+    assert.ok(
+      (askFlowEvidenceCivilRights.decisionPacket?.nextActions ?? []).some(
+        (item) => item.label === 'Inspect citation sources'
       )
     );
 

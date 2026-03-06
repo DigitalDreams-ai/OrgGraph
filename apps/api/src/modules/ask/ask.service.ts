@@ -892,6 +892,7 @@ export class AskService {
           flowName: requestedFlowName,
           summary: flowEvidenceSummary,
           citationCount: citations.length,
+          citationSourceLabels: citations.map((citation) => this.toCitationSourceLabel(citation.sourcePath)),
           user: plan.entities.user
         });
         executionTrace.push(
@@ -944,6 +945,7 @@ export class AskService {
             triggerTypes: []
           },
           citationCount: citations.length,
+          citationSourceLabels: citations.map((citation) => this.toCitationSourceLabel(citation.sourcePath)),
           user: plan.entities.user
         });
         decisionPacket.targetLabel = 'flow-name-unresolved';
@@ -1533,6 +1535,7 @@ export class AskService {
     flowName: string;
     summary: FlowEvidenceSummary;
     citationCount: number;
+    citationSourceLabels: string[];
     user?: string;
   }): AskDecisionPacket {
     const coverageScore = Math.min(1, input.citationCount / 6);
@@ -1567,6 +1570,19 @@ export class AskService {
       triggerTypes.length > 0
         ? `trigger types: ${triggerTypes.join(', ')}`
         : 'trigger types: not explicit in retrieved snippet';
+    const topCitationSources = [
+      ...new Set(
+        input.citationSourceLabels
+          .map((label) => label.trim())
+          .filter((label) => label.length > 0)
+      )
+    ]
+      .sort((a, b) => a.localeCompare(b))
+      .slice(0, 3);
+    const topCitationSummary =
+      topCitationSources.length > 0
+        ? topCitationSources.join(', ')
+        : 'citation source labels unavailable';
     const topImpactedSources = [...new Set([...writeFields, ...readFields, ...referencedObjects])].slice(0, 3);
     const primaryPermissionTarget =
       writeFields[0] ?? readFields[0] ?? referencedObjects[0] ?? input.flowName;
@@ -1598,6 +1614,10 @@ export class AskService {
       label: 'Run permission check',
       rationale: `Ask who can edit ${primaryPermissionTarget} before approving downstream changes.`
     });
+    nextActions.push({
+      label: 'Inspect citation sources',
+      rationale: `Validate flow grounding against: ${topCitationSummary}.`
+    });
     if (input.citationCount < 3) {
       nextActions.push({
         label: 'Increase evidence coverage',
@@ -1625,6 +1645,9 @@ export class AskService {
       },
       topRiskDrivers: [
         `${input.summary.matchedCount} citation(s) matched the requested flow`,
+        topCitationSources.length > 0
+          ? `top citation sources: ${topCitationSummary}`
+          : 'top citation sources unavailable',
         `${writeFields.length} explicit write field(s) identified`,
         `${readFields.length} explicit read field(s) identified`,
         writeSummary,
@@ -1651,7 +1674,7 @@ export class AskService {
         impactPathCount: topImpactedSources.length,
         topImpactedSources
       },
-      nextActions: nextActions.slice(0, 5)
+      nextActions: nextActions.slice(0, 6)
     };
   }
 
