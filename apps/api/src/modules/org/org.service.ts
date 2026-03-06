@@ -17,6 +17,8 @@ import type {
   OrgSessionAliasValidationResponse,
   OrgSessionAliasesResponse,
   OrgSessionAuditEntry,
+  OrgSessionBridgeRequest,
+  OrgSessionBridgeResponse,
   OrgSessionDisconnectResponse,
   OrgSessionConnectRequest,
   OrgSessionConnectResponse,
@@ -393,6 +395,106 @@ export class OrgService {
       authMode,
       connectedAt,
       method: 'sf_cli_keychain'
+    };
+  }
+
+  async bridgeSessionAlias(input: OrgSessionBridgeRequest = {}): Promise<OrgSessionBridgeResponse> {
+    if (!this.configService.sfIntegrationEnabled()) {
+      throw new BadRequestException({
+        message: 'Salesforce integration is disabled',
+        details: {
+          code: 'SF_INTEGRATION_DISABLED',
+          hint: 'Set SF_INTEGRATION_ENABLED=true and restart API.'
+        }
+      });
+    }
+
+    const authMode = this.configService.sfAuthMode();
+    const projectPath = this.runtimePaths.sfProjectPath();
+    this.ensureProjectScaffold(projectPath);
+    const alias = input.alias?.trim() || this.resolveActiveAlias();
+
+    await this.orgToolAdapter.ensureSfInstalled(projectPath);
+
+    const sfAliasCheck = await this.orgToolAdapter.displayOrg(alias, projectPath);
+    if (sfAliasCheck.exitCode !== 0) {
+      throw new BadRequestException({
+        message: `No authenticated org for alias ${alias}.`,
+        details: {
+          code: 'ALIAS_NOT_AUTHENTICATED',
+          hint: `Run 'sf org login web --alias ${alias} --instance-url ${this.configService.sfBaseUrl()} --set-default' locally, then retry.`
+        }
+      });
+    }
+
+    try {
+      await this.orgToolAdapter.ensureCciInstalled(projectPath);
+    } catch {
+      throw new BadRequestException({
+        message: 'cci is not available in local runtime.',
+        details: {
+          code: 'CCI_MISSING',
+          hint: 'Install cci locally and retry bridge.'
+        }
+      });
+    }
+
+    try {
+      await this.orgToolAdapter.ensureCciProjectScaffold(projectPath);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException({
+        message: `Unable to initialize local cci project scaffold for alias ${alias}.`,
+        details: {
+          code: 'CCI_PROJECT_SCAFFOLD_FAILED',
+          reason,
+          hint: this.buildCciAliasRemediation(alias, projectPath)
+        }
+      });
+    }
+
+    const cciAliasCheck = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
+    if (cciAliasCheck.exitCode === 0) {
+      return {
+        status: 'already_connected',
+        alias,
+        authMode,
+        bridgedAt: new Date().toISOString(),
+        message: `Alias ${alias} is already present in the cci org registry.`
+      };
+    }
+
+    const username = this.orgToolAdapter.extractSfUsername(sfAliasCheck.stdout) ?? alias;
+    const cciImport = await this.orgToolAdapter.importAliasIntoCci(alias, username, projectPath);
+    const importError = (cciImport.stderr || cciImport.stdout || '').trim();
+    if (cciImport.exitCode !== 0 && !importError.toLowerCase().includes('already exists')) {
+      throw new BadRequestException({
+        message: `Unable to bridge alias ${alias} into cci org registry.`,
+        details: {
+          code: 'CCI_ALIAS_BRIDGE_FAILED',
+          reason: importError || 'unknown cci import failure',
+          hint: this.buildCciAliasRemediation(alias, projectPath)
+        }
+      });
+    }
+
+    const cciAliasRetry = await this.orgToolAdapter.cciOrgInfo(alias, projectPath);
+    if (cciAliasRetry.exitCode !== 0) {
+      throw new BadRequestException({
+        message: `Alias ${alias} still not found in cci org registry after import.`,
+        details: {
+          code: 'CCI_ALIAS_NOT_CONNECTED',
+          hint: this.buildCciAliasRemediation(alias, projectPath)
+        }
+      });
+    }
+
+    return {
+      status: 'connected',
+      alias,
+      authMode,
+      bridgedAt: new Date().toISOString(),
+      message: `Alias ${alias} is now connected in the cci org registry.`
     };
   }
 

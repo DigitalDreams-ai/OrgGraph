@@ -67,6 +67,7 @@ Materially true now:
 - fallback error copy now distinguishes API non-response failures from normal request-validation failures
 - session action labels now distinguish quick top-bar attach from explicit connect/switch controls in Org Sessions
 - session alias switch now reuses connect auth/bridge flow so missing CCI alias registrations are remediated during switch, not only during explicit connect
+- Org Sessions now exposes explicit `Bridge CCI Alias` action backed by `/org/session/bridge`, with fail-closed alias/auth/tooling errors and deterministic remediation hints when CCI registry import fails
 - Settings & Diagnostics now renders structured runtime triage cards (bootstrap/db/fixtures/evidence health + recovery checklist) and demotes raw readiness JSON to an optional details panel
 - Settings & Diagnostics now surfaces alias preflight checks/issues and remediation checklist actions alongside tooling status (auth/CCI alias/parse-path parity), reducing bounce-back to Org Sessions for diagnostics triage
 - Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs

@@ -102,6 +102,14 @@ export function connectOrgSession(payload: OrgAliasPayload): Promise<QueryRespon
   });
 }
 
+export function bridgeOrgSessionAlias(payload: OrgAliasPayload): Promise<QueryResponse> {
+  return requestBoundary(resolveDesktopApiUrl('/org/session/bridge'), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
+
 export function switchOrgSession(payload: OrgAliasPayload): Promise<QueryResponse> {
   return requestBoundary(resolveDesktopApiUrl('/org/session/switch'), {
     method: 'POST',

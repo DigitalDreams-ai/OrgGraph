@@ -356,6 +356,24 @@ async function run(): Promise<void> {
     };
     assert.equal(orgRetrieveDisabledBody.error.code, 'BAD_REQUEST');
 
+    const orgBridgeDisabledRes = await fetch(`${base}/org/session/bridge`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ alias: 'orgumented-sandbox' })
+    });
+    assert.equal(
+      orgBridgeDisabledRes.status,
+      400,
+      'org session bridge should reject when SF integration is disabled'
+    );
+
+    const orgBridgeBadAliasRes = await fetch(`${base}/org/session/bridge`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ alias: 7 })
+    });
+    assert.equal(orgBridgeBadAliasRes.status, 400, 'org session bridge should validate alias payload');
+
     const orgStatusRes = await fetch(`${base}/org/status`);
     assert.equal(orgStatusRes.status, 200, 'org status should return 200');
     const orgStatusBody = (await orgStatusRes.json()) as {
