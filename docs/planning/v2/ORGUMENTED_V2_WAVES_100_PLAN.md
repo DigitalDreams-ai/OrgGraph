@@ -135,7 +135,7 @@ Mandatory:
 | wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
 | wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |
 | wave6 | ask planner/compiler depth | B003, B009 | In Progress | Replay-safe grounding expansion for additional metadata families |
-| wave7 | decision-packet quality | B010, B017 | Open | Approval-quality packet benchmark evidence |
+| wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | Open | Structured triage without raw JSON dependence |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first reopen/replay/export complete |
 | wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline |
