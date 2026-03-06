@@ -27,6 +27,9 @@ export function assessRetrieveHandoff(
   if (!handoff.alias) {
     reasons.push('Retrieve result did not report the active alias.');
   }
+  if (!handoff.completedAt) {
+    reasons.push('Retrieve result did not include a completion timestamp.');
+  }
   if (expectedAlias && handoff.alias) {
     const expected = expectedAlias.trim().toLowerCase();
     const actual = handoff.alias.trim().toLowerCase();
