@@ -81,6 +81,7 @@ Materially true now:
 - disconnected/session-switch-failure state now preserves the last active alias and persisted switch timestamp, keeping restore targets deterministic across relaunch even when session audit history is trimmed
 - Settings & Diagnostics now renders structured runtime triage cards (bootstrap/db/fixtures/evidence health + recovery checklist) and demotes raw readiness JSON to an optional details panel
 - Settings & Diagnostics now surfaces alias preflight checks/issues and remediation checklist actions alongside tooling status (auth/CCI alias/parse-path parity), reducing bounce-back to Org Sessions for diagnostics triage
+- Settings & Diagnostics now includes a deterministic triage snapshot (runtime/toolchain/session status + explicit next action per domain), reducing dependence on raw JSON for first-line operator diagnosis
 - Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs
 - Analyze now includes one-click Ask handoff actions for automation and impact results so deterministic analysis context can be promoted directly into trust/proof decision packets
 - Operator Rail now includes a runtime-triage summary so common readiness failures can be diagnosed without opening raw JSON
@@ -137,29 +138,25 @@ Rules:
 - close retrieve -> refresh -> diff handoff proof gaps for real-org workflows
 - lock staged summaries and fail-closed guidance when handoff is incomplete
 
-3. Wave6 start slice:
-- expand grounded metadata-family coverage and fallback elimination
-
-4. Wave7 start slice:
-- improve decision-packet risk drivers and next actions for real-org review asks
-- capture acceptance benchmark evidence with proof/replay IDs
-
-5. Wave8 start slice:
+3. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage
 - reduce raw JSON dependence in permission/automation/impact/map workflows
 
-6. Wave9 start slice:
+4. Wave9 finish slice:
 - complete label-first proof lifecycle (open/replay/export) without token-first dependence in normal workflows
 - keep token fields strictly advanced/debug while preserving replay parity checks
 
-7. Wave10 finish slice:
+5. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 
-9. Wave11 finish slice:
+6. Wave11 finish slice:
 - complete P0/P1 burn-down lock and regression gates
 - keep CI strict while preserving minute-efficiency controls
 - keep Actions storage bounded with automated run-retention pruning and short artifact retention defaults
+
+7. Wave12 finish slice:
+- close clean-machine quickstart proof and release/rollback evidence gates
 
 ## Execution Cadence (Mandatory)
 

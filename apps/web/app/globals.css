@@ -759,6 +759,9 @@ button.ghost {
   border-radius: 10px;
   background: #fff;
   padding: 0.6rem 0.65rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .analysis-path-list p,
@@ -776,6 +779,12 @@ button.ghost {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
   gap: 0.8rem;
   margin-bottom: 0.8rem;
+}
+
+.analysis-grid > *,
+.analysis-stat-grid > *,
+.ops-grid > * {
+  min-width: 0;
 }
 
 .citation-source,
