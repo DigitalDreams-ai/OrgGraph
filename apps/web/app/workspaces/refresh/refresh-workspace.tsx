@@ -244,10 +244,23 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
       </div>
 
       <div className="action-row">
-        <button type="button" onClick={props.onRunDiff} disabled={props.loading}>
+        <button
+          type="button"
+          onClick={props.onRunDiff}
+          disabled={
+            props.loading ||
+            props.fromSnapshot.trim().length === 0 ||
+            props.toSnapshot.trim().length === 0 ||
+            props.fromSnapshot.trim() === props.toSnapshot.trim()
+          }
+        >
           Run Diff
         </button>
       </div>
+      <p className="muted">
+        Run Refresh to auto-fill the latest snapshot pair for diff. Diff stays fail-closed until both snapshot IDs
+        are present and distinct.
+      </p>
 
       {props.lastDiffRun ? (
         <article className="sub-card">

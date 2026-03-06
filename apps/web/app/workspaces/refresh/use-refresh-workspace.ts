@@ -26,6 +26,8 @@ interface UseRefreshWorkspaceOptions {
   setErrorText: (message: string) => void;
 }
 
+const MAX_REFRESH_SNAPSHOTS = 10;
+
 function payloadAsRecord(response: QueryResponse): Record<string, unknown> | null {
   if (!response.payload || typeof response.payload !== 'object' || Array.isArray(response.payload)) {
     return null;
@@ -129,6 +131,7 @@ function parseOrgRetrieveRun(response: QueryResponse): OrgRetrieveRunView | null
 function parseStoredRefreshWorkflowState(raw: string | null): {
   fromSnapshot?: string;
   toSnapshot?: string;
+  refreshSnapshots?: string[];
   lastRefreshRun?: RefreshRunView | null;
   lastDiffRun?: RefreshDiffView | null;
   lastOrgRetrieveRun?: OrgRetrieveRunView | null;
@@ -144,6 +147,9 @@ function parseStoredRefreshWorkflowState(raw: string | null): {
     return {
       fromSnapshot: typeof parsed.fromSnapshot === 'string' ? parsed.fromSnapshot : undefined,
       toSnapshot: typeof parsed.toSnapshot === 'string' ? parsed.toSnapshot : undefined,
+      refreshSnapshots: Array.isArray(parsed.refreshSnapshots)
+        ? parsed.refreshSnapshots.filter((value): value is string => typeof value === 'string')
+        : undefined,
       lastRefreshRun:
         parsed.lastRefreshRun && typeof parsed.lastRefreshRun === 'object' && !Array.isArray(parsed.lastRefreshRun)
           ? (parsed.lastRefreshRun as RefreshRunView)
@@ -171,6 +177,7 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
   const [orgRunAuth, setOrgRunAuth] = useState(true);
   const [orgRunRetrieve, setOrgRunRetrieve] = useState(true);
   const [orgAutoRefresh, setOrgAutoRefresh] = useState(true);
+  const [refreshSnapshots, setRefreshSnapshots] = useState<string[]>([]);
   const [lastRefreshRun, setLastRefreshRun] = useState<RefreshRunView | null>(null);
   const [lastDiffRun, setLastDiffRun] = useState<RefreshDiffView | null>(null);
   const [lastOrgRetrieveRun, setLastOrgRetrieveRun] = useState<OrgRetrieveRunView | null>(null);
@@ -186,6 +193,9 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
       }
       if (stored.toSnapshot !== undefined) {
         setToSnapshot(stored.toSnapshot);
+      }
+      if (stored.refreshSnapshots !== undefined) {
+        setRefreshSnapshots(stored.refreshSnapshots);
       }
       if (stored.lastRefreshRun !== undefined) {
         setLastRefreshRun(stored.lastRefreshRun);
@@ -216,6 +226,7 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
         JSON.stringify({
           fromSnapshot,
           toSnapshot,
+          refreshSnapshots,
           lastRefreshRun,
           lastDiffRun,
           lastOrgRetrieveRun
@@ -224,7 +235,31 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
     } catch {
       // ignore
     }
-  }, [fromSnapshot, toSnapshot, lastRefreshRun, lastDiffRun, lastOrgRetrieveRun]);
+  }, [fromSnapshot, toSnapshot, refreshSnapshots, lastRefreshRun, lastDiffRun, lastOrgRetrieveRun]);
+
+  function rememberRefreshSnapshot(snapshotId: string): void {
+    const normalized = snapshotId.trim();
+    if (!normalized) {
+      return;
+    }
+
+    setRefreshSnapshots((current) => {
+      const next = [normalized, ...current.filter((value) => value !== normalized)].slice(
+        0,
+        MAX_REFRESH_SNAPSHOTS
+      );
+
+      if (next.length >= 2) {
+        setToSnapshot(next[0]);
+        setFromSnapshot(next[1]);
+      } else {
+        setToSnapshot(next[0] ?? '');
+        setFromSnapshot('');
+      }
+
+      return next;
+    });
+  }
 
   async function runRefreshNow(): Promise<void> {
     options.setLoading(true);
@@ -238,7 +273,11 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
         options.setErrorText(options.resolveErrorMessage(result));
         setLastRefreshRun(null);
       } else {
-        setLastRefreshRun(parseRefreshRun(result));
+        const parsedRun = parseRefreshRun(result);
+        setLastRefreshRun(parsedRun);
+        if (parsedRun?.snapshotId) {
+          rememberRefreshSnapshot(parsedRun.snapshotId);
+        }
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected refresh query failure';
@@ -256,8 +295,44 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
     options.setCopied(false);
     options.setErrorText('');
 
+    const from = fromSnapshot.trim();
+    const to = toSnapshot.trim();
+    if (!from || !to) {
+      const message =
+        'Diff blocked until both snapshot IDs are set. Run Refresh to auto-fill latest snapshots, then run Diff.';
+      const response: QueryResponse = {
+        ok: false,
+        statusCode: 400,
+        error: {
+          message
+        }
+      };
+      options.presentResponse(response);
+      options.setErrorText(message);
+      setLastDiffRun(null);
+      options.setLoading(false);
+      return;
+    }
+
+    if (from === to) {
+      const message =
+        'Diff blocked because source and target snapshots are identical. Select two different snapshot IDs.';
+      const response: QueryResponse = {
+        ok: false,
+        statusCode: 400,
+        error: {
+          message
+        }
+      };
+      options.presentResponse(response);
+      options.setErrorText(message);
+      setLastDiffRun(null);
+      options.setLoading(false);
+      return;
+    }
+
     try {
-      const result = await getRefreshDiff(fromSnapshot, toSnapshot);
+      const result = await getRefreshDiff(from, to);
       options.presentResponse(result);
       if (result.ok === false) {
         options.setErrorText(options.resolveErrorMessage(result));
