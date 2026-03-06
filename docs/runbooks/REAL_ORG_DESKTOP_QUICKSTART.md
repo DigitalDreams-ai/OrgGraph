@@ -71,7 +71,7 @@ Inside Orgumented:
 4. Confirm:
    - `sf CLI: installed`
    - `CCI: installed`
-5. Click `Connect Selected`.
+5. Click `Attach Selected Alias`.
 
 Expected result:
 - `Session: connected`
@@ -104,7 +104,7 @@ Expected result:
 
 If you get no results:
 1. Click `Browse All`.
-2. Click `Load Trees`.
+2. Click `Load Visible Items`.
 3. Expand a family and select members via checkbox.
 4. Click `Retrieve Cart` again.
 
