@@ -681,6 +681,15 @@ export class AskService {
         topAutomationNames.length > 0 ? topAutomationNames.join(', ') : 'no deterministic automation names';
       const topImpactSummary =
         topImpactedSources.length > 0 ? topImpactedSources.join(', ') : 'no deterministic impact sources';
+      const topCitationSources = [
+        ...new Set(citations.map((citation) => this.toCitationSourceLabel(citation.sourcePath)))
+      ]
+        .sort((a, b) => a.localeCompare(b))
+        .slice(0, 3);
+      const topCitationSummary =
+        topCitationSources.length > 0
+          ? topCitationSources.join(', ')
+          : 'citation source labels unavailable';
       const automationSpotlight =
         topAutomationNames.length > 0
           ? `top automation sources: ${topAutomationSummary}`
@@ -689,8 +698,13 @@ export class AskService {
         topImpactedSources.length > 0
           ? `top impact sources: ${topImpactSummary}`
           : `no deterministic impact sources matched ${targetLabel}`;
+      const citationSpotlight =
+        topCitationSources.length > 0
+          ? `top citation sources: ${topCitationSummary}`
+          : 'top citation sources unavailable';
       const topRiskDrivers = [
         `${citations.length} citation(s) ground this decision packet`,
+        citationSpotlight,
         `${impact.totalPaths} impact path(s) reference ${targetLabel}`,
         `${automations.totalAutomations} automation item(s) touch ${object}`,
         automationSpotlight,
@@ -717,6 +731,10 @@ export class AskService {
             impact.totalPaths > 0
               ? `${impact.explanation} Start with ${topImpactSummary}.`
               : impact.explanation
+        },
+        {
+          label: 'Inspect citation sources',
+          rationale: `Validate decision grounding against: ${topCitationSummary}.`
         }
       ];
       if (citations.length < 3) {
@@ -765,6 +783,7 @@ export class AskService {
         `review.action=${plan.reviewWorkflow.action}`,
         `review.focus=${plan.reviewWorkflow.focus}`,
         `review.target=${targetLabel}`,
+        `review.citation.sources=${String(topCitationSources.length)}`,
         `review.perms.granted=${String(perms.granted)}`,
         `review.automation.count=${String(automations.totalAutomations)}`,
         `review.impact.paths=${String(impact.totalPaths)}`
@@ -1666,6 +1685,13 @@ export class AskService {
 
   private compactFlowToken(value: string): string {
     return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  private toCitationSourceLabel(sourcePath: string): string {
+    const normalized = sourcePath.replace(/\\/g, '/');
+    const segments = normalized.split('/').filter((segment) => segment.length > 0);
+    const fileName = segments[segments.length - 1];
+    return fileName && fileName.length > 0 ? fileName : normalized;
   }
 
   private collectTagValues(chunk: string, tagName: string): string[] {
