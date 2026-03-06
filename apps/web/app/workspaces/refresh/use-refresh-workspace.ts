@@ -288,6 +288,40 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
     options.setLoading(true);
     options.setCopied(false);
     options.setErrorText('');
+    const retrieveHandoff = assessRetrieveHandoff(options.retrieveHandoff, options.orgAlias);
+
+    if (retrieveHandoff.state !== 'ready') {
+      const message = `Refresh blocked until Browser handoff is ready. ${retrieveHandoff.reasons[0] ?? 'Complete a Browser retrieve first.'}`;
+      const response: QueryResponse = {
+        ok: false,
+        statusCode: 400,
+        error: {
+          message
+        }
+      };
+      options.presentResponse(response);
+      options.setErrorText(message);
+      setLastRefreshRun(null);
+      options.setLoading(false);
+      return;
+    }
+
+    if (options.retrieveSelections.length === 0) {
+      const message =
+        'Refresh blocked because no staged metadata selections were found. In Org Browser, check items and run Retrieve Cart first.';
+      const response: QueryResponse = {
+        ok: false,
+        statusCode: 400,
+        error: {
+          message
+        }
+      };
+      options.presentResponse(response);
+      options.setErrorText(message);
+      setLastRefreshRun(null);
+      options.setLoading(false);
+      return;
+    }
 
     try {
       const result = await runRefresh({ mode: refreshMode });

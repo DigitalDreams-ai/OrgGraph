@@ -43,6 +43,7 @@ Materially true now:
 - wave10 follow-up now enforces larger card-grid minimum widths and path-specific wrapping classes, reducing truncation in decision packets, citations, mapping diagnostics, and diagnostics artifacts
 - wave10 follow-up now hardens Ask proof/context and citation rendering with explicit path-value wrapping, snippet scroll bounds, and denser auto-fit minima to reduce clipping in mid-width desktop layouts
 - refresh handoff is staged and fail-closed from browser selections
+- `Run Refresh` now also fails closed until Browser handoff is ready and staged selections are present, preventing rebuild from running on ambiguous retrieve context
 - refresh handoff now also fails closed on alias mismatch and persists latest retrieve/selections across relaunch
 - `Refresh & Build` now shows explicit staged selection previews (family/member scope) from Browser handoff, reducing retrieve-cart ambiguity without raw JSON
 - Browser retrieve failures now clear persisted handoff/selections and fail closed in Refresh instead of silently reusing stale retrieve context
