@@ -1378,37 +1378,84 @@ export class AskService {
     user?: string;
   }): AskDecisionPacket {
     const coverageScore = Math.min(1, input.citationCount / 6);
-    const hasReads = input.summary.readFields.length > 0;
-    const hasWrites = input.summary.writeFields.length > 0;
+    const readFields = [...new Set(input.summary.readFields)];
+    const writeFields = [...new Set(input.summary.writeFields)];
+    const referencedObjects = [...new Set(input.summary.referencedObjects)];
+    const triggerTypes = [...new Set(input.summary.triggerTypes)];
+    const hasReads = readFields.length > 0;
+    const hasWrites = writeFields.length > 0;
+    const writeCountWeight = Math.min(0.2, writeFields.length * 0.035);
+    const readCountWeight = Math.min(0.16, readFields.length * 0.025);
+    const triggerWeight = triggerTypes.length > 0 ? 0.08 : 0.03;
     const baseRisk =
-      0.38 +
-      (hasWrites ? 0.2 : 0.05) +
-      (hasReads ? 0.14 : 0.05) +
+      0.32 +
+      (hasWrites ? 0.11 : 0.04) +
+      (hasReads ? 0.08 : 0.04) +
+      writeCountWeight +
+      readCountWeight +
+      triggerWeight +
       (input.summary.matchedCount === 0 ? 0.28 : 0) +
       (1 - coverageScore) * 0.18;
     const riskScore = Number(Math.min(1, Math.max(0.05, baseRisk)).toFixed(3));
     const riskLevel: AskDecisionPacket['riskLevel'] =
       riskScore >= 0.7 ? 'high' : riskScore >= 0.4 ? 'medium' : 'low';
-    const readSummary = this.describeFieldSet(new Set(input.summary.readFields), 'reads');
-    const writeSummary = this.describeFieldSet(new Set(input.summary.writeFields), 'writes');
+    const readSummary = this.describeFieldSet(new Set(readFields), 'reads');
+    const writeSummary = this.describeFieldSet(new Set(writeFields), 'writes');
     const objectSummary =
-      input.summary.referencedObjects.length > 0
-        ? `objects: ${input.summary.referencedObjects.join(', ')}`
+      referencedObjects.length > 0
+        ? `objects: ${referencedObjects.join(', ')}`
         : 'objects: not explicit in retrieved snippet';
-    const targetField =
-      input.summary.writeFields[0] ??
-      input.summary.readFields[0] ??
-      input.summary.referencedObjects[0] ??
-      input.flowName;
+    const triggerSummary =
+      triggerTypes.length > 0
+        ? `trigger types: ${triggerTypes.join(', ')}`
+        : 'trigger types: not explicit in retrieved snippet';
+    const topImpactedSources = [...new Set([...writeFields, ...readFields, ...referencedObjects])].slice(0, 3);
+    const primaryPermissionTarget =
+      writeFields[0] ?? readFields[0] ?? referencedObjects[0] ?? input.flowName;
+    const nextActions: AskDecisionPacket['nextActions'] = [];
+    if (input.summary.matchedCount === 0) {
+      nextActions.push({
+        label: 'Retrieve flow metadata',
+        rationale:
+          `No retrieved citations matched ${input.flowName}. Retrieve the flow family or broader metadata scope, then rerun Ask.`
+      });
+    }
+    nextActions.push(
+      {
+        label: 'Inspect write targets',
+        rationale: writeSummary
+      },
+      {
+        label: 'Inspect read conditions',
+        rationale: readSummary
+      }
+    );
+    if (triggerTypes.length > 0) {
+      nextActions.push({
+        label: 'Inspect trigger criteria',
+        rationale: triggerSummary
+      });
+    }
+    nextActions.push({
+      label: 'Run permission check',
+      rationale: `Ask who can edit ${primaryPermissionTarget} before approving downstream changes.`
+    });
+    if (input.citationCount < 3) {
+      nextActions.push({
+        label: 'Increase evidence coverage',
+        rationale:
+          'Citation coverage is light for this packet. Retrieve related metadata families and rerun Ask for higher confidence.'
+      });
+    }
 
     return {
       kind: 'high_risk_change_review',
       focus: 'breakage',
       targetLabel: input.flowName,
-      targetType: 'object',
+      targetType: 'flow',
       summary:
         input.summary.matchedCount > 0
-          ? `Flow ${input.flowName} read/write summary grounded by ${input.summary.matchedCount} citation(s).`
+          ? `Flow ${input.flowName} read/write summary grounded by ${input.summary.matchedCount} citation(s): ${readSummary}; ${writeSummary}.`
           : `Flow ${input.flowName} is not grounded by the current retrieve evidence yet.`,
       riskScore,
       riskLevel,
@@ -1420,14 +1467,17 @@ export class AskService {
       },
       topRiskDrivers: [
         `${input.summary.matchedCount} citation(s) matched the requested flow`,
+        `${writeFields.length} explicit write field(s) identified`,
+        `${readFields.length} explicit read field(s) identified`,
         writeSummary,
         readSummary,
-        objectSummary
+        objectSummary,
+        triggerSummary
       ],
       permissionImpact: {
         user: input.user ?? 'n/a',
         summary:
-          'Permission paths are not part of this flow read/write ask. Run a permission ask next if approval depends on actor access.',
+          `Permission paths are not part of this flow read/write ask. Run a permission ask for ${primaryPermissionTarget} if approval depends on actor access.`,
         granted: false,
         pathCount: 0,
         principalCount: 0,
@@ -1439,25 +1489,11 @@ export class AskService {
         topAutomationNames: [input.flowName]
       },
       changeImpact: {
-        summary: `${readSummary}; ${writeSummary}.`,
-        impactPathCount: input.summary.readFields.length + input.summary.writeFields.length,
-        topImpactedSources:
-          input.summary.writeFields.slice(0, 2).concat(input.summary.readFields.slice(0, 1))
+        summary: `${readSummary}; ${writeSummary}; ${objectSummary}; ${triggerSummary}.`,
+        impactPathCount: topImpactedSources.length,
+        topImpactedSources
       },
-      nextActions: [
-        {
-          label: 'Inspect write targets',
-          rationale: writeSummary
-        },
-        {
-          label: 'Inspect read conditions',
-          rationale: readSummary
-        },
-        {
-          label: 'Run permission check',
-          rationale: `Ask who can edit ${targetField} before approving downstream changes.`
-        }
-      ]
+      nextActions: nextActions.slice(0, 5)
     };
   }
 

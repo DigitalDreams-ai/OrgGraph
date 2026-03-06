@@ -47,6 +47,7 @@ Materially true now:
 - flow grounding now tolerates quoted/article-prefixed flow references (for example `Flow "the X" reads and writes`) and keeps explicit-flow asks off the generic object fallback path
 - flow grounding now also accepts `Flow called <name>` / `Flow named <name>` phrasing and can infer a flow target from citation source paths when query extraction misses
 - flow read/write asks now emit structured breakage decision packets (with explicit reads/writes summaries and deterministic next actions), not only free-form deterministic text
+- flow read/write decision packets now emit `targetType: flow`, richer risk drivers (read/write/object/trigger coverage), and explicit ungrounded-flow remediation actions (`Retrieve flow metadata`, `Increase evidence coverage`)
 - review decision packets now include explicit `riskScore` and `evidenceCoverage` signals to improve approval-workflow readability
 - proof history supports searchable labels and open-first artifact access
 - Ask `Save to history` now executes a true history handoff (sync proof identifiers, switch to Proofs, and refresh recent proof labels) instead of duplicating `Open proof`

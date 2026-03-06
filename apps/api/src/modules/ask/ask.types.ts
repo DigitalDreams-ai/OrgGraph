@@ -96,7 +96,7 @@ export interface AskDecisionPacket {
   kind: 'high_risk_change_review';
   focus: AskReviewFocus;
   targetLabel: string;
-  targetType: 'field' | 'object';
+  targetType: 'field' | 'object' | 'flow';
   summary: string;
   riskScore: number;
   riskLevel: 'low' | 'medium' | 'high';

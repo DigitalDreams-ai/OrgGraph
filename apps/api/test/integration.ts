@@ -762,7 +762,9 @@ async function run(): Promise<void> {
         kind?: string;
         focus?: string;
         targetLabel?: string;
+        targetType?: string;
         changeImpact?: { summary?: string };
+        nextActions?: Array<{ label?: string }>;
       };
     };
     assert.equal(askFlowEvidence.plan.intent, 'automation');
@@ -774,8 +776,12 @@ async function run(): Promise<void> {
     assert.equal(askFlowEvidence.decisionPacket?.kind, 'high_risk_change_review');
     assert.equal(askFlowEvidence.decisionPacket?.focus, 'breakage');
     assert.equal(askFlowEvidence.decisionPacket?.targetLabel, 'OpportunityStageSync');
+    assert.equal(askFlowEvidence.decisionPacket?.targetType, 'flow');
     assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /reads:/i);
     assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /writes:/i);
+    assert.ok(
+      (askFlowEvidence.decisionPacket?.nextActions ?? []).some((item) => item.label === 'Run permission check')
+    );
 
     const askFlowEvidenceSpacedRes = await fetch(`${base}/ask`, {
       method: 'POST',
@@ -838,7 +844,11 @@ async function run(): Promise<void> {
     const askFlowEvidenceCivilRights = (await askFlowEvidenceCivilRightsRes.json()) as {
       plan: { intent: string; entities: { object?: string } };
       deterministicAnswer: string;
-      decisionPacket?: { summary?: string };
+      decisionPacket?: {
+        targetType?: string;
+        summary?: string;
+        nextActions?: Array<{ label?: string }>;
+      };
     };
     assert.equal(askFlowEvidenceCivilRights.plan.intent, 'automation');
     assert.equal(askFlowEvidenceCivilRights.plan.entities.object, undefined);
@@ -847,9 +857,15 @@ async function run(): Promise<void> {
       /no retrieved flow evidence matched Civil_Rights_Intake_Questionnaire/i
     );
     assert.doesNotMatch(askFlowEvidenceCivilRights.deterministicAnswer, /no automation found for the/i);
+    assert.equal(askFlowEvidenceCivilRights.decisionPacket?.targetType, 'flow');
     assert.match(
       askFlowEvidenceCivilRights.decisionPacket?.summary ?? '',
       /not grounded by the current retrieve evidence/i
+    );
+    assert.ok(
+      (askFlowEvidenceCivilRights.decisionPacket?.nextActions ?? []).some(
+        (item) => item.label === 'Retrieve flow metadata'
+      )
     );
 
     const askFlowEvidenceQuotedRes = await fetch(`${base}/ask`, {
@@ -889,12 +905,13 @@ async function run(): Promise<void> {
     const askFlowEvidenceCalled = (await askFlowEvidenceCalledRes.json()) as {
       plan: { intent: string; entities: { object?: string } };
       deterministicAnswer: string;
-      decisionPacket?: { targetLabel?: string };
+      decisionPacket?: { targetLabel?: string; targetType?: string };
     };
     assert.equal(askFlowEvidenceCalled.plan.intent, 'automation');
     assert.equal(askFlowEvidenceCalled.plan.entities.object, undefined);
     assert.doesNotMatch(askFlowEvidenceCalled.deterministicAnswer, /no automation found for the/i);
     assert.equal(askFlowEvidenceCalled.decisionPacket?.targetLabel, 'Civil_Rights_Intake_Questionnaire');
+    assert.equal(askFlowEvidenceCalled.decisionPacket?.targetType, 'flow');
 
     const askImpactRes = await fetch(`${base}/ask`, {
       method: 'POST',
