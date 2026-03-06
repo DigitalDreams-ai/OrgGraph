@@ -28,7 +28,7 @@ Purpose:
 | G014 | Diagnostics | Structured diagnostics triage for runtime/tool/semantic issues | Faster and safer incident triage | Wave8 | Diagnostics cards provide actionable triage paths | In Progress |
 | G015 | Proofs & History | Label-first proof/replay lifecycle completion | Supports auditability and team collaboration | Wave9 | History-first proof operations are complete and stable | In Progress |
 | G016 | Design/Layout | Cross-workspace visual and layout consistency | Improves reliability, readability, and trust | Wave10 | Layout/design checklist green across all workspaces | In Progress |
-| G017 | Accessibility | Keyboard and focus compliance for core operations | Required quality baseline for production usage | Wave10 | Accessibility checks pass for critical workflows | Open |
+| G017 | Accessibility | Keyboard and focus compliance for core operations | Required quality baseline for production usage | Wave10 | Accessibility checks pass for critical workflows | In Progress |
 | G018 | Quality | Zero critical/high defect state with regression protection | Required for production confidence | Wave11 | Critical/high defect count reaches zero with test lock | Open |
 | G019 | CI/Release | Efficient but strict CI gate architecture | Maintains safety while controlling iteration cost | Wave11 | CI optimization delivered without gate reduction | In Progress |
 | G020 | Runbooks | Assumption-free operator quickstart + troubleshooting | Enables repeatable onboarding and field usage | Wave12 | Runbooks validated by clean-machine operator run | In Progress |

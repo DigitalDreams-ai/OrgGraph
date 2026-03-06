@@ -248,6 +248,13 @@ button {
   border-radius: 10px;
 }
 
+input[type='checkbox'],
+input[type='radio'] {
+  inline-size: 1rem;
+  block-size: 1rem;
+  accent-color: #0f766e;
+}
+
 input,
 textarea,
 select {
@@ -287,6 +294,25 @@ button.ghost {
   background: #e7efff;
   color: #17427a;
   border-color: #9fb8e2;
+}
+
+:where(
+    button,
+    .tab-btn,
+    .sub-tab,
+    .chip-btn,
+    a,
+    input,
+    select,
+    textarea,
+    details summary
+  ):focus-visible {
+  outline: 3px solid #22d3ee;
+  outline-offset: 2px;
+}
+
+.selection-toggle input:focus-visible {
+  outline-offset: 3px;
 }
 
 .field-grid {

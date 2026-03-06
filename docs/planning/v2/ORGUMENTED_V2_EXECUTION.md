@@ -69,6 +69,7 @@ Materially true now:
 - Operator Rail now includes a runtime-triage summary so common readiness failures can be diagnosed without opening raw JSON
 - Proofs & History now auto-selects a current label on history refresh so open/replay operations are label-first by default
 - wave10 density guardrails now widen card-grid minima and heading wrapping to reduce clipping/overlap in Ask, Analyze, Proofs, and Diagnostics
+- wave10 accessibility baseline now includes explicit focus-visible rings across core interactive controls and standardized checkbox/radio sizing for keyboard clarity
 
 Still unresolved:
 - runtime/tooling state clarity still needs parity checks in non-connect workspaces

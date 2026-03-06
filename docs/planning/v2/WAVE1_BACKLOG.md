@@ -40,7 +40,7 @@ Purpose:
 | B017 | P2 | Benchmark | Replace fixture-only benchmark narrative with stronger real-org scenario evidence | Wave7 | Real-org benchmark artifact set published and reproducible | Open |
 | B018 | P2 | CI Cost | Continue reducing GitHub Actions minute burn without losing required trust gates | Wave11 | CI runtime reduced while validate + desktop smoke integrity remains intact; Actions storage bounded by retention automation | In Progress |
 | B019 | P2 | Docs | Consolidate runbooks to explicit, assumption-free operator steps | Wave12 | New operator runbooks pass first-run validation by non-author operator | In Progress |
-| B020 | P2 | Accessibility | Keyboard/focus/accessibility baseline for high-value workflows | Wave10 | Accessibility checks pass for Ask, Sessions, Browser, Refresh | Open |
+| B020 | P2 | Accessibility | Keyboard/focus/accessibility baseline for high-value workflows | Wave10 | Accessibility checks pass for Ask, Sessions, Browser, Refresh | In Progress |
 | B021 | P3 | Design System | Harmonize spacing, typography hierarchy, and density rhythm across workspaces | Wave10 | Visual consistency checklist passes for all Stage 1 workspaces | Open |
 | B022 | P3 | Telemetry | Add structured non-sensitive runtime telemetry for diagnostics correlation | Wave8 | Failure signatures and timings are traceable without exposing secrets | Open |
 | B023 | P3 | Automation | Expand deterministic test corpus for edge metadata families | Wave11 | Regression corpus includes expanded metadata family scenarios | Open |
