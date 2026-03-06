@@ -675,10 +675,26 @@ export class AskService {
         hasAutomationCoverage: automations.totalAutomations > 0,
         hasImpactPaths: impact.totalPaths > 0
       };
+      const topAutomationNames = [...new Set(automations.automations.map((item) => item.name))].slice(0, 3);
+      const topImpactedSources = [...new Set(impact.paths.map((item) => item.from))].slice(0, 3);
+      const topAutomationSummary =
+        topAutomationNames.length > 0 ? topAutomationNames.join(', ') : 'no deterministic automation names';
+      const topImpactSummary =
+        topImpactedSources.length > 0 ? topImpactedSources.join(', ') : 'no deterministic impact sources';
+      const automationSpotlight =
+        topAutomationNames.length > 0
+          ? `top automation sources: ${topAutomationSummary}`
+          : `no deterministic automation names matched ${object}`;
+      const impactSpotlight =
+        topImpactedSources.length > 0
+          ? `top impact sources: ${topImpactSummary}`
+          : `no deterministic impact sources matched ${targetLabel}`;
       const topRiskDrivers = [
         `${citations.length} citation(s) ground this decision packet`,
         `${impact.totalPaths} impact path(s) reference ${targetLabel}`,
         `${automations.totalAutomations} automation item(s) touch ${object}`,
+        automationSpotlight,
+        impactSpotlight,
         perms.granted
           ? `${user} retains deterministic access coverage for ${field ?? object}`
           : `${user} lacks deterministic access coverage for ${field ?? object}`
@@ -688,7 +704,7 @@ export class AskService {
           label: 'Inspect impacted automation',
           rationale:
             automations.totalAutomations > 0
-              ? 'review the highest-scoring automations before changing the target'
+              ? `review the highest-scoring automations before changing the target. Start with ${topAutomationSummary}.`
               : 'confirm no hidden automation exists outside the current snapshot'
         },
         {
@@ -697,7 +713,10 @@ export class AskService {
         },
         {
           label: field ? 'Inspect impact paths' : 'Open proof for object review',
-          rationale: impact.explanation
+          rationale:
+            impact.totalPaths > 0
+              ? `${impact.explanation} Start with ${topImpactSummary}.`
+              : impact.explanation
         }
       ];
       if (citations.length < 3) {
@@ -728,12 +747,12 @@ export class AskService {
         automationImpact: {
           summary: automations.explanation,
           automationCount: automations.totalAutomations,
-          topAutomationNames: automations.automations.slice(0, 3).map((item) => item.name)
+          topAutomationNames
         },
         changeImpact: {
           summary: impact.explanation,
           impactPathCount: impact.totalPaths,
-          topImpactedSources: impact.paths.slice(0, 3).map((item) => item.from)
+          topImpactedSources
         },
         nextActions
       };

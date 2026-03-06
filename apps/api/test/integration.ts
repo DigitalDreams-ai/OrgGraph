@@ -1023,8 +1023,8 @@ async function run(): Promise<void> {
         };
         topRiskDrivers: string[];
         permissionImpact: { user: string; summary: string; pathCount: number };
-        automationImpact: { summary: string; automationCount: number };
-        changeImpact: { summary: string; impactPathCount: number };
+        automationImpact: { summary: string; automationCount: number; topAutomationNames: string[] };
+        changeImpact: { summary: string; impactPathCount: number; topImpactedSources: string[] };
         nextActions: Array<{ label: string; rationale: string }>;
       };
     };
@@ -1051,6 +1051,50 @@ async function run(): Promise<void> {
     assert.equal(typeof askReview.decisionPacket?.automationImpact.automationCount, 'number');
     assert.equal(typeof askReview.decisionPacket?.changeImpact.impactPathCount, 'number');
     assert.ok((askReview.decisionPacket?.nextActions.length ?? 0) >= 3);
+    assert.ok((askReview.decisionPacket?.automationImpact.topAutomationNames.length ?? 0) >= 1);
+    assert.ok((askReview.decisionPacket?.changeImpact.topImpactedSources.length ?? 0) >= 1);
+    const topAutomationName = askReview.decisionPacket?.automationImpact.topAutomationNames[0];
+    const topImpactSource = askReview.decisionPacket?.changeImpact.topImpactedSources[0];
+    assert.ok(
+      askReview.decisionPacket?.topRiskDrivers.some((driver) => driver.toLowerCase().includes('top automation')),
+      'review packet should include top automation spotlight in risk drivers'
+    );
+    assert.ok(
+      askReview.decisionPacket?.topRiskDrivers.some((driver) => driver.toLowerCase().includes('top impact source')),
+      'review packet should include top impact spotlight in risk drivers'
+    );
+    if (topAutomationName) {
+      assert.ok(
+        askReview.decisionPacket?.topRiskDrivers.some((driver) => driver.includes(topAutomationName)),
+        'review packet should include specific top automation names'
+      );
+    }
+    if (topImpactSource) {
+      assert.ok(
+        askReview.decisionPacket?.topRiskDrivers.some((driver) => driver.includes(topImpactSource)),
+        'review packet should include specific top impact sources'
+      );
+    }
+    const reviewAutomationAction = askReview.decisionPacket?.nextActions.find(
+      (action) => action.label === 'Inspect impacted automation'
+    );
+    assert.ok(reviewAutomationAction, 'review packet should include automation action');
+    if (topAutomationName) {
+      assert.ok(
+        reviewAutomationAction?.rationale.includes(topAutomationName),
+        'automation action rationale should reference top automation names'
+      );
+    }
+    const reviewImpactAction = askReview.decisionPacket?.nextActions.find(
+      (action) => action.label === 'Inspect impact paths'
+    );
+    assert.ok(reviewImpactAction, 'review packet should include impact action');
+    if (topImpactSource) {
+      assert.ok(
+        reviewImpactAction?.rationale.includes(topImpactSource),
+        'impact action rationale should reference top impacted sources'
+      );
+    }
 
     const askReviewRepeatRes = await fetch(`${base}/ask`, {
       method: 'POST',

@@ -53,6 +53,7 @@ Materially true now:
 - flow read/write asks now emit structured breakage decision packets (with explicit reads/writes summaries and deterministic next actions), not only free-form deterministic text
 - flow read/write decision packets now emit `targetType: flow`, richer risk drivers (read/write/object/trigger coverage), and explicit ungrounded-flow remediation actions (`Retrieve flow metadata`, `Increase evidence coverage`)
 - review decision packets now include explicit `riskScore` and `evidenceCoverage` signals to improve approval-workflow readability
+- review decision packets now surface explicit top automation names and top impact sources directly inside risk drivers and next-action rationales, with deterministic integration assertions
 - proof history supports searchable labels and open-first artifact access
 - Ask `Save to history` now executes a true history handoff (sync proof identifiers, switch to Proofs, and refresh recent proof labels) instead of duplicating `Open proof`
 - CI heavy Windows jobs are path-gated for minute efficiency
