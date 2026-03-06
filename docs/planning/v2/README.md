@@ -82,6 +82,11 @@ Purpose:
 - structured pass/fail JSON output
 - runs typecheck, tests, build, desktop smoke, replay parity, scope check
 
+14. `docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md`
+- operator-proof evidence log for real-org desktop validation
+- capture of proof/replay IDs from runbook executions
+- Wave12 release-readiness input artifact
+
 ## Wave1 Baseline Artifacts
 
 1. `docs/planning/v2/WAVE1_BACKLOG.md`
