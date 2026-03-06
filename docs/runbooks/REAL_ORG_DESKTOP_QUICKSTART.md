@@ -84,7 +84,7 @@ If connect fails:
 sf org list --all --json
 sf org display --target-org shulman-uat --json
 ```
-2. Re-open Orgumented and retry `Refresh Overview` then `Connect Selected`.
+2. Re-open Orgumented and retry `Refresh Overview` then `Attach Selected Alias`.
 
 ## 3) Browse And Retrieve Metadata (Org Browser)
 
@@ -113,11 +113,15 @@ If you get no results:
 Inside Orgumented:
 1. Click `Open Refresh & Build` from Org Browser (or switch to `Refresh & Build` in rail).
 2. Confirm retrieve handoff card shows selected metadata summary.
-3. Run the staged refresh/build actions in order shown in the workspace.
+3. Click `Run Refresh` once.
+4. Confirm `From Snapshot ID` and `To Snapshot ID` auto-fill.
+5. Click `Run Diff`.
+6. (Optional) Click `Run Org Retrieve` if you want to execute auth/retrieve/refresh from this workspace.
 
 Expected result:
 - handoff state is visible without opening raw JSON
 - staged flow is not blocked by missing selections
+- Diff remains disabled until both snapshot IDs are present and different
 
 ## 5) Ask A Retrieved-Metadata Question
 
