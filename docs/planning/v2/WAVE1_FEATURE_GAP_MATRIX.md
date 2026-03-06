@@ -14,8 +14,8 @@ Purpose:
 |---|---|---|---|---|---|---|
 | G001 | Runtime | Fully converged packaged and local behavior contract | Prevent hidden regression between dev and operator runtime | Wave2 | No known packaged vs local behavioral divergence for core paths | In Progress |
 | G002 | Runtime | Deterministic bootstrap resilience for real-org operator startup | Operators must not hit startup abort loops | Wave2 | Startup consistently reaches ready state under supported baseline | In Progress |
-| G003 | Org Sessions | Robust connect/switch/restore state machine | Session flow is foundational for all org workflows | Wave3 | Connect/switch/restore/disconnect validated end-to-end | In Progress |
-| G004 | Org Sessions | Actionable remediation for tool/auth/session/preflight failures | Reduces operator confusion and support burden | Wave3 | Every failure state includes direct next action | In Progress |
+| G003 | Org Sessions | Robust connect/switch/restore state machine | Session flow is foundational for all org workflows | Wave3 | Connect/switch/restore/disconnect validated end-to-end | Complete |
+| G004 | Org Sessions | Actionable remediation for tool/auth/session/preflight failures | Reduces operator confusion and support burden | Wave3 | Every failure state includes direct next action | Complete |
 | G005 | Org Browser | True explorer-style browsing by names and families | Matches expected org-browser mental model | Wave4 | User can browse and search by real metadata names | Complete |
 | G006 | Org Browser | Deterministic checkbox selection model across search and browse | Reduces interaction ambiguity and retrieval errors | Wave4 | Single selection model works in all browser states | Complete |
 | G007 | Browser + Refresh | First-class retrieve handoff workflow | Retrieval must flow directly into rebuild/compare actions | Wave5 | Retrieve handoff visible, valid, and executable without JSON | In Progress |

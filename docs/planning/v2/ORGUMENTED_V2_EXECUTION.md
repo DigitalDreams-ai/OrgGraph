@@ -73,6 +73,7 @@ Materially true now:
 - session action labels now distinguish quick top-bar attach from explicit connect/switch controls in Org Sessions
 - session alias switch now reuses connect auth/bridge flow so missing CCI alias registrations are remediated during switch, not only during explicit connect
 - Org Sessions now exposes explicit `Bridge CCI Alias` action backed by `/org/session/bridge`, with fail-closed alias/auth/tooling errors and deterministic remediation hints when CCI registry import fails
+- disconnected/session-switch-failure state now preserves the last active alias and persisted switch timestamp, keeping restore targets deterministic across relaunch even when session audit history is trimmed
 - Settings & Diagnostics now renders structured runtime triage cards (bootstrap/db/fixtures/evidence health + recovery checklist) and demotes raw readiness JSON to an optional details panel
 - Settings & Diagnostics now surfaces alias preflight checks/issues and remediation checklist actions alongside tooling status (auth/CCI alias/parse-path parity), reducing bounce-back to Org Sessions for diagnostics triage
 - Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs
@@ -127,29 +128,26 @@ Rules:
 - lock runtime-unavailable vs tool-missing behavior across remaining workspace surfaces
 - add explicit regression tests for readiness + org status surfaces
 
-2. Wave3 finish slice:
-- close CCI alias remediation and restore/switch deterministic behavior
-
-3. Wave5 finish slice:
+2. Wave5 finish slice:
 - close retrieve -> refresh -> diff handoff proof gaps for real-org workflows
 - lock staged summaries and fail-closed guidance when handoff is incomplete
 
-4. Wave6 start slice:
+3. Wave6 start slice:
 - expand grounded metadata-family coverage and fallback elimination
 
-5. Wave7 start slice:
+4. Wave7 start slice:
 - improve decision-packet risk drivers and next actions for real-org review asks
 - capture acceptance benchmark evidence with proof/replay IDs
 
-6. Wave8 start slice:
+5. Wave8 start slice:
 - deepen structured diagnostics/analysis cards for primary operator triage
 - reduce raw JSON dependence in permission/automation/impact/map workflows
 
-7. Wave9 start slice:
+6. Wave9 start slice:
 - complete label-first proof lifecycle (open/replay/export) without token-first dependence in normal workflows
 - keep token fields strictly advanced/debug while preserving replay parity checks
 
-8. Wave10 finish slice:
+7. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 

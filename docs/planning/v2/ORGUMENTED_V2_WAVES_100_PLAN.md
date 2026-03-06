@@ -131,7 +131,7 @@ Mandatory:
 |---|---|---|---|---|
 | wave1 | baseline lock and triage | B001-B024 mapped | Complete | Maintain drift-free docs |
 | wave2 | runtime convergence | B001, B002 | In Progress | Distinguish runtime unreachable vs tool missing everywhere |
-| wave3 | sessions and toolchain reliability | B004, B005 | In Progress | Clear CCI bridge status and deterministic restore behavior |
+| wave3 | sessions and toolchain reliability | B004, B005 | Complete | Session state persists active alias/switch timestamps and restore alias remains deterministic across relaunch |
 | wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
 | wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |
 | wave6 | ask planner/compiler depth | B003, B009 | In Progress | Replay-safe grounding expansion for additional metadata families |
@@ -346,10 +346,9 @@ Exit:
 ## Immediate Branch Queue (Regrouped)
 
 1. `dna-wave2-startup-drift-recovery`: finish packaged runtime startup/drift parity hardening.
-2. `dna-wave3-session-toolchain-reliability`: close deterministic connect/switch/restore and CCI remediation gaps.
-3. `dna-wave5-handoff-proof-guard`: close real-org retrieve -> refresh -> diff handoff proof and fail-closed guidance gaps.
-4. `dna-wave6-grounding-expansion`: deepen grounded Ask coverage and reduce weak fallback paths.
-5. `dna-wave7-decision-packet-quality-baseline`: raise packet quality to approval-workflow acceptance.
+2. `dna-wave5-handoff-proof-guard`: close real-org retrieve -> refresh -> diff handoff proof and fail-closed guidance gaps.
+3. `dna-wave6-grounding-expansion`: deepen grounded Ask coverage and reduce weak fallback paths.
+4. `dna-wave7-decision-packet-quality-baseline`: raise packet quality to approval-workflow acceptance.
 
 ## Cross-Wave Non-Negotiable Gates
 
