@@ -602,8 +602,19 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
       options.presentResponse(result);
       if (result.ok === false) {
         options.setErrorText(options.resolveErrorMessage(result));
+        setLastMetadataRetrieve(null);
+        setLastRetrievedSelections([]);
       } else {
-        setLastMetadataRetrieve(parseMetadataRetrieve(result));
+        const parsedRetrieve = parseMetadataRetrieve(result);
+        if (!parsedRetrieve) {
+          setLastMetadataRetrieve(null);
+          setLastRetrievedSelections([]);
+          options.setErrorText(
+            'Retrieve completed without a structured handoff payload. Re-run Retrieve Cart before continuing to Refresh & Build.'
+          );
+          return;
+        }
+        setLastMetadataRetrieve(parsedRetrieve);
         setLastRetrievedSelections(selectionSnapshot);
       }
     } catch (error) {
@@ -612,6 +623,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
       options.presentResponse(fallback);
       options.setErrorText('Metadata retrieve request failed. Check API readiness and local runtime health.');
       setLastMetadataRetrieve(null);
+      setLastRetrievedSelections([]);
     } finally {
       options.setLoading(false);
     }
