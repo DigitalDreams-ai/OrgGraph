@@ -76,7 +76,197 @@ function renderActionChecklist(title: string, actions: string[]): JSX.Element {
   );
 }
 
+type StructuredAnalyzeSummary = {
+  id: string;
+  title: string;
+  status: 'good' | 'warning' | 'bad';
+  detail: string;
+  nextAction: string;
+};
+
+function statusBadgeClass(status: StructuredAnalyzeSummary['status']): string {
+  if (status === 'good') {
+    return 'decision-badge good';
+  }
+  if (status === 'warning') {
+    return 'decision-badge muted';
+  }
+  return 'decision-badge bad';
+}
+
+function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSummary[] {
+  if (props.analyzeMode === 'perms') {
+    const summaries: StructuredAnalyzeSummary[] = [];
+    if (props.permissionsResult) {
+      const hasWarnings = props.permissionsResult.warnings.length > 0;
+      const mappingResolved = props.permissionsResult.mappingStatus === 'resolved';
+      const status: StructuredAnalyzeSummary['status'] =
+        !mappingResolved || !props.permissionsResult.granted
+          ? 'bad'
+          : hasWarnings || props.permissionsResult.truncated
+            ? 'warning'
+            : 'good';
+      summaries.push({
+        id: 'permission-verdict',
+        title: 'Permission verdict',
+        status,
+        detail: `${props.permissionsResult.field || props.permissionsResult.object}: ${
+          props.permissionsResult.granted ? 'granted' : 'blocked'
+        }. ${props.permissionsResult.paths.length}/${props.permissionsResult.totalPaths} visible path(s).`,
+        nextAction:
+          !mappingResolved
+            ? 'Run Diagnose User Mapping before final approval.'
+            : !props.permissionsResult.granted
+              ? 'Inspect permission paths and remediate profile/permset coverage.'
+              : props.permissionsResult.truncated
+                ? 'Increase Limit to confirm full path coverage.'
+                : hasWarnings
+                  ? 'Resolve warning items before relying on this verdict.'
+                  : 'Permission coverage is deterministic and ready.'
+      });
+    } else {
+      summaries.push({
+        id: 'permission-verdict',
+        title: 'Permission verdict',
+        status: 'warning',
+        detail: 'No permission analysis result loaded for the current user/object/field context.',
+        nextAction: 'Run Permissions Analysis to generate a deterministic verdict.'
+      });
+    }
+
+    if (props.permissionDiagnosis) {
+      const status: StructuredAnalyzeSummary['status'] = !props.permissionDiagnosis.mapExists
+        ? 'bad'
+        : props.permissionDiagnosis.stale || props.permissionDiagnosis.warnings.length > 0
+          ? 'warning'
+          : 'good';
+      summaries.push({
+        id: 'mapping-diagnosis',
+        title: 'Mapping diagnosis',
+        status,
+        detail: `Principal map: ${props.permissionDiagnosis.mapExists ? 'present' : 'missing'}; status ${
+          props.permissionDiagnosis.mappingStatus
+        }; principals ${props.permissionDiagnosis.principals.length}.`,
+        nextAction: !props.permissionDiagnosis.mapExists
+          ? 'Run retrieve + Refresh Semantic State to generate the principal map.'
+          : props.permissionDiagnosis.stale
+            ? 'Refresh semantic state to replace stale mapping data.'
+            : props.permissionDiagnosis.warnings.length > 0
+              ? 'Resolve mapping warnings before permission approval.'
+              : 'Mapping context is ready for permission checks.'
+      });
+    }
+
+    return summaries;
+  }
+
+  if (props.analyzeMode === 'automation') {
+    if (!props.automationResult) {
+      return [
+        {
+          id: 'automation-summary',
+          title: 'Automation summary',
+          status: 'warning',
+          detail: 'No automation analysis result loaded for this object context.',
+          nextAction: 'Run Automation Analysis to generate deterministic automation coverage.'
+        }
+      ];
+    }
+
+    const hasMatches = props.automationResult.automations.length > 0;
+    const status: StructuredAnalyzeSummary['status'] = !hasMatches
+      ? 'warning'
+      : props.automationResult.truncated
+        ? 'warning'
+        : 'good';
+    return [
+      {
+        id: 'automation-summary',
+        title: 'Automation summary',
+        status,
+        detail: `${props.automationResult.object}: ${props.automationResult.automations.length}/${props.automationResult.totalAutomations} automation(s) visible.`,
+        nextAction: !hasMatches
+          ? 'Validate object API name or relax confidence settings, then rerun.'
+          : props.automationResult.truncated
+            ? 'Increase Limit to inspect complete automation coverage.'
+            : 'Use Open Ask for Automation Scope to create a trust/proof packet.'
+      }
+    ];
+  }
+
+  if (props.analyzeMode === 'impact') {
+    if (!props.impactResult) {
+      return [
+        {
+          id: 'impact-summary',
+          title: 'Impact summary',
+          status: 'warning',
+          detail: 'No impact analysis result loaded for this field context.',
+          nextAction: 'Run Impact Analysis to generate deterministic downstream paths.'
+        }
+      ];
+    }
+
+    const hasPaths = props.impactResult.paths.length > 0;
+    const status: StructuredAnalyzeSummary['status'] = !hasPaths
+      ? 'warning'
+      : props.impactResult.truncated
+        ? 'warning'
+        : 'good';
+    return [
+      {
+        id: 'impact-summary',
+        title: 'Impact summary',
+        status,
+        detail: `${props.impactResult.field}: ${props.impactResult.paths.length}/${props.impactResult.totalPaths} impact path(s) visible.`,
+        nextAction: !hasPaths
+          ? 'Confirm field API name and refresh metadata before rerunning.'
+          : props.impactResult.truncated
+            ? 'Increase Limit to inspect full impact coverage.'
+            : 'Use Open Ask for Impact Scope for approval-ready packet output.'
+      }
+    ];
+  }
+
+  if (!props.systemPermissionResult) {
+    return [
+      {
+        id: 'system-summary',
+        title: 'System permission summary',
+        status: 'warning',
+        detail: 'No system-permission result loaded for this user and permission context.',
+        nextAction: 'Run System Permission Check to load deterministic grant paths.'
+      }
+    ];
+  }
+
+  const status: StructuredAnalyzeSummary['status'] = !props.systemPermissionResult.granted
+    ? 'bad'
+    : props.systemPermissionResult.warnings.length > 0 || props.systemPermissionResult.truncated
+      ? 'warning'
+      : 'good';
+  return [
+    {
+      id: 'system-summary',
+      title: 'System permission summary',
+      status,
+      detail: `${props.systemPermissionResult.permission}: ${
+        props.systemPermissionResult.granted ? 'granted' : 'not granted'
+      }. ${props.systemPermissionResult.paths.length}/${props.systemPermissionResult.totalPaths} visible path(s).`,
+      nextAction: !props.systemPermissionResult.granted
+        ? 'Inspect grant paths and update assignments before approval.'
+        : props.systemPermissionResult.truncated
+          ? 'Increase Limit to verify full grant coverage.'
+          : props.systemPermissionResult.warnings.length > 0
+            ? 'Resolve warning items before relying on this verdict.'
+            : 'System permission coverage is deterministic and ready.'
+    }
+  ];
+}
+
 export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
+  const structuredSnapshot = buildAnalyzeSnapshot(props);
+
   return (
     <>
       <h2>Explain &amp; Analyze</h2>
@@ -179,6 +369,26 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
         ) : null}
       </div>
 
+      <div className="analysis-grid">
+        <div className="sub-card analysis-grid-full">
+          <p className="panel-caption">Structured triage</p>
+          <h3>Operator snapshot</h3>
+          <ul className="analysis-list">
+            {structuredSnapshot.map((item) => (
+              <li key={item.id}>
+                <div className="decision-meta">
+                  <span className={statusBadgeClass(item.status)}>{item.title}</span>
+                </div>
+                <p>{item.detail}</p>
+                <p>
+                  <strong>Next action:</strong> {item.nextAction}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
       {props.analyzeMode === 'perms' && props.permissionsResult ? (
         <div className="analysis-grid">
           <div className="sub-card">
@@ -260,6 +470,27 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
           </div>
 
           {renderWarnings(props.permissionsResult.warnings)}
+
+          <div className="sub-card">
+            <p className="panel-caption">Ask handoff</p>
+            <h3>Open permission decision packet</h3>
+            <p className="muted">Carry this deterministic permission context into Ask for trust envelope, proof ID, and replay token output.</p>
+            <div className="action-row">
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  props.onOpenAsk(
+                    `Based only on the latest retrieve, explain whether ${props.permissionsResult?.user} can edit ${
+                      props.permissionsResult?.field || props.permissionsResult?.object
+                    } and what permission path gaps still block approval.`
+                  )
+                }
+              >
+                Open Ask for Permission Scope
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
 
@@ -545,6 +776,27 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
           ])}
 
           {renderWarnings(props.systemPermissionResult.warnings)}
+
+          <div className="sub-card">
+            <p className="panel-caption">Ask handoff</p>
+            <h3>Open system-permission packet</h3>
+            <p className="muted">Move this deterministic system-permission context into Ask to produce a trusted approval packet.</p>
+            <div className="action-row">
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  props.onOpenAsk(
+                    `Based only on the latest retrieve, explain whether ${props.systemPermissionResult?.user} has ${
+                      props.systemPermissionResult?.permission
+                    } and what deterministic grant paths support or block approval.`
+                  )
+                }
+              >
+                Open Ask for System Permission
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
     </>
