@@ -32,7 +32,7 @@ Purpose:
 | D011 | S2 | Runbooks | Operator instructions have had ambiguity in shell/command usage and expected cues | Documentation drift and fragmented runbook ownership | Wave12 | First-run operator validation checklist | In Progress |
 | D012 | S2 | CI Throughput | CI checks can consume high minutes and delay iteration | Redundant or heavy jobs without selective optimization | Wave11 | CI duration baseline vs optimized target | In Progress |
 | D013 | S3 | Design Consistency | Visual hierarchy and spacing can vary across workspace cards | Incremental UI evolution without unified design pass | Wave10 | Design consistency checklist pass | Open |
-| D014 | S3 | Accessibility | Keyboard/focus behavior incomplete across some controls | Accessibility hardening not yet run end-to-end | Wave10 | Accessibility pass for core flows | Open |
+| D014 | S3 | Accessibility | Keyboard/focus behavior incomplete across some controls | Accessibility hardening not yet run end-to-end | Wave10 | Accessibility pass for core flows | In Progress |
 | D015 | S1 | Governance/Execution | Delivery churn risk from platform-reset debate and out-of-order wave starts | Missing locked execution order and objective rebuild triggers | Wave11 | Pivot-lock policy adopted in v2 planning set and followed by active branch queue | In Progress |
 
 ## Defect Exit Criteria
