@@ -955,6 +955,48 @@ async function run(): Promise<void> {
     assert.equal(askFlowEvidencePath.decisionPacket?.targetLabel, 'Civil_Rights_Intake_Questionnaire');
     assert.equal(askFlowEvidencePath.decisionPacket?.targetType, 'flow');
 
+    const askFlowEvidenceUnresolvedRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Based only on the latest retrieve, explain what Flow reads and writes.'
+      })
+    });
+    assert.equal(
+      askFlowEvidenceUnresolvedRes.status,
+      201,
+      'ask flow evidence (unresolved flow target) should return 201'
+    );
+    const askFlowEvidenceUnresolved = (await askFlowEvidenceUnresolvedRes.json()) as {
+      plan: { intent: string; entities: { object?: string } };
+      deterministicAnswer: string;
+      decisionPacket?: {
+        targetLabel?: string;
+        targetType?: string;
+        summary?: string;
+        nextActions?: Array<{ label?: string }>;
+      };
+      rejectedBranches?: Array<{ reasonCode?: string }>;
+    };
+    assert.equal(askFlowEvidenceUnresolved.plan.intent, 'automation');
+    assert.equal(askFlowEvidenceUnresolved.plan.entities.object, undefined);
+    assert.match(
+      askFlowEvidenceUnresolved.deterministicAnswer,
+      /exact flow API name could not be resolved/i
+    );
+    assert.doesNotMatch(askFlowEvidenceUnresolved.deterministicAnswer, /no automation found for/i);
+    assert.equal(askFlowEvidenceUnresolved.decisionPacket?.targetType, 'flow');
+    assert.equal(askFlowEvidenceUnresolved.decisionPacket?.targetLabel, 'flow-name-unresolved');
+    assert.match(
+      askFlowEvidenceUnresolved.decisionPacket?.summary ?? '',
+      /Flow target could not be resolved from the query/i
+    );
+    assert.ok(
+      (askFlowEvidenceUnresolved.decisionPacket?.nextActions ?? []).some(
+        (item) => item.label === 'Specify exact flow API name'
+      )
+    );
+
     const askImpactRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

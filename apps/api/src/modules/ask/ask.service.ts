@@ -839,10 +839,11 @@ export class AskService {
       }
     } else if (plan.intent === 'automation') {
       operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.INTERSECT);
+      const flowQueryRequested = /\bflow\b/i.test(input.query);
       const requestedFlowNameFromQuery = this.extractRequestedFlowName(input.query);
       const requestedFlowName =
         requestedFlowNameFromQuery ??
-        (/\bflow\b/i.test(input.query)
+        (flowQueryRequested && this.shouldInferFlowNameFromCitations(input.query)
           ? this.inferRequestedFlowNameFromCitations(citationHits)
           : undefined);
       const object = this.normalizeAutomationObject(plan.entities.object);
@@ -897,6 +898,71 @@ export class AskService {
             `no retrieved flow evidence matched ${requestedFlowName}`
           );
         }
+      } else if (flowQueryRequested && !object) {
+        const flowSuggestions = this
+          .rankFlowNamesFromCitations(citationHits)
+          .map(([name]) => name)
+          .slice(0, 3);
+        const suggestionText =
+          flowSuggestions.length > 0
+            ? `Closest retrieved flow candidates: ${flowSuggestions.join(', ')}.`
+            : 'No flow candidates were detected in the current retrieve citations.';
+        answer =
+          `Flow question detected but the exact flow API name could not be resolved. ${suggestionText} ` +
+          'Re-run Ask with: Based only on the latest retrieve, explain what Flow <FlowApiName> reads and writes.';
+        deterministicAnswer = answer;
+        confidence = 0.46;
+        const unresolvedTarget = flowSuggestions[0] ?? 'flow-name-unresolved';
+        decisionPacket = this.buildAutomationFlowDecisionPacket({
+          flowName: unresolvedTarget,
+          summary: {
+            explanation:
+              'Flow target was unresolved from the query. Deterministic read/write synthesis is blocked until an exact flow API name is provided.',
+            matchedCount: 0,
+            readFields: [],
+            writeFields: [],
+            referencedObjects: [],
+            triggerTypes: []
+          },
+          citationCount: citations.length,
+          user: plan.entities.user
+        });
+        decisionPacket.targetLabel = 'flow-name-unresolved';
+        decisionPacket.summary =
+          'Flow target could not be resolved from the query. No deterministic read/write summary was produced.';
+        decisionPacket.nextActions = [
+          {
+            label: 'Specify exact flow API name',
+            rationale:
+              'Use the exact flow API name in Ask (for example, Flow Civil_Rights_Intake_Questionnaire reads and writes).'
+          },
+          {
+            label: 'Browse flow metadata',
+            rationale:
+              'Load Flow family in Org Browser, verify the flow API name, then rerun Ask.'
+          },
+          {
+            label: 'Increase evidence coverage',
+            rationale: suggestionText
+          }
+        ];
+        executionTrace.push(
+          'automation.flowName.source=unresolved',
+          `automation.flowSuggestions=${flowSuggestions.join('|') || 'none'}`,
+          'automation.failClosed=unresolved-flow-target'
+        );
+        consistency = {
+          checked: consistencyCheck,
+          aligned: true,
+          reason: consistencyCheck
+            ? 'flow-targeted ask failed closed because no exact flow name was resolved'
+            : 'consistency check disabled'
+        };
+        reject(
+          'analysis.automation',
+          'FLOW_NAME_UNRESOLVED',
+          'flow-targeted ask did not resolve an exact flow name'
+        );
       } else {
         const result = await this.analysis.automation(
           object ?? 'Case',
@@ -1215,6 +1281,20 @@ export class AskService {
     return undefined;
   }
 
+  private shouldInferFlowNameFromCitations(query: string): boolean {
+    const normalized = query.trim().toLowerCase();
+    if (normalized.includes('.flow-meta.xml')) {
+      return true;
+    }
+    if (/\bflow\s+(?:called|named)\b/i.test(query)) {
+      return true;
+    }
+    if (/\bflow\s+["'`][^"'`]+["'`]/i.test(query)) {
+      return true;
+    }
+    return false;
+  }
+
   private normalizeRequestedFlowName(candidate: string | undefined): string | undefined {
     if (!candidate) {
       return undefined;
@@ -1242,6 +1322,13 @@ export class AskService {
     if (normalized.length === 0) {
       return undefined;
     }
+    if (
+      /^(?:read|reads|write|writes)(?:\s+(?:and|or))?(?:\s+(?:read|reads|write|writes))?$/i.test(
+        normalized
+      )
+    ) {
+      return undefined;
+    }
     if (new Set(['the', 'a', 'an', 'this', 'that']).has(normalized.toLowerCase())) {
       return undefined;
     }
@@ -1251,23 +1338,11 @@ export class AskService {
   private inferRequestedFlowNameFromCitations(
     evidenceHits: EvidenceSearchResult[]
   ): string | undefined {
-    const scoreByFlow = new Map<string, number>();
-    for (const hit of evidenceHits) {
-      const source = hit.sourcePath.replace(/\\/g, '/');
-      const match = source.match(/\/flows\/([^/]+)\.flow-meta\.xml$/i);
-      const flowName = this.normalizeRequestedFlowName(match?.[1]);
-      if (!flowName) {
-        continue;
-      }
-      const next = (scoreByFlow.get(flowName) ?? 0) + Math.max(0.05, hit.score);
-      scoreByFlow.set(flowName, next);
-    }
-
-    if (scoreByFlow.size === 0) {
+    const ranked = this.rankFlowNamesFromCitations(evidenceHits);
+    if (ranked.length === 0) {
       return undefined;
     }
 
-    const ranked = [...scoreByFlow.entries()].sort((a, b) => b[1] - a[1]);
     const [topName, topScore] = ranked[0];
     const secondScore = ranked[1]?.[1] ?? 0;
     const totalScore = ranked.reduce((sum, [, score]) => sum + score, 0);
@@ -1283,6 +1358,23 @@ export class AskService {
     }
 
     return topName;
+  }
+
+  private rankFlowNamesFromCitations(
+    evidenceHits: EvidenceSearchResult[]
+  ): Array<[name: string, score: number]> {
+    const scoreByFlow = new Map<string, number>();
+    for (const hit of evidenceHits) {
+      const source = hit.sourcePath.replace(/\\/g, '/');
+      const match = source.match(/\/flows\/([^/]+)\.flow-meta\.xml$/i);
+      const flowName = this.normalizeRequestedFlowName(match?.[1]);
+      if (!flowName) {
+        continue;
+      }
+      const next = (scoreByFlow.get(flowName) ?? 0) + Math.max(0.05, hit.score);
+      scoreByFlow.set(flowName, next);
+    }
+    return [...scoreByFlow.entries()].sort((a, b) => b[1] - a[1]);
   }
 
   private normalizeAutomationObject(candidate?: string): string | undefined {
@@ -1303,9 +1395,23 @@ export class AskService {
   }
 
   private isAutomationObjectStopWord(candidate: string): boolean {
-    return new Set(['the', 'a', 'an', 'latest', 'this', 'that', 'my', 'our']).has(
-      candidate.toLowerCase()
-    );
+    return new Set([
+      'the',
+      'a',
+      'an',
+      'latest',
+      'this',
+      'that',
+      'my',
+      'our',
+      'flow',
+      'called',
+      'named',
+      'read',
+      'reads',
+      'write',
+      'writes'
+    ]).has(candidate.toLowerCase());
   }
 
   private buildFlowEvidenceSummary(
