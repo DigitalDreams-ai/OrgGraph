@@ -69,6 +69,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
   const expectedAlias = props.activeAlias || props.selectedAlias;
   const retrieveHandoff = assessRetrieveHandoff(props.retrieveHandoff, expectedAlias);
   const stagedSelectionCount = props.retrieveSelections.length;
+  const refreshBlocked = retrieveHandoff.state !== 'ready' || stagedSelectionCount === 0;
   const orgRetrieveBlocked =
     props.orgRunRetrieve && (retrieveHandoff.state !== 'ready' || stagedSelectionCount === 0);
   const stagedSelectionPreview = props.retrieveSelections.slice(0, 6);
@@ -82,7 +83,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
   return (
     <>
       <h2>Refresh &amp; Build</h2>
-      <p className="section-lead">Rebuild semantic state, review drift, and keep the retrieve-to-refresh handoff visible instead of treating rebuild as a separate backend step.</p>
+      <p className="section-lead">Rebuild semantic state, review drift, and keep the retrieve-to-refresh handoff visible instead of treating rebuild as a separate backend step. Refresh now fails closed until Browser handoff is ready.</p>
 
       <div className="ops-grid">
         <article className="sub-card">
@@ -297,10 +298,25 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
       </select>
 
       <div className="action-row">
-        <button type="button" onClick={props.onRunRefresh} disabled={props.loading}>
+        <button type="button" onClick={props.onRunRefresh} disabled={props.loading || refreshBlocked}>
           Run Refresh
         </button>
       </div>
+      {refreshBlocked ? (
+        <ul className="issue-list">
+          {retrieveHandoff.state !== 'ready' ? (
+            <li>
+              <strong>Fail closed.</strong> Browser handoff is not ready. {retrieveHandoff.reasons[0]}
+            </li>
+          ) : null}
+          {stagedSelectionCount === 0 ? (
+            <li>
+              <strong>Fail closed.</strong> No staged metadata selections found. Go to `Org Browser`, check items, and
+              run `Retrieve Cart`.
+            </li>
+          ) : null}
+        </ul>
+      ) : null}
 
       <div className="field-grid">
         <div>
