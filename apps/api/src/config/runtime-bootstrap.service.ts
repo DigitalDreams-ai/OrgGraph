@@ -69,13 +69,26 @@ export class RuntimeBootstrapService {
 
     try {
       this.logger.log(`bootstrapping runtime from fixtures at ${fixturesPath}`);
-      const refreshed = await this.ingestionService.refresh({
+      const refreshRequest = {
         fixturesPath,
-        mode: 'full',
+        mode: 'full' as const,
         // Runtime bootstrap starts from an ungrounded state, so stale snapshot history must not
         // block recovery with drift-budget enforcement against an obsolete baseline.
         rebaseline: true
-      });
+      };
+      let refreshed;
+      try {
+        refreshed = await this.ingestionService.refresh(refreshRequest);
+      } catch (error) {
+        if (!this.isSemanticDriftBudgetError(error)) {
+          throw error;
+        }
+        this.logger.warn(
+          'bootstrap refresh hit semantic drift budget guard; clearing stale semantic state and retrying once with rebaseline'
+        );
+        this.clearStaleSemanticStateArtifacts();
+        refreshed = await this.ingestionService.refresh(refreshRequest);
+      }
 
       if (refreshed.nodeCount <= 0 || refreshed.edgeCount <= 0 || refreshed.evidenceCount <= 0) {
         throw new Error(
@@ -171,5 +184,31 @@ export class RuntimeBootstrapService {
     }
 
     return raw.split(/\r?\n/).filter((line) => line.trim().length > 0).length;
+  }
+
+  private isSemanticDriftBudgetError(error: unknown): boolean {
+    if (!(error instanceof Error)) {
+      return false;
+    }
+    return error.message.toLowerCase().includes('semantic drift budget exceeded');
+  }
+
+  private clearStaleSemanticStateArtifacts(): void {
+    const removablePaths = [
+      this.runtimePaths.refreshStatePath(),
+      this.runtimePaths.semanticSnapshotPath(),
+      this.runtimePaths.semanticSnapshotHistoryDir(),
+      this.runtimePaths.semanticDiffArtifactsDir()
+    ];
+
+    for (const targetPath of removablePaths) {
+      try {
+        fs.rmSync(targetPath, { recursive: true, force: true });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'unknown stale-state cleanup failure';
+        this.logger.warn(`failed to clear stale semantic state artifact at ${targetPath}: ${message}`);
+      }
+    }
   }
 }

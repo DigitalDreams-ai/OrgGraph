@@ -4,6 +4,7 @@ import path from 'node:path';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { RuntimeBootstrapService } from '../src/config/runtime-bootstrap.service';
+import { IngestionService } from '../src/modules/ingestion/ingestion.service';
 
 function workspaceRoot(): string {
   return path.resolve(process.cwd(), '../..');
@@ -142,6 +143,47 @@ async function assertReadyOnly(appDataRoot: string): Promise<void> {
   }
 }
 
+async function assertBootstrapRetriesDriftBudgetFailure(appDataRoot: string): Promise<void> {
+  const app = await NestFactory.create(AppModule, { logger: false });
+  const runtimeBootstrap = app.get(RuntimeBootstrapService);
+  const ingestionService = app.get(IngestionService);
+  const originalRefresh = ingestionService.refresh.bind(ingestionService);
+  const rebaselineFlags: boolean[] = [];
+  let attempts = 0;
+
+  (ingestionService as { refresh: typeof ingestionService.refresh }).refresh = async (
+    options
+  ) => {
+    attempts += 1;
+    rebaselineFlags.push(options?.rebaseline === true);
+    if (attempts === 1) {
+      throw new Error('Semantic drift budget exceeded: simulated stale bootstrap baseline');
+    }
+    return originalRefresh(options ?? {});
+  };
+
+  const bootstrapReady = await runtimeBootstrap.ensureRuntimeReady();
+  assert.equal(bootstrapReady, true, 'bootstrap should recover by retrying semantic drift failures once');
+  assert.deepEqual(
+    rebaselineFlags,
+    [true, true],
+    'bootstrap retry should keep rebaseline enabled on both attempts'
+  );
+  assert.equal(attempts, 2, 'bootstrap should retry semantic drift failure exactly once');
+  await app.listen(0);
+
+  try {
+    const addr = app.getHttpServer().address();
+    const port = typeof addr === 'string' ? 0 : addr.port;
+    const base = `http://127.0.0.1:${port}`;
+    const readyRes = await fetch(`${base}/ready`);
+    assert.equal(readyRes.status, 200, 'bootstrap retry should leave runtime ready');
+  } finally {
+    await app.close().catch(() => undefined);
+    fs.rmSync(appDataRoot, { recursive: true, force: true });
+  }
+}
+
 async function assertBootstrapFailureReadiness(appDataRoot: string): Promise<void> {
   const app = await NestFactory.create(AppModule, { logger: false });
   const runtimeBootstrap = app.get(RuntimeBootstrapService);
@@ -220,6 +262,11 @@ async function run(): Promise<void> {
   applyBootstrapEnv(root, staleFixtureSnapshotAppDataRoot);
   seedStaleSemanticSnapshot(staleFixtureSnapshotAppDataRoot, path.join(root, 'fixtures', 'permissions'));
   await assertReadyOnly(staleFixtureSnapshotAppDataRoot);
+
+  const retryAfterDriftAppDataRoot = path.join(root, 'data', 'runtime-bootstrap-drift-retry-test');
+  fs.rmSync(retryAfterDriftAppDataRoot, { recursive: true, force: true });
+  applyBootstrapEnv(root, retryAfterDriftAppDataRoot);
+  await assertBootstrapRetriesDriftBudgetFailure(retryAfterDriftAppDataRoot);
 
   const failedBootstrapAppDataRoot = path.join(root, 'data', 'runtime-bootstrap-failure-test');
   fs.rmSync(failedBootstrapAppDataRoot, { recursive: true, force: true });
