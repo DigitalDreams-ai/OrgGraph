@@ -11,6 +11,8 @@ import type {
   OrgRetrieveResponse,
   OrgSessionAliasValidationResponse,
   OrgSessionAliasesResponse,
+  OrgSessionBridgeRequest,
+  OrgSessionBridgeResponse,
   OrgSessionHistoryResponse,
   OrgSessionConnectRequest,
   OrgSessionConnectResponse,
@@ -81,6 +83,18 @@ export class OrgController {
   ): Promise<OrgSessionConnectResponse> {
     return this.orgService.connectSession({
       alias: typeof body.alias === 'string' && body.alias.trim().length > 0 ? body.alias.trim() : undefined
+    });
+  }
+
+  @Post('/org/session/bridge')
+  async sessionBridge(
+    @Body() body: Partial<OrgSessionBridgeRequest> = {}
+  ): Promise<OrgSessionBridgeResponse> {
+    if (body.alias !== undefined && (typeof body.alias !== 'string' || body.alias.trim().length === 0)) {
+      throw new BadRequestException('alias must be a non-empty string when provided');
+    }
+    return this.orgService.bridgeSessionAlias({
+      alias: typeof body.alias === 'string' ? body.alias.trim() : undefined
     });
   }
 

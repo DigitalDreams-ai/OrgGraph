@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { QueryResponse } from '../../lib/ask-client';
 import {
+  bridgeOrgSessionAlias,
   connectOrgSession,
   disconnectOrgSession,
   getOrgSession,
@@ -255,6 +256,13 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     });
   }
 
+  function bridgeAlias(alias = orgAlias): Promise<QueryResponse | null> {
+    return runAction(() => bridgeOrgSessionAlias({ alias }), async () => {
+      setOrgAlias(alias);
+      await syncOverview(alias, false);
+    });
+  }
+
   function disconnect(): Promise<QueryResponse | null> {
     return runAction(() => disconnectOrgSession(), async (response) => {
       const payload = readPayload<OrgSessionPayload>(response);
@@ -312,6 +320,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     runPreflight,
     refreshOverview,
     connectExistingAlias,
+    bridgeAlias,
     switchAlias,
     disconnect,
     restoreLastSession,

@@ -246,6 +246,7 @@ export default function Page(): JSX.Element {
               onLoadSessionHistory={() => void connectWorkspace.loadSessionHistory()}
               onCheckToolStatus={() => void connectWorkspace.loadToolStatus()}
               onPreflight={() => void connectWorkspace.runPreflight()}
+              onBridgeAlias={(alias) => void connectWorkspace.bridgeAlias(alias)}
               onSwitchAlias={(alias) => void connectWorkspace.switchAlias(alias)}
               onConnectExistingAlias={(alias) => void connectWorkspace.connectExistingAlias(alias)}
               onDisconnect={() => void connectWorkspace.disconnect()}

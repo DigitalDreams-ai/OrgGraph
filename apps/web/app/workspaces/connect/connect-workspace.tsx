@@ -38,6 +38,7 @@ interface ConnectWorkspaceProps {
   onLoadSessionHistory: () => void;
   onCheckToolStatus: () => void;
   onPreflight: () => void;
+  onBridgeAlias: (alias?: string) => void;
   onSwitchAlias: (alias?: string) => void;
   onConnectExistingAlias: (alias?: string) => void;
   onDisconnect: () => void;
@@ -198,6 +199,7 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
         <button type="button" className="ghost" onClick={props.onLoadSessionHistory} disabled={props.loading}>Session History</button>
         <button type="button" className="ghost" onClick={props.onCheckToolStatus} disabled={props.loading}>Check Tool Status</button>
         <button type="button" className="ghost" onClick={props.onPreflight} disabled={props.loading}>Preflight Selected</button>
+        <button type="button" className="ghost" onClick={() => props.onBridgeAlias()} disabled={props.loading}>Bridge CCI Alias</button>
       </div>
 
       <div className="ops-grid">
@@ -227,7 +229,9 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
         <article className="sub-card">
           <p className="panel-caption">Operator commands</p>
           <h3>Manual auth bridge</h3>
-          <p className="muted">Use these only when the selected alias still needs to be authenticated or bridged into CCI.</p>
+          <p className="muted">
+            Use `Bridge CCI Alias` first. Run these commands only when the automatic bridge path reports a blocking error.
+          </p>
           <pre>{`# 1) Authenticate in sf keychain
 sf org login web --alias ${props.orgAlias} --instance-url https://test.salesforce.com --set-default
 

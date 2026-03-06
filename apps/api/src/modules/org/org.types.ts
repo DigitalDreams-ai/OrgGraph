@@ -174,6 +174,10 @@ export interface OrgSessionConnectRequest {
   alias?: string;
 }
 
+export interface OrgSessionBridgeRequest {
+  alias?: string;
+}
+
 export interface OrgSessionConnectResponse {
   status: 'connected';
   activeAlias: string;
@@ -194,6 +198,14 @@ export interface OrgSessionDisconnectResponse {
   activeAlias: string;
   authMode: OrgAuthMode;
   disconnectedAt: string;
+}
+
+export interface OrgSessionBridgeResponse {
+  status: 'connected' | 'already_connected';
+  alias: string;
+  authMode: OrgAuthMode;
+  bridgedAt: string;
+  message: string;
 }
 
 export interface OrgPreflightIssue {
