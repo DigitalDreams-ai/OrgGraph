@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReadyPayload } from '../../shell/use-shell-runtime';
-import type { OrgPreflightPayload, OrgStatusPayload } from '../connect/types';
+import type { OrgPreflightIssue, OrgPreflightPayload, OrgStatusPayload } from '../connect/types';
 import type { MetaAdaptPayload, MetaContextPayload } from './types';
 
 interface SystemWorkspaceProps {
@@ -29,6 +29,14 @@ type RuntimeIssue = {
   severity: 'error' | 'warning';
   message: string;
   remediation: string;
+};
+
+type StructuredSummary = {
+  id: string;
+  title: string;
+  status: 'good' | 'warning' | 'bad';
+  detail: string;
+  nextAction: string;
 };
 
 function formatTimestamp(value?: string): string {
@@ -206,11 +214,149 @@ function renderRelationMultipliers(payload: MetaContextPayload | null): JSX.Elem
   );
 }
 
+function buildStructuredSnapshot(input: {
+  runtimeUnavailable: boolean;
+  healthStatus: string;
+  readyStatus: string;
+  runtimeIssues: RuntimeIssue[];
+  orgStatus: OrgStatusPayload | null;
+  preflightIssues: OrgPreflightIssue[];
+  preflightChecks: OrgPreflightPayload['checks'] | undefined;
+}): StructuredSummary[] {
+  const runtimeErrors = input.runtimeIssues.filter((issue) => issue.severity === 'error').length;
+  const runtimeWarnings = input.runtimeIssues.filter((issue) => issue.severity === 'warning').length;
+
+  const runtimeSummary: StructuredSummary = input.runtimeUnavailable
+    ? {
+        id: 'runtime',
+        title: 'Runtime reachability',
+        status: 'bad',
+        detail: 'Desktop runtime is unavailable, so readiness and tooling probes are blocked.',
+        nextAction: 'Use Refresh Status after relaunching Orgumented.'
+      }
+    : runtimeErrors > 0
+      ? {
+          id: 'runtime',
+          title: 'Runtime readiness',
+          status: 'bad',
+          detail: `${runtimeErrors} readiness error(s) detected (health=${input.healthStatus}, ready=${input.readyStatus}).`,
+          nextAction: 'Open Refresh & Build and run Refresh Semantic State.'
+        }
+      : runtimeWarnings > 0
+        ? {
+            id: 'runtime',
+            title: 'Runtime readiness',
+            status: 'warning',
+            detail: `${runtimeWarnings} readiness warning(s) detected (fixtures/evidence may be incomplete).`,
+            nextAction: 'Run retrieve + refresh to repopulate parse/evidence paths.'
+          }
+        : {
+            id: 'runtime',
+            title: 'Runtime readiness',
+            status: 'good',
+            detail: `Health and readiness are stable (health=${input.healthStatus}, ready=${input.readyStatus}).`,
+            nextAction: 'No runtime recovery action required.'
+          };
+
+  const sfInstalled = input.orgStatus?.sf?.installed === true;
+  const cciInstalled = input.orgStatus?.cci?.installed === true;
+  const preflightErrors = input.preflightIssues.filter((issue) => (issue.severity || '').toLowerCase() === 'error').length;
+  const preflightWarnings = input.preflightIssues.filter((issue) => (issue.severity || '').toLowerCase() === 'warning').length;
+
+  const toolingSummary: StructuredSummary = input.runtimeUnavailable
+    ? {
+        id: 'tooling',
+        title: 'Toolchain status',
+        status: 'bad',
+        detail: 'sf/cci checks are unavailable while runtime is unreachable.',
+        nextAction: 'Restore runtime first, then rerun Org Status and Preflight.'
+      }
+    : !sfInstalled || !cciInstalled
+      ? {
+          id: 'tooling',
+          title: 'Toolchain status',
+          status: 'bad',
+          detail: `Tooling is degraded (sf=${sfInstalled ? 'installed' : 'missing'}, cci=${cciInstalled ? 'installed' : 'missing'}).`,
+          nextAction: 'Install missing tools and rerun Preflight.'
+        }
+      : preflightErrors > 0
+        ? {
+            id: 'tooling',
+            title: 'Toolchain status',
+            status: 'bad',
+            detail: `${preflightErrors} blocking preflight error(s) detected for the selected alias.`,
+            nextAction: 'Follow preflight remediation items before retrieve/ask.'
+          }
+        : preflightWarnings > 0
+          ? {
+              id: 'tooling',
+              title: 'Toolchain status',
+              status: 'warning',
+              detail: `${preflightWarnings} warning(s) remain (non-blocking but should be cleaned up).`,
+              nextAction: 'Run preflight checklist actions to remove warnings.'
+            }
+          : {
+              id: 'tooling',
+              title: 'Toolchain status',
+              status: 'good',
+              detail: 'sf/cci are installed and no preflight issues are currently reported.',
+              nextAction: 'Toolchain is ready for retrieve, refresh, and ask.'
+            };
+
+  const sessionConnected =
+    input.runtimeUnavailable
+      ? undefined
+      : input.orgStatus?.session?.status === 'connected' || input.preflightChecks?.sessionConnected === true;
+  const aliasAuthenticated = input.preflightChecks?.aliasAuthenticated;
+  const cciAliasAvailable = input.preflightChecks?.cciAliasAvailable;
+
+  const sessionSummary: StructuredSummary = input.runtimeUnavailable
+    ? {
+        id: 'session',
+        title: 'Session state',
+        status: 'bad',
+        detail: 'Session state cannot be validated while runtime is unavailable.',
+        nextAction: 'Relaunch runtime, then run Refresh Overview.'
+      }
+    : sessionConnected && aliasAuthenticated === true
+      ? {
+          id: 'session',
+          title: 'Session state',
+          status: cciAliasAvailable === false ? 'warning' : 'good',
+          detail:
+            cciAliasAvailable === false
+              ? 'Session is connected, but CCI alias bridging is still pending.'
+              : 'Session is connected and alias authentication is healthy.',
+          nextAction:
+            cciAliasAvailable === false
+              ? 'Use Bridge CCI Alias, then rerun Preflight.'
+              : 'No session recovery action required.'
+        }
+      : {
+          id: 'session',
+          title: 'Session state',
+          status: 'bad',
+          detail: 'Session is not yet ready for deterministic operator workflows.',
+          nextAction: 'Run Attach/Switch Active Alias and rerun Preflight.'
+        };
+
+  return [runtimeSummary, toolingSummary, sessionSummary];
+}
+
 export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
   const runtimeIssues = deriveRuntimeIssues(props.healthStatus, props.readyStatus, props.readyPayload);
   const readyChecks = props.readyPayload?.checks;
   const preflightIssues = props.orgPreflight?.issues ?? [];
   const preflightChecks = props.orgPreflight?.checks;
+  const structuredSnapshot = buildStructuredSnapshot({
+    runtimeUnavailable: props.runtimeUnavailable,
+    healthStatus: props.healthStatus,
+    readyStatus: props.readyStatus,
+    runtimeIssues,
+    orgStatus: props.orgStatus,
+    preflightIssues: preflightIssues as OrgPreflightIssue[],
+    preflightChecks
+  });
   const sfState =
     props.runtimeUnavailable ? 'unavailable' : props.orgStatus ? (props.orgStatus.sf?.installed ? 'installed' : 'missing') : 'unknown';
   const cciState =
@@ -280,6 +426,7 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
           {props.readyDetails ? (
             <details>
               <summary>Raw readiness JSON</summary>
+              <p className="muted">Use this only for deep debugging. Primary triage is captured in the structured snapshot below.</p>
               <pre>{props.readyDetails}</pre>
             </details>
           ) : null}
@@ -393,6 +540,29 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
       </div>
 
       <div className="analysis-grid">
+        <article className="sub-card">
+          <p className="panel-caption">Structured diagnostics</p>
+          <h3>Operator triage snapshot</h3>
+          <ul className="analysis-list">
+            {structuredSnapshot.map((item) => (
+              <li key={item.id}>
+                <div className="decision-meta">
+                  <span
+                    className={`decision-badge ${
+                      item.status === 'good' ? 'good' : item.status === 'warning' ? 'muted' : 'bad'
+                    }`}
+                  >
+                    {item.title}
+                  </span>
+                </div>
+                <p>{item.detail}</p>
+                <p>
+                  <strong>Next action:</strong> {item.nextAction}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </article>
         {renderRuntimeActionChecklist(runtimeIssues)}
         {renderPreflightActionChecklist(props.orgPreflight)}
       </div>
