@@ -55,6 +55,17 @@ Reference runbook:
   - Proof ID: `proof_6191da2051e9b10b25c3bd11`
   - Replay Token: `trace_607a628baaef3350d991dd0`
 
+5. Ask grounded flow read/write response with `Flow called` phrasing:
+- Result: pass
+- Query:
+  - `Based only on the latest retrieve, explain what Flow called Civil_Rights_Intake_Questionnaire reads and writes`
+- Evidence:
+  - Ask Snapshot: `Flow Civil_Rights_Intake_Questionnaire read/write summary grounded by 5 citation(s).`
+  - Trust: `trusted`
+  - Confidence: `0.79`
+  - Proof ID: `proof_304775e3d852eecdde28ebe1`
+  - Replay Token: `trace_d7725382d02a5fcf02b91b20`
+
 ## Gate Impact
 
 - Wave12 runbook/operator-proof gate:
@@ -63,7 +74,7 @@ Reference runbook:
 
 - Wave6 flow-grounding regression check:
   - no generic fallback (`no automation found for the`) observed in this operator run
-  - grounded flow summary returned with trusted envelope
+  - grounded flow summary returned with trusted envelope for both direct flow-name and `Flow called` phrasing
 
 ## Next Required Validation
 
