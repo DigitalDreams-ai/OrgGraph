@@ -14,6 +14,7 @@ interface SystemWorkspaceProps {
   orgStatus: OrgStatusPayload | null;
   orgPreflight: OrgPreflightPayload | null;
   runtimeUnavailable: boolean;
+  toolStatusSource: 'runtime_unavailable' | 'live' | 'unknown';
   metaContext: MetaContextPayload | null;
   metaAdaptResult: MetaAdaptPayload | null;
   loading: boolean;
@@ -210,8 +211,16 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
   const readyChecks = props.readyPayload?.checks;
   const preflightIssues = props.orgPreflight?.issues ?? [];
   const preflightChecks = props.orgPreflight?.checks;
-  const sfState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.sf?.installed ? 'installed' : 'missing';
-  const cciState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.installed ? 'installed' : 'missing';
+  const sfState =
+    props.runtimeUnavailable ? 'unavailable' : props.orgStatus ? (props.orgStatus.sf?.installed ? 'installed' : 'missing') : 'unknown';
+  const cciState =
+    props.runtimeUnavailable ? 'unavailable' : props.orgStatus ? (props.orgStatus.cci?.installed ? 'installed' : 'missing') : 'unknown';
+  const toolSourceLabel =
+    props.toolStatusSource === 'runtime_unavailable'
+      ? 'runtime blocked'
+      : props.toolStatusSource === 'live'
+        ? 'live status'
+        : 'status not loaded';
   const toolingMessage = props.runtimeUnavailable
     ? 'Runtime is currently unreachable. Relaunch Orgumented desktop, then run Refresh Status before checking toolchain state.'
     : props.orgStatus?.sf?.message || props.orgStatus?.cci?.message || 'Tooling messages look healthy.';
@@ -294,6 +303,7 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
                   Integration: {props.runtimeUnavailable ? 'unavailable' : String(props.orgStatus?.integrationEnabled)}
                 </span>
                 <span className="decision-badge muted">Auth: {props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.authMode || 'n/a'}</span>
+                <span className="decision-badge muted">Source: {toolSourceLabel}</span>
                 <span
                   className={
                     props.runtimeUnavailable
@@ -306,6 +316,11 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
                   Session: {props.runtimeUnavailable ? 'runtime unavailable' : props.orgStatus?.session?.status || 'unknown'}
                 </span>
               </div>
+              {props.runtimeUnavailable ? (
+                <p className="muted">
+                  Runtime-unavailable status blocks tool checks. `sf` and `cci` are shown as unavailable, not missing.
+                </p>
+              ) : null}
               <div className="analysis-stat-grid">
                 <div className="packet-stat">
                   <span>sf</span>

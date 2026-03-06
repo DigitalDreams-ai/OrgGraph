@@ -21,6 +21,7 @@ interface OperatorRailProps {
   orgStatus: OrgStatusPayload | null;
   orgPreflight: OrgPreflightPayload | null;
   runtimeUnavailable: boolean;
+  toolStatusSource: 'runtime_unavailable' | 'live' | 'unknown';
   onCopy: () => void;
 }
 
@@ -56,6 +57,12 @@ export function OperatorRail(props: OperatorRailProps): JSX.Element {
   const sessionLabel = props.runtimeUnavailable ? 'runtime unavailable' : props.sessionStatus;
   const sfInstalledLabel = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.sf?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
   const cciInstalledLabel = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
+  const toolSourceLabel =
+    props.toolStatusSource === 'runtime_unavailable'
+      ? 'runtime blocked'
+      : props.toolStatusSource === 'live'
+        ? 'live status'
+        : 'status not loaded';
   const runtimeTriage = deriveRuntimeTriage(props.readyPayload);
 
   return (
@@ -90,6 +97,7 @@ export function OperatorRail(props: OperatorRailProps): JSX.Element {
         <p><strong>Auth Mode:</strong> {props.orgSession?.authMode || props.orgStatus?.authMode || 'sf_cli_keychain'}</p>
         <p><strong>sf Installed:</strong> {sfInstalledLabel}</p>
         <p><strong>CCI Installed:</strong> {cciInstalledLabel}</p>
+        <p><strong>Tool Source:</strong> {toolSourceLabel}</p>
       </div>
 
       <div className="sub-card">

@@ -234,6 +234,7 @@ export default function Page(): JSX.Element {
               selectedAlias={connectWorkspace.selectedAlias}
               preflightIssues={connectWorkspace.preflightIssues}
               toolingReady={connectWorkspace.toolingReady}
+              toolStatusSource={connectWorkspace.toolStatusSource}
               browserSeeded={connectWorkspace.browserSeeded}
               selectedAliasReady={connectWorkspace.selectedAliasReady}
               runtimeUnavailable={runtimeUnavailable}
@@ -394,6 +395,7 @@ export default function Page(): JSX.Element {
               orgStatus={connectWorkspace.orgStatus}
               orgPreflight={connectWorkspace.orgPreflight}
               runtimeUnavailable={runtimeUnavailable}
+              toolStatusSource={connectWorkspace.toolStatusSource}
               metaContext={systemWorkspace.metaContext}
               metaAdaptResult={systemWorkspace.metaAdaptResult}
               loading={secondaryQueryRunner.loading}
@@ -422,6 +424,7 @@ export default function Page(): JSX.Element {
           orgStatus={connectWorkspace.orgStatus}
           orgPreflight={connectWorkspace.orgPreflight}
           runtimeUnavailable={runtimeUnavailable}
+          toolStatusSource={connectWorkspace.toolStatusSource}
           onCopy={() => void responseInspector.copyJson()}
         />
       </section>

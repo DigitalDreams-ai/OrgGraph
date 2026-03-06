@@ -63,6 +63,7 @@ Materially true now:
 - org-session runtime-unavailable detection now ignores generic 5xx surfaces unless the payload explicitly indicates runtime/bootstrap unavailability
 - runtime-bootstrap failure regression now verifies `/org/status` remains reachable while `/ready` stays fail-closed
 - runtime-unavailable signaling is now shared across Connect, Operator Rail, and Settings/Diagnostics (shell reachability + connect runtime detection), reducing false tool-missing interpretation outside Org Sessions
+- Connect, Operator Rail, and Settings/Diagnostics now show explicit tool-status source labels (`runtime blocked`, `live status`, `status not loaded`) so runtime loss cannot be misread as missing `sf`/`cci`
 - fallback error copy now distinguishes API non-response failures from normal request-validation failures
 - session action labels now distinguish quick top-bar attach from explicit connect/switch controls in Org Sessions
 - session alias switch now reuses connect auth/bridge flow so missing CCI alias registrations are remediated during switch, not only during explicit connect
@@ -76,7 +77,6 @@ Materially true now:
 - wave10 accessibility baseline now includes explicit focus-visible rings across core interactive controls and standardized checkbox/radio sizing for keyboard clarity
 
 Still unresolved:
-- runtime/tooling state clarity still needs parity checks in non-connect workspaces
 - planner/compiler still needs deeper typed coverage beyond current query families
 - decision packet quality is not yet benchmark-accepted for approval use
 - explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
