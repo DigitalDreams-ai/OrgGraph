@@ -279,7 +279,8 @@ async function main() {
   if (
     humanArtifact.proxyGuards?.repeatedAskStable !== true ||
     humanArtifact.proxyGuards?.replayParity !== true ||
-    humanArtifact.proxyGuards?.proofIdentityStable !== true
+    humanArtifact.proxyGuards?.proofIdentityStable !== true ||
+    humanArtifact.proxyGuards?.reviewPacketSpecificity !== true
   ) {
     process.stdout.write(
       `${JSON.stringify(
@@ -362,9 +363,11 @@ async function main() {
   process.stdout.write(
     `${JSON.stringify(
       buildSummary({
-        code: 'verified_real_human_evidence',
+        code: syntheticCheck.synthetic ? 'verified_synthetic_preview' : 'verified_real_human_evidence',
         verified: true,
-        reason: 'Real human benchmark evidence is present, passed, and matches the published results provenance.',
+        reason: syntheticCheck.synthetic
+          ? 'Synthetic benchmark evidence passed guard checks in allow-synthetic preview mode.'
+          : 'Real human benchmark evidence is present, passed, and matches the published results provenance.',
         proxyArtifactPath,
         humanArtifactPath,
         resultsPath,

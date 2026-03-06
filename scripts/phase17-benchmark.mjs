@@ -274,6 +274,69 @@ function summarizeAskResponse(body) {
   };
 }
 
+function buildReviewPacketQuality(decisionPacket) {
+  if (!decisionPacket || typeof decisionPacket !== 'object') {
+    return {
+      hasDecisionPacket: false,
+      hasTopAutomationSpotlight: false,
+      hasTopImpactSpotlight: false,
+      hasSpecificAutomationAction: false,
+      hasSpecificImpactAction: false,
+      passed: false
+    };
+  }
+
+  const topRiskDrivers = Array.isArray(decisionPacket.topRiskDrivers)
+    ? decisionPacket.topRiskDrivers.map((driver) => String(driver))
+    : [];
+  const topAutomationNames = Array.isArray(decisionPacket?.automationImpact?.topAutomationNames)
+    ? decisionPacket.automationImpact.topAutomationNames.map((name) => String(name))
+    : [];
+  const topImpactedSources = Array.isArray(decisionPacket?.changeImpact?.topImpactedSources)
+    ? decisionPacket.changeImpact.topImpactedSources.map((source) => String(source))
+    : [];
+  const nextActions = Array.isArray(decisionPacket.nextActions)
+    ? decisionPacket.nextActions
+    : [];
+  const automationAction = nextActions.find(
+    (action) => action && String(action.label) === 'Inspect impacted automation'
+  );
+  const impactAction = nextActions.find(
+    (action) => action && String(action.label) === 'Inspect impact paths'
+  );
+
+  const hasTopAutomationSpotlight = topRiskDrivers.some((driver) =>
+    driver.toLowerCase().includes('top automation')
+  ) || topRiskDrivers.some((driver) => driver.toLowerCase().includes('no deterministic automation names matched'));
+  const hasTopImpactSpotlight = topRiskDrivers.some((driver) =>
+    driver.toLowerCase().includes('top impact source')
+  ) || topRiskDrivers.some((driver) => driver.toLowerCase().includes('no deterministic impact sources matched'));
+  const hasSpecificAutomationAction =
+    typeof automationAction?.rationale === 'string' &&
+    (topAutomationNames.length > 0
+      ? topAutomationNames.some((name) => automationAction.rationale.includes(name))
+      : automationAction.rationale.toLowerCase().includes('confirm no hidden automation exists'));
+  const hasSpecificImpactAction =
+    typeof impactAction?.rationale === 'string' &&
+    (topImpactedSources.length > 0
+      ? topImpactedSources.some((source) => impactAction.rationale.includes(source))
+      : impactAction.rationale.toLowerCase().includes('no impact path found'));
+  const passed =
+    hasTopAutomationSpotlight &&
+    hasTopImpactSpotlight &&
+    hasSpecificAutomationAction &&
+    hasSpecificImpactAction;
+
+  return {
+    hasDecisionPacket: true,
+    hasTopAutomationSpotlight,
+    hasTopImpactSpotlight,
+    hasSpecificAutomationAction,
+    hasSpecificImpactAction,
+    passed
+  };
+}
+
 async function main() {
   let packagedRuntime = null;
   let forceExitAfterSuccess = false;
@@ -350,6 +413,7 @@ async function main() {
     const reviewReplay = await measure('review-replay', () =>
       postJson('/ask/replay', { replayToken: reviewReplayToken })
     );
+    const reviewPacketQuality = buildReviewPacketQuality(reviewAsk.result?.decisionPacket);
 
     const baselineTotalMs = baselineSteps.reduce((sum, step) => sum + step.durationMs, 0);
     const reviewOperatorTotalMs = reviewAsk.durationMs;
@@ -404,7 +468,8 @@ async function main() {
           matched: Boolean(reviewReplay.result?.matched),
           corePayloadMatched: Boolean(reviewReplay.result?.corePayloadMatched),
           metricsMatched: Boolean(reviewReplay.result?.metricsMatched)
-        }
+        },
+        packetQuality: reviewPacketQuality
       },
       comparison: {
         proxyTimeDeltaMs: baselineTotalMs - reviewOperatorTotalMs,
