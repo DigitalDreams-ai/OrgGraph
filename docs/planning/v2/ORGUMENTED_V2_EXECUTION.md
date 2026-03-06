@@ -66,6 +66,7 @@ Materially true now:
 - session action labels now distinguish quick top-bar attach from explicit connect/switch controls in Org Sessions
 - session alias switch now reuses connect auth/bridge flow so missing CCI alias registrations are remediated during switch, not only during explicit connect
 - Settings & Diagnostics now renders structured runtime triage cards (bootstrap/db/fixtures/evidence health + recovery checklist) and demotes raw readiness JSON to an optional details panel
+- Settings & Diagnostics now surfaces alias preflight checks/issues and remediation checklist actions alongside tooling status (auth/CCI alias/parse-path parity), reducing bounce-back to Org Sessions for diagnostics triage
 - Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs
 - Analyze now includes one-click Ask handoff actions for automation and impact results so deterministic analysis context can be promoted directly into trust/proof decision packets
 - Operator Rail now includes a runtime-triage summary so common readiness failures can be diagnosed without opening raw JSON

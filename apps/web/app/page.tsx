@@ -392,6 +392,7 @@ export default function Page(): JSX.Element {
               readyDetails={shellRuntime.readyDetails}
               readyPayload={shellRuntime.readyPayload}
               orgStatus={connectWorkspace.orgStatus}
+              orgPreflight={connectWorkspace.orgPreflight}
               runtimeUnavailable={runtimeUnavailable}
               metaContext={systemWorkspace.metaContext}
               metaAdaptResult={systemWorkspace.metaAdaptResult}
@@ -399,6 +400,7 @@ export default function Page(): JSX.Element {
               onLoadMetaContext={() => void systemWorkspace.loadMetaContext()}
               onRunMetaAdapt={() => void systemWorkspace.runMetaAdapt()}
               onLoadOrgStatus={() => void systemWorkspace.loadOrgStatus()}
+              onRunPreflight={() => void connectWorkspace.runPreflight(connectWorkspace.activeAlias)}
             />
           )}
         </section>

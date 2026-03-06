@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReadyPayload } from '../../shell/use-shell-runtime';
-import type { OrgStatusPayload } from '../connect/types';
+import type { OrgPreflightPayload, OrgStatusPayload } from '../connect/types';
 import type { MetaAdaptPayload, MetaContextPayload } from './types';
 
 interface SystemWorkspaceProps {
@@ -12,6 +12,7 @@ interface SystemWorkspaceProps {
   readyDetails: string;
   readyPayload: ReadyPayload | null;
   orgStatus: OrgStatusPayload | null;
+  orgPreflight: OrgPreflightPayload | null;
   runtimeUnavailable: boolean;
   metaContext: MetaContextPayload | null;
   metaAdaptResult: MetaAdaptPayload | null;
@@ -19,6 +20,7 @@ interface SystemWorkspaceProps {
   onLoadMetaContext: () => void;
   onRunMetaAdapt: () => void;
   onLoadOrgStatus: () => void;
+  onRunPreflight: () => void;
 }
 
 type RuntimeIssue = {
@@ -161,6 +163,29 @@ function renderRuntimeActionChecklist(issues: RuntimeIssue[]): JSX.Element {
   );
 }
 
+function renderPreflightActionChecklist(preflight: OrgPreflightPayload | null): JSX.Element {
+  const actions = Array.from(
+    new Set(
+      (preflight?.issues ?? [])
+        .map((issue) => issue.remediation?.trim() ?? '')
+        .filter((value) => value.length > 0)
+    )
+  );
+  return (
+    <article className="sub-card">
+      <p className="panel-caption">Tooling triage actions</p>
+      <h3>Session/toolchain recovery checklist</h3>
+      <ul className="analysis-list">
+        {actions.length > 0 ? (
+          actions.map((action) => <li key={action}>{action}</li>)
+        ) : (
+          <li>Preflight did not report remediation items for the selected alias.</li>
+        )}
+      </ul>
+    </article>
+  );
+}
+
 function renderRelationMultipliers(payload: MetaContextPayload | null): JSX.Element {
   const multipliers = payload?.context.relationMultipliers ?? {};
   const entries = Object.entries(multipliers);
@@ -183,6 +208,8 @@ function renderRelationMultipliers(payload: MetaContextPayload | null): JSX.Elem
 export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
   const runtimeIssues = deriveRuntimeIssues(props.healthStatus, props.readyStatus, props.readyPayload);
   const readyChecks = props.readyPayload?.checks;
+  const preflightIssues = props.orgPreflight?.issues ?? [];
+  const preflightChecks = props.orgPreflight?.checks;
   const sfState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.sf?.installed ? 'installed' : 'missing';
   const cciState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.installed ? 'installed' : 'missing';
   const toolingMessage = props.runtimeUnavailable
@@ -293,7 +320,56 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
                   <strong>{props.runtimeUnavailable ? 'n/a' : props.orgStatus?.session?.activeAlias || props.orgStatus?.alias || 'n/a'}</strong>
                 </div>
               </div>
+              <div className="analysis-stat-grid">
+                <div className="packet-stat">
+                  <span>Alias auth</span>
+                  <strong>
+                    {props.runtimeUnavailable
+                      ? 'unavailable'
+                      : preflightChecks?.aliasAuthenticated === true
+                        ? 'yes'
+                        : preflightChecks?.aliasAuthenticated === false
+                          ? 'no'
+                          : 'unknown'}
+                  </strong>
+                </div>
+                <div className="packet-stat">
+                  <span>CCI alias</span>
+                  <strong>
+                    {props.runtimeUnavailable
+                      ? 'unavailable'
+                      : preflightChecks?.cciAliasAvailable === true
+                        ? 'yes'
+                        : preflightChecks?.cciAliasAvailable === false
+                          ? 'no'
+                          : 'unknown'}
+                  </strong>
+                </div>
+                <div className="packet-stat">
+                  <span>Parse path</span>
+                  <strong>
+                    {props.runtimeUnavailable
+                      ? 'unavailable'
+                      : preflightChecks?.parsePathPresent === true
+                        ? 'present'
+                        : preflightChecks?.parsePathPresent === false
+                          ? 'missing'
+                          : 'unknown'}
+                  </strong>
+                </div>
+              </div>
               <p>{toolingMessage}</p>
+              {preflightIssues.length > 0 ? (
+                <ul className="issue-list">
+                  {preflightIssues.map((issue, index) => (
+                    <li key={`${issue.code ?? 'issue'}-${index}`}>
+                      <strong>{(issue.severity || 'warning').toUpperCase()}:</strong> {issue.message || 'preflight issue reported'}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">No preflight issues reported for the selected alias.</p>
+              )}
             </>
           ) : (
             <p className="muted">Load Org Status to inspect CLI readiness and current session state.</p>
@@ -301,7 +377,10 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
         </article>
       </div>
 
-      {renderRuntimeActionChecklist(runtimeIssues)}
+      <div className="analysis-grid">
+        {renderRuntimeActionChecklist(runtimeIssues)}
+        {renderPreflightActionChecklist(props.orgPreflight)}
+      </div>
 
       <label className="check-row" htmlFor="metaDryRun">
         <input id="metaDryRun" type="checkbox" checked={props.metaDryRun} onChange={(e) => props.setMetaDryRun(e.target.checked)} />
@@ -316,6 +395,9 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
         </button>
         <button type="button" onClick={props.onLoadOrgStatus} disabled={props.loading}>
           Org Status
+        </button>
+        <button type="button" onClick={props.onRunPreflight} disabled={props.loading}>
+          Preflight
         </button>
       </div>
 
