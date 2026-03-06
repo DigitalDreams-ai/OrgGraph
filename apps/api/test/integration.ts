@@ -931,6 +931,30 @@ async function run(): Promise<void> {
     assert.equal(askFlowEvidenceCalled.decisionPacket?.targetLabel, 'Civil_Rights_Intake_Questionnaire');
     assert.equal(askFlowEvidenceCalled.decisionPacket?.targetType, 'flow');
 
+    const askFlowEvidencePathRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query:
+          'Based only on the latest retrieve, explain what Flow C:/tmp/force-app/main/default/flows/Civil_Rights_Intake_Questionnaire.flow-meta.xml reads and writes.'
+      })
+    });
+    assert.equal(
+      askFlowEvidencePathRes.status,
+      201,
+      'ask flow evidence (flow path with extension) should return 201'
+    );
+    const askFlowEvidencePath = (await askFlowEvidencePathRes.json()) as {
+      plan: { intent: string; entities: { object?: string } };
+      deterministicAnswer: string;
+      decisionPacket?: { targetLabel?: string; targetType?: string };
+    };
+    assert.equal(askFlowEvidencePath.plan.intent, 'automation');
+    assert.equal(askFlowEvidencePath.plan.entities.object, undefined);
+    assert.doesNotMatch(askFlowEvidencePath.deterministicAnswer, /no automation found for the/i);
+    assert.equal(askFlowEvidencePath.decisionPacket?.targetLabel, 'Civil_Rights_Intake_Questionnaire');
+    assert.equal(askFlowEvidencePath.decisionPacket?.targetType, 'flow');
+
     const askImpactRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

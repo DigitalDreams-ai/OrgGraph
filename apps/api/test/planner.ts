@@ -49,6 +49,12 @@ function run(): void {
   assert.equal(flowEvidenceSpacedPlan.intent, 'automation');
   assert.equal(flowEvidenceSpacedPlan.entities.object, undefined);
 
+  const flowEvidencePathPlan = planner.plan(
+    'Based only on the latest retrieve, explain what Flow C:/tmp/force-app/main/default/flows/Civil_Rights_Intake_Questionnaire.flow-meta.xml reads and writes.'
+  );
+  assert.equal(flowEvidencePathPlan.intent, 'automation');
+  assert.equal(flowEvidencePathPlan.entities.object, undefined);
+
   const normalizedPermPlan = planner.plan('Who can edit object Opportunity?');
   assert.equal(normalizedPermPlan.intent, 'perms');
   assert.ok(normalizedPermPlan.rewriteRules?.includes('perm_who_can_edit'));

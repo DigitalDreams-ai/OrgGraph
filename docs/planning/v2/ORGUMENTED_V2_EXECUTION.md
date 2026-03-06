@@ -49,6 +49,7 @@ Materially true now:
 - flow grounding now adds deterministic targeted evidence retry for explicit flow-name asks when first-pass evidence ranking misses the named flow
 - flow grounding now tolerates quoted/article-prefixed flow references (for example `Flow "the X" reads and writes`) and keeps explicit-flow asks off the generic object fallback path
 - flow grounding now also accepts `Flow called <name>` / `Flow named <name>` phrasing and can infer a flow target from citation source paths when query extraction misses
+- flow grounding now normalizes flow file-path/file-name asks (for example `.../flows/<name>.flow-meta.xml`) to the correct flow target instead of drifting into object-field fallback
 - flow read/write asks now emit structured breakage decision packets (with explicit reads/writes summaries and deterministic next actions), not only free-form deterministic text
 - flow read/write decision packets now emit `targetType: flow`, richer risk drivers (read/write/object/trigger coverage), and explicit ungrounded-flow remediation actions (`Retrieve flow metadata`, `Increase evidence coverage`)
 - review decision packets now include explicit `riskScore` and `evidenceCoverage` signals to improve approval-workflow readability
