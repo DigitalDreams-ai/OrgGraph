@@ -83,6 +83,7 @@ Materially true now:
 - session alias switch now reuses connect auth/bridge flow so missing CCI alias registrations are remediated during switch, not only during explicit connect
 - Org Sessions now exposes explicit `Bridge CCI Alias` action backed by `/org/session/bridge`, with fail-closed alias/auth/tooling errors and deterministic remediation hints when CCI registry import fails
 - disconnected/session-switch-failure state now preserves the last active alias and persisted switch timestamp, keeping restore targets deterministic across relaunch even when session audit history is trimmed
+- desktop packaged smoke now retries one launch automatically when the desktop process exits before readiness, reducing false-negative launch flake failures in local/CI validation
 - Settings & Diagnostics now renders structured runtime triage cards (bootstrap/db/fixtures/evidence health + recovery checklist) and demotes raw readiness JSON to an optional details panel
 - Settings & Diagnostics now surfaces alias preflight checks/issues and remediation checklist actions alongside tooling status (auth/CCI alias/parse-path parity), reducing bounce-back to Org Sessions for diagnostics triage
 - Settings & Diagnostics now includes a deterministic triage snapshot (runtime/toolchain/session status + explicit next action per domain), reducing dependence on raw JSON for first-line operator diagnosis
