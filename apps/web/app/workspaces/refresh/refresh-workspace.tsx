@@ -55,6 +55,8 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
   const stagedSelectionCount = props.retrieveSelections.length;
   const orgRetrieveBlocked =
     props.orgRunRetrieve && (retrieveHandoff.state !== 'ready' || stagedSelectionCount === 0);
+  const stagedSelectionPreview = props.retrieveSelections.slice(0, 6);
+  const stagedSelectionOverflow = Math.max(stagedSelectionCount - stagedSelectionPreview.length, 0);
 
   return (
     <>
@@ -94,6 +96,41 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
               <p><strong>Completed:</strong> {formatTimestamp(props.retrieveHandoff.completedAt)}</p>
               <p><strong>Parse path:</strong> {props.retrieveHandoff.parsePath}</p>
               <p><strong>Metadata args:</strong> {props.retrieveHandoff.metadataArgs.join(' ') || 'n/a'}</p>
+              <p><strong>Staged selections:</strong> {stagedSelectionCount}</p>
+              {stagedSelectionCount > 0 ? (
+                <>
+                  <ul className="issue-list">
+                    {stagedSelectionPreview.map((selection, index) => {
+                      const memberCount = Array.isArray(selection.members) ? selection.members.length : null;
+                      const previewMembers = memberCount ? selection.members!.slice(0, 3) : [];
+                      const remainingMembers = memberCount ? Math.max(memberCount - previewMembers.length, 0) : 0;
+                      return (
+                        <li key={`${selection.type}-${index}`}>
+                          <div className="decision-meta">
+                            <span className="decision-badge good">{selection.type}</span>
+                            <span className="decision-badge muted">
+                              {memberCount === null ? 'all members' : `${memberCount} member${memberCount === 1 ? '' : 's'}`}
+                            </span>
+                          </div>
+                          {memberCount === null ? (
+                            <p>Entire metadata family is staged in the handoff cart.</p>
+                          ) : (
+                            <p>
+                              {previewMembers.join(', ')}
+                              {remainingMembers > 0 ? ` + ${remainingMembers} more` : ''}
+                            </p>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  {stagedSelectionOverflow > 0 ? (
+                    <p className="muted">Showing first {stagedSelectionPreview.length} selections. Open Org Browser for full cart details.</p>
+                  ) : null}
+                </>
+              ) : (
+                <p className="muted">No staged selections were captured with this handoff yet.</p>
+              )}
               {retrieveHandoff.state === 'blocked' ? (
                 <ul className="issue-list">
                   {retrieveHandoff.reasons.map((reason) => (
