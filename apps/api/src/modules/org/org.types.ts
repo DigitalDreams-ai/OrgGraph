@@ -120,6 +120,7 @@ export interface OrgSessionStatusResponse {
   activeAlias: string;
   authMode: OrgAuthMode;
   connectedAt?: string;
+  switchedAt?: string;
   disconnectedAt?: string;
   lastError?: string;
 }

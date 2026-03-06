@@ -30,6 +30,15 @@ import type {
   OrgAuthMode
 } from './org.types';
 
+type OrgSessionState = {
+  status: 'connected' | 'disconnected';
+  activeAlias: string;
+  connectedAt?: string;
+  switchedAt?: string;
+  disconnectedAt?: string;
+  lastError?: string;
+};
+
 @Injectable()
 export class OrgService {
   private readonly logger = new Logger(OrgService.name);
@@ -229,11 +238,14 @@ export class OrgService {
 
   sessionHistory(limit = 10): OrgSessionHistoryResponse {
     const authMode = this.configService.sfAuthMode();
-    const session = this.sessionStatus();
-    const activeAlias = session.activeAlias || this.resolveActiveAlias();
+    const session = this.readSessionState();
+    const activeAlias = session?.activeAlias?.trim() || this.resolveActiveAlias();
     const entries = this.readSessionAuditEntries(limit);
     const lastConnectedAlias = entries.find((entry) => entry.action === 'connect' || entry.action === 'switch')?.alias;
-    const restoreAlias = session.status === 'disconnected' ? lastConnectedAlias || activeAlias : undefined;
+    const restoreAlias =
+      session?.status === 'disconnected'
+        ? session.activeAlias?.trim() || lastConnectedAlias || activeAlias
+        : undefined;
 
     return {
       authMode,
@@ -334,20 +346,24 @@ export class OrgService {
   sessionStatus(): OrgSessionStatusResponse {
     const authMode = this.configService.sfAuthMode();
     const session = this.readSessionState();
+    const activeAlias = session?.activeAlias?.trim() || this.configService.sfAlias();
     if (!session || session.status !== 'connected') {
       return {
         status: 'disconnected',
-        activeAlias: this.configService.sfAlias(),
+        activeAlias,
         authMode,
+        connectedAt: session?.connectedAt,
+        switchedAt: session?.switchedAt,
         disconnectedAt: session?.disconnectedAt,
         lastError: session?.lastError
       };
     }
     return {
       status: 'connected',
-      activeAlias: session.activeAlias,
+      activeAlias,
       authMode,
       connectedAt: session.connectedAt,
+      switchedAt: session.switchedAt,
       lastError: session.lastError
     };
   }
@@ -386,7 +402,10 @@ export class OrgService {
     this.writeSessionState({
       status: 'connected',
       activeAlias: alias,
-      connectedAt
+      connectedAt,
+      switchedAt: undefined,
+      disconnectedAt: undefined,
+      lastError: undefined
     });
     this.appendAuthAudit('connect', alias, authMode, 'session connected via sf_cli_keychain');
     return {
@@ -503,11 +522,15 @@ export class OrgService {
     const projectPath = this.runtimePaths.sfProjectPath();
     this.ensureProjectScaffold(projectPath);
     await this.orgToolAdapter.ensureSfInstalled(projectPath);
+    const currentSession = this.readSessionState();
+    const previousAlias = currentSession?.activeAlias?.trim() || this.configService.sfAlias();
     const aliasCheck = await this.orgToolAdapter.displayOrg(alias, projectPath);
     if (aliasCheck.exitCode !== 0) {
       this.writeSessionState({
         status: 'disconnected',
-        activeAlias: this.configService.sfAlias(),
+        activeAlias: previousAlias,
+        connectedAt: currentSession?.connectedAt,
+        switchedAt: currentSession?.switchedAt,
         disconnectedAt: new Date().toISOString(),
         lastError: `org alias not accessible: ${alias}`
       });
@@ -522,7 +545,10 @@ export class OrgService {
     this.writeSessionState({
       status: 'connected',
       activeAlias: alias,
-      connectedAt: switchedAt
+      connectedAt: switchedAt,
+      switchedAt,
+      disconnectedAt: undefined,
+      lastError: undefined
     });
     this.appendAuthAudit('switch', alias, authMode, 'active alias switched');
     return {
@@ -535,12 +561,16 @@ export class OrgService {
 
   disconnectSession(): OrgSessionDisconnectResponse {
     const authMode = this.configService.sfAuthMode();
+    const currentSession = this.readSessionState();
     const activeAlias = this.resolveActiveAlias();
     const disconnectedAt = new Date().toISOString();
     this.writeSessionState({
       status: 'disconnected',
       activeAlias,
-      disconnectedAt
+      connectedAt: currentSession?.connectedAt,
+      switchedAt: currentSession?.switchedAt,
+      disconnectedAt,
+      lastError: undefined
     });
     this.appendAuthAudit('disconnect', activeAlias, authMode, 'session disconnected by operator');
     return {
@@ -1438,7 +1468,7 @@ export class OrgService {
 
   private resolveActiveAlias(): string {
     const session = this.readSessionState();
-    if (session && session.status === 'connected' && session.activeAlias.trim().length > 0) {
+    if (session && session.activeAlias.trim().length > 0) {
       return session.activeAlias;
     }
     return this.configService.sfAlias();
@@ -1448,40 +1478,20 @@ export class OrgService {
     return this.runtimePaths.orgSessionStatePath();
   }
 
-  private readSessionState():
-    | {
-        status: 'connected' | 'disconnected';
-        activeAlias: string;
-        connectedAt?: string;
-        disconnectedAt?: string;
-        lastError?: string;
-      }
-    | undefined {
+  private readSessionState(): OrgSessionState | undefined {
     const sessionPath = this.getSessionStatePath();
     if (!fs.existsSync(sessionPath)) {
       return undefined;
     }
     try {
       const raw = fs.readFileSync(sessionPath, 'utf8');
-      return JSON.parse(raw) as {
-        status: 'connected' | 'disconnected';
-        activeAlias: string;
-        connectedAt?: string;
-        disconnectedAt?: string;
-        lastError?: string;
-      };
+      return JSON.parse(raw) as OrgSessionState;
     } catch {
       return undefined;
     }
   }
 
-  private writeSessionState(state: {
-    status: 'connected' | 'disconnected';
-    activeAlias: string;
-    connectedAt?: string;
-    disconnectedAt?: string;
-    lastError?: string;
-  }): void {
+  private writeSessionState(state: OrgSessionState): void {
     const sessionPath = this.getSessionStatePath();
     fs.mkdirSync(path.dirname(sessionPath), { recursive: true });
     fs.writeFileSync(sessionPath, JSON.stringify(state, null, 2), 'utf8');

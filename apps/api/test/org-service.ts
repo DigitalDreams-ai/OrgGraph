@@ -164,7 +164,7 @@ async function run(): Promise<void> {
     sfIntegrationEnabled: () => true,
     sfAuthMode: () => 'sf_cli_keychain' as const,
     cciVersionPin: () => '4.5.0',
-    sfAlias: () => 'orgumented-sandbox',
+    sfAlias: () => 'orgumented-default',
     sfProjectPath: () => sfProjectDir,
     sfParsePath: () => parsePath,
     sfAutoRefreshAfterRetrieve: () => true,
@@ -230,6 +230,13 @@ async function run(): Promise<void> {
         return response?.details?.code === 'SF_SESSION_SWITCH_DENIED';
       }
     );
+    const statusAfterFailedSwitch = service.sessionStatus();
+    assert.equal(statusAfterFailedSwitch.status, 'disconnected');
+    assert.equal(
+      statusAfterFailedSwitch.activeAlias,
+      'orgumented-sandbox',
+      'failed switch should preserve last active alias for deterministic restore'
+    );
 
     const restartedService = new OrgService(fakeConfig as never, fakePaths as never, fakeIngestion as never, toolAdapter as never);
     const restoreAfterRestart = restartedService.sessionHistory(5);
@@ -245,6 +252,15 @@ async function run(): Promise<void> {
     const switched = await restartedService.switchSessionAlias('orgumented-sandbox');
     assert.equal(switched.status, 'connected');
     assert.equal(switched.activeAlias, 'orgumented-sandbox');
+    const restartedAfterSwitch = new OrgService(fakeConfig as never, fakePaths as never, fakeIngestion as never, toolAdapter as never);
+    const statusAfterRestartedSwitch = restartedAfterSwitch.sessionStatus();
+    assert.equal(statusAfterRestartedSwitch.status, 'connected');
+    assert.equal(statusAfterRestartedSwitch.activeAlias, 'orgumented-sandbox');
+    assert.equal(
+      statusAfterRestartedSwitch.switchedAt,
+      switched.switchedAt,
+      'switch timestamp should persist across restart for deterministic session history'
+    );
     const cciImportCallsAfterSwitch = toolAdapter.calls.filter(
       (call) => call.command === 'cci' && call.args[0] === 'org' && call.args[1] === 'import'
     ).length;
@@ -266,6 +282,13 @@ async function run(): Promise<void> {
     assert.equal(sessionHistory.entries[1].action, 'switch');
     assert.equal(sessionHistory.entries[2].action, 'switch_failed');
     assert.equal(sessionHistory.entries[3].action, 'connect');
+    fs.writeFileSync(fakePaths.orgAuthAuditPath(), '', 'utf8');
+    const noAuditHistory = restartedService.sessionHistory(5);
+    assert.equal(
+      noAuditHistory.restoreAlias,
+      'orgumented-sandbox',
+      'restore alias should remain deterministic from persisted session state when audit history is pruned'
+    );
 
     const result = await service.retrieveAndRefresh({
       selections: [{ type: 'CustomObject', members: ['Account'] }]
