@@ -92,6 +92,7 @@ function buildMarkdown(template) {
     `- repeated ask stable: ${template.thresholds.repeatedAskStableRequired ? 'required' : 'not required'}`,
     `- replay parity: ${template.thresholds.replayParityRequired ? 'required' : 'not required'}`,
     `- proof identity stable: ${template.thresholds.proofIdentityStableRequired ? 'required' : 'not required'}`,
+    `- review packet specificity guard: ${template.thresholds.reviewPacketSpecificityRequired ? 'required' : 'not required'}`,
     `- time improvement ratio target: >= ${template.thresholds.timeImprovementRatioTarget}`,
     `- evidence-step delta target: >= ${template.thresholds.evidenceStepDeltaTarget}`,
     `- workspace-switch delta target: >= ${template.thresholds.workspaceSwitchDeltaTarget}`,
@@ -141,6 +142,7 @@ ${thresholdLines}
 - repeated ask stable: ${template.proxyGuards.repeatedAskStable ? 'pass' : 'fail'}
 - replay parity: ${template.proxyGuards.replayParity ? 'pass' : 'fail'}
 - proof identity stable: ${template.proxyGuards.proofIdentityStable ? 'pass' : 'fail'}
+- review packet specificity: ${template.proxyGuards.reviewPacketSpecificity ? 'pass' : 'fail'}
 
 ## Submit With
 
@@ -188,12 +190,15 @@ async function main() {
         Boolean(proxyArtifact?.reviewPacket?.replay?.metricsMatched),
       proofIdentityStable:
         proxyArtifact?.reviewPacket?.ask?.proofId === proxyArtifact?.reviewPacket?.proofLookup?.proofId &&
-        proxyArtifact?.reviewPacket?.ask?.replayToken === proxyArtifact?.reviewPacket?.proofLookup?.replayToken
+        proxyArtifact?.reviewPacket?.ask?.replayToken === proxyArtifact?.reviewPacket?.proofLookup?.replayToken,
+      reviewPacketSpecificity:
+        proxyArtifact?.reviewPacket?.packetQuality?.passed === true
     },
     thresholds: {
       repeatedAskStableRequired: true,
       replayParityRequired: true,
       proofIdentityStableRequired: true,
+      reviewPacketSpecificityRequired: true,
       timeImprovementRatioTarget: 0.4,
       evidenceStepDeltaTarget: 2,
       workspaceSwitchDeltaTarget: 1,

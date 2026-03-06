@@ -37,7 +37,7 @@ Purpose:
 | B014 | P1 | Release | Finalize release checklist, rollback path, and operator machine validation | Wave12 | Release candidate checklist fully green with evidence artifacts | Open |
 | B015 | P2 | Analyze | Deepen explain/analyze workflows to reduce raw JSON dependency | Wave8 | Core analyze tasks complete using structured cards/actions | In Progress |
 | B016 | P2 | Diagnostics | Improve diagnostics readability and operator actionability under failure | Wave8 | Runtime/tool/semantic failure states map to direct operator actions | In Progress |
-| B017 | P2 | Benchmark | Replace fixture-only benchmark narrative with stronger real-org scenario evidence | Wave7 | Real-org benchmark artifact set published and reproducible | Open |
+| B017 | P2 | Benchmark | Replace fixture-only benchmark narrative with stronger real-org scenario evidence | Wave7 | Real-org benchmark artifact set published and reproducible | In Progress |
 | B018 | P2 | CI Cost | Continue reducing GitHub Actions minute burn without losing required trust gates | Wave11 | CI runtime reduced while validate + desktop smoke integrity remains intact; Actions storage bounded by retention automation | In Progress |
 | B019 | P2 | Docs | Consolidate runbooks to explicit, assumption-free operator steps | Wave12 | New operator runbooks pass first-run validation by non-author operator | In Progress |
 | B020 | P2 | Accessibility | Keyboard/focus/accessibility baseline for high-value workflows | Wave10 | Accessibility checks pass for Ask, Sessions, Browser, Refresh | In Progress |

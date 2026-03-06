@@ -147,6 +147,9 @@ The typed review-packet path materially reduced workflow friction on the automat
   - \`proofId\`
   - \`replayToken\`
   - replay parity
+- review packet specificity guard:
+  - top automation/impact spotlights are present
+  - action rationales reference concrete top sources
 - both baseline and review-packet asks returned:
   - \`trustLevel = trusted\`
 
@@ -173,6 +176,7 @@ Operator:
 | repeated ask stable | ${boolPass(humanArtifact.proxyGuards?.repeatedAskStable)} |
 | replay parity | ${boolPass(humanArtifact.proxyGuards?.replayParity)} |
 | proof identity stable | ${boolPass(humanArtifact.proxyGuards?.proofIdentityStable)} |
+| review packet specificity | ${boolPass(humanArtifact.proxyGuards?.reviewPacketSpecificity)} |
 | time improved by at least 40% | ${boolPass(thresholdChecks.timeImprovedByFortyPercent)} |
 | evidence steps reduced by at least 2 | ${boolPass(thresholdChecks.evidenceStepsReducedByTwo)} |
 | workspace switches reduced by at least 1 | ${boolPass(thresholdChecks.workspaceSwitchesReducedByOne)} |

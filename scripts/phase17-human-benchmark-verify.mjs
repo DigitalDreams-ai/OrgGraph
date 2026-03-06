@@ -149,6 +149,10 @@ async function main() {
     fail('Human benchmark artifact does not preserve proof identity stability.');
   }
 
+  if (humanArtifact.proxyGuards?.reviewPacketSpecificity !== true) {
+    fail('Human benchmark artifact does not preserve review packet specificity guard.');
+  }
+
   if (proxyArtifact?.scenario?.reviewQuery !== humanArtifact.query) {
     fail('Human benchmark query does not match the current proxy benchmark scenario.');
   }

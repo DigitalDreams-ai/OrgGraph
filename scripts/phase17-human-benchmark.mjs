@@ -235,6 +235,7 @@ Proxy artifact:
 | repeated ask stable | ${artifact.proxyGuards.repeatedAskStable ? 'pass' : 'fail'} |
 | replay parity | ${artifact.proxyGuards.replayParity ? 'pass' : 'fail'} |
 | proof identity stable | ${artifact.proxyGuards.proofIdentityStable ? 'pass' : 'fail'} |
+| review packet specificity | ${artifact.proxyGuards.reviewPacketSpecificity ? 'pass' : 'fail'} |
 | time improved by at least 40% | ${checks.timeImprovedByFortyPercent ? 'pass' : 'fail'} |
 | evidence steps reduced by at least 2 | ${checks.evidenceStepsReducedByTwo ? 'pass' : 'fail'} |
 | workspace switches reduced by at least 1 | ${checks.workspaceSwitchesReducedByOne ? 'pass' : 'fail'} |
@@ -330,13 +331,15 @@ async function main() {
       Boolean(proxyArtifact?.reviewPacket?.replay?.metricsMatched),
     proofIdentityStable:
       proxyArtifact?.reviewPacket?.ask?.proofId === proxyArtifact?.reviewPacket?.proofLookup?.proofId &&
-      proxyArtifact?.reviewPacket?.ask?.replayToken === proxyArtifact?.reviewPacket?.proofLookup?.replayToken
+      proxyArtifact?.reviewPacket?.ask?.replayToken === proxyArtifact?.reviewPacket?.proofLookup?.replayToken,
+    reviewPacketSpecificity: proxyArtifact?.reviewPacket?.packetQuality?.passed === true
   };
 
   const passed =
     proxyGuards.repeatedAskStable &&
     proxyGuards.replayParity &&
     proxyGuards.proofIdentityStable &&
+    proxyGuards.reviewPacketSpecificity &&
     thresholds.checks.timeImprovedByFortyPercent &&
     thresholds.checks.evidenceStepsReducedByTwo &&
     thresholds.checks.workspaceSwitchesReducedByOne &&
