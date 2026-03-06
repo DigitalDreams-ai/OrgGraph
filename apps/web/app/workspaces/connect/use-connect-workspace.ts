@@ -96,6 +96,8 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   );
   const preflightIssues = orgPreflight?.issues ?? [];
   const toolingReady = Boolean(orgStatus?.sf?.installed) && Boolean(orgStatus?.cci?.installed);
+  const toolStatusSource: 'runtime_unavailable' | 'live' | 'unknown' =
+    runtimeUnavailable ? 'runtime_unavailable' : orgStatus ? 'live' : 'unknown';
   const browserSeeded = Boolean(orgPreflight?.checks?.parsePathPresent);
   const selectedAliasReady = Boolean(
     orgPreflight?.integrationEnabled &&
@@ -299,6 +301,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     selectedAlias,
     preflightIssues: preflightIssues as OrgPreflightIssue[],
     toolingReady,
+    toolStatusSource,
     browserSeeded,
     selectedAliasReady,
     runtimeUnavailable,

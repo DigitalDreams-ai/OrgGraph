@@ -26,6 +26,7 @@ interface ConnectWorkspaceProps {
   selectedAlias: OrgAliasSummary | null;
   preflightIssues: OrgPreflightIssue[];
   toolingReady: boolean;
+  toolStatusSource: 'runtime_unavailable' | 'live' | 'unknown';
   browserSeeded: boolean;
   selectedAliasReady: boolean;
   runtimeUnavailable: boolean;
@@ -64,6 +65,12 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
   const sfState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.sf?.installed ? 'installed' : props.orgStatus ? 'missing' : 'unknown';
   const cciState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.installed ? 'installed' : props.orgStatus ? 'missing' : 'unknown';
   const cciVersion = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.version || 'n/a';
+  const toolStatusSourceLabel =
+    props.toolStatusSource === 'runtime_unavailable'
+      ? 'runtime blocked'
+      : props.toolStatusSource === 'live'
+        ? 'live status'
+        : 'status not loaded';
   const sfMessage =
     props.runtimeUnavailable
       ? 'Refresh Overview could not reach the local desktop runtime. Relaunch Orgumented or restore the packaged API before checking sf access again.'
@@ -118,7 +125,15 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
             <span className={`decision-badge ${props.orgStatus?.cci?.versionPinned ? 'good' : 'muted'}`}>
               CCI pinned: {String(props.orgStatus?.cci?.versionPinned ?? false)}
             </span>
+            <span className="decision-badge muted">
+              Source: {toolStatusSourceLabel}
+            </span>
           </div>
+          {props.runtimeUnavailable ? (
+            <p className="muted">
+              Runtime is unavailable, so tool checks are blocked. This state is not treated as missing `sf` or `cci`.
+            </p>
+          ) : null}
           <p><strong>sf CLI:</strong> {sfState}</p>
           <p>{sfMessage}</p>
           <p><strong>CCI:</strong> {cciState}</p>
