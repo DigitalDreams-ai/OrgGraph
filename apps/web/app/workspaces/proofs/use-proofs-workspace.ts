@@ -191,6 +191,12 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
   const [replayResult, setReplayResult] = useState<ReplayResultView | null>(null);
   const [metricsExport, setMetricsExport] = useState<MetricsExportView | null>(null);
 
+  function reportSelectionRequired(message: string): void {
+    const fallback: QueryResponse = { ok: false, error: { message } };
+    options.presentResponse(fallback);
+    options.setErrorText(message);
+  }
+
   function useRecentProof(proof: RecentProofItem): void {
     setProofId(proof.proofId);
     setReplayToken(proof.replayToken);
@@ -277,7 +283,10 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
   }
 
   async function runProofLookupById(nextProofId: string): Promise<void> {
-    if (!nextProofId.trim()) return;
+    if (!nextProofId.trim()) {
+      reportSelectionRequired('Select a history label first, or provide a proof ID in Advanced token lookup.');
+      return;
+    }
     options.setLoading(true);
     options.setCopied(false);
     options.setErrorText('');
@@ -312,7 +321,12 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
   }
 
   async function runReplay(): Promise<void> {
-    if (!proofId.trim() && !replayToken.trim()) return;
+    if (!proofId.trim() && !replayToken.trim()) {
+      reportSelectionRequired(
+        'Select a history label first, or provide proof ID/replay token in Advanced token lookup before replay.'
+      );
+      return;
+    }
 
     options.setLoading(true);
     options.setCopied(false);
