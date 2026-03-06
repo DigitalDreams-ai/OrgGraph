@@ -80,11 +80,11 @@ export class RuntimeBootstrapService {
       try {
         refreshed = await this.ingestionService.refresh(refreshRequest);
       } catch (error) {
-        if (!this.isSemanticDriftBudgetError(error)) {
+        if (!this.isRecoverableSemanticBootstrapError(error)) {
           throw error;
         }
         this.logger.warn(
-          'bootstrap refresh hit semantic drift budget guard; clearing stale semantic state and retrying once with rebaseline'
+          'bootstrap refresh hit recoverable semantic drift guard; clearing stale semantic state and retrying once with rebaseline'
         );
         this.clearStaleSemanticStateArtifacts();
         refreshed = await this.ingestionService.refresh(refreshRequest);
@@ -186,11 +186,41 @@ export class RuntimeBootstrapService {
     return raw.split(/\r?\n/).filter((line) => line.trim().length > 0).length;
   }
 
-  private isSemanticDriftBudgetError(error: unknown): boolean {
-    if (!(error instanceof Error)) {
-      return false;
+  private isRecoverableSemanticBootstrapError(error: unknown): boolean {
+    const recoverableTokens = [
+      'semantic drift budget exceeded',
+      'semantic drift exceeds budget',
+      'semantic drift regression detected'
+    ];
+    const messages = this.collectErrorMessages(error).map((entry) => entry.toLowerCase());
+    return messages.some((entry) => recoverableTokens.some((token) => entry.includes(token)));
+  }
+
+  private collectErrorMessages(error: unknown): string[] {
+    const messages: string[] = [];
+    if (error instanceof Error && typeof error.message === 'string') {
+      messages.push(error.message);
     }
-    return error.message.toLowerCase().includes('semantic drift budget exceeded');
+
+    if (error && typeof error === 'object') {
+      const response = (error as { response?: unknown }).response;
+      if (typeof response === 'string') {
+        messages.push(response);
+      } else if (response && typeof response === 'object') {
+        const responseMessage = (response as { message?: unknown }).message;
+        if (typeof responseMessage === 'string') {
+          messages.push(responseMessage);
+        } else if (Array.isArray(responseMessage)) {
+          for (const entry of responseMessage) {
+            if (typeof entry === 'string') {
+              messages.push(entry);
+            }
+          }
+        }
+      }
+    }
+
+    return [...new Set(messages.map((entry) => entry.trim()).filter((entry) => entry.length > 0))];
   }
 
   private clearStaleSemanticStateArtifacts(): void {
