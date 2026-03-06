@@ -183,6 +183,33 @@ function parseMetricsExport(response: QueryResponse): MetricsExportView | null {
   };
 }
 
+function sanitizeArtifactName(value: string): string {
+  const next = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return next || 'artifact';
+}
+
+function downloadJsonArtifact(fileName: string, payload: Record<string, unknown>): void {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    throw new Error('Browser download APIs are unavailable in this runtime.');
+  }
+  const serialized = `${JSON.stringify(payload, null, 2)}\n`;
+  const blob = new Blob([serialized], { type: 'application/json;charset=utf-8' });
+  const href = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = href;
+  anchor.download = fileName;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(href);
+}
+
 export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
   const [proofId, setProofId] = useState('');
   const [replayToken, setReplayToken] = useState('');
@@ -380,6 +407,26 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     }
   }
 
+  function exportSelectedProofArtifact(): void {
+    if (!selectedProof) {
+      reportSelectionRequired('Select a history label first, then open proof before exporting.');
+      return;
+    }
+    options.setErrorText('');
+    const name = sanitizeArtifactName(selectedProof.query || selectedProof.proofId);
+    downloadJsonArtifact(`orgumented-proof-${name}.json`, selectedProof as unknown as Record<string, unknown>);
+  }
+
+  function exportSelectedReplayArtifact(): void {
+    if (!replayResult) {
+      reportSelectionRequired('Run replay for the selected history label before exporting replay parity.');
+      return;
+    }
+    options.setErrorText('');
+    const name = sanitizeArtifactName(replayResult.proofId || replayResult.replayToken);
+    downloadJsonArtifact(`orgumented-replay-${name}.json`, replayResult as unknown as Record<string, unknown>);
+  }
+
   const selectedRecentProof = recentProofs.find((proof) => proof.proofId === proofId) ?? null;
 
   return {
@@ -399,6 +446,8 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     runProofsRecent,
     runProofLookup,
     runReplay,
-    runMetricsExport
+    runMetricsExport,
+    exportSelectedProofArtifact,
+    exportSelectedReplayArtifact
   };
 }

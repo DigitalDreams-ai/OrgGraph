@@ -23,6 +23,8 @@ interface ProofsWorkspaceProps {
   onGetProof: () => void;
   onReplay: () => void;
   onExportMetrics: () => void;
+  onExportProofArtifact: () => void;
+  onExportReplayArtifact: () => void;
   onOpenRecentProof: (proof: RecentProofItem) => void;
   onReplayRecentProof: (proof: RecentProofItem) => void;
 }
@@ -65,6 +67,22 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
           }
         >
           Replay Selected History
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          onClick={props.onExportProofArtifact}
+          disabled={props.loading || !props.selectedProof}
+        >
+          Export Selected Proof
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          onClick={props.onExportReplayArtifact}
+          disabled={props.loading || !props.replayResult}
+        >
+          Export Selected Replay
         </button>
         <button type="button" onClick={props.onExportMetrics} disabled={props.loading}>Export Trust History</button>
       </div>
