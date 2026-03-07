@@ -20,6 +20,8 @@ $sessionAfterConnectArtifact = Join-Path $logsDir 'desktop-release-smoke-session
 $sessionSwitchArtifact = Join-Path $logsDir 'desktop-release-smoke-session-switch.json'
 $sessionAfterSwitchArtifact = Join-Path $logsDir 'desktop-release-smoke-session-after-switch.json'
 $sessionRestoreArtifact = Join-Path $logsDir 'desktop-release-smoke-session-restore.json'
+$metadataSearchArtifact = Join-Path $logsDir 'desktop-release-smoke-metadata-search.json'
+$metadataRetrieveArtifact = Join-Path $logsDir 'desktop-release-smoke-metadata-retrieve.json'
 $resultArtifact = Join-Path $logsDir 'desktop-release-smoke-result.json'
 
 function Stop-PackagedProcesses {
@@ -230,7 +232,7 @@ if (-not (Test-Path $exePath)) {
 }
 
 New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
-Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $proofArtifact, $recentProofsArtifact, $replayArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $resultArtifact -ErrorAction SilentlyContinue
+Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $proofArtifact, $recentProofsArtifact, $replayArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $metadataSearchArtifact, $metadataRetrieveArtifact, $resultArtifact -ErrorAction SilentlyContinue
 
 $desktopProcess = $null
 $sessionBefore = $null
@@ -239,6 +241,9 @@ $sessionConnectStatus = 'skipped-no-aliases'
 $sessionSwitchStatus = 'skipped'
 $sessionConnectAlias = $null
 $sessionSwitchAlias = $null
+$metadataSearchStatus = 'skipped-disconnected'
+$metadataRetrieveStatus = 'skipped-disconnected'
+$metadataRetrieveArgCount = 0
 $launchAttemptsUsed = 0
 
 try {
@@ -404,6 +409,53 @@ try {
     }
   }
 
+  $sessionForMetadata = Invoke-RestMethod -Method Get -Uri 'http://127.0.0.1:3100/org/session'
+  if ($sessionForMetadata.status -eq 'connected' -and -not [string]::IsNullOrWhiteSpace($sessionForMetadata.activeAlias)) {
+    $metadataSearch = Invoke-JsonGet -Url 'http://127.0.0.1:3100/org/metadata/search?q=Opportunity&limit=25' -ArtifactPath $metadataSearchArtifact
+    if (($metadataSearch.totalResults ?? 0) -le 0 -or -not $metadataSearch.results) {
+      throw 'Metadata search did not return any selectable results for retrieve handoff validation.'
+    }
+    $metadataSearchStatus = 'verified'
+
+    $selectionResult = $metadataSearch.results | Select-Object -First 1
+    $selectionType = [string]$selectionResult.type
+    $selectionName = [string]$selectionResult.name
+    $selectionKind = [string]$selectionResult.kind
+    if ([string]::IsNullOrWhiteSpace($selectionType)) {
+      throw 'Metadata search result did not include a type for retrieve handoff validation.'
+    }
+
+    $selection = @{
+      type = $selectionType
+    }
+    if ($selectionKind -eq 'member' -and -not [string]::IsNullOrWhiteSpace($selectionName)) {
+      $selection.members = @($selectionName)
+    }
+
+    $metadataRetrieve = Invoke-JsonPost -Url 'http://127.0.0.1:3100/org/metadata/retrieve' -ArtifactPath $metadataRetrieveArtifact -Body @{
+      selections = @($selection)
+      autoRefresh = $true
+    }
+
+    if ($metadataRetrieve.status -ne 'completed') {
+      throw 'Metadata retrieve did not return status=completed for handoff validation.'
+    }
+    if ([string]::IsNullOrWhiteSpace($metadataRetrieve.alias)) {
+      throw 'Metadata retrieve did not return a connected alias for handoff validation.'
+    }
+    if ([string]::IsNullOrWhiteSpace($metadataRetrieve.parsePath)) {
+      throw 'Metadata retrieve did not return parsePath for handoff validation.'
+    }
+    if (-not $metadataRetrieve.metadataArgs -or $metadataRetrieve.metadataArgs.Count -le 0) {
+      throw 'Metadata retrieve did not return metadata arguments for handoff validation.'
+    }
+    if (-not $metadataRetrieve.refresh) {
+      throw 'Metadata retrieve did not include refresh summary for handoff validation.'
+    }
+    $metadataRetrieveArgCount = [int]$metadataRetrieve.metadataArgs.Count
+    $metadataRetrieveStatus = 'verified'
+  }
+
   $artifacts = @(
     'logs/desktop-release-smoke.stdout.log'
     'logs/desktop-release-smoke.stderr.log'
@@ -418,6 +470,12 @@ try {
     'logs/desktop-release-smoke-session-before.json'
     'logs/desktop-release-smoke-session-aliases.json'
   )
+  if ($metadataSearchStatus -eq 'verified') {
+    $artifacts += 'logs/desktop-release-smoke-metadata-search.json'
+  }
+  if ($metadataRetrieveStatus -eq 'verified') {
+    $artifacts += 'logs/desktop-release-smoke-metadata-retrieve.json'
+  }
   if ($sessionConnectStatus -eq 'verified') {
     $artifacts += 'logs/desktop-release-smoke-session-connect.json'
     $artifacts += 'logs/desktop-release-smoke-session-after-connect.json'
@@ -448,6 +506,9 @@ try {
     sessionSwitchStatus = $sessionSwitchStatus
     sessionSwitchAlias = $sessionSwitchAlias
     sessionRestoreStatus = $sessionRestoreStatus
+    metadataSearchStatus = $metadataSearchStatus
+    metadataRetrieveStatus = $metadataRetrieveStatus
+    metadataRetrieveArgCount = $metadataRetrieveArgCount
     launchAttemptsUsed = $launchAttemptsUsed
     artifacts = $artifacts
   } | ConvertTo-Json -Depth 8 | Set-Content -Path $resultArtifact

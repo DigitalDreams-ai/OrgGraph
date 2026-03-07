@@ -88,6 +88,7 @@ Materially true now:
 - Org Sessions now exposes explicit `Bridge CCI Alias` action backed by `/org/session/bridge`, with fail-closed alias/auth/tooling errors and deterministic remediation hints when CCI registry import fails
 - disconnected/session-switch-failure state now preserves the last active alias and persisted switch timestamp, keeping restore targets deterministic across relaunch even when session audit history is trimmed
 - desktop packaged smoke now retries one launch automatically when the desktop process exits before readiness, reducing false-negative launch flake failures in local/CI validation
+- desktop packaged smoke now verifies metadata search + selective metadata retrieve handoff artifacts whenever a connected org session is available, adding Wave5 retrieve-to-refresh proof coverage without breaking no-session CI environments
 - Settings & Diagnostics now renders structured runtime triage cards (bootstrap/db/fixtures/evidence health + recovery checklist) and demotes raw readiness JSON to an optional details panel
 - Settings & Diagnostics now surfaces alias preflight checks/issues and remediation checklist actions alongside tooling status (auth/CCI alias/parse-path parity), reducing bounce-back to Org Sessions for diagnostics triage
 - Settings & Diagnostics now includes a deterministic triage snapshot (runtime/toolchain/session status + explicit next action per domain), reducing dependence on raw JSON for first-line operator diagnosis
