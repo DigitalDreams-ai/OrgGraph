@@ -419,8 +419,10 @@ async function run(): Promise<void> {
       'empty live cache should trigger fresh sf metadata listing'
     );
     assert.ok(
-      liveSearchAfterEmptyCache.warnings.some((warning) => warning.includes('cache was empty')),
-      'response should surface warning when stale empty cache is bypassed'
+      liveSearchAfterEmptyCache.warnings.some(
+        (warning) => warning.includes('cache was empty') || warning.includes('cache version mismatch')
+      ),
+      'response should surface warning when stale live cache is bypassed'
     );
 
     const flowTypeSearch = await service.metadataSearch({

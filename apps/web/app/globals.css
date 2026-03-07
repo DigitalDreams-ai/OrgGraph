@@ -896,28 +896,46 @@ pre {
 
 .metadata-family-head {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
   gap: 0.65rem;
   padding: 0.55rem 0.65rem;
 }
 
-.metadata-family-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
+.metadata-family-chevron {
   flex: 0 0 auto;
+  width: 1.8rem;
+  min-width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid #b7c8df;
+  background: #f5f9ff;
+  color: #264972;
+  font-size: 0.95rem;
+  line-height: 1;
 }
 
-.metadata-family-actions > span {
+.metadata-family-chevron:hover {
+  border-color: #8ea9cd;
+  background: #eaf3ff;
+}
+
+.metadata-family-main {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.metadata-family-count {
+  flex: 0 0 auto;
   color: #315886;
   font-size: 0.8rem;
   white-space: nowrap;
-}
-
-.metadata-family-toggle {
-  min-width: 82px;
-  padding: 0.32rem 0.62rem;
+  margin-top: 0.34rem;
 }
 
 .type-actions {

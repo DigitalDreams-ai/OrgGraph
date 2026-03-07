@@ -42,6 +42,7 @@ type OrgSessionState = {
 @Injectable()
 export class OrgService {
   private readonly logger = new Logger(OrgService.name);
+  private static readonly LIVE_METADATA_CACHE_VERSION = 2;
   private static readonly LIVE_METADATA_MEMBER_SEED_TYPES = [
     'CustomObject',
     'Layout',
@@ -1278,10 +1279,13 @@ export class OrgService {
       try {
         const raw = fs.readFileSync(cachePath, 'utf8');
         const parsed = JSON.parse(raw) as {
+          cacheVersion?: unknown;
           refreshedAt?: string;
           types?: Array<{ type: string; members: string[] }>;
         };
-        if (Array.isArray(parsed.types)) {
+        if (parsed.cacheVersion !== OrgService.LIVE_METADATA_CACHE_VERSION) {
+          warnings.push(`live metadata cache version mismatch; refreshing from org: ${cachePath}`);
+        } else if (Array.isArray(parsed.types)) {
           const typeMembers = new Map<string, string[]>();
           for (const item of parsed.types) {
             if (!item || typeof item.type !== 'string' || !Array.isArray(item.members)) {
@@ -1328,6 +1332,7 @@ export class OrgService {
     const liveMetadataTypes = await this.loadLiveMetadataTypes(alias, projectPath);
     warnings.push(...liveMetadataTypes.warnings);
 
+    const usingMetadataTypeFallback = liveMetadataTypes.types.length === 0;
     const catalogTypes =
       liveMetadataTypes.types.length > 0
         ? liveMetadataTypes.types
@@ -1370,12 +1375,15 @@ export class OrgService {
 
     if (typeMembers.size === 0) {
       warnings.push('live metadata discovery returned no entries; cache not updated');
+    } else if (usingMetadataTypeFallback) {
+      warnings.push('live metadata family discovery unavailable; using non-cached fallback family set');
     } else {
       try {
         fs.writeFileSync(
           cachePath,
           JSON.stringify(
             {
+              cacheVersion: OrgService.LIVE_METADATA_CACHE_VERSION,
               refreshedAt,
               types: Array.from(typeMembers.entries())
                 .map(([type, members]) => ({ type, members }))

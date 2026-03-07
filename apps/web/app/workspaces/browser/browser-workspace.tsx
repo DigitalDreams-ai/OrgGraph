@@ -480,24 +480,25 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           return (
             <section key={typeRow.type} className={`metadata-family ${isExpanded ? 'is-open' : ''}`}>
               <div className="metadata-family-head">
-                <SelectionCheckbox
-                  checked={typeSelectionState === 'all'}
-                  indeterminate={typeSelectionState === 'partial'}
-                  label={typeRow.type}
-                  hint={`${typeRow.memberCount} discoverable item${typeRow.memberCount === 1 ? '' : 's'} • check to include this family`}
-                  onChange={(checked) => props.onSetTypeSelected(typeRow.type, checked)}
-                />
-                <div className="metadata-family-actions">
-                  <span>{typeRow.memberCount}</span>
-                  <button
-                    type="button"
-                    className="ghost metadata-family-toggle"
-                    aria-expanded={isExpanded}
-                    onClick={() => toggleBrowseFamily(typeRow.type, shouldAutoLoadMembers)}
-                  >
-                    {isExpanded ? 'Collapse' : 'Expand'}
-                  </button>
+                <button
+                  type="button"
+                  className="metadata-family-chevron"
+                  aria-expanded={isExpanded}
+                  aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${typeRow.type}`}
+                  onClick={() => toggleBrowseFamily(typeRow.type, shouldAutoLoadMembers)}
+                >
+                  <span aria-hidden>{isExpanded ? '▾' : '▸'}</span>
+                </button>
+                <div className="metadata-family-main">
+                  <SelectionCheckbox
+                    checked={typeSelectionState === 'all'}
+                    indeterminate={typeSelectionState === 'partial'}
+                    label={typeRow.type}
+                    hint={`${typeRow.memberCount} discoverable item${typeRow.memberCount === 1 ? '' : 's'} • check to include this family`}
+                    onChange={(checked) => props.onSetTypeSelected(typeRow.type, checked)}
+                  />
                 </div>
+                <span className="metadata-family-count">{typeRow.memberCount}</span>
               </div>
               {isExpanded ? (
                 <>
@@ -513,7 +514,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                   )}
                 </>
               ) : (
-                <p className="muted">Click Expand to load nested items for this family.</p>
+                <p className="muted">Click the triangle to load and browse nested items for this family.</p>
               )}
             </section>
           );
