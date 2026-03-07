@@ -291,3 +291,37 @@ A completed change must be:
 - Logically committed
 
 If any condition fails, the task is incomplete.
+
+---
+
+# 16) Time-Sensitive OpenAI Model Guidance
+
+This section is advisory and only applies when this repository uses OpenAI
+models for code generation, evaluation, or agent automation.
+
+If official OpenAI documentation changes, follow the official documentation
+and update this section narrowly.
+
+Current default:
+
+- Use `gpt-5.4` for most OpenAI-backed code generation and agentic coding tasks.
+- Do not assume a specialized coding-only model is the default choice.
+
+Reproducibility rule:
+
+- For evaluations, automation, comparison-sensitive workflows, or long-running
+  slices where consistent behavior matters, prefer a pinned snapshot such as
+  `gpt-5.4-2026-03-05`.
+
+Reasoning rule:
+
+- Use `reasoning.effort: none` or `low` for routine edits and mechanical work.
+- Use `reasoning.effort: medium` or `high` for debugging, multi-file changes,
+  and non-trivial implementation work.
+- Use `reasoning.effort: xhigh` only when the extra latency and cost are
+  justified by architecture, replay, or failure-analysis complexity.
+
+Repository rule:
+
+- Do not hardcode transient pricing, benchmark claims, or marketing language
+  into repository governance documents.
