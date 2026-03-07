@@ -5,6 +5,14 @@ import type { MetadataRetrieveResultView, MetadataSelection } from '../browser/t
 export type RefreshRetrieveHandoffView = MetadataRetrieveResultView;
 export type RefreshRetrieveSelectionView = MetadataSelection;
 
+export interface WorkflowLineage {
+  alias: string;
+  parsePath: string;
+  metadataArgs: string[];
+  selectionCount: number;
+  handoffCompletedAt: string;
+}
+
 export interface RefreshRunView {
   snapshotId: string;
   mode: string;
@@ -17,6 +25,7 @@ export interface RefreshRunView {
   driftWithinBudget: boolean;
   driftSummary: string;
   driftViolationCount: number;
+  lineage?: WorkflowLineage;
 }
 
 export interface RefreshDiffView {
@@ -30,6 +39,8 @@ export interface RefreshDiffView {
   structureDigestChanged: boolean;
   driftWithinBudget: boolean;
   driftSummary: string;
+  refreshSnapshotId?: string;
+  lineage?: WorkflowLineage;
 }
 
 export interface OrgRetrieveRunView {
@@ -39,6 +50,8 @@ export interface OrgRetrieveRunView {
   parsePath: string;
   projectPath: string;
   metadataArgs: string[];
+  runRetrieve?: boolean;
+  lineage?: WorkflowLineage;
   stepSummary: Array<{
     step: string;
     status: string;
