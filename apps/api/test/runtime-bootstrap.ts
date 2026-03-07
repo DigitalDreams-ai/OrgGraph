@@ -237,6 +237,53 @@ async function assertBootstrapRetriesWrappedSemanticDriftFailure(
   }
 }
 
+async function assertBootstrapRecoversAfterDoubleRecoverableDriftFailure(
+  appDataRoot: string
+): Promise<void> {
+  const app = await NestFactory.create(AppModule, { logger: false });
+  const runtimeBootstrap = app.get(RuntimeBootstrapService);
+  const ingestionService = app.get(IngestionService);
+  const originalRefresh = ingestionService.refresh.bind(ingestionService);
+  const rebaselineFlags: boolean[] = [];
+  let attempts = 0;
+
+  (ingestionService as { refresh: typeof ingestionService.refresh }).refresh = async (
+    options
+  ) => {
+    attempts += 1;
+    rebaselineFlags.push(options?.rebaseline === true);
+    if (attempts <= 2) {
+      throw new Error(`semantic drift budget exceeded: simulated stale runtime baseline attempt ${attempts}`);
+    }
+    return originalRefresh(options ?? {});
+  };
+
+  const bootstrapReady = await runtimeBootstrap.ensureRuntimeReady();
+  assert.equal(
+    bootstrapReady,
+    true,
+    'bootstrap should recover after two recoverable drift failures by retrying a final time'
+  );
+  assert.deepEqual(
+    rebaselineFlags,
+    [true, true, true],
+    'double recoverable drift retry should keep rebaseline enabled on all attempts'
+  );
+  assert.equal(attempts, 3, 'bootstrap should attempt refresh three times on repeated recoverable drift failures');
+  await app.listen(0);
+
+  try {
+    const addr = app.getHttpServer().address();
+    const port = typeof addr === 'string' ? 0 : addr.port;
+    const base = `http://127.0.0.1:${port}`;
+    const readyRes = await fetch(`${base}/ready`);
+    assert.equal(readyRes.status, 200, 'double recoverable drift retry should leave runtime ready');
+  } finally {
+    await app.close().catch(() => undefined);
+    fs.rmSync(appDataRoot, { recursive: true, force: true });
+  }
+}
+
 async function assertBootstrapFailureReadiness(appDataRoot: string): Promise<void> {
   const app = await NestFactory.create(AppModule, { logger: false });
   const runtimeBootstrap = app.get(RuntimeBootstrapService);
@@ -378,6 +425,17 @@ async function run(): Promise<void> {
   fs.rmSync(retryAfterWrappedDriftAppDataRoot, { recursive: true, force: true });
   applyBootstrapEnv(root, retryAfterWrappedDriftAppDataRoot);
   await assertBootstrapRetriesWrappedSemanticDriftFailure(retryAfterWrappedDriftAppDataRoot);
+
+  const retryAfterDoubleRecoverableDriftAppDataRoot = path.join(
+    root,
+    'data',
+    'runtime-bootstrap-double-drift-retry-test'
+  );
+  fs.rmSync(retryAfterDoubleRecoverableDriftAppDataRoot, { recursive: true, force: true });
+  applyBootstrapEnv(root, retryAfterDoubleRecoverableDriftAppDataRoot);
+  await assertBootstrapRecoversAfterDoubleRecoverableDriftFailure(
+    retryAfterDoubleRecoverableDriftAppDataRoot
+  );
 
   const failedBootstrapAppDataRoot = path.join(root, 'data', 'runtime-bootstrap-failure-test');
   fs.rmSync(failedBootstrapAppDataRoot, { recursive: true, force: true });

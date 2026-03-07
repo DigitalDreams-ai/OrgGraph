@@ -87,7 +87,18 @@ export class RuntimeBootstrapService {
           'bootstrap refresh hit recoverable semantic drift guard; clearing stale semantic state and retrying once with rebaseline'
         );
         this.clearStaleSemanticStateArtifacts();
-        refreshed = await this.ingestionService.refresh(refreshRequest);
+        try {
+          refreshed = await this.ingestionService.refresh(refreshRequest);
+        } catch (retryError) {
+          if (!this.isRecoverableSemanticBootstrapError(retryError)) {
+            throw retryError;
+          }
+          this.logger.warn(
+            'bootstrap refresh hit recoverable semantic drift guard again; clearing full runtime artifacts and retrying one final time with rebaseline'
+          );
+          this.clearRuntimeBootstrapArtifacts();
+          refreshed = await this.ingestionService.refresh(refreshRequest);
+        }
       }
 
       if (refreshed.nodeCount <= 0 || refreshed.edgeCount <= 0 || refreshed.evidenceCount <= 0) {
@@ -230,14 +241,32 @@ export class RuntimeBootstrapService {
       this.runtimePaths.semanticSnapshotHistoryDir(),
       this.runtimePaths.semanticDiffArtifactsDir()
     ];
+    this.removeArtifactPaths(removablePaths, 'stale semantic state artifact');
+  }
 
-    for (const targetPath of removablePaths) {
+  private clearRuntimeBootstrapArtifacts(): void {
+    const removablePaths = [
+      this.runtimePaths.databasePath(),
+      this.runtimePaths.evidenceIndexPath(),
+      this.runtimePaths.refreshStatePath(),
+      this.runtimePaths.refreshAuditPath(),
+      this.runtimePaths.semanticSnapshotPath(),
+      this.runtimePaths.semanticSnapshotHistoryDir(),
+      this.runtimePaths.semanticDiffArtifactsDir(),
+      this.runtimePaths.ontologyReportPath()
+    ];
+    this.removeArtifactPaths(removablePaths, 'runtime bootstrap artifact');
+  }
+
+  private removeArtifactPaths(paths: string[], label: string): void {
+    const uniquePaths = [...new Set(paths)];
+    for (const targetPath of uniquePaths) {
       try {
         fs.rmSync(targetPath, { recursive: true, force: true });
       } catch (error) {
         const message =
           error instanceof Error ? error.message : 'unknown stale-state cleanup failure';
-        this.logger.warn(`failed to clear stale semantic state artifact at ${targetPath}: ${message}`);
+        this.logger.warn(`failed to clear ${label} at ${targetPath}: ${message}`);
       }
     }
   }
