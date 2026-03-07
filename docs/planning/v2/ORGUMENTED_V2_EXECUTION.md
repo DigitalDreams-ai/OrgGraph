@@ -79,6 +79,7 @@ Materially true now:
 - runtime-bootstrap failure regression now verifies `/org/status` remains reachable while `/ready` stays fail-closed
 - runtime-bootstrap failure regression now also verifies `/org/preflight` remains reachable and `/org/status` keeps tool/session message surfaces while `/ready` stays fail-closed
 - runtime bootstrap retry now also recovers when semantic-drift failures are wrapped in response payload messages (for example, `Bad Request Exception` with nested drift text)
+- runtime bootstrap now performs a final guarded recovery pass after repeated recoverable drift failures by clearing full runtime semantic artifacts (DB/index/state/snapshots) and retrying once more with rebaseline before failing closed
 - runtime-unavailable signaling is now shared across Connect, Operator Rail, and Settings/Diagnostics (shell reachability + connect runtime detection), reducing false tool-missing interpretation outside Org Sessions
 - Connect, Operator Rail, and Settings/Diagnostics now show explicit tool-status source labels (`runtime blocked`, `live status`, `status not loaded`) so runtime loss cannot be misread as missing `sf`/`cci`
 - fallback error copy now distinguishes API non-response failures from normal request-validation failures
