@@ -40,6 +40,8 @@ Materially true now:
 - org browser now auto-loads explorer families on first open and uses simpler action labels (`Search`, `Refresh Types`, `Load Trees`, `Retrieve Cart`) with Enter-to-search support
 - org browser now auto-refreshes full family discovery when a connected alias changes, and browse mode enforces full-family coverage (minimum 5000 families) even when search/member limits are set lower
 - org browser live metadata discovery now tolerates trailing sf CLI warning lines in JSON command output, preventing false fallback to the 8-family seed set when `sf org list metadata-types --json` includes update notices
+- org browser live metadata discovery now strips ANSI/noise-prefixed warning lines and extracts the first valid JSON segment from sf CLI output, preventing false seed-family fallback when stdout includes colored warning or update-notice text
+- live metadata catalog cache version is now bumped so stale pre-fix limited-family cache artifacts are invalidated and rebuilt from current org discovery
 - org browser family catalog now hydrates from live metadata-type discovery (not only fixed seed families), and family rows now use explicit `Expand`/`Collapse` controls with deterministic lazy child loading
 - org browser now invalidates pre-v2 limited live-catalog caches, and family rows expose chevron-style tree expansion so nested children open from the left-edge toggle
 - org browser now defaults catalog/member discovery limits to full-coverage mode (5000), surfaces explicit truncation guidance when limits still cut family results, and supports triangle expansion on nested member tree folders (not only top-level families)
