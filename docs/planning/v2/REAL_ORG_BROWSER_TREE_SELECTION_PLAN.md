@@ -50,4 +50,7 @@ Implemented on `dna-org-browser-tree-selection`:
 - selection summaries and copy now use family/item wording instead of mixed type/member add verbs
 - summary row alignment in the explorer frame now prevents clipping while keeping counts visible
 - live family rows now also surface directory/suffix/folder/meta-file descriptors so the tree explorer feels less like a raw metadata API list
+- search-result groups now use the same chevron/tree affordance as browse rows instead of a different `details` interaction model
+- catalog visibility now comes from the full live metadata-type catalog union, so families remain visible even when a cache row has no member array yet
+- live catalog cache version is bumped again to flush partial family listings before the remaining real-org parity pass
 

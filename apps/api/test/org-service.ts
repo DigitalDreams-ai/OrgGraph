@@ -425,6 +425,35 @@ async function run(): Promise<void> {
       'expected zero-member metadata families to remain visible in catalog'
     );
 
+    const liveCatalogCachePath = path.join(path.dirname(parsePath), 'metadata-live-catalog-cache.json');
+    fs.writeFileSync(
+      liveCatalogCachePath,
+      JSON.stringify(
+        {
+          cacheVersion: 6,
+          refreshedAt: new Date().toISOString(),
+          types: [
+            {
+              type: 'AnimationRule',
+              directoryName: 'animationRules',
+              inFolder: false,
+              metaFile: false,
+              suffix: 'animationRule',
+              childXmlNames: []
+            }
+          ]
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+    const cacheOnlyCatalog = await service.metadataCatalog({ refresh: false, limit: 50 });
+    assert.ok(
+      cacheOnlyCatalog.types.some((item) => item.type === 'AnimationRule' && item.memberCount === 0),
+      'cache-backed catalog should preserve families even when a cached row has no members array yet'
+    );
+
     const liveSearch = await service.metadataSearch({
       search: 'Opportunity',
       refresh: true,

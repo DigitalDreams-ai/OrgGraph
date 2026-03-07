@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type {
   MetadataCatalogPayload,
   MetadataMembersPayload,
@@ -215,7 +215,15 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
   const expectedAlias = props.activeAlias || props.selectedAlias;
   const retrieveHandoff = assessRetrieveHandoff(props.lastMetadataRetrieve, expectedAlias);
   const groupedSearchResults = groupSearchResults(props.metadataSearchResults);
+  const familyDescriptors = useMemo(
+    () =>
+      new Map(
+        (props.metadataCatalog?.types ?? []).map((typeRow) => [typeRow.type, formatFamilyDescriptor(typeRow)])
+      ),
+    [props.metadataCatalog]
+  );
   const [expandedBrowseFamilies, setExpandedBrowseFamilies] = useState<Record<string, boolean>>({});
+  const [expandedSearchFamilies, setExpandedSearchFamilies] = useState<Record<string, boolean>>({});
   const [expandedMemberNodes, setExpandedMemberNodes] = useState<Record<string, boolean>>({});
   const toggleBrowseFamily = (type: string, shouldLoadMembers: boolean): void => {
     const nextOpen = !Boolean(expandedBrowseFamilies[type]);
@@ -226,6 +234,12 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
     if (nextOpen && shouldLoadMembers) {
       props.onLoadMembers(type);
     }
+  };
+  const toggleSearchFamily = (type: string): void => {
+    setExpandedSearchFamilies((current) => ({
+      ...current,
+      [type]: !(current[type] ?? true)
+    }));
   };
   const toggleMemberNode = (type: string, nodeKey: string): void => {
     const key = `${type}:${nodeKey}`;
@@ -336,6 +350,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
             <span className="decision-badge muted">Families: {props.selectionSummary.typeCount}</span>
             <span className="decision-badge muted">Items: {props.selectionSummary.memberCount}</span>
             <span className="decision-badge muted">Visible families: {props.visibleCatalogTypes.length}</span>
+            <span className="decision-badge muted">Loaded trees: {Object.keys(props.metadataMembersByType).length}</span>
             <span className={`decision-badge ${props.metadataAutoRefresh ? 'good' : 'muted'}`}>
               Auto refresh: {String(props.metadataAutoRefresh)}
             </span>
@@ -472,41 +487,71 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           </p>
           {groupedSearchResults.length > 0 ? (
             <div className="org-browser-frame org-browser-frame-search">
-              {groupedSearchResults.map((group) => (
-                <details key={group.type} open>
-                  <summary>
-                    <SelectionCheckbox
-                      checked={props.getTypeSelectionState(group.type) === 'all'}
-                      indeterminate={props.getTypeSelectionState(group.type) === 'partial'}
-                      label={group.type}
-                      hint={`${group.results.length} match${group.results.length === 1 ? '' : 'es'} • check to include this family`}
-                      onChange={(checked) => props.onSetTypeSelected(group.type, checked)}
-                    />
-                    <span>{group.results.length} match{group.results.length === 1 ? '' : 'es'}</span>
-                  </summary>
-                  <ul className="member-list explorer-list">
-                    {group.results.map((result) => (
-                      <li key={`${result.kind}:${result.type}:${result.name}`} className="explorer-item">
+              {groupedSearchResults.map((group) => {
+                const isExpanded = expandedSearchFamilies[group.type] ?? true;
+                const descriptors = familyDescriptors.get(group.type) ?? [];
+                return (
+                  <section key={group.type} className={`metadata-family metadata-family-search ${isExpanded ? 'is-open' : ''}`}>
+                    <div className="metadata-family-head">
+                      <button
+                        type="button"
+                        className="metadata-family-chevron"
+                        aria-expanded={isExpanded}
+                        aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${group.type} search results`}
+                        onClick={() => toggleSearchFamily(group.type)}
+                      >
+                        <span aria-hidden>{isExpanded ? '▾' : '▸'}</span>
+                      </button>
+                      <div className="metadata-family-main">
                         <SelectionCheckbox
-                          checked={result.kind === 'member' ? props.isMemberSelected(result.type, result.name) : props.getTypeSelectionState(result.type) === 'all'}
-                          disabled={result.kind === 'member' && props.getTypeSelectionState(result.type) === 'all'}
-                          label={result.name}
-                          hint={
-                            result.kind === 'member'
-                              ? `${group.type} • matched ${result.matchField} • check for only this item`
-                              : `${group.type} • check to include all nested items`
-                          }
-                          onChange={(checked) =>
-                            result.kind === 'member'
-                              ? props.onSetMemberSelected(result.type, result.name, checked)
-                              : props.onSetTypeSelected(result.type, checked)
-                          }
+                          checked={props.getTypeSelectionState(group.type) === 'all'}
+                          indeterminate={props.getTypeSelectionState(group.type) === 'partial'}
+                          label={group.type}
+                          hint={`${group.results.length} match${group.results.length === 1 ? '' : 'es'} • check to include this family`}
+                          onChange={(checked) => props.onSetTypeSelected(group.type, checked)}
                         />
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              ))}
+                        {descriptors.length > 0 ? (
+                          <div className="metadata-family-descriptor-list">
+                            {descriptors.map((descriptor) => (
+                              <span key={`${group.type}:search:${descriptor}`} className="decision-badge muted">
+                                {descriptor}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                      <span className="metadata-family-count">
+                        {group.results.length} match{group.results.length === 1 ? '' : 'es'}
+                      </span>
+                    </div>
+                    {isExpanded ? (
+                      <ul className="member-list explorer-list">
+                        {group.results.map((result) => (
+                          <li key={`${result.kind}:${result.type}:${result.name}`} className="explorer-item">
+                            <SelectionCheckbox
+                              checked={result.kind === 'member' ? props.isMemberSelected(result.type, result.name) : props.getTypeSelectionState(result.type) === 'all'}
+                              disabled={result.kind === 'member' && props.getTypeSelectionState(result.type) === 'all'}
+                              label={result.name}
+                              hint={
+                                result.kind === 'member'
+                                  ? `${group.type} • matched ${result.matchField} • check for only this item`
+                                  : `${group.type} • check to include all nested items`
+                              }
+                              onChange={(checked) =>
+                                result.kind === 'member'
+                                  ? props.onSetMemberSelected(result.type, result.name, checked)
+                                  : props.onSetTypeSelected(result.type, checked)
+                              }
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="muted metadata-family-collapsed-hint">Click the triangle to review matched items in this family.</p>
+                    )}
+                  </section>
+                );
+              })}
             </div>
           ) : (
             <div>
@@ -522,6 +567,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       ) : null}
 
       <p className="panel-caption">Browse by metadata family</p>
+      <p className="muted">Showing {props.metadataCatalog?.types.length ?? 0} family rows from the current catalog. Use the triangles to expand families and browse child items.</p>
       <div className="org-browser-frame">
         {(props.metadataCatalog?.types || []).map((typeRow) => {
           const membersPayload = props.metadataMembersByType[typeRow.type];

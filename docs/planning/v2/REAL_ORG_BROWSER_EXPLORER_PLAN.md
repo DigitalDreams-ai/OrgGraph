@@ -89,6 +89,9 @@ Implemented on `dna-org-browser-live-discovery`:
 - long values in decision packets, proof context, mapping cards, and diagnostics now wrap inside their cards instead of clipping
 - wave13 follow-up now carries richer live family descriptors (directory/suffix/folder/meta-file/child-family metadata) through the catalog contract so the family explorer can describe what each row represents before expansion
 - wave13 follow-up now uses `Browse All` as the explicit full-family discovery action and keeps latest-retrieve Flow prompt starters visible in Ask so evidence-grounded follow-up stays on the primary path
+- wave14 follow-up now keeps family visibility anchored to the full live type catalog instead of only preloaded member rows, so zero-member or not-yet-loaded families remain browsable
+- wave14 follow-up now uses the same triangle-and-checkbox explorer contract in search results as in family browse, reducing search-vs-browse interaction drift
+- wave14 follow-up bumps the live catalog cache version again so older partial family caches are invalidated on the next desktop browse
 
 Current local verification:
 - `pnpm --filter api exec ts-node --transpile-only test/org-service.ts`
