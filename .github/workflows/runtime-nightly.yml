@@ -2,7 +2,7 @@ name: Runtime Nightly
 
 on:
   schedule:
-    - cron: '30 6 * * *'
+    - cron: '30 6 * * 1'
   workflow_dispatch:
 
 concurrency:
@@ -84,4 +84,4 @@ jobs:
             logs/desktop-release-smoke*
             logs/desktop-phase4-release.log
           if-no-files-found: ignore
-          retention-days: 3
+          retention-days: 1
