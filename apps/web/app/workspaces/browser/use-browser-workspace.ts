@@ -19,6 +19,8 @@ import type {
 } from './types';
 
 interface UseBrowserWorkspaceOptions {
+  activeAlias: string;
+  sessionStatus: string;
   presentResponse: (response: QueryResponse) => void;
   resolveErrorMessage: (response: QueryResponse) => string;
   setLoading: (loading: boolean) => void;
@@ -195,6 +197,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const [lastMetadataRetrieve, setLastMetadataRetrieve] = useState<MetadataRetrieveResultView | null>(null);
   const [lastRetrievedSelections, setLastRetrievedSelections] = useState<MetadataSelection[]>([]);
   const [metadataCatalogRequested, setMetadataCatalogRequested] = useState(false);
+  const [lastCatalogAlias, setLastCatalogAlias] = useState('');
 
   const metadataSelectionsPreview = useMemo(() => JSON.stringify(metadataSelected, null, 2), [metadataSelected]);
   const selectionSummary = useMemo(() => buildSelectionSummary(metadataSelected), [metadataSelected]);
@@ -233,6 +236,20 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     // Load family explorer on first open so operators can browse immediately.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const alias = options.activeAlias.trim();
+    if (options.sessionStatus !== 'connected' || alias.length === 0) {
+      return;
+    }
+    if (alias.toLowerCase() === lastCatalogAlias.toLowerCase()) {
+      return;
+    }
+    setLastCatalogAlias(alias);
+    setMetadataCatalogRequested(false);
+    void refreshTypes('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options.activeAlias, options.sessionStatus, lastCatalogAlias]);
 
   function clearFilters(): void {
     setMetadataSearch('');
@@ -439,7 +456,9 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     options.setErrorText('');
 
     try {
-      const limit = parseOptionalInt(metadataLimitRaw) ?? DEFAULT_METADATA_LIMIT;
+      const parsedLimit = parseOptionalInt(metadataLimitRaw) ?? DEFAULT_METADATA_LIMIT;
+      const searchLimit = parsedLimit;
+      const catalogLimit = Math.max(parsedLimit, DEFAULT_METADATA_LIMIT);
       const search = typeof searchOverride === 'string' ? searchOverride.trim() : metadataSearch.trim();
       if (!search) {
         setMetadataCatalogRequested(true);
@@ -447,12 +466,12 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
       const result = search
         ? await getOrgMetadataSearch({
             q: search,
-            limit,
+            limit: searchLimit,
             refresh: metadataForceRefresh
           })
         : await getOrgMetadataCatalog({
             q: '',
-            limit,
+            limit: catalogLimit,
             refresh: metadataForceRefresh
           });
       options.presentResponse(result);
@@ -466,7 +485,13 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
         setMetadataWarnings(extractWarnings(payload));
       } else {
         setMetadataSearchResults([]);
-        setMetadataWarnings(extractWarnings(result.payload));
+        const warnings = extractWarnings(result.payload);
+        if (parsedLimit < DEFAULT_METADATA_LIMIT) {
+          warnings.push(
+            `Browse mode enforces a minimum catalog limit of ${DEFAULT_METADATA_LIMIT} metadata families; increase Search/Member Limit only when needed for dense search/member result sets.`
+          );
+        }
+        setMetadataWarnings(Array.from(new Set(warnings)));
       }
       if (!search && result.payload) {
         setMetadataCatalog(result.payload as MetadataCatalogPayload);
