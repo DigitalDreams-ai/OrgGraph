@@ -103,9 +103,9 @@ Expected result:
 - no empty-selection failure
 
 If you get no results:
-1. Click `Browse All`.
-2. Click `Load Visible Items`.
-3. Expand a family and select members via checkbox.
+1. Click `Refresh Types`.
+2. Click `Load Trees`.
+3. Click the triangle on a family row to expand nested members, then select via checkbox.
 4. Click `Retrieve Cart` again.
 
 ## 4) Verify Handoff In Refresh & Build
