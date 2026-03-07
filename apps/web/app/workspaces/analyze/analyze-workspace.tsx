@@ -76,12 +76,60 @@ function renderActionChecklist(title: string, actions: string[]): JSX.Element {
   );
 }
 
+type StructuredAnalyzeActionId =
+  | 'run-permissions'
+  | 'diagnose-mapping'
+  | 'run-automation'
+  | 'run-impact'
+  | 'run-system'
+  | 'open-ask-permissions'
+  | 'open-ask-automation'
+  | 'open-ask-impact'
+  | 'open-ask-system';
+
+type StructuredAnalyzeAction = {
+  id: StructuredAnalyzeActionId;
+  label: string;
+};
+
+function buildPermissionScopeAskQuery(
+  permissionResult: PermissionAnalysisResult | null,
+  user: string,
+  fieldName: string,
+  objectName: string
+): string {
+  const target = permissionResult?.field || permissionResult?.object || fieldName || objectName;
+  const actor = permissionResult?.user || user;
+  return `Based only on the latest retrieve, explain whether ${actor} can edit ${target} and what permission path gaps still block approval.`;
+}
+
+function buildAutomationScopeAskQuery(automationResult: AutomationResult | null, objectName: string): string {
+  const target = automationResult?.object || objectName;
+  return `Based only on the latest retrieve, explain what automations update ${target} and what should be reviewed before approval.`;
+}
+
+function buildImpactScopeAskQuery(impactResult: ImpactResult | null, fieldName: string): string {
+  const target = impactResult?.field || fieldName;
+  return `Based only on the latest retrieve, should we approve changing ${target}? Explain downstream automations and deterministic impact paths.`;
+}
+
+function buildSystemPermissionAskQuery(
+  systemPermissionResult: SystemPermissionResult | null,
+  user: string,
+  systemPermission: string
+): string {
+  const actor = systemPermissionResult?.user || user;
+  const permission = systemPermissionResult?.permission || systemPermission;
+  return `Based only on the latest retrieve, explain whether ${actor} has ${permission} and what deterministic grant paths support or block approval.`;
+}
+
 type StructuredAnalyzeSummary = {
   id: string;
   title: string;
   status: 'good' | 'warning' | 'bad';
   detail: string;
   nextAction: string;
+  actions: StructuredAnalyzeAction[];
 };
 
 function statusBadgeClass(status: StructuredAnalyzeSummary['status']): string {
@@ -122,7 +170,12 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
                 ? 'Increase Limit to confirm full path coverage.'
                 : hasWarnings
                   ? 'Resolve warning items before relying on this verdict.'
-                  : 'Permission coverage is deterministic and ready.'
+                  : 'Permission coverage is deterministic and ready.',
+        actions: [
+          { id: 'run-permissions', label: 'Run Permissions Analysis' },
+          { id: 'open-ask-permissions', label: 'Open Ask for Permission Scope' },
+          ...(!mappingResolved ? [{ id: 'diagnose-mapping', label: 'Diagnose User Mapping' } as StructuredAnalyzeAction] : [])
+        ]
       });
     } else {
       summaries.push({
@@ -130,7 +183,8 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
         title: 'Permission verdict',
         status: 'warning',
         detail: 'No permission analysis result loaded for the current user/object/field context.',
-        nextAction: 'Run Permissions Analysis to generate a deterministic verdict.'
+        nextAction: 'Run Permissions Analysis to generate a deterministic verdict.',
+        actions: [{ id: 'run-permissions', label: 'Run Permissions Analysis' }]
       });
     }
 
@@ -153,7 +207,11 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
             ? 'Refresh semantic state to replace stale mapping data.'
             : props.permissionDiagnosis.warnings.length > 0
               ? 'Resolve mapping warnings before permission approval.'
-              : 'Mapping context is ready for permission checks.'
+              : 'Mapping context is ready for permission checks.',
+        actions: [
+          { id: 'diagnose-mapping', label: 'Diagnose User Mapping' },
+          { id: 'run-permissions', label: 'Run Permissions Analysis' }
+        ]
       });
     }
 
@@ -168,7 +226,8 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
           title: 'Automation summary',
           status: 'warning',
           detail: 'No automation analysis result loaded for this object context.',
-          nextAction: 'Run Automation Analysis to generate deterministic automation coverage.'
+          nextAction: 'Run Automation Analysis to generate deterministic automation coverage.',
+          actions: [{ id: 'run-automation', label: 'Run Automation Analysis' }]
         }
       ];
     }
@@ -189,7 +248,11 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
           ? 'Validate object API name or relax confidence settings, then rerun.'
           : props.automationResult.truncated
             ? 'Increase Limit to inspect complete automation coverage.'
-            : 'Use Open Ask for Automation Scope to create a trust/proof packet.'
+            : 'Use Open Ask for Automation Scope to create a trust/proof packet.',
+        actions: [
+          { id: 'run-automation', label: 'Run Automation Analysis' },
+          { id: 'open-ask-automation', label: 'Open Ask for Automation Scope' }
+        ]
       }
     ];
   }
@@ -202,7 +265,8 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
           title: 'Impact summary',
           status: 'warning',
           detail: 'No impact analysis result loaded for this field context.',
-          nextAction: 'Run Impact Analysis to generate deterministic downstream paths.'
+          nextAction: 'Run Impact Analysis to generate deterministic downstream paths.',
+          actions: [{ id: 'run-impact', label: 'Run Impact Analysis' }]
         }
       ];
     }
@@ -223,7 +287,11 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
           ? 'Confirm field API name and refresh metadata before rerunning.'
           : props.impactResult.truncated
             ? 'Increase Limit to inspect full impact coverage.'
-            : 'Use Open Ask for Impact Scope for approval-ready packet output.'
+            : 'Use Open Ask for Impact Scope for approval-ready packet output.',
+        actions: [
+          { id: 'run-impact', label: 'Run Impact Analysis' },
+          { id: 'open-ask-impact', label: 'Open Ask for Impact Scope' }
+        ]
       }
     ];
   }
@@ -235,7 +303,8 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
         title: 'System permission summary',
         status: 'warning',
         detail: 'No system-permission result loaded for this user and permission context.',
-        nextAction: 'Run System Permission Check to load deterministic grant paths.'
+        nextAction: 'Run System Permission Check to load deterministic grant paths.',
+        actions: [{ id: 'run-system', label: 'Run System Permission Check' }]
       }
     ];
   }
@@ -259,13 +328,53 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
           ? 'Increase Limit to verify full grant coverage.'
           : props.systemPermissionResult.warnings.length > 0
             ? 'Resolve warning items before relying on this verdict.'
-            : 'System permission coverage is deterministic and ready.'
+            : 'System permission coverage is deterministic and ready.',
+      actions: [
+        { id: 'run-system', label: 'Run System Permission Check' },
+        { id: 'open-ask-system', label: 'Open Ask for System Permission' }
+      ]
     }
   ];
 }
 
 export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
   const structuredSnapshot = buildAnalyzeSnapshot(props);
+
+  function handleStructuredAction(actionId: StructuredAnalyzeActionId): void {
+    if (actionId === 'run-permissions') {
+      props.onRunPermissions();
+      return;
+    }
+    if (actionId === 'diagnose-mapping') {
+      props.onDiagnoseUserMapping();
+      return;
+    }
+    if (actionId === 'run-automation') {
+      props.onRunAutomation();
+      return;
+    }
+    if (actionId === 'run-impact') {
+      props.onRunImpact();
+      return;
+    }
+    if (actionId === 'run-system') {
+      props.onRunSystemPermission();
+      return;
+    }
+    if (actionId === 'open-ask-permissions') {
+      props.onOpenAsk(buildPermissionScopeAskQuery(props.permissionsResult, props.user, props.fieldName, props.objectName));
+      return;
+    }
+    if (actionId === 'open-ask-automation') {
+      props.onOpenAsk(buildAutomationScopeAskQuery(props.automationResult, props.objectName));
+      return;
+    }
+    if (actionId === 'open-ask-impact') {
+      props.onOpenAsk(buildImpactScopeAskQuery(props.impactResult, props.fieldName));
+      return;
+    }
+    props.onOpenAsk(buildSystemPermissionAskQuery(props.systemPermissionResult, props.user, props.systemPermission));
+  }
 
   return (
     <>
@@ -383,6 +492,21 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
                 <p>
                   <strong>Next action:</strong> {item.nextAction}
                 </p>
+                {item.actions.length > 0 ? (
+                  <div className="action-row">
+                    {item.actions.map((action) => (
+                      <button
+                        key={`${item.id}-${action.id}`}
+                        type="button"
+                        className="ghost"
+                        onClick={() => handleStructuredAction(action.id)}
+                        disabled={props.loading}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -479,13 +603,7 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               <button
                 type="button"
                 className="ghost"
-                onClick={() =>
-                  props.onOpenAsk(
-                    `Based only on the latest retrieve, explain whether ${props.permissionsResult?.user} can edit ${
-                      props.permissionsResult?.field || props.permissionsResult?.object
-                    } and what permission path gaps still block approval.`
-                  )
-                }
+                onClick={() => props.onOpenAsk(buildPermissionScopeAskQuery(props.permissionsResult, props.user, props.fieldName, props.objectName))}
               >
                 Open Ask for Permission Scope
               </button>
@@ -623,11 +741,7 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               <button
                 type="button"
                 className="ghost"
-                onClick={() =>
-                  props.onOpenAsk(
-                    `Based only on the latest retrieve, explain what automations update ${props.automationResult?.object} and what should be reviewed before approval.`
-                  )
-                }
+                onClick={() => props.onOpenAsk(buildAutomationScopeAskQuery(props.automationResult, props.objectName))}
               >
                 Open Ask for Automation Scope
               </button>
@@ -703,11 +817,7 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               <button
                 type="button"
                 className="ghost"
-                onClick={() =>
-                  props.onOpenAsk(
-                    `Based only on the latest retrieve, should we approve changing ${props.impactResult?.field}? Explain downstream automations and deterministic impact paths.`
-                  )
-                }
+                onClick={() => props.onOpenAsk(buildImpactScopeAskQuery(props.impactResult, props.fieldName))}
               >
                 Open Ask for Impact Scope
               </button>
@@ -785,13 +895,7 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               <button
                 type="button"
                 className="ghost"
-                onClick={() =>
-                  props.onOpenAsk(
-                    `Based only on the latest retrieve, explain whether ${props.systemPermissionResult?.user} has ${
-                      props.systemPermissionResult?.permission
-                    } and what deterministic grant paths support or block approval.`
-                  )
-                }
+                onClick={() => props.onOpenAsk(buildSystemPermissionAskQuery(props.systemPermissionResult, props.user, props.systemPermission))}
               >
                 Open Ask for System Permission
               </button>
