@@ -558,10 +558,10 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           );
         })}
         {props.metadataCatalogRequested && (props.metadataCatalog?.types || []).length === 0 ? (
-          <p className="muted">No metadata families were returned yet. Try `Browse All` again with `Force Refresh` enabled.</p>
+          <p className="muted">No metadata families were returned yet. Try `Refresh Types` again with `Force Refresh` enabled.</p>
         ) : null}
         {!props.metadataCatalogRequested ? (
-          <p className="muted">Click `Browse All` to load live metadata families before retrieving anything.</p>
+          <p className="muted">Click `Refresh Types` to load live metadata families before retrieving anything.</p>
         ) : null}
       </div>
 

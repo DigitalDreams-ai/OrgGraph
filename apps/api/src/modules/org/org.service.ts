@@ -42,7 +42,7 @@ type OrgSessionState = {
 @Injectable()
 export class OrgService {
   private readonly logger = new Logger(OrgService.name);
-  private static readonly LIVE_METADATA_CACHE_VERSION = 3;
+  private static readonly LIVE_METADATA_CACHE_VERSION = 4;
   private static readonly LIVE_METADATA_MEMBER_SEED_TYPES = [
     'CustomObject',
     'Layout',

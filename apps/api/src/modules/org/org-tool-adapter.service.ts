@@ -358,7 +358,9 @@ export class OrgToolAdapterService {
   }
 
   private parseSfJsonOutput<T>(output: string): T | undefined {
-    const trimmed = output.trim();
+    const stripAnsi = (value: string): string =>
+      value.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, '');
+    const trimmed = stripAnsi(output).replace(/\uFEFF/g, '').trim();
     if (trimmed.length === 0) {
       return undefined;
     }
@@ -374,15 +376,29 @@ export class OrgToolAdapterService {
 
     addCandidate(trimmed);
 
-    const firstBrace = trimmed.indexOf('{');
-    const lastBrace = trimmed.lastIndexOf('}');
-    if (firstBrace >= 0 && lastBrace > firstBrace) {
-      addCandidate(trimmed.slice(firstBrace, lastBrace + 1));
+    const firstObject = trimmed.indexOf('{');
+    const firstArray = trimmed.indexOf('[');
+    const firstJson = [firstObject, firstArray]
+      .filter((index) => index >= 0)
+      .sort((left, right) => left - right)[0];
+    if (firstJson !== undefined) {
+      const opening = trimmed[firstJson];
+      const closing = opening === '[' ? ']' : '}';
+      const lastClosing = trimmed.lastIndexOf(closing);
+      if (lastClosing > firstJson) {
+        addCandidate(trimmed.slice(firstJson, lastClosing + 1));
+      }
+      addCandidate(trimmed.slice(firstJson));
     }
 
     const withoutWarningLines = trimmed
       .split(/\r?\n/)
-      .filter((line) => !/^(?:\u00BB\s*)?warning:/i.test(line.trim()))
+      .filter((line) => {
+        const normalized = line.trim();
+        return !/^(?:\(?node:\d+\)?\s*)?(?:[\u00BB>\-*]+\s*)?(?:warning|deprecationwarning)\b[:\s]/i.test(
+          normalized
+        );
+      })
       .join('\n');
     addCandidate(withoutWarningLines);
 
