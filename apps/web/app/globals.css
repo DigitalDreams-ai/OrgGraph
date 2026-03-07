@@ -894,6 +894,10 @@ pre {
   background: #ffffff;
 }
 
+.metadata-family-search {
+  margin: 0.4rem 0;
+}
+
 .metadata-family-head {
   display: flex;
   justify-content: flex-start;
@@ -944,6 +948,10 @@ pre {
   flex-wrap: wrap;
   gap: 0.35rem;
   min-width: 0;
+}
+
+.metadata-family-collapsed-hint {
+  padding: 0 0.85rem 0.8rem;
 }
 
 .type-actions {

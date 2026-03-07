@@ -56,7 +56,7 @@ type DiscoveryMetadataIndex = {
 @Injectable()
 export class OrgService {
   private readonly logger = new Logger(OrgService.name);
-  private static readonly LIVE_METADATA_CACHE_VERSION = 5;
+  private static readonly LIVE_METADATA_CACHE_VERSION = 6;
   private static readonly LIVE_METADATA_MEMBER_SEED_TYPES = [
     'CustomObject',
     'Layout',
@@ -878,10 +878,10 @@ export class OrgService {
     const normalizedSearch = this.normalizeMetadataSearchValue(search ?? '');
     const limit = input.limit ?? 1000;
     const warnings: string[] = [...index.warnings];
-    let types = Array.from(index.typeMembers.entries())
-      .map(([type, members]) => ({
+    let types = this.listMetadataCatalogTypes(index)
+      .map((type) => ({
         type,
-        memberCount: members.length,
+        memberCount: (index.typeMembers.get(type) ?? []).length,
         ...this.toMetadataCatalogSummary(type, index.typeCatalog.get(type))
       }))
       .sort((a, b) => a.type.localeCompare(b.type));
@@ -926,7 +926,7 @@ export class OrgService {
     const normalizedSearch = this.normalizeMetadataSearchValue(search ?? '');
     const limit = input.limit ?? 1000;
     const selectedType = input.type.trim();
-    const typeExistsInCatalog = index.typeMembers.has(selectedType);
+    const typeExistsInCatalog = index.typeMembers.has(selectedType) || index.typeCatalog.has(selectedType);
     let members = index.typeMembers.get(selectedType) ?? [];
 
     if (this.configService.sfIntegrationEnabled() && members.length === 0) {
@@ -983,7 +983,8 @@ export class OrgService {
       score: number;
     }> = [];
 
-    for (const [type, members] of index.typeMembers.entries()) {
+    for (const type of this.listMetadataCatalogTypes(index)) {
+      const members = index.typeMembers.get(type) ?? [];
       const typeScore = this.computeMetadataSearchScore(type, search, normalizedSearch);
       if (typeScore !== null) {
         results.push({
@@ -1239,6 +1240,12 @@ export class OrgService {
     return merged;
   }
 
+  private listMetadataCatalogTypes(index: DiscoveryMetadataIndex): string[] {
+    return Array.from(new Set([...index.typeCatalog.keys(), ...index.typeMembers.keys()])).sort((left, right) =>
+      left.localeCompare(right)
+    );
+  }
+
   private toMetadataCatalogSummary(
     type: string,
     entry?: MetadataTypeCatalogEntry
@@ -1350,20 +1357,20 @@ export class OrgService {
           const typeMembers = new Map<string, string[]>();
           const typeCatalog = new Map<string, MetadataTypeCatalogEntry>();
           for (const item of parsed.types) {
-            if (!item || typeof item.type !== 'string' || !Array.isArray(item.members)) {
+            if (!item || typeof item.type !== 'string') {
               continue;
             }
             const type = item.type.trim();
             if (!type) {
               continue;
             }
-            typeMembers.set(
-              type,
-              item.members
+            const members = Array.isArray(item.members)
+              ? item.members
                 .map((member) => String(member).trim())
                 .filter((member) => member.length > 0)
                 .sort((a, b) => a.localeCompare(b))
-            );
+              : [];
+            typeMembers.set(type, members);
             const directoryName = typeof item.directoryName === 'string' ? item.directoryName.trim() : '';
             const suffix = typeof item.suffix === 'string' ? item.suffix.trim() : '';
             const childXmlNames = Array.isArray(item.childXmlNames)
