@@ -155,105 +155,98 @@ export class OrgToolAdapterService {
   }
 
   parseDisplayedOrg(stdout: string): { username?: string; orgId?: string; instanceUrl?: string } | undefined {
-    try {
-      const parsed = JSON.parse(stdout) as { result?: { username?: string } };
-      const result = parsed?.result;
-      if (!result || typeof result !== 'object') {
-        return undefined;
-      }
-      const username = typeof result.username === 'string' ? result.username.trim() : undefined;
-      const orgId = typeof (result as { id?: string }).id === 'string' ? (result as { id?: string }).id?.trim() : undefined;
-      const instanceUrl =
-        typeof (result as { instanceUrl?: string }).instanceUrl === 'string'
-          ? (result as { instanceUrl?: string }).instanceUrl?.trim()
-          : undefined;
-      return {
-        username: username && username.length > 0 ? username : undefined,
-        orgId: orgId && orgId.length > 0 ? orgId : undefined,
-        instanceUrl: instanceUrl && instanceUrl.length > 0 ? instanceUrl : undefined
-      };
-    } catch {
+    const parsed = this.parseSfJsonOutput<{ result?: { username?: string } }>(stdout);
+    const result = parsed?.result;
+    if (!result || typeof result !== 'object') {
       return undefined;
     }
+    const username = typeof result.username === 'string' ? result.username.trim() : undefined;
+    const orgId = typeof (result as { id?: string }).id === 'string' ? (result as { id?: string }).id?.trim() : undefined;
+    const instanceUrl =
+      typeof (result as { instanceUrl?: string }).instanceUrl === 'string'
+        ? (result as { instanceUrl?: string }).instanceUrl?.trim()
+        : undefined;
+    return {
+      username: username && username.length > 0 ? username : undefined,
+      orgId: orgId && orgId.length > 0 ? orgId : undefined,
+      instanceUrl: instanceUrl && instanceUrl.length > 0 ? instanceUrl : undefined
+    };
   }
 
   parseAliasList(stdout: string): OrgAliasSummary[] {
-    try {
-      const parsed = JSON.parse(stdout) as {
-        result?: {
-          nonScratchOrgs?: Array<Record<string, unknown>>;
-          scratchOrgs?: Array<Record<string, unknown>>;
-        };
+    const parsed = this.parseSfJsonOutput<{
+      result?: {
+        nonScratchOrgs?: Array<Record<string, unknown>>;
+        scratchOrgs?: Array<Record<string, unknown>>;
       };
-      const orgs = [
-        ...(Array.isArray(parsed?.result?.nonScratchOrgs) ? parsed.result.nonScratchOrgs : []),
-        ...(Array.isArray(parsed?.result?.scratchOrgs) ? parsed.result.scratchOrgs : [])
-      ];
-      const deduped = new Map<string, OrgAliasSummary>();
-      for (const org of orgs) {
-        const alias = typeof org.alias === 'string' ? org.alias.trim() : '';
-        if (!alias) {
-          continue;
-        }
-        deduped.set(alias, {
-          alias,
-          username: typeof org.username === 'string' ? org.username.trim() || undefined : undefined,
-          orgId: typeof org.orgId === 'string' ? org.orgId.trim() || undefined : undefined,
-          instanceUrl: typeof org.instanceUrl === 'string' ? org.instanceUrl.trim() || undefined : undefined,
-          isDefault: Boolean(org.isDefaultUsername) || Boolean(org.isDefaultDevHubUsername),
-          source: 'sf_cli_keychain'
-        });
-      }
-      return Array.from(deduped.values()).sort((left, right) => left.alias.localeCompare(right.alias));
-    } catch {
+    }>(stdout);
+    if (!parsed) {
       return [];
     }
+    const orgs = [
+      ...(Array.isArray(parsed?.result?.nonScratchOrgs) ? parsed.result.nonScratchOrgs : []),
+      ...(Array.isArray(parsed?.result?.scratchOrgs) ? parsed.result.scratchOrgs : [])
+    ];
+    const deduped = new Map<string, OrgAliasSummary>();
+    for (const org of orgs) {
+      const alias = typeof org.alias === 'string' ? org.alias.trim() : '';
+      if (!alias) {
+        continue;
+      }
+      deduped.set(alias, {
+        alias,
+        username: typeof org.username === 'string' ? org.username.trim() || undefined : undefined,
+        orgId: typeof org.orgId === 'string' ? org.orgId.trim() || undefined : undefined,
+        instanceUrl: typeof org.instanceUrl === 'string' ? org.instanceUrl.trim() || undefined : undefined,
+        isDefault: Boolean(org.isDefaultUsername) || Boolean(org.isDefaultDevHubUsername),
+        source: 'sf_cli_keychain'
+      });
+    }
+    return Array.from(deduped.values()).sort((left, right) => left.alias.localeCompare(right.alias));
   }
 
   parseMetadataList(stdout: string): Array<{ type: string; fullName: string; fileName?: string }> {
-    try {
-      const parsed = JSON.parse(stdout) as {
-        result?: Array<{ type?: string; fullName?: string; fileName?: string }>;
-      };
-      const results = Array.isArray(parsed?.result) ? parsed.result : [];
-      return results
-        .map((item) => ({
-          type: typeof item.type === 'string' ? item.type.trim() : '',
-          fullName: typeof item.fullName === 'string' ? item.fullName.trim() : '',
-          fileName: typeof item.fileName === 'string' ? item.fileName.trim() : undefined
-        }))
-        .filter((item) => item.type.length > 0 && item.fullName.length > 0);
-    } catch {
+    const parsed = this.parseSfJsonOutput<{
+      result?: Array<{ type?: string; fullName?: string; fileName?: string }>;
+    }>(stdout);
+    if (!parsed) {
       return [];
     }
+    const results = Array.isArray(parsed?.result) ? parsed.result : [];
+    return results
+      .map((item) => ({
+        type: typeof item.type === 'string' ? item.type.trim() : '',
+        fullName: typeof item.fullName === 'string' ? item.fullName.trim() : '',
+        fileName: typeof item.fileName === 'string' ? item.fileName.trim() : undefined
+      }))
+      .filter((item) => item.type.length > 0 && item.fullName.length > 0);
   }
 
   parseMetadataTypes(stdout: string): string[] {
-    try {
-      const parsed = JSON.parse(stdout) as {
-        result?: unknown;
-      };
-
-      let metadataObjects: Array<{ xmlName?: unknown }> = [];
-      if (Array.isArray(parsed.result)) {
-        metadataObjects = parsed.result as Array<{ xmlName?: unknown }>;
-      } else if (parsed.result && typeof parsed.result === 'object') {
-        const result = parsed.result as { metadataObjects?: unknown };
-        if (Array.isArray(result.metadataObjects)) {
-          metadataObjects = result.metadataObjects as Array<{ xmlName?: unknown }>;
-        }
-      }
-
-      return Array.from(
-        new Set(
-          metadataObjects
-            .map((item) => (typeof item.xmlName === 'string' ? item.xmlName.trim() : ''))
-            .filter((xmlName) => xmlName.length > 0)
-        )
-      ).sort((left, right) => left.localeCompare(right));
-    } catch {
+    const parsed = this.parseSfJsonOutput<{
+      result?: unknown;
+    }>(stdout);
+    if (!parsed) {
       return [];
     }
+
+    let metadataObjects: Array<{ xmlName?: unknown }> = [];
+    if (Array.isArray(parsed.result)) {
+      metadataObjects = parsed.result as Array<{ xmlName?: unknown }>;
+    } else if (parsed.result && typeof parsed.result === 'object') {
+      const result = parsed.result as { metadataObjects?: unknown };
+      if (Array.isArray(result.metadataObjects)) {
+        metadataObjects = result.metadataObjects as Array<{ xmlName?: unknown }>;
+      }
+    }
+
+    return Array.from(
+      new Set(
+        metadataObjects
+          .map((item) => (typeof item.xmlName === 'string' ? item.xmlName.trim() : ''))
+          .filter((xmlName) => xmlName.length > 0)
+      )
+    ).sort((left, right) => left.localeCompare(right));
   }
 
   extractCciVersion(stdout: string, stderr: string): string | undefined {
@@ -362,5 +355,45 @@ export class OrgToolAdapterService {
       command: existsSync(fallback) ? fallback : 'sf',
       args: []
     };
+  }
+
+  private parseSfJsonOutput<T>(output: string): T | undefined {
+    const trimmed = output.trim();
+    if (trimmed.length === 0) {
+      return undefined;
+    }
+
+    const candidates: string[] = [];
+    const addCandidate = (candidate: string): void => {
+      const normalized = candidate.trim();
+      if (normalized.length === 0 || candidates.includes(normalized)) {
+        return;
+      }
+      candidates.push(normalized);
+    };
+
+    addCandidate(trimmed);
+
+    const firstBrace = trimmed.indexOf('{');
+    const lastBrace = trimmed.lastIndexOf('}');
+    if (firstBrace >= 0 && lastBrace > firstBrace) {
+      addCandidate(trimmed.slice(firstBrace, lastBrace + 1));
+    }
+
+    const withoutWarningLines = trimmed
+      .split(/\r?\n/)
+      .filter((line) => !/^(?:\u00BB\s*)?warning:/i.test(line.trim()))
+      .join('\n');
+    addCandidate(withoutWarningLines);
+
+    for (const candidate of candidates) {
+      try {
+        return JSON.parse(candidate) as T;
+      } catch {
+        // try next candidate
+      }
+    }
+
+    return undefined;
   }
 }
