@@ -129,6 +129,10 @@ export class OrgToolAdapterService {
     return this.runSf(['org', 'list', 'metadata', '--target-org', alias, '--metadata-type', metadataType, '--json'], cwd, 120_000);
   }
 
+  async listMetadataTypes(alias: string, cwd: string): Promise<CommandResult> {
+    return this.runSf(['org', 'list', 'metadata-types', '--target-org', alias, '--json'], cwd, 120_000);
+  }
+
   async probe(command: string, args: string[], cwd: string): Promise<CommandResult> {
     try {
       return await this.commandRunner.run(command, args, {
@@ -219,6 +223,34 @@ export class OrgToolAdapterService {
           fileName: typeof item.fileName === 'string' ? item.fileName.trim() : undefined
         }))
         .filter((item) => item.type.length > 0 && item.fullName.length > 0);
+    } catch {
+      return [];
+    }
+  }
+
+  parseMetadataTypes(stdout: string): string[] {
+    try {
+      const parsed = JSON.parse(stdout) as {
+        result?: unknown;
+      };
+
+      let metadataObjects: Array<{ xmlName?: unknown }> = [];
+      if (Array.isArray(parsed.result)) {
+        metadataObjects = parsed.result as Array<{ xmlName?: unknown }>;
+      } else if (parsed.result && typeof parsed.result === 'object') {
+        const result = parsed.result as { metadataObjects?: unknown };
+        if (Array.isArray(result.metadataObjects)) {
+          metadataObjects = result.metadataObjects as Array<{ xmlName?: unknown }>;
+        }
+      }
+
+      return Array.from(
+        new Set(
+          metadataObjects
+            .map((item) => (typeof item.xmlName === 'string' ? item.xmlName.trim() : ''))
+            .filter((xmlName) => xmlName.length > 0)
+        )
+      ).sort((left, right) => left.localeCompare(right));
     } catch {
       return [];
     }

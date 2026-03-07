@@ -182,7 +182,7 @@ function parseStoredRetrieveHandoff(raw: string | null): StoredRetrieveHandoffSt
 export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const [metadataSearch, setMetadataSearch] = useState('');
   const [metadataMemberSearch, setMetadataMemberSearch] = useState('');
-  const [metadataLimitRaw, setMetadataLimitRaw] = useState('200');
+  const [metadataLimitRaw, setMetadataLimitRaw] = useState('1000');
   const [metadataForceRefresh, setMetadataForceRefresh] = useState(false);
   const [metadataAutoRefresh, setMetadataAutoRefresh] = useState(true);
   const [metadataCatalog, setMetadataCatalog] = useState<MetadataCatalogPayload | null>(null);
@@ -528,9 +528,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   }
 
   async function loadVisibleMembers(): Promise<void> {
-    const visibleTypes = (metadataCatalog?.types ?? [])
-      .filter((entry) => entry.memberCount > 0)
-      .map((entry) => entry.type);
+    const visibleTypes = (metadataCatalog?.types ?? []).map((entry) => entry.type);
     if (visibleTypes.length === 0) {
       return;
     }
