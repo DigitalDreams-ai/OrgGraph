@@ -968,6 +968,42 @@ pre {
   display: block;
 }
 
+.member-tree-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.member-tree-toggle {
+  flex: 0 0 auto;
+  width: 1.45rem;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid #b7c8df;
+  background: #f5f9ff;
+  color: #264972;
+  font-size: 0.86rem;
+  line-height: 1;
+}
+
+.member-tree-toggle:hover {
+  border-color: #8ea9cd;
+  background: #eaf3ff;
+}
+
+.member-tree-toggle-spacer {
+  flex: 0 0 auto;
+  width: 1.45rem;
+  min-width: 1.45rem;
+  height: 1.45rem;
+}
+
 .member-tree-children {
   margin-top: 0.35rem;
   padding: 0.25rem 0 0.15rem 0.75rem;

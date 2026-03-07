@@ -86,6 +86,7 @@ function extractWarnings(payload: unknown): string[] {
     .filter((warning) => warning.length > 0);
 }
 
+const DEFAULT_METADATA_LIMIT = 5000;
 const MAX_VISIBLE_MEMBER_LOAD_TYPES = 20;
 const RETRIEVE_HANDOFF_STORAGE_KEY = 'orgumented.browser.retrieve-handoff.v1';
 
@@ -182,7 +183,7 @@ function parseStoredRetrieveHandoff(raw: string | null): StoredRetrieveHandoffSt
 export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const [metadataSearch, setMetadataSearch] = useState('');
   const [metadataMemberSearch, setMetadataMemberSearch] = useState('');
-  const [metadataLimitRaw, setMetadataLimitRaw] = useState('1000');
+  const [metadataLimitRaw, setMetadataLimitRaw] = useState(String(DEFAULT_METADATA_LIMIT));
   const [metadataForceRefresh, setMetadataForceRefresh] = useState(false);
   const [metadataAutoRefresh, setMetadataAutoRefresh] = useState(true);
   const [metadataCatalog, setMetadataCatalog] = useState<MetadataCatalogPayload | null>(null);
@@ -438,7 +439,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     options.setErrorText('');
 
     try {
-      const limit = parseOptionalInt(metadataLimitRaw) ?? 200;
+      const limit = parseOptionalInt(metadataLimitRaw) ?? DEFAULT_METADATA_LIMIT;
       const search = typeof searchOverride === 'string' ? searchOverride.trim() : metadataSearch.trim();
       if (!search) {
         setMetadataCatalogRequested(true);
@@ -491,7 +492,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     return getOrgMetadataMembers({
       type,
       q: search,
-      limit: parseOptionalInt(metadataLimitRaw) ?? 1000,
+      limit: parseOptionalInt(metadataLimitRaw) ?? DEFAULT_METADATA_LIMIT,
       refresh: metadataForceRefresh
     });
   }

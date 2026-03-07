@@ -200,6 +200,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
   const retrieveHandoff = assessRetrieveHandoff(props.lastMetadataRetrieve, expectedAlias);
   const groupedSearchResults = groupSearchResults(props.metadataSearchResults);
   const [expandedBrowseFamilies, setExpandedBrowseFamilies] = useState<Record<string, boolean>>({});
+  const [expandedMemberNodes, setExpandedMemberNodes] = useState<Record<string, boolean>>({});
   const toggleBrowseFamily = (type: string, shouldLoadMembers: boolean): void => {
     const nextOpen = !Boolean(expandedBrowseFamilies[type]);
     setExpandedBrowseFamilies((current) => ({
@@ -210,6 +211,18 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       props.onLoadMembers(type);
     }
   };
+  const toggleMemberNode = (type: string, nodeKey: string): void => {
+    const key = `${type}:${nodeKey}`;
+    setExpandedMemberNodes((current) => ({
+      ...current,
+      [key]: !Boolean(current[key])
+    }));
+  };
+  const isMemberNodeExpanded = (type: string, nodeKey: string): boolean =>
+    Boolean(expandedMemberNodes[`${type}:${nodeKey}`]);
+  const visibleTypeCount = props.metadataCatalog?.types.length ?? 0;
+  const totalTypeCount = props.metadataCatalog?.totalTypes ?? 0;
+  const catalogIsTruncated = totalTypeCount > visibleTypeCount;
   const nodeSelectionState = (
     type: string,
     memberNames: string[]
@@ -236,27 +249,44 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
   ): JSX.Element[] =>
     nodes.map((node) => {
       const selectionState = nodeSelectionState(type, node.memberNames);
+      const hasChildren = node.children.length > 0;
+      const nodeExpanded = hasChildren ? isMemberNodeExpanded(type, node.key) : false;
       return (
         <li key={`${type}:${node.key}`}>
-          <SelectionCheckbox
-            checked={selectionState === 'all'}
-            indeterminate={selectionState === 'partial'}
-            disabled={typeSelectionState === 'all'}
-            label={node.label}
-            hint={
-              typeSelectionState === 'all'
-                ? 'included via family selection'
-                : node.isLeaf
-                  ? 'select this single item'
-                  : `${node.memberNames.length} nested item(s) • check to include this folder`
-            }
-            onChange={(checked) =>
-              node.isLeaf && node.memberNames.length === 1
-                ? props.onSetMemberSelected(type, node.memberNames[0], checked)
-                : props.onSetMembersSelected(type, node.memberNames, checked)
-            }
-          />
-          {node.children.length > 0 ? (
+          <div className="member-tree-row">
+            {hasChildren ? (
+              <button
+                type="button"
+                className="member-tree-toggle"
+                aria-expanded={nodeExpanded}
+                aria-label={`${nodeExpanded ? 'Collapse' : 'Expand'} ${node.label}`}
+                onClick={() => toggleMemberNode(type, node.key)}
+              >
+                <span aria-hidden>{nodeExpanded ? '▾' : '▸'}</span>
+              </button>
+            ) : (
+              <span className="member-tree-toggle-spacer" aria-hidden />
+            )}
+            <SelectionCheckbox
+              checked={selectionState === 'all'}
+              indeterminate={selectionState === 'partial'}
+              disabled={typeSelectionState === 'all'}
+              label={node.label}
+              hint={
+                typeSelectionState === 'all'
+                  ? 'included via family selection'
+                  : node.isLeaf
+                    ? 'select this single item'
+                    : `${node.memberNames.length} nested item(s) • check to include this folder`
+              }
+              onChange={(checked) =>
+                node.isLeaf && node.memberNames.length === 1
+                  ? props.onSetMemberSelected(type, node.memberNames[0], checked)
+                  : props.onSetMembersSelected(type, node.memberNames, checked)
+              }
+            />
+          </div>
+          {hasChildren && nodeExpanded ? (
             <ul className="member-list member-tree-children">
               {renderMemberTreeNodes(type, node.children, typeSelectionState)}
             </ul>
@@ -328,6 +358,11 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
         <div>
           <label htmlFor="metadataLimit">Catalog Limit</label>
           <input id="metadataLimit" value={props.metadataLimitRaw} onChange={(e) => props.setMetadataLimitRaw(e.target.value)} />
+          {catalogIsTruncated ? (
+            <p className="muted input-hint">
+              Showing {visibleTypeCount} of {totalTypeCount} metadata families. Increase Catalog Limit, then click `Browse All`.
+            </p>
+          ) : null}
         </div>
         <label className="check-row" htmlFor="forceRefresh">
           <input
@@ -371,7 +406,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           onClick={props.onLoadVisibleMembers}
           disabled={props.loading || props.visibleCatalogTypes.length === 0}
         >
-          Load Visible Items
+          Load Trees
         </button>
         <button type="button" onClick={props.onRetrieveSelected} disabled={props.loading || props.selectionSummary.typeCount === 0}>
           Retrieve Cart
@@ -396,7 +431,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       </article>
       <p className="muted"><strong>Cart rule:</strong> every checked row is already in the cart.</p>
       <p className="muted">Check a family to include everything nested under it. Check an individual item to include only that item.</p>
-      <p className="muted">Use <strong>Load Visible Items</strong> to preload member trees for the visible families without opening each one manually.</p>
+      <p className="muted">Use <strong>Load Trees</strong> to preload member trees for visible families without opening each one manually.</p>
       {props.metadataWarnings.length > 0 ? (
         <article className="sub-card">
           <p className="panel-caption">Discovery warnings</p>
