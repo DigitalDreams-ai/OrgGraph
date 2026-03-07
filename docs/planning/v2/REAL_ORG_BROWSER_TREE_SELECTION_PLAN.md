@@ -44,9 +44,10 @@ Out of scope:
 ## Current Checkpoint
 
 Implemented on `dna-org-browser-tree-selection`:
-- action labels now use explorer/check semantics (`Load Explorer Tree`, `Search Explorer`, `Retrieve Checked`)
+- action labels now use direct operator semantics (`Search`, `Browse All`, `Load Trees`, `Retrieve Cart`)
 - search and browse both use checkbox-first staging with explicit family vs item hints
 - expanding a family now auto-loads nested members for tree-style browsing
 - selection summaries and copy now use family/item wording instead of mixed type/member add verbs
 - summary row alignment in the explorer frame now prevents clipping while keeping counts visible
+- live family rows now also surface directory/suffix/folder/meta-file descriptors so the tree explorer feels less like a raw metadata API list
 

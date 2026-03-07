@@ -33,11 +33,11 @@ Materially true now:
 - real-org session attach/switch and selective retrieve path is materially functional
 - org browser supports name-first search and grouped explorer/tree selection
 - org browser now uses explicit cart language (`checked row = in cart`) with simpler explorer/retrieve actions
-- org browser action row now uses direct operator language (`Search`, `Refresh Types`, `Load Trees`, `Retrieve Cart`) and a quick workflow block clarifies checkbox-first selection from search/browse into retrieve cart
+- org browser action row now uses direct operator language (`Search`, `Browse All`, `Load Trees`, `Retrieve Cart`) and a quick workflow block clarifies checkbox-first selection from search/browse into retrieve cart
 - org browser now includes `Load Trees` to preload member trees for visible families in one pass (up to 20 families) instead of requiring per-family expansion clicks
 - org browser metadata search now matches normalized naming patterns (for example, spaced query text against compact/underscored metadata names), and discovery warnings are shown directly in workspace cards
 - org browser now bypasses stale empty live-metadata cache artifacts and re-queries org metadata discovery so search/browse recover automatically after prior failed discovery runs
-- org browser now auto-loads explorer families on first open and uses simpler action labels (`Search`, `Refresh Types`, `Load Trees`, `Retrieve Cart`) with Enter-to-search support
+- org browser now auto-loads explorer families on first open and uses simpler action labels (`Search`, `Browse All`, `Load Trees`, `Retrieve Cart`) with Enter-to-search support
 - org browser now auto-refreshes full family discovery when a connected alias changes, and browse mode enforces full-family coverage (minimum 5000 families) even when search/member limits are set lower
 - org browser live metadata discovery now tolerates trailing sf CLI warning lines in JSON command output, preventing false fallback to the 8-family seed set when `sf org list metadata-types --json` includes update notices
 - org browser live metadata discovery now strips ANSI/noise-prefixed warning lines and extracts the first valid JSON segment from sf CLI output, preventing false seed-family fallback when stdout includes colored warning or update-notice text
@@ -45,6 +45,9 @@ Materially true now:
 - org browser family catalog now hydrates from live metadata-type discovery (not only fixed seed families), and family rows now use explicit `Expand`/`Collapse` controls with deterministic lazy child loading
 - org browser now invalidates pre-v2 limited live-catalog caches, and family rows expose chevron-style tree expansion so nested children open from the left-edge toggle
 - org browser now defaults catalog/member discovery limits to full-coverage mode (5000), surfaces explicit truncation guidance when limits still cut family results, and supports triangle expansion on nested member tree folders (not only top-level families)
+- org browser metadata catalog responses now carry live family descriptors (directory, suffix, folder/meta-file flags, child-family counts), and the desktop live-catalog cache version is bumped again so stale pre-descriptor caches are force-refreshed
+- org browser family rows now expose those live descriptors inline so operators can browse with a more explorer-like mental model instead of raw metadata-type names alone
+- Ask now surfaces the latest retrieve handoff directly in the workspace and offers grounded flow read/write prompt starters from retrieved Flow members
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
 - wave10 follow-up now enforces larger card-grid minimum widths and path-specific wrapping classes, reducing truncation in decision packets, citations, mapping diagnostics, and diagnostics artifacts
