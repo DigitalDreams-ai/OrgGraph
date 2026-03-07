@@ -40,6 +40,7 @@ Materially true now:
 - org browser now auto-loads explorer families on first open and uses simpler action labels (`Search`, `Browse All`, `Load Visible Items`, `Retrieve Cart`) with Enter-to-search support
 - org browser family catalog now hydrates from live metadata-type discovery (not only fixed seed families), and family rows now use explicit `Expand`/`Collapse` controls with deterministic lazy child loading
 - org browser now invalidates pre-v2 limited live-catalog caches, and family rows expose chevron-style tree expansion so nested children open from the left-edge toggle
+- org browser now defaults catalog/member discovery limits to full-coverage mode (5000), surfaces explicit truncation guidance when limits still cut family results, and supports triangle expansion on nested member tree folders (not only top-level families)
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
 - wave10 follow-up now enforces larger card-grid minimum widths and path-specific wrapping classes, reducing truncation in decision packets, citations, mapping diagnostics, and diagnostics artifacts
