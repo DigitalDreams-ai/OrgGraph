@@ -42,7 +42,7 @@ type OrgSessionState = {
 @Injectable()
 export class OrgService {
   private readonly logger = new Logger(OrgService.name);
-  private static readonly LIVE_METADATA_CATALOG_TYPES = [
+  private static readonly LIVE_METADATA_MEMBER_SEED_TYPES = [
     'CustomObject',
     'Layout',
     'ApexClass',
@@ -861,7 +861,7 @@ export class OrgService {
     });
     const search = input.search?.trim().toLowerCase();
     const normalizedSearch = this.normalizeMetadataSearchValue(search ?? '');
-    const limit = input.limit ?? 200;
+    const limit = input.limit ?? 1000;
     const warnings: string[] = [...index.warnings];
     let types = Array.from(index.typeMembers.entries())
       .map(([type, members]) => ({
@@ -910,11 +910,24 @@ export class OrgService {
     const normalizedSearch = this.normalizeMetadataSearchValue(search ?? '');
     const limit = input.limit ?? 1000;
     const selectedType = input.type.trim();
-    const rawMembers = index.typeMembers.get(selectedType) ?? [];
-    if (rawMembers.length === 0 && !index.typeMembers.has(selectedType)) {
+    const typeExistsInCatalog = index.typeMembers.has(selectedType);
+    let members = index.typeMembers.get(selectedType) ?? [];
+
+    if (this.configService.sfIntegrationEnabled() && members.length === 0) {
+      const alias = this.resolveActiveAlias();
+      const projectPath = this.runtimePaths.sfProjectPath();
+      const liveMembers = await this.discoverLiveMetadataMembers(alias, selectedType, projectPath);
+      if (liveMembers.members.length > 0) {
+        members = liveMembers.members;
+      } else if (liveMembers.warning) {
+        warnings.push(liveMembers.warning);
+      }
+    }
+
+    if (members.length === 0 && !typeExistsInCatalog) {
       warnings.push(`type not found in catalog: ${selectedType}`);
     }
-    let members = rawMembers;
+
     if (search) {
       members = members.filter((member) => this.matchesMetadataSearch(member, search, normalizedSearch));
     }
@@ -1120,13 +1133,27 @@ export class OrgService {
           typeMembers: new Map<string, string[]>(),
           warnings: []
         };
-    const liveMemberCount = this.countMetadataMembers(liveIndex.typeMembers);
+    const localIndex = this.loadMetadataIndex(parsePath, input.refresh);
+    const liveTypeCount = liveIndex.typeMembers.size;
 
-    if (liveMemberCount > 0) {
-      return liveIndex;
+    if (liveTypeCount > 0 && localIndex.typeMembers.size > 0) {
+      return {
+        source: 'mixed',
+        refreshedAt: liveIndex.refreshedAt,
+        typeMembers: this.mergeTypeMembers(liveIndex.typeMembers, localIndex.typeMembers),
+        warnings: [...liveIndex.warnings, ...localIndex.warnings]
+      };
     }
 
-    const localIndex = this.loadMetadataIndex(parsePath, input.refresh);
+    if (liveTypeCount > 0) {
+      return {
+        source: liveIndex.source,
+        refreshedAt: liveIndex.refreshedAt,
+        typeMembers: liveIndex.typeMembers,
+        warnings: [...liveIndex.warnings, ...localIndex.warnings]
+      };
+    }
+
     if (localIndex.typeMembers.size > 0) {
       return {
         source: liveIndex.warnings.length > 0 ? 'mixed' : localIndex.source,
@@ -1150,6 +1177,82 @@ export class OrgService {
       total += members.length;
     }
     return total;
+  }
+
+  private mergeTypeMembers(
+    primary: Map<string, string[]>,
+    secondary: Map<string, string[]>
+  ): Map<string, string[]> {
+    const merged = new Map<string, string[]>();
+
+    for (const [type, members] of primary.entries()) {
+      merged.set(type, [...members]);
+    }
+
+    for (const [type, members] of secondary.entries()) {
+      const existing = merged.get(type) ?? [];
+      if (existing.length === 0 && members.length === 0) {
+        if (!merged.has(type)) {
+          merged.set(type, []);
+        }
+        continue;
+      }
+      const combined = Array.from(new Set([...existing, ...members])).sort((left, right) =>
+        left.localeCompare(right)
+      );
+      merged.set(type, combined);
+    }
+
+    return merged;
+  }
+
+  private async loadLiveMetadataTypes(
+    alias: string,
+    projectPath: string
+  ): Promise<{ types: string[]; warnings: string[] }> {
+    const result = await this.orgToolAdapter.listMetadataTypes(alias, projectPath);
+    if (result.exitCode !== 0) {
+      const reason = (result.stderr || result.stdout || 'unknown error').trim();
+      return {
+        types: [],
+        warnings: [`live metadata type discovery failed: ${reason}`]
+      };
+    }
+
+    const types = this.orgToolAdapter.parseMetadataTypes(result.stdout);
+    if (types.length === 0) {
+      return {
+        types: [],
+        warnings: ['live metadata type discovery returned no metadata families']
+      };
+    }
+
+    return { types, warnings: [] };
+  }
+
+  private async discoverLiveMetadataMembers(
+    alias: string,
+    metadataType: string,
+    projectPath: string
+  ): Promise<{ members: string[]; warning?: string }> {
+    const result = await this.orgToolAdapter.listMetadata(alias, metadataType, projectPath);
+    if (result.exitCode !== 0) {
+      const reason = (result.stderr || result.stdout || 'unknown error').trim();
+      return {
+        members: [],
+        warning: `live metadata discovery failed for ${metadataType}: ${reason}`
+      };
+    }
+
+    const discovered = this.orgToolAdapter.parseMetadataList(result.stdout);
+    const members = Array.from(
+      new Set(
+        discovered
+          .map((item) => item.fullName.trim())
+          .filter((name) => name.length > 0)
+      )
+    ).sort((left, right) => left.localeCompare(right));
+    return { members };
   }
 
   private async loadLiveMetadataIndex(
@@ -1222,12 +1325,30 @@ export class OrgService {
     }
 
     const typeMembers = new Map<string, string[]>();
-    const metadataTypes = [
-      ...OrgService.LIVE_METADATA_CATALOG_TYPES,
-      ...(includeSearchOnlyTypes ? OrgService.LIVE_METADATA_SEARCH_ONLY_TYPES : [])
-    ];
+    const liveMetadataTypes = await this.loadLiveMetadataTypes(alias, projectPath);
+    warnings.push(...liveMetadataTypes.warnings);
 
-    for (const metadataType of metadataTypes) {
+    const catalogTypes =
+      liveMetadataTypes.types.length > 0
+        ? liveMetadataTypes.types
+        : Array.from(
+            new Set([
+              ...OrgService.LIVE_METADATA_MEMBER_SEED_TYPES,
+              ...(includeSearchOnlyTypes ? OrgService.LIVE_METADATA_SEARCH_ONLY_TYPES : [])
+            ])
+          );
+    for (const metadataType of catalogTypes) {
+      typeMembers.set(metadataType, []);
+    }
+
+    const metadataTypesForMemberSeed = Array.from(
+      new Set([
+        ...OrgService.LIVE_METADATA_MEMBER_SEED_TYPES,
+        ...(includeSearchOnlyTypes ? OrgService.LIVE_METADATA_SEARCH_ONLY_TYPES : [])
+      ])
+    );
+
+    for (const metadataType of metadataTypesForMemberSeed) {
       const result = await this.orgToolAdapter.listMetadata(alias, metadataType, projectPath);
       if (result.exitCode !== 0) {
         const reason = (result.stderr || result.stdout || 'unknown error').trim();
@@ -1247,7 +1368,7 @@ export class OrgService {
       typeMembers.set(metadataType, members);
     }
 
-    if (typeMembers.size === 0 && this.countMetadataMembers(typeMembers) === 0) {
+    if (typeMembers.size === 0) {
       warnings.push('live metadata discovery returned no entries; cache not updated');
     } else {
       try {

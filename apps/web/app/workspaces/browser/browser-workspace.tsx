@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import type {
   MetadataCatalogPayload,
   MetadataMembersPayload,
@@ -198,6 +199,17 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
   const expectedAlias = props.activeAlias || props.selectedAlias;
   const retrieveHandoff = assessRetrieveHandoff(props.lastMetadataRetrieve, expectedAlias);
   const groupedSearchResults = groupSearchResults(props.metadataSearchResults);
+  const [expandedBrowseFamilies, setExpandedBrowseFamilies] = useState<Record<string, boolean>>({});
+  const toggleBrowseFamily = (type: string, shouldLoadMembers: boolean): void => {
+    const nextOpen = !Boolean(expandedBrowseFamilies[type]);
+    setExpandedBrowseFamilies((current) => ({
+      ...current,
+      [type]: nextOpen
+    }));
+    if (nextOpen && shouldLoadMembers) {
+      props.onLoadMembers(type);
+    }
+  };
   const nodeSelectionState = (
     type: string,
     memberNames: string[]
@@ -463,18 +475,11 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           const memberTree = buildMemberTree(members.map((member) => member.name));
           const typeSelectionState = props.getTypeSelectionState(typeRow.type);
           const membersLoaded = Boolean(membersPayload);
-          const shouldAutoLoadMembers = typeRow.memberCount > 0 && !membersLoaded && props.metadataLoadingType !== typeRow.type && !props.loading;
+          const shouldAutoLoadMembers = !membersLoaded && props.metadataLoadingType !== typeRow.type && !props.loading;
+          const isExpanded = Boolean(expandedBrowseFamilies[typeRow.type]);
           return (
-            <details
-              key={typeRow.type}
-              onToggle={(event) => {
-                const detailsElement = event.currentTarget;
-                if (detailsElement.open && shouldAutoLoadMembers) {
-                  props.onLoadMembers(typeRow.type);
-                }
-              }}
-            >
-              <summary>
+            <section key={typeRow.type} className={`metadata-family ${isExpanded ? 'is-open' : ''}`}>
+              <div className="metadata-family-head">
                 <SelectionCheckbox
                   checked={typeSelectionState === 'all'}
                   indeterminate={typeSelectionState === 'partial'}
@@ -482,19 +487,35 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                   hint={`${typeRow.memberCount} discoverable item${typeRow.memberCount === 1 ? '' : 's'} • check to include this family`}
                   onChange={(checked) => props.onSetTypeSelected(typeRow.type, checked)}
                 />
-                <span>{typeRow.memberCount}</span>
-              </summary>
-              {props.metadataLoadingType === typeRow.type ? <p className="muted">Loading family items...</p> : null}
-              {members.length > 0 ? (
-                <ul className="member-list member-tree-root">
-                  {renderMemberTreeNodes(typeRow.type, memberTree, typeSelectionState)}
-                </ul>
-              ) : membersLoaded ? (
-                <p className="muted">No members returned for this family.</p>
+                <div className="metadata-family-actions">
+                  <span>{typeRow.memberCount}</span>
+                  <button
+                    type="button"
+                    className="ghost metadata-family-toggle"
+                    aria-expanded={isExpanded}
+                    onClick={() => toggleBrowseFamily(typeRow.type, shouldAutoLoadMembers)}
+                  >
+                    {isExpanded ? 'Collapse' : 'Expand'}
+                  </button>
+                </div>
+              </div>
+              {isExpanded ? (
+                <>
+                  {props.metadataLoadingType === typeRow.type ? <p className="muted">Loading family items...</p> : null}
+                  {members.length > 0 ? (
+                    <ul className="member-list member-tree-root">
+                      {renderMemberTreeNodes(typeRow.type, memberTree, typeSelectionState)}
+                    </ul>
+                  ) : membersLoaded ? (
+                    <p className="muted">No members returned for this family.</p>
+                  ) : (
+                    <p className="muted">Loading family items. If this remains empty, run Force Refresh and try again.</p>
+                  )}
+                </>
               ) : (
-                <p className="muted">Expand this family to load nested items.</p>
+                <p className="muted">Click Expand to load nested items for this family.</p>
               )}
-            </details>
+            </section>
           );
         })}
         {props.metadataCatalogRequested && (props.metadataCatalog?.types || []).length === 0 ? (

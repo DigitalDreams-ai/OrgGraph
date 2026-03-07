@@ -105,6 +105,23 @@ class StubToolAdapter {
     return this.ok(JSON.stringify({ result: fixtures[metadataType] ?? [] }));
   }
 
+  async listMetadataTypes(alias: string, cwd: string) {
+    const args = ['org', 'list', 'metadata-types', '--target-org', alias, '--json'];
+    this.calls.push({ command: 'sf', args, cwd });
+    return this.ok(
+      JSON.stringify({
+        result: {
+          metadataObjects: [
+            { xmlName: 'CustomObject' },
+            { xmlName: 'Layout' },
+            { xmlName: 'Flow' },
+            { xmlName: 'PermissionSet' }
+          ]
+        }
+      })
+    );
+  }
+
   extractSfUsername(stdout: string) {
     return JSON.parse(stdout).result.username;
   }
@@ -139,6 +156,12 @@ class StubToolAdapter {
       fullName: String(item.fullName ?? ''),
       fileName: typeof item.fileName === 'string' ? item.fileName : undefined
     }));
+  }
+
+  parseMetadataTypes(stdout: string) {
+    return (JSON.parse(stdout).result?.metadataObjects ?? [])
+      .map((item: Record<string, unknown>) => String(item.xmlName ?? '').trim())
+      .filter((xmlName: string) => xmlName.length > 0);
   }
 
   toActionableBadRequest() {
@@ -342,6 +365,10 @@ async function run(): Promise<void> {
     const liveCatalog = await service.metadataCatalog({ refresh: true, limit: 50 });
     assert.equal(liveCatalog.source, 'metadata_api');
     assert.ok(liveCatalog.types.some((item) => item.type === 'Layout'));
+    assert.ok(
+      liveCatalog.types.some((item) => item.type === 'PermissionSet'),
+      'expected live metadata-types discovery to include non-seed families'
+    );
     assert.ok(
       liveCatalog.types.some((item) => item.type === 'Flow' && item.memberCount === 0),
       'expected zero-member metadata families to remain visible in catalog'

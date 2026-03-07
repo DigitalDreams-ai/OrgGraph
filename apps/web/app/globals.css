@@ -887,6 +887,39 @@ pre {
   display: none;
 }
 
+.metadata-family {
+  border: 1px solid #d4e0f1;
+  border-radius: 10px;
+  margin: 0.3rem 0;
+  background: #ffffff;
+}
+
+.metadata-family-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.metadata-family-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 0 0 auto;
+}
+
+.metadata-family-actions > span {
+  color: #315886;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.metadata-family-toggle {
+  min-width: 82px;
+  padding: 0.32rem 0.62rem;
+}
+
 .type-actions {
   display: flex;
   gap: 0.4rem;

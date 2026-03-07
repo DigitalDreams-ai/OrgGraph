@@ -28,6 +28,7 @@ Purpose:
 | B005 | P1 | Sessions | Resolve CCI alias registry mismatch workflow (`alias not found`) with actionable next steps | Wave3 | Operator gets exact remediation path; no ambiguous warning-only dead end | Complete |
 | B006 | P1 | Browser | Complete explorer-style metadata browsing with tree parity to expected org-browser mental model | Wave4 | Operator can browse families and members without type-first workflow | Complete |
 | B007 | P1 | Browser | Ensure search-by-name returns predictable results when catalog is unseeded | Wave4 | Name search works with live metadata discovery and clear empty-state behavior | Complete |
+| B026 | P1 | Browser | Remove fixed family ceiling and make family row expansion explicit/reliable in Org Browser | Wave11 | Browser lists full live metadata family catalog and every family row supports deterministic expand/load of nested items | In Progress |
 | B008 | P1 | Refresh/Build | Make retrieve -> refresh -> diff -> org-retrieve handoff product-grade | Wave5 | End-to-end handoff works without raw JSON reliance | In Progress |
 | B009 | P1 | Ask | Improve flow/object/field grounding quality for real metadata questions | Wave6 | No low-value generic fallback for grounded metadata asks | In Progress |
 | B010 | P1 | Decision Packets | Raise packet usefulness for approval decisions (risk drivers, reads/writes, next actions) | Wave7 | Benchmark packet accepted as primary review artifact in runbook scenario | In Progress |
