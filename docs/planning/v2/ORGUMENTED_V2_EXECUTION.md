@@ -47,6 +47,9 @@ Materially true now:
 - org browser now defaults catalog/member discovery limits to full-coverage mode (5000), surfaces explicit truncation guidance when limits still cut family results, and supports triangle expansion on nested member tree folders (not only top-level families)
 - org browser metadata catalog responses now carry live family descriptors (directory, suffix, folder/meta-file flags, child-family counts), and the desktop live-catalog cache version is bumped again so stale pre-descriptor caches are force-refreshed
 - org browser family rows now expose those live descriptors inline so operators can browse with a more explorer-like mental model instead of raw metadata-type names alone
+- org browser catalog listing now unions live family descriptors with member inventories, so zero-member or not-yet-loaded families still stay visible instead of disappearing from browse/search due to sparse caches
+- org browser search results now use the same chevron + checkbox explorer pattern as browse rows, keeping tree expansion behavior consistent whether the operator starts from a family name or a specific metadata item
+- live metadata catalog cache version is bumped again so older partial family caches are force-refreshed before the remaining browser parity work
 - Ask now surfaces the latest retrieve handoff directly in the workspace and offers grounded flow read/write prompt starters from retrieved Flow members
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
@@ -158,6 +161,10 @@ Rules:
 2. Wave5 finish slice:
 - close retrieve -> refresh -> diff handoff proof gaps for real-org workflows
 - lock staged summaries and fail-closed guidance when handoff is incomplete
+
+Browser parity slice now in progress on top of current main:
+- keep the real-org family catalog complete even when cached rows omit member arrays
+- close the remaining explorer-style parity gap around family visibility and deterministic child expansion
 
 3. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage
