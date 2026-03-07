@@ -3,12 +3,13 @@ name: Actions Retention Cleanup
 on:
   schedule:
     - cron: "15 4 * * *"
+    - cron: "15 16 * * *"
   workflow_dispatch:
     inputs:
       keep_runs_per_workflow:
         description: "Number of most-recent completed runs to keep per workflow"
         required: false
-        default: "30"
+        default: "14"
 
 permissions:
   actions: write
