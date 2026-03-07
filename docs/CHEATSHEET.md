@@ -38,6 +38,8 @@ Optional packaged auth proof:
 $env:ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH="1"
 $env:ORGUMENTED_DESKTOP_SMOKE_ALIAS="orgumented-sandbox"
 $env:ORGUMENTED_DESKTOP_SMOKE_SWITCH_ALIAS="orgumented-uat"
+$env:ORGUMENTED_DESKTOP_SMOKE_HTTP_ATTEMPTS="4"
+$env:ORGUMENTED_DESKTOP_SMOKE_HTTP_DELAY_MS="500"
 pnpm desktop:smoke:release
 ```
 

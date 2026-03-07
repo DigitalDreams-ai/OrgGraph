@@ -86,6 +86,8 @@ Rules:
 - `ORGUMENTED_DESKTOP_SMOKE_ALIAS` forces the alias used for packaged attach proof
 - `ORGUMENTED_DESKTOP_SMOKE_VERIFY_SWITCH=1` enables packaged alias-switch verification
 - `ORGUMENTED_DESKTOP_SMOKE_SWITCH_ALIAS` picks the switch target instead of auto-selecting another discovered alias
+- `ORGUMENTED_DESKTOP_SMOKE_HTTP_ATTEMPTS` overrides transient HTTP retry attempts for packaged smoke API calls
+- `ORGUMENTED_DESKTOP_SMOKE_HTTP_DELAY_MS` overrides transient HTTP retry delay in milliseconds
 - the smoke restores the original session alias or disconnected state before exit
 - packaged auth proof requires `SF_INTEGRATION_ENABLED=true` in `.env`, `.env.local`, or the build shell used for `desktop:build`
 

@@ -96,7 +96,7 @@ function Wait-PortReleased {
 }
 
 function Invoke-JsonGet([string]$Url, [string]$ArtifactPath) {
-  $response = Invoke-RestMethod -Method Get -Uri $Url
+  $response = Invoke-WithTransientRetry -Description "GET $Url" -Operation { Invoke-RestMethod -Method Get -Uri $Url }
   $response | ConvertTo-Json -Depth 12 | Set-Content -Path $ArtifactPath
   return $response
 }
@@ -110,9 +110,100 @@ function Invoke-JsonPost([string]$Url, [string]$ArtifactPath, [object]$Body = $n
     $params.ContentType = 'application/json'
     $params.Body = $Body | ConvertTo-Json -Depth 12
   }
-  $response = Invoke-RestMethod @params
+  $response = Invoke-WithTransientRetry -Description "POST $Url" -Operation { Invoke-RestMethod @params }
   $response | ConvertTo-Json -Depth 12 | Set-Content -Path $ArtifactPath
   return $response
+}
+
+function Test-TransientHttpFailure {
+  param(
+    [System.Management.Automation.ErrorRecord]$ErrorRecord
+  )
+
+  if ($null -eq $ErrorRecord) {
+    return $false
+  }
+
+  $messages = @()
+  if ($ErrorRecord.Exception) {
+    $messages += $ErrorRecord.Exception.Message
+    if ($ErrorRecord.Exception.InnerException) {
+      $messages += $ErrorRecord.Exception.InnerException.Message
+    }
+  }
+  if ($ErrorRecord.ErrorDetails -and -not [string]::IsNullOrWhiteSpace($ErrorRecord.ErrorDetails.Message)) {
+    $messages += $ErrorRecord.ErrorDetails.Message
+  }
+
+  $messageText = ($messages -join ' | ').ToLowerInvariant()
+  $transientPatterns = @(
+    'forcibly closed'
+    'connection reset'
+    'connection was closed'
+    'connection refused'
+    'actively refused'
+    'timed out'
+    'timeout'
+    'temporarily unavailable'
+    'no connection could be made'
+  )
+  foreach ($pattern in $transientPatterns) {
+    if ($messageText.Contains($pattern)) {
+      return $true
+    }
+  }
+
+  $statusCode = $null
+  try {
+    if ($ErrorRecord.Exception.Response -and $ErrorRecord.Exception.Response.StatusCode) {
+      $statusCode = [int]$ErrorRecord.Exception.Response.StatusCode
+    }
+  } catch {
+  }
+  if ($null -ne $statusCode -and @(
+      500
+      502
+      503
+      504
+    ) -contains $statusCode) {
+    return $true
+  }
+
+  return $false
+}
+
+function Invoke-WithTransientRetry {
+  param(
+    [Parameter(Mandatory = $true)]
+    [scriptblock]$Operation,
+    [Parameter(Mandatory = $true)]
+    [string]$Description,
+    [int]$Attempts = 0,
+    [int]$DelayMilliseconds = 0
+  )
+
+  if ($Attempts -le 0) {
+    $Attempts = [Math]::Max(1, [int]($env:ORGUMENTED_DESKTOP_SMOKE_HTTP_ATTEMPTS ?? '4'))
+  }
+  if ($DelayMilliseconds -le 0) {
+    $DelayMilliseconds = [Math]::Max(100, [int]($env:ORGUMENTED_DESKTOP_SMOKE_HTTP_DELAY_MS ?? '500'))
+  }
+
+  for ($attempt = 1; $attempt -le $Attempts; $attempt += 1) {
+    try {
+      return & $Operation
+    } catch {
+      if ($attempt -lt $Attempts -and (Test-TransientHttpFailure -ErrorRecord $_)) {
+        Write-Host "Transient HTTP failure during $Description (attempt $attempt/$Attempts). Retrying in $DelayMilliseconds ms..."
+        Start-Sleep -Milliseconds $DelayMilliseconds
+        continue
+      }
+
+      throw
+    }
+  }
+
+  throw "Failed to execute $Description after $Attempts attempts."
 }
 
 function Resolve-PreferredAlias([string[]]$KnownAliases, [string]$RequestedAlias, [string]$CurrentAlias, [string]$ActiveAlias) {
@@ -292,17 +383,15 @@ try {
     query = 'What touches Opportunity.StageName?'
     maxCitations = 5
     consistencyCheck = $true
-  } | ConvertTo-Json -Depth 8
-  $ask = Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:3100/ask' -ContentType 'application/json' -Body $askBody
-  $ask | ConvertTo-Json -Depth 12 | Set-Content -Path $askArtifact
+  }
+  $ask = Invoke-JsonPost -Url 'http://127.0.0.1:3100/ask' -ArtifactPath $askArtifact -Body $askBody
   if ([string]::IsNullOrWhiteSpace($ask.trustLevel)) {
     throw 'Ask response missing trustLevel'
   }
   if (-not $ask.proof -or [string]::IsNullOrWhiteSpace($ask.proof.proofId) -or [string]::IsNullOrWhiteSpace($ask.proof.replayToken)) {
     throw 'Ask response missing deterministic proof identifiers'
   }
-  $askRepeat = Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:3100/ask' -ContentType 'application/json' -Body $askBody
-  $askRepeat | ConvertTo-Json -Depth 12 | Set-Content -Path $askRepeatArtifact
+  $askRepeat = Invoke-JsonPost -Url 'http://127.0.0.1:3100/ask' -ArtifactPath $askRepeatArtifact -Body $askBody
   if ([string]::IsNullOrWhiteSpace($askRepeat.trustLevel)) {
     throw 'Repeated ask response missing trustLevel'
   }
