@@ -21,13 +21,49 @@ async function run(): Promise<void> {
     'Flow',
     'Layout'
   ]);
+  assert.deepEqual(adapter.parseMetadataTypeCatalog(metadataTypesWithTrailingWarning), [
+    {
+      type: 'ApexClass',
+      directoryName: undefined,
+      inFolder: false,
+      metaFile: false,
+      suffix: undefined,
+      childXmlNames: []
+    },
+    {
+      type: 'Flow',
+      directoryName: undefined,
+      inFolder: false,
+      metaFile: false,
+      suffix: undefined,
+      childXmlNames: []
+    },
+    {
+      type: 'Layout',
+      directoryName: undefined,
+      inFolder: false,
+      metaFile: false,
+      suffix: undefined,
+      childXmlNames: []
+    }
+  ]);
 
   const metadataTypesWithLeadingAnsiWarning = [
     '\u001b[33mWarning: plugin telemetry notice\u001b[39m',
     JSON.stringify({
       status: 0,
       result: {
-        metadataObjects: [{ xmlName: 'CustomObject' }, { xmlName: 'ApexClass' }]
+        metadataObjects: [
+          {
+            xmlName: 'CustomObject',
+            directoryName: 'objects',
+            inFolder: false,
+            metaFile: false,
+            suffix: 'object',
+            childXmlNames: ['CustomField', 'RecordType']
+          },
+          { xmlName: 'ApexClass', directoryName: 'classes', inFolder: false, metaFile: true, suffix: 'cls' }
+        ]
       }
     })
   ].join('\n');
@@ -35,6 +71,24 @@ async function run(): Promise<void> {
   assert.deepEqual(adapter.parseMetadataTypes(metadataTypesWithLeadingAnsiWarning), [
     'ApexClass',
     'CustomObject'
+  ]);
+  assert.deepEqual(adapter.parseMetadataTypeCatalog(metadataTypesWithLeadingAnsiWarning), [
+    {
+      type: 'ApexClass',
+      directoryName: 'classes',
+      inFolder: false,
+      metaFile: true,
+      suffix: 'cls',
+      childXmlNames: []
+    },
+    {
+      type: 'CustomObject',
+      directoryName: 'objects',
+      inFolder: false,
+      metaFile: false,
+      suffix: 'object',
+      childXmlNames: ['CustomField', 'RecordType']
+    }
   ]);
 
   const metadataTypesWithTrailingNotice = [

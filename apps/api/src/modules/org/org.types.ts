@@ -51,7 +51,16 @@ export interface OrgMetadataMember {
   name: string;
 }
 
-export interface OrgMetadataTypeSummary {
+export interface OrgMetadataFamilyDescriptor {
+  directoryName?: string;
+  inFolder?: boolean;
+  metaFile?: boolean;
+  suffix?: string;
+  childXmlNames?: string[];
+  childFamilyCount?: number;
+}
+
+export interface OrgMetadataTypeSummary extends OrgMetadataFamilyDescriptor {
   type: string;
   memberCount: number;
 }

@@ -925,9 +925,10 @@ pre {
 }
 
 .metadata-family-main {
-  display: flex;
+  display: grid;
   flex: 1 1 auto;
   min-width: 0;
+  gap: 0.4rem;
 }
 
 .metadata-family-count {
@@ -936,6 +937,13 @@ pre {
   font-size: 0.8rem;
   white-space: nowrap;
   margin-top: 0.34rem;
+}
+
+.metadata-family-descriptor-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-width: 0;
 }
 
 .type-actions {

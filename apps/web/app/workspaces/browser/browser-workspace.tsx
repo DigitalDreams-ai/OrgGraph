@@ -122,6 +122,22 @@ function groupSearchResults(results: MetadataSearchResult[]): Array<{
     .sort((left, right) => left.type.localeCompare(right.type));
 }
 
+function formatFamilyDescriptor(typeRow: MetadataCatalogPayload['types'][number]): string[] {
+  const descriptors: string[] = [];
+  if (typeRow.directoryName) {
+    descriptors.push(`folder ${typeRow.directoryName}`);
+  }
+  if (typeRow.suffix) {
+    descriptors.push(`suffix .${typeRow.suffix}`);
+  }
+  descriptors.push(typeRow.inFolder ? 'foldered' : 'top-level');
+  descriptors.push(typeRow.metaFile ? 'meta file' : 'bundle');
+  if ((typeRow.childFamilyCount ?? 0) > 0) {
+    descriptors.push(`${typeRow.childFamilyCount} child family${typeRow.childFamilyCount === 1 ? '' : 'ies'}`);
+  }
+  return descriptors;
+}
+
 interface MemberTreeNode {
   key: string;
   label: string;
@@ -325,7 +341,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
             </span>
           </div>
           <p><strong>Force catalog refresh:</strong> {String(props.metadataForceRefresh)}</p>
-          <p className="muted">Build the retrieve cart from the visible catalog, then continue to `Refresh & Build` for drift and snapshot review.</p>
+          <p className="muted">Build the retrieve cart from the visible explorer, then continue to `Refresh & Build` for drift and snapshot review.</p>
         </article>
       </div>
 
@@ -359,11 +375,11 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           <label htmlFor="metadataLimit">Search/Member Limit</label>
           <input id="metadataLimit" value={props.metadataLimitRaw} onChange={(e) => props.setMetadataLimitRaw(e.target.value)} />
           <p className="muted input-hint">
-            `Refresh Types` always loads up to 5000 families for full coverage. This limit applies to Search and member listings.
+            `Browse All` always loads up to 5000 families for full coverage. This limit applies to Search and member listings.
           </p>
           {catalogIsTruncated ? (
             <p className="muted input-hint">
-              Showing {visibleTypeCount} of {totalTypeCount} metadata families. Increase Search/Member Limit, then click `Refresh Types`.
+              Showing {visibleTypeCount} of {totalTypeCount} metadata families. Increase Search/Member Limit, then click `Browse All`.
             </p>
           ) : null}
         </div>
@@ -401,7 +417,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           onClick={props.onRefreshExplorer}
           disabled={props.loading}
         >
-          Refresh Types
+          Browse All
         </button>
         <button
           type="button"
@@ -427,14 +443,14 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       <article className="sub-card">
         <p className="panel-caption">Quick workflow</p>
         <ol className="workflow-step-list">
-          <li>Search by name or click Refresh Types to load every family.</li>
+          <li>Search by name or click Browse All to load every family.</li>
           <li>Check any row you want in the retrieve cart (family, folder, or single item).</li>
           <li>Run <strong>Retrieve Cart</strong>, then continue in <strong>Refresh &amp; Build</strong>.</li>
         </ol>
       </article>
       <p className="muted"><strong>Cart rule:</strong> every checked row is already in the cart.</p>
       <p className="muted">Check a family to include everything nested under it. Check an individual item to include only that item.</p>
-      <p className="muted">Use <strong>Load Trees</strong> to preload member trees for visible families without opening each one manually.</p>
+      <p className="muted">Use <strong>Load Trees</strong> to preload child items for the visible families without opening each row manually.</p>
       {props.metadataWarnings.length > 0 ? (
         <article className="sub-card">
           <p className="panel-caption">Discovery warnings</p>
@@ -497,7 +513,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
               <p className="muted">No metadata names matched this search yet. Try `Opportunity`, `layout`, a field API name, or an Apex class name.</p>
               <div className="action-row">
                 <button type="button" className="ghost" onClick={props.onRefreshExplorer} disabled={props.loading}>
-                  Refresh Types
+                  Browse All
                 </button>
               </div>
             </div>
@@ -535,6 +551,13 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                     hint={`${typeRow.memberCount} discoverable item${typeRow.memberCount === 1 ? '' : 's'} • check to include this family`}
                     onChange={(checked) => props.onSetTypeSelected(typeRow.type, checked)}
                   />
+                  <div className="metadata-family-descriptor-list">
+                    {formatFamilyDescriptor(typeRow).map((descriptor) => (
+                      <span key={`${typeRow.type}:${descriptor}`} className="decision-badge muted">
+                        {descriptor}
+                      </span>
+                    ))}
+                  </div>
                 </div>
                 <span className="metadata-family-count">{typeRow.memberCount}</span>
               </div>
@@ -546,22 +569,24 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                       {renderMemberTreeNodes(typeRow.type, memberTree, typeSelectionState)}
                     </ul>
                   ) : membersLoaded ? (
-                    <p className="muted">No members returned for this family.</p>
+                    <p className="muted">
+                      No members returned for this family. It may still be valid metadata with zero discoverable child items in the current org.
+                    </p>
                   ) : (
-                    <p className="muted">Loading family items. If this remains empty, run Force Refresh and try again.</p>
+                    <p className="muted">Loading child items. If this remains empty, run Force Refresh and try again.</p>
                   )}
                 </>
               ) : (
-                <p className="muted">Click the triangle to load and browse nested items for this family.</p>
+                <p className="muted">Click the triangle to load and browse child items for this family.</p>
               )}
             </section>
           );
         })}
         {props.metadataCatalogRequested && (props.metadataCatalog?.types || []).length === 0 ? (
-          <p className="muted">No metadata families were returned yet. Try `Refresh Types` again with `Force Refresh` enabled.</p>
+          <p className="muted">No metadata families were returned yet. Try `Browse All` again with `Force Refresh` enabled.</p>
         ) : null}
         {!props.metadataCatalogRequested ? (
-          <p className="muted">Click `Refresh Types` to load live metadata families before retrieving anything.</p>
+          <p className="muted">Click `Browse All` to load live metadata families before retrieving anything.</p>
         ) : null}
       </div>
 

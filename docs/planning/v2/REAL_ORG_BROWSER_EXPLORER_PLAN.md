@@ -87,6 +87,8 @@ Implemented on `dna-org-browser-live-discovery`:
 - checked item rows add those specific items to the retrieve cart
 - the original family browser remains visible as the fallback browse path when search is empty
 - long values in decision packets, proof context, mapping cards, and diagnostics now wrap inside their cards instead of clipping
+- wave13 follow-up now carries richer live family descriptors (directory/suffix/folder/meta-file/child-family metadata) through the catalog contract so the family explorer can describe what each row represents before expansion
+- wave13 follow-up now uses `Browse All` as the explicit full-family discovery action and keeps latest-retrieve Flow prompt starters visible in Ask so evidence-grounded follow-up stays on the primary path
 
 Current local verification:
 - `pnpm --filter api exec ts-node --transpile-only test/org-service.ts`

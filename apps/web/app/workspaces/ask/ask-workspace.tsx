@@ -1,11 +1,14 @@
 'use client';
 
 import type { AskPayload } from './types';
+import type { MetadataRetrieveResultView, MetadataSelection } from '../browser/types';
 
 interface AskWorkspaceProps {
   activeAlias: string;
   sessionStatus: string;
   buildVersion: string;
+  latestRetrieve: MetadataRetrieveResultView | null;
+  latestRetrieveSelections: MetadataSelection[];
   askQuery: string;
   setAskQuery: (value: string) => void;
   maxCitationsRaw: string;
@@ -42,7 +45,20 @@ const ASK_PRESETS = [
   'Should we approve changing Opportunity.StageName for jane@example.com?'
 ];
 
+function buildRetrieveAwarePresets(
+  latestRetrieveSelections: MetadataSelection[]
+): string[] {
+  const flowPrompts = latestRetrieveSelections
+    .filter((selection) => selection.type === 'Flow' && Array.isArray(selection.members))
+    .flatMap((selection) => selection.members ?? [])
+    .slice(0, 3)
+    .map((flowName) => `Based only on the latest retrieve, explain what Flow ${flowName} reads and writes.`);
+
+  return Array.from(new Set(flowPrompts));
+}
+
 export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
+  const retrieveAwarePresets = buildRetrieveAwarePresets(props.latestRetrieveSelections);
   return (
     <>
       <h2>Ask</h2>
@@ -82,6 +98,32 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
             <button type="button" className="ghost" onClick={props.onOpenBrowser}>Browse metadata</button>
             <button type="button" className="ghost" onClick={props.onOpenRefresh}>Run refresh</button>
           </div>
+        </article>
+
+        <article className="sub-card launch-card">
+          <p className="panel-caption">Latest retrieve</p>
+          <h3>Ask only from current retrieved evidence</h3>
+          {props.latestRetrieve ? (
+            <>
+              <p><strong>Alias:</strong> {props.latestRetrieve.alias || 'n/a'}</p>
+              <p><strong>Completed:</strong> {props.latestRetrieve.completedAt || 'n/a'}</p>
+              <p><strong>Metadata args:</strong> {props.latestRetrieve.metadataArgs.join(', ') || 'n/a'}</p>
+              <p><strong>Parse path:</strong> <span className="path-value">{props.latestRetrieve.parsePath || 'n/a'}</span></p>
+              {retrieveAwarePresets.length > 0 ? (
+                <div className="preset-row">
+                  {retrieveAwarePresets.map((preset) => (
+                    <button key={preset} type="button" className="ghost chip-btn" onClick={() => props.setAskQuery(preset)}>
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted">No retrieved Flow member is staged yet. Use Org Browser to retrieve a specific flow, then Ask from that retrieve.</p>
+              )}
+            </>
+          ) : (
+            <p className="muted">No retrieve handoff found yet. Use Org Browser, check the metadata you want, run Retrieve Cart, then Ask from that grounded retrieve.</p>
+          )}
         </article>
       </div>
 

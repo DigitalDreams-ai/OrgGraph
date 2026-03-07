@@ -223,6 +223,17 @@ export class OrgToolAdapterService {
   }
 
   parseMetadataTypes(stdout: string): string[] {
+    return this.parseMetadataTypeCatalog(stdout).map((item) => item.type);
+  }
+
+  parseMetadataTypeCatalog(stdout: string): Array<{
+    type: string;
+    directoryName?: string;
+    inFolder: boolean;
+    metaFile: boolean;
+    suffix?: string;
+    childXmlNames: string[];
+  }> {
     const parsed = this.parseSfJsonOutput<{
       result?: unknown;
     }>(stdout);
@@ -240,13 +251,48 @@ export class OrgToolAdapterService {
       }
     }
 
-    return Array.from(
-      new Set(
-        metadataObjects
-          .map((item) => (typeof item.xmlName === 'string' ? item.xmlName.trim() : ''))
-          .filter((xmlName) => xmlName.length > 0)
-      )
-    ).sort((left, right) => left.localeCompare(right));
+    const catalog = new Map<
+      string,
+      {
+        type: string;
+        directoryName?: string;
+        inFolder: boolean;
+        metaFile: boolean;
+        suffix?: string;
+        childXmlNames: string[];
+      }
+    >();
+
+    for (const item of metadataObjects) {
+      const type = typeof item.xmlName === 'string' ? item.xmlName.trim() : '';
+      if (!type) {
+        continue;
+      }
+      const directoryName =
+        typeof (item as { directoryName?: unknown }).directoryName === 'string'
+          ? (item as { directoryName?: string }).directoryName?.trim()
+          : undefined;
+      const suffix =
+        typeof (item as { suffix?: unknown }).suffix === 'string'
+          ? (item as { suffix?: string }).suffix?.trim()
+          : undefined;
+      const childXmlNames = Array.isArray((item as { childXmlNames?: unknown }).childXmlNames)
+        ? ((item as { childXmlNames?: unknown[] }).childXmlNames ?? [])
+            .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
+            .filter((entry) => entry.length > 0)
+            .sort((left, right) => left.localeCompare(right))
+        : [];
+      catalog.set(type, {
+        type,
+        directoryName: directoryName && directoryName.length > 0 ? directoryName : undefined,
+        inFolder: Boolean((item as { inFolder?: unknown }).inFolder),
+        metaFile: Boolean((item as { metaFile?: unknown }).metaFile),
+        suffix: suffix && suffix.length > 0 ? suffix : undefined,
+        childXmlNames,
+      });
+    }
+
+    return Array.from(catalog.values()).sort((left, right) => left.type.localeCompare(right.type));
   }
 
   extractCciVersion(stdout: string, stderr: string): string | undefined {

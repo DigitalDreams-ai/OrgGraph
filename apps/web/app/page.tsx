@@ -186,6 +186,8 @@ export default function Page(): JSX.Element {
               activeAlias={connectWorkspace.activeAlias}
               sessionStatus={connectWorkspace.sessionStatus}
               buildVersion={BUILD_VERSION}
+              latestRetrieve={browserWorkspace.lastMetadataRetrieve}
+              latestRetrieveSelections={browserWorkspace.lastRetrievedSelections}
               askQuery={askWorkspace.askQuery}
               setAskQuery={askWorkspace.setAskQuery}
               maxCitationsRaw={askWorkspace.maxCitationsRaw}

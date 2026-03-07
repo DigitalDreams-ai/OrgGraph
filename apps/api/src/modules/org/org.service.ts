@@ -6,6 +6,7 @@ import { RuntimePathsService } from '../../config/runtime-paths.service';
 import { IngestionService } from '../ingestion/ingestion.service';
 import { OrgToolAdapterService } from './org-tool-adapter.service';
 import type {
+  OrgMetadataFamilyDescriptor,
   OrgMetadataCatalogResponse,
   OrgMetadataMembersResponse,
   OrgMetadataSearchResponse,
@@ -39,10 +40,23 @@ type OrgSessionState = {
   lastError?: string;
 };
 
+type MetadataTypeCatalogEntry = Required<Pick<OrgMetadataFamilyDescriptor, 'inFolder' | 'metaFile' | 'childXmlNames' | 'childFamilyCount'>> &
+  Pick<OrgMetadataFamilyDescriptor, 'directoryName' | 'suffix'> & {
+    type: string;
+  };
+
+type DiscoveryMetadataIndex = {
+  source: 'local' | 'cache' | 'metadata_api' | 'mixed';
+  refreshedAt: string;
+  typeMembers: Map<string, string[]>;
+  typeCatalog: Map<string, MetadataTypeCatalogEntry>;
+  warnings: string[];
+};
+
 @Injectable()
 export class OrgService {
   private readonly logger = new Logger(OrgService.name);
-  private static readonly LIVE_METADATA_CACHE_VERSION = 4;
+  private static readonly LIVE_METADATA_CACHE_VERSION = 5;
   private static readonly LIVE_METADATA_MEMBER_SEED_TYPES = [
     'CustomObject',
     'Layout',
@@ -867,7 +881,8 @@ export class OrgService {
     let types = Array.from(index.typeMembers.entries())
       .map(([type, members]) => ({
         type,
-        memberCount: members.length
+        memberCount: members.length,
+        ...this.toMetadataCatalogSummary(type, index.typeCatalog.get(type))
       }))
       .sort((a, b) => a.type.localeCompare(b.type));
 
@@ -1111,12 +1126,7 @@ export class OrgService {
   private async loadDiscoveryMetadataIndex(input: {
     refresh: boolean;
     includeSearchOnlyTypes: boolean;
-  }): Promise<{
-    source: 'local' | 'cache' | 'metadata_api' | 'mixed';
-    refreshedAt: string;
-    typeMembers: Map<string, string[]>;
-    warnings: string[];
-  }> {
+  }): Promise<DiscoveryMetadataIndex> {
     const parsePath = this.runtimePaths.sfParsePath();
     const projectPath = this.runtimePaths.sfProjectPath();
     const alias = this.resolveActiveAlias();
@@ -1132,6 +1142,7 @@ export class OrgService {
           source: 'metadata_api' as const,
           refreshedAt: new Date().toISOString(),
           typeMembers: new Map<string, string[]>(),
+          typeCatalog: new Map<string, MetadataTypeCatalogEntry>(),
           warnings: []
         };
     const localIndex = this.loadMetadataIndex(parsePath, input.refresh);
@@ -1142,6 +1153,7 @@ export class OrgService {
         source: 'mixed',
         refreshedAt: liveIndex.refreshedAt,
         typeMembers: this.mergeTypeMembers(liveIndex.typeMembers, localIndex.typeMembers),
+        typeCatalog: this.mergeTypeCatalog(liveIndex.typeCatalog, localIndex.typeCatalog),
         warnings: [...liveIndex.warnings, ...localIndex.warnings]
       };
     }
@@ -1151,6 +1163,7 @@ export class OrgService {
         source: liveIndex.source,
         refreshedAt: liveIndex.refreshedAt,
         typeMembers: liveIndex.typeMembers,
+        typeCatalog: liveIndex.typeCatalog,
         warnings: [...liveIndex.warnings, ...localIndex.warnings]
       };
     }
@@ -1160,6 +1173,7 @@ export class OrgService {
         source: liveIndex.warnings.length > 0 ? 'mixed' : localIndex.source,
         refreshedAt: localIndex.refreshedAt,
         typeMembers: localIndex.typeMembers,
+        typeCatalog: localIndex.typeCatalog,
         warnings: [...liveIndex.warnings, ...localIndex.warnings]
       };
     }
@@ -1168,6 +1182,7 @@ export class OrgService {
       source: liveIndex.source,
       refreshedAt: liveIndex.refreshedAt,
       typeMembers: liveIndex.typeMembers,
+      typeCatalog: liveIndex.typeCatalog,
       warnings: [...liveIndex.warnings, ...localIndex.warnings]
     };
   }
@@ -1207,10 +1222,45 @@ export class OrgService {
     return merged;
   }
 
+  private mergeTypeCatalog(
+    primary: Map<string, MetadataTypeCatalogEntry>,
+    secondary: Map<string, MetadataTypeCatalogEntry>
+  ): Map<string, MetadataTypeCatalogEntry> {
+    const merged = new Map<string, MetadataTypeCatalogEntry>();
+
+    for (const [type, entry] of secondary.entries()) {
+      merged.set(type, entry);
+    }
+
+    for (const [type, entry] of primary.entries()) {
+      merged.set(type, entry);
+    }
+
+    return merged;
+  }
+
+  private toMetadataCatalogSummary(
+    type: string,
+    entry?: MetadataTypeCatalogEntry
+  ): OrgMetadataFamilyDescriptor {
+    if (!entry) {
+      return {};
+    }
+
+    return {
+      directoryName: entry.directoryName,
+      inFolder: entry.inFolder,
+      metaFile: entry.metaFile,
+      suffix: entry.suffix,
+      childXmlNames: entry.childXmlNames,
+      childFamilyCount: entry.childFamilyCount,
+    };
+  }
+
   private async loadLiveMetadataTypes(
     alias: string,
     projectPath: string
-  ): Promise<{ types: string[]; warnings: string[] }> {
+  ): Promise<{ types: MetadataTypeCatalogEntry[]; warnings: string[] }> {
     const result = await this.orgToolAdapter.listMetadataTypes(alias, projectPath);
     if (result.exitCode !== 0) {
       const reason = (result.stderr || result.stdout || 'unknown error').trim();
@@ -1220,7 +1270,15 @@ export class OrgService {
       };
     }
 
-    const types = this.orgToolAdapter.parseMetadataTypes(result.stdout);
+    const types = this.orgToolAdapter.parseMetadataTypeCatalog(result.stdout).map((item) => ({
+      type: item.type,
+      directoryName: item.directoryName,
+      inFolder: item.inFolder,
+      metaFile: item.metaFile,
+      suffix: item.suffix,
+      childXmlNames: item.childXmlNames,
+      childFamilyCount: item.childXmlNames.length
+    }));
     if (types.length === 0) {
       return {
         types: [],
@@ -1262,12 +1320,7 @@ export class OrgService {
     parsePath: string,
     refresh: boolean,
     includeSearchOnlyTypes: boolean
-  ): Promise<{
-    source: 'metadata_api';
-    refreshedAt: string;
-    typeMembers: Map<string, string[]>;
-    warnings: string[];
-  }> {
+  ): Promise<DiscoveryMetadataIndex> {
     const warnings: string[] = [];
     const refreshedAt = new Date().toISOString();
     const cachePath = path.join(
@@ -1281,23 +1334,53 @@ export class OrgService {
         const parsed = JSON.parse(raw) as {
           cacheVersion?: unknown;
           refreshedAt?: string;
-          types?: Array<{ type: string; members: string[] }>;
+          types?: Array<{
+            type?: unknown;
+            members?: unknown;
+            directoryName?: unknown;
+            inFolder?: unknown;
+            metaFile?: unknown;
+            suffix?: unknown;
+            childXmlNames?: unknown;
+          }>;
         };
         if (parsed.cacheVersion !== OrgService.LIVE_METADATA_CACHE_VERSION) {
           warnings.push(`live metadata cache version mismatch; refreshing from org: ${cachePath}`);
         } else if (Array.isArray(parsed.types)) {
           const typeMembers = new Map<string, string[]>();
+          const typeCatalog = new Map<string, MetadataTypeCatalogEntry>();
           for (const item of parsed.types) {
             if (!item || typeof item.type !== 'string' || !Array.isArray(item.members)) {
               continue;
             }
+            const type = item.type.trim();
+            if (!type) {
+              continue;
+            }
             typeMembers.set(
-              item.type,
+              type,
               item.members
                 .map((member) => String(member).trim())
                 .filter((member) => member.length > 0)
                 .sort((a, b) => a.localeCompare(b))
             );
+            const directoryName = typeof item.directoryName === 'string' ? item.directoryName.trim() : '';
+            const suffix = typeof item.suffix === 'string' ? item.suffix.trim() : '';
+            const childXmlNames = Array.isArray(item.childXmlNames)
+              ? item.childXmlNames
+                  .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
+                  .filter((entry) => entry.length > 0)
+                  .sort((left, right) => left.localeCompare(right))
+              : [];
+            typeCatalog.set(type, {
+              type,
+              directoryName: directoryName || undefined,
+              inFolder: item.inFolder === true,
+              metaFile: item.metaFile === true,
+              suffix: suffix || undefined,
+              childXmlNames,
+              childFamilyCount: childXmlNames.length
+            });
           }
           if (typeMembers.size === 0 && this.countMetadataMembers(typeMembers) === 0) {
             warnings.push(`live metadata cache was empty; refreshing from org: ${cachePath}`);
@@ -1306,6 +1389,7 @@ export class OrgService {
               source: 'metadata_api',
               refreshedAt: parsed.refreshedAt ?? refreshedAt,
               typeMembers,
+              typeCatalog,
               warnings
             };
           }
@@ -1324,11 +1408,13 @@ export class OrgService {
         source: 'metadata_api',
         refreshedAt,
         typeMembers: new Map(),
+        typeCatalog: new Map<string, MetadataTypeCatalogEntry>(),
         warnings
       };
     }
 
     const typeMembers = new Map<string, string[]>();
+    const typeCatalog = new Map<string, MetadataTypeCatalogEntry>();
     const liveMetadataTypes = await this.loadLiveMetadataTypes(alias, projectPath);
     warnings.push(...liveMetadataTypes.warnings);
 
@@ -1341,9 +1427,16 @@ export class OrgService {
               ...OrgService.LIVE_METADATA_MEMBER_SEED_TYPES,
               ...(includeSearchOnlyTypes ? OrgService.LIVE_METADATA_SEARCH_ONLY_TYPES : [])
             ])
-          );
+          ).map((type) => ({
+            type,
+            inFolder: false,
+            metaFile: false,
+            childXmlNames: [],
+            childFamilyCount: 0
+          }));
     for (const metadataType of catalogTypes) {
-      typeMembers.set(metadataType, []);
+      typeMembers.set(metadataType.type, []);
+      typeCatalog.set(metadataType.type, metadataType);
     }
 
     const metadataTypesForMemberSeed = Array.from(
@@ -1386,7 +1479,18 @@ export class OrgService {
               cacheVersion: OrgService.LIVE_METADATA_CACHE_VERSION,
               refreshedAt,
               types: Array.from(typeMembers.entries())
-                .map(([type, members]) => ({ type, members }))
+                .map(([type, members]) => {
+                  const catalogEntry = typeCatalog.get(type);
+                  return {
+                    type,
+                    members,
+                    directoryName: catalogEntry?.directoryName,
+                    inFolder: catalogEntry?.inFolder ?? false,
+                    metaFile: catalogEntry?.metaFile ?? false,
+                    suffix: catalogEntry?.suffix,
+                    childXmlNames: catalogEntry?.childXmlNames ?? []
+                  };
+                })
                 .sort((a, b) => a.type.localeCompare(b.type))
             },
             null,
@@ -1403,6 +1507,7 @@ export class OrgService {
       source: 'metadata_api',
       refreshedAt,
       typeMembers,
+      typeCatalog,
       warnings
     };
   }
@@ -1414,6 +1519,7 @@ export class OrgService {
     source: 'local' | 'cache' | 'mixed';
     refreshedAt: string;
     typeMembers: Map<string, string[]>;
+    typeCatalog: Map<string, MetadataTypeCatalogEntry>;
     warnings: string[];
   } {
     const warnings: string[] = [];
@@ -1443,6 +1549,7 @@ export class OrgService {
             source: 'cache',
             refreshedAt: parsed.refreshedAt ?? new Date().toISOString(),
             typeMembers,
+            typeCatalog: new Map<string, MetadataTypeCatalogEntry>(),
             warnings
           };
         }
@@ -1457,6 +1564,7 @@ export class OrgService {
         source: 'local',
         refreshedAt: new Date().toISOString(),
         typeMembers: new Map(),
+        typeCatalog: new Map<string, MetadataTypeCatalogEntry>(),
         warnings
       };
     }
@@ -1522,6 +1630,7 @@ export class OrgService {
       source: 'local',
       refreshedAt: new Date().toISOString(),
       typeMembers: normalizedMap,
+      typeCatalog: new Map<string, MetadataTypeCatalogEntry>(),
       warnings
     };
   }
