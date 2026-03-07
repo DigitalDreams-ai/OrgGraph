@@ -56,14 +56,16 @@ export default function Page(): JSX.Element {
     setCopied: responseInspector.setCopied,
     setErrorText: responseInspector.setErrorText
   });
-  const browserWorkspace = useBrowserWorkspace({
+  const connectWorkspace = useConnectWorkspace({
     presentResponse: responseInspector.presentResponse,
     resolveErrorMessage: resolveQueryErrorMessage,
     setLoading: secondaryQueryRunner.setLoading,
     setCopied: responseInspector.setCopied,
     setErrorText: responseInspector.setErrorText
   });
-  const connectWorkspace = useConnectWorkspace({
+  const browserWorkspace = useBrowserWorkspace({
+    activeAlias: connectWorkspace.activeAlias,
+    sessionStatus: connectWorkspace.sessionStatus,
     presentResponse: responseInspector.presentResponse,
     resolveErrorMessage: resolveQueryErrorMessage,
     setLoading: secondaryQueryRunner.setLoading,

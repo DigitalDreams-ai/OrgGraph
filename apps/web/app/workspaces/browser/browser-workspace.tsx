@@ -356,11 +356,14 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           />
         </div>
         <div>
-          <label htmlFor="metadataLimit">Catalog Limit</label>
+          <label htmlFor="metadataLimit">Search/Member Limit</label>
           <input id="metadataLimit" value={props.metadataLimitRaw} onChange={(e) => props.setMetadataLimitRaw(e.target.value)} />
+          <p className="muted input-hint">
+            `Refresh Types` always loads up to 5000 families for full coverage. This limit applies to Search and member listings.
+          </p>
           {catalogIsTruncated ? (
             <p className="muted input-hint">
-              Showing {visibleTypeCount} of {totalTypeCount} metadata families. Increase Catalog Limit, then click `Browse All`.
+              Showing {visibleTypeCount} of {totalTypeCount} metadata families. Increase Search/Member Limit, then click `Refresh Types`.
             </p>
           ) : null}
         </div>
@@ -398,7 +401,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           onClick={props.onRefreshExplorer}
           disabled={props.loading}
         >
-          Browse All
+          Refresh Types
         </button>
         <button
           type="button"
@@ -424,7 +427,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       <article className="sub-card">
         <p className="panel-caption">Quick workflow</p>
         <ol className="workflow-step-list">
-          <li>Search by name or click Browse All to load every family.</li>
+          <li>Search by name or click Refresh Types to load every family.</li>
           <li>Check any row you want in the retrieve cart (family, folder, or single item).</li>
           <li>Run <strong>Retrieve Cart</strong>, then continue in <strong>Refresh &amp; Build</strong>.</li>
         </ol>
@@ -494,7 +497,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
               <p className="muted">No metadata names matched this search yet. Try `Opportunity`, `layout`, a field API name, or an Apex class name.</p>
               <div className="action-row">
                 <button type="button" className="ghost" onClick={props.onRefreshExplorer} disabled={props.loading}>
-                  Browse All Families
+                  Refresh Types
                 </button>
               </div>
             </div>
