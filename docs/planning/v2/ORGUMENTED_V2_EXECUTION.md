@@ -52,6 +52,7 @@ Materially true now:
 - live metadata catalog cache version is bumped again so older partial family caches are force-refreshed before the remaining browser parity work
 - Ask now surfaces the latest retrieve handoff directly in the workspace and offers grounded flow read/write prompt starters from retrieved Flow members
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
+- browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
 - wave10 follow-up now enforces larger card-grid minimum widths and path-specific wrapping classes, reducing truncation in decision packets, citations, mapping diagnostics, and diagnostics artifacts
 - wave10 follow-up now hardens Ask proof/context and citation rendering with explicit path-value wrapping, snippet scroll bounds, and denser auto-fit minima to reduce clipping in mid-width desktop layouts
@@ -62,6 +63,9 @@ Materially true now:
 - Browser retrieve failures now clear persisted handoff/selections and fail closed in Refresh instead of silently reusing stale retrieve context
 - refresh diff now auto-seeds `from/to` snapshot IDs from recent refresh runs and fails closed when snapshot inputs are missing or identical
 - refresh diff now also fails closed when the latest refresh snapshot source path does not match the current Browser handoff parse path, preventing cross-handoff drift comparisons
+- `Refresh & Build` now persists handoff lineage with refresh/diff/org-retrieve summaries and marks stale results explicitly when the current Browser handoff changes
+- refresh diff now also fails closed when the latest Refresh no longer belongs to the current Browser handoff lineage, preventing stale snapshot comparisons after alias, selection, or retrieve-cycle changes
+- org-retrieve summaries now distinguish handoff-backed pipeline runs from auth-only runs, so the staged workflow cannot silently treat a non-retrieve pipeline step as current rebuild evidence
 - flow grounding now prioritizes explicit flow-name asks over weak object-token inference (prevents false `no automation found for the` fallbacks)
 - flow grounding now adds deterministic targeted evidence retry for explicit flow-name asks when first-pass evidence ranking misses the named flow
 - flow grounding now tolerates quoted/article-prefixed flow references (for example `Flow "the X" reads and writes`) and keeps explicit-flow asks off the generic object fallback path
@@ -162,9 +166,9 @@ Rules:
 - close retrieve -> refresh -> diff handoff proof gaps for real-org workflows
 - lock staged summaries and fail-closed guidance when handoff is incomplete
 
-Browser parity slice now in progress on top of current main:
-- keep the real-org family catalog complete even when cached rows omit member arrays
-- close the remaining explorer-style parity gap around family visibility and deterministic child expansion
+Wave5 handoff-proof slice now in progress on top of current main:
+- keep refresh, diff, and org-retrieve summaries explicitly current-vs-stale against the latest Browser handoff
+- close the remaining real-org proof gap for retrieve -> refresh -> diff -> org-retrieve without raw JSON fallback
 
 3. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage

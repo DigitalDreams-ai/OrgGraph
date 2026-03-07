@@ -76,7 +76,8 @@ Merged by PR #70 on March 3, 2026:
 Current checkpoint on this branch:
 - `Org Browser` now assesses retrieve handoff readiness directly from the latest retrieve result
 - `Refresh & Build` now mirrors that readiness state and fails closed in the desktop shell when the handoff is incomplete
-- packaged desktop verification still passes after the handoff assessment was added
+- `Refresh & Build` now persists lineage context with refresh, diff, and org-retrieve summaries so stale results are marked explicitly when the current Browser handoff changes
+- packaged desktop verification still passes after the handoff lineage guard was added
 
 Still to prove in this branch:
 - direct packaged desktop operator proof of the same retrieve -> refresh handoff against the real UI
