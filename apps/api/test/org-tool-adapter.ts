@@ -22,6 +22,36 @@ async function run(): Promise<void> {
     'Layout'
   ]);
 
+  const metadataTypesWithLeadingAnsiWarning = [
+    '\u001b[33mWarning: plugin telemetry notice\u001b[39m',
+    JSON.stringify({
+      status: 0,
+      result: {
+        metadataObjects: [{ xmlName: 'CustomObject' }, { xmlName: 'ApexClass' }]
+      }
+    })
+  ].join('\n');
+
+  assert.deepEqual(adapter.parseMetadataTypes(metadataTypesWithLeadingAnsiWarning), [
+    'ApexClass',
+    'CustomObject'
+  ]);
+
+  const metadataTypesWithTrailingNotice = [
+    JSON.stringify({
+      status: 0,
+      result: {
+        metadataObjects: [{ xmlName: 'Profile' }, { xmlName: 'RecordType' }]
+      }
+    }),
+    '@salesforce/cli update available from 2.124.7 to 2.125.2.'
+  ].join('\n');
+
+  assert.deepEqual(adapter.parseMetadataTypes(metadataTypesWithTrailingNotice), [
+    'Profile',
+    'RecordType'
+  ]);
+
   const metadataMembersWithTrailingWarning =
     JSON.stringify(
       {
@@ -38,6 +68,18 @@ async function run(): Promise<void> {
   assert.deepEqual(adapter.parseMetadataList(metadataMembersWithTrailingWarning), [
     { type: 'Layout', fullName: 'Opportunity-Opportunity Layout', fileName: undefined },
     { type: 'Layout', fullName: 'Account-Account Layout', fileName: undefined }
+  ]);
+
+  const metadataMembersWithTrailingNotice = [
+    JSON.stringify({
+      status: 0,
+      result: [{ type: 'ApexClass', fullName: 'OpportunitySyncService' }]
+    }),
+    '@salesforce/cli update available from 2.124.7 to 2.125.2.'
+  ].join('\n');
+
+  assert.deepEqual(adapter.parseMetadataList(metadataMembersWithTrailingNotice), [
+    { type: 'ApexClass', fullName: 'OpportunitySyncService', fileName: undefined }
   ]);
 
   const orgDisplayWithLeadingWarning = [
