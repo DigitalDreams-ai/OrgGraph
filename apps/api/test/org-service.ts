@@ -112,10 +112,38 @@ class StubToolAdapter {
       JSON.stringify({
         result: {
           metadataObjects: [
-            { xmlName: 'CustomObject' },
-            { xmlName: 'Layout' },
-            { xmlName: 'Flow' },
-            { xmlName: 'PermissionSet' }
+            {
+              xmlName: 'CustomObject',
+              directoryName: 'objects',
+              inFolder: false,
+              metaFile: false,
+              suffix: 'object',
+              childXmlNames: ['CustomField', 'RecordType']
+            },
+            {
+              xmlName: 'Layout',
+              directoryName: 'layouts',
+              inFolder: false,
+              metaFile: false,
+              suffix: 'layout',
+              childXmlNames: []
+            },
+            {
+              xmlName: 'Flow',
+              directoryName: 'flows',
+              inFolder: false,
+              metaFile: false,
+              suffix: 'flow',
+              childXmlNames: []
+            },
+            {
+              xmlName: 'PermissionSet',
+              directoryName: 'permissionsets',
+              inFolder: false,
+              metaFile: false,
+              suffix: 'permissionset',
+              childXmlNames: []
+            }
           ]
         }
       })
@@ -162,6 +190,21 @@ class StubToolAdapter {
     return (JSON.parse(stdout).result?.metadataObjects ?? [])
       .map((item: Record<string, unknown>) => String(item.xmlName ?? '').trim())
       .filter((xmlName: string) => xmlName.length > 0);
+  }
+
+  parseMetadataTypeCatalog(stdout: string) {
+    return (JSON.parse(stdout).result?.metadataObjects ?? [])
+      .map((item: Record<string, unknown>) => ({
+        type: String(item.xmlName ?? '').trim(),
+        directoryName: typeof item.directoryName === 'string' ? item.directoryName : undefined,
+        inFolder: item.inFolder === true,
+        metaFile: item.metaFile === true,
+        suffix: typeof item.suffix === 'string' ? item.suffix : undefined,
+        childXmlNames: Array.isArray(item.childXmlNames)
+          ? item.childXmlNames.filter((entry): entry is string => typeof entry === 'string')
+          : []
+      }))
+      .filter((item: { type: string }) => item.type.length > 0);
   }
 
   toActionableBadRequest() {
@@ -349,6 +392,11 @@ async function run(): Promise<void> {
 
     const metadataCatalog = await service.metadataCatalog({ refresh: true, limit: 50 });
     assert.ok(metadataCatalog.types.some((item) => item.type === 'CustomObject'));
+    const customObjectCatalog = metadataCatalog.types.find((item) => item.type === 'CustomObject');
+    assert.equal(customObjectCatalog?.directoryName, 'objects');
+    assert.equal(customObjectCatalog?.suffix, 'object');
+    assert.deepEqual(customObjectCatalog?.childXmlNames, ['CustomField', 'RecordType']);
+    assert.equal(customObjectCatalog?.childFamilyCount, 2);
 
     const metadataMembers = await service.metadataMembers({
       type: 'CustomObject',
@@ -369,6 +417,9 @@ async function run(): Promise<void> {
       liveCatalog.types.some((item) => item.type === 'PermissionSet'),
       'expected live metadata-types discovery to include non-seed families'
     );
+    const liveLayout = liveCatalog.types.find((item) => item.type === 'Layout');
+    assert.equal(liveLayout?.directoryName, 'layouts');
+    assert.equal(liveLayout?.suffix, 'layout');
     assert.ok(
       liveCatalog.types.some((item) => item.type === 'Flow' && item.memberCount === 0),
       'expected zero-member metadata families to remain visible in catalog'

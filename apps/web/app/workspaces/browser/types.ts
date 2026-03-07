@@ -1,6 +1,15 @@
 'use client';
 
-export type MetadataCatalogType = { type: string; memberCount: number };
+export type MetadataCatalogType = {
+  type: string;
+  memberCount: number;
+  directoryName?: string;
+  inFolder?: boolean;
+  metaFile?: boolean;
+  suffix?: string;
+  childXmlNames?: string[];
+  childFamilyCount?: number;
+};
 export type MetadataMember = { name: string };
 
 export type MetadataCatalogPayload = {
