@@ -51,8 +51,8 @@ Materially true now:
 - org browser search results now use the same chevron + checkbox explorer pattern as browse rows, keeping tree expansion behavior consistent whether the operator starts from a family name or a specific metadata item
 - org browser search-family rows now load the actual family tree on expand, so search no longer dead-ends in a flat match list when the operator needs to browse child items in-place
 - org browser now surfaces explicit catalog-coverage state (`full`, `limited`, `unavailable`) so fallback or truncated family discovery cannot silently read as complete org inventory
+- wave11 browser refinement is back in progress: coverage state and explorer expansion affordances still need stronger operator-facing clarity before browser parity can stay closed
 - live metadata catalog cache version is bumped again so older partial family caches are force-refreshed before the remaining browser parity work
-- wave11 browser parity closeout is complete (`D016`, `G024`): direct `sf org list metadata-types --target-org shulman-uat --json` discovery returns a full real-org family catalog, desktop live-catalog cache hydrates the full family set, and merged browser rows now expand deterministically from both browse and search surfaces
 - Ask now surfaces the latest retrieve handoff directly in the workspace and offers grounded flow read/write prompt starters from retrieved Flow members
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model

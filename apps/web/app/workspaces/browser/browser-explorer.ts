@@ -24,6 +24,13 @@ export interface MetadataCatalogCoverage {
   reasons: string[];
 }
 
+export interface MetadataCatalogCoveragePanel extends MetadataCatalogCoverage {
+  badgeLabel: string;
+  sourceLabel: string;
+  countsLabel: string;
+  nextStep: string;
+}
+
 function splitMemberPath(member: string): string[] {
   if (member.includes('/')) {
     return member.split('/').filter((part) => part.length > 0);
@@ -151,5 +158,73 @@ export function assessMetadataCatalogCoverage(
     state: 'limited',
     summary: reasons[0],
     reasons
+  };
+}
+
+function describeCatalogSource(catalog: MetadataCatalogPayload | null): string {
+  if (!catalog) {
+    return 'no catalog loaded';
+  }
+
+  switch (catalog.source) {
+    case 'metadata_api':
+      return 'live org metadata discovery';
+    case 'source_api':
+      return 'source API metadata discovery';
+    case 'local':
+      return 'local parse-path catalog';
+    case 'cache':
+      return 'cached metadata catalog';
+    case 'mixed':
+      return 'mixed live and fallback catalog';
+    default:
+      return catalog.source;
+  }
+}
+
+export function describeMetadataCatalogCoverage(
+  catalog: MetadataCatalogPayload | null,
+  warnings: string[]
+): MetadataCatalogCoveragePanel {
+  const coverage = assessMetadataCatalogCoverage(catalog, warnings);
+  const visibleTypes = catalog?.types.length ?? 0;
+  const totalTypes = catalog?.totalTypes ?? 0;
+
+  if (!catalog) {
+    return {
+      ...coverage,
+      badgeLabel: 'Not loaded',
+      sourceLabel: describeCatalogSource(catalog),
+      countsLabel: '0 visible families',
+      nextStep: 'Click Load All Families to pull the current org metadata family catalog.'
+    };
+  }
+
+  if (coverage.state === 'full') {
+    return {
+      ...coverage,
+      badgeLabel: 'Live coverage',
+      sourceLabel: describeCatalogSource(catalog),
+      countsLabel: `${visibleTypes} of ${totalTypes} families visible`,
+      nextStep: 'Search by metadata name or expand any family row to inspect child items.'
+    };
+  }
+
+  const countsLabel =
+    totalTypes > visibleTypes
+      ? `${visibleTypes} of ${totalTypes} families visible`
+      : `${visibleTypes} visible families`;
+  const nextStep = coverage.reasons.some((reason) => /truncating the visible family list/i.test(reason))
+    ? 'Increase Search/Member Limit, then run Load All Families again.'
+    : coverage.reasons.some((reason) => /failed/i.test(reason) || /sf CLI is unavailable/i.test(reason))
+      ? 'Run Force Refresh, then verify sf CLI metadata-type discovery for the active alias.'
+      : 'Run Load All Families with Force Refresh enabled before treating this as full org inventory.';
+
+  return {
+    ...coverage,
+    badgeLabel: 'Coverage limited',
+    sourceLabel: describeCatalogSource(catalog),
+    countsLabel,
+    nextStep
   };
 }

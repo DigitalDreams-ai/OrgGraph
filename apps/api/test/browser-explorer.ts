@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   assessMetadataCatalogCoverage,
+  describeMetadataCatalogCoverage,
   buildMemberTree
 } from '../../web/app/workspaces/browser/browser-explorer';
 import type { MetadataCatalogPayload } from '../../web/app/workspaces/browser/types';
@@ -38,6 +39,10 @@ function run(): void {
   const fullCoverage = assessMetadataCatalogCoverage(fullCatalog, []);
   assert.equal(fullCoverage.state, 'full');
   assert.match(fullCoverage.summary, /live metadata family coverage/i);
+  const fullPanel = describeMetadataCatalogCoverage(fullCatalog, []);
+  assert.equal(fullPanel.badgeLabel, 'Live coverage');
+  assert.equal(fullPanel.countsLabel, '3 of 3 families visible');
+  assert.match(fullPanel.nextStep, /search by metadata name/i);
 
   const localCoverage = assessMetadataCatalogCoverage(
     {
@@ -60,6 +65,11 @@ function run(): void {
     fallbackCoverage.reasons.some((reason) => /fell back/i.test(reason)),
     'fallback warning should report limited coverage'
   );
+  const fallbackPanel = describeMetadataCatalogCoverage(fullCatalog, [
+    'live metadata family discovery unavailable; using non-cached fallback family set'
+  ]);
+  assert.equal(fallbackPanel.badgeLabel, 'Coverage limited');
+  assert.match(fallbackPanel.nextStep, /force refresh/i);
 
   const truncatedCoverage = assessMetadataCatalogCoverage(
     {
@@ -74,10 +84,23 @@ function run(): void {
     truncatedCoverage.reasons.some((reason) => /truncating the visible family list/i.test(reason)),
     'truncation warning should report limited coverage'
   );
+  const truncatedPanel = describeMetadataCatalogCoverage(
+    {
+      ...fullCatalog,
+      totalTypes: 125,
+      types: fullCatalog.types.slice(0, 3)
+    },
+    ['result truncated to limit=3']
+  );
+  assert.equal(truncatedPanel.countsLabel, '3 of 125 families visible');
+  assert.match(truncatedPanel.nextStep, /increase search\/member limit/i);
 
   const unavailableCoverage = assessMetadataCatalogCoverage(null, []);
   assert.equal(unavailableCoverage.state, 'unavailable');
   assert.match(unavailableCoverage.summary, /not loaded yet/i);
+  const unavailablePanel = describeMetadataCatalogCoverage(null, []);
+  assert.equal(unavailablePanel.badgeLabel, 'Not loaded');
+  assert.match(unavailablePanel.nextStep, /load all families/i);
 
   console.log('browser explorer test passed');
 }
