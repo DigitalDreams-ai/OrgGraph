@@ -8,6 +8,12 @@ import type {
   RefreshRunView
 } from './types';
 import { assessRetrieveHandoff } from '../browser/retrieve-handoff';
+import {
+  assessDiffRunLineage,
+  assessOrgRetrieveRunLineage,
+  assessRefreshRunLineage,
+  type WorkflowLineageAssessment
+} from './workflow-lineage';
 
 interface RefreshWorkspaceProps {
   activeAlias: string;
@@ -49,36 +55,45 @@ function formatTimestamp(value?: string): string {
   return new Date(parsed).toLocaleString();
 }
 
-function normalizeRuntimePath(value: string): string {
-  return value
-    .trim()
-    .replace(/\\/g, '/')
-    .replace(/\/+/g, '/')
-    .replace(/\/$/, '')
-    .toLowerCase();
-}
-
-function pathsMatch(left?: string, right?: string): boolean {
-  if (!left || !right) {
-    return false;
+function lineageTone(assessment: WorkflowLineageAssessment): 'good' | 'muted' | 'bad' {
+  if (assessment.state === 'current') {
+    return 'good';
   }
-  return normalizeRuntimePath(left) === normalizeRuntimePath(right);
+  if (assessment.state === 'missing') {
+    return 'muted';
+  }
+  return 'bad';
 }
 
 export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
   const expectedAlias = props.activeAlias || props.selectedAlias;
   const retrieveHandoff = assessRetrieveHandoff(props.retrieveHandoff, expectedAlias);
+  const refreshLineage = assessRefreshRunLineage(
+    props.lastRefreshRun,
+    props.retrieveHandoff,
+    props.retrieveSelections,
+    expectedAlias
+  );
+  const diffLineage = assessDiffRunLineage(
+    props.lastDiffRun,
+    props.retrieveHandoff,
+    props.retrieveSelections,
+    expectedAlias,
+    props.lastRefreshRun
+  );
+  const orgRetrieveLineage = assessOrgRetrieveRunLineage(
+    props.lastOrgRetrieveRun,
+    props.retrieveHandoff,
+    props.retrieveSelections,
+    expectedAlias
+  );
   const stagedSelectionCount = props.retrieveSelections.length;
   const refreshBlocked = retrieveHandoff.state !== 'ready' || stagedSelectionCount === 0;
   const orgRetrieveBlocked =
     props.orgRunRetrieve && (retrieveHandoff.state !== 'ready' || stagedSelectionCount === 0);
   const stagedSelectionPreview = props.retrieveSelections.slice(0, 6);
   const stagedSelectionOverflow = Math.max(stagedSelectionCount - stagedSelectionPreview.length, 0);
-  const refreshSourceParity =
-    props.lastRefreshRun && props.retrieveHandoff
-      ? pathsMatch(props.lastRefreshRun.sourcePath, props.retrieveHandoff.parsePath)
-      : null;
-  const diffBlockedBySourceParity = refreshSourceParity === false;
+  const diffBlockedByRefreshLineage = refreshLineage.state !== 'current';
 
   return (
     <>
@@ -197,22 +212,23 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
                 <span className={`decision-badge ${props.lastRefreshRun.skipped ? 'muted' : 'good'}`}>
                   Skipped: {String(props.lastRefreshRun.skipped)}
                 </span>
-                {props.retrieveHandoff ? (
-                  <span className={`decision-badge ${refreshSourceParity ? 'good' : 'bad'}`}>
-                    Handoff source match: {String(refreshSourceParity)}
-                  </span>
-                ) : null}
+                <span className={`decision-badge ${lineageTone(refreshLineage)}`}>
+                  Lineage: {refreshLineage.state}
+                </span>
               </div>
               <p><strong>Snapshot:</strong> {props.lastRefreshRun.snapshotId}</p>
               <p><strong>Source path:</strong> {props.lastRefreshRun.sourcePath || 'n/a'}</p>
               <p><strong>Counts:</strong> {props.lastRefreshRun.nodeCount} nodes, {props.lastRefreshRun.edgeCount} edges, {props.lastRefreshRun.evidenceCount} evidence</p>
               <p><strong>Meaning change:</strong> {props.lastRefreshRun.meaningChangeSummary || 'n/a'}</p>
               <p><strong>Drift summary:</strong> {props.lastRefreshRun.driftSummary || 'n/a'}</p>
-              {diffBlockedBySourceParity && props.retrieveHandoff ? (
-                <p>
-                  <strong>Fail closed:</strong> refresh source path does not match current Browser handoff parse
-                  path. Run `Retrieve Cart` and `Run Refresh` again before diff.
-                </p>
+              {refreshLineage.state !== 'current' ? (
+                <ul className="issue-list">
+                  {refreshLineage.reasons.map((reason) => (
+                    <li key={reason}>
+                      <strong>Refresh lineage stale.</strong> {reason}
+                    </li>
+                  ))}
+                </ul>
               ) : null}
             </>
           ) : (
@@ -247,41 +263,47 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
           </li>
           <li>
             <div className="decision-meta">
-              <span className={`decision-badge ${props.lastRefreshRun ? 'good' : 'muted'}`}>Refresh</span>
+              <span className={`decision-badge ${lineageTone(refreshLineage)}`}>Refresh</span>
               <span className="decision-badge muted">
                 {props.lastRefreshRun ? props.lastRefreshRun.snapshotId : 'waiting'}
               </span>
             </div>
             <p>
-              {props.lastRefreshRun
-                ? `${props.lastRefreshRun.mode} rebuild captured ${props.lastRefreshRun.nodeCount} nodes and ${props.lastRefreshRun.edgeCount} edges.`
-                : 'Run Refresh to capture the next grounded snapshot.'}
+              {refreshLineage.state === 'current' && props.lastRefreshRun
+                ? `${props.lastRefreshRun.mode} rebuild captured ${props.lastRefreshRun.nodeCount} nodes and ${props.lastRefreshRun.edgeCount} edges for the current Browser handoff.`
+                : refreshLineage.state === 'stale'
+                  ? `Latest Refresh is stale. ${refreshLineage.reasons[0]}`
+                  : 'Run Refresh to capture the next grounded snapshot.'}
             </p>
           </li>
           <li>
             <div className="decision-meta">
-              <span className={`decision-badge ${props.lastDiffRun ? 'good' : 'muted'}`}>Diff</span>
+              <span className={`decision-badge ${lineageTone(diffLineage)}`}>Diff</span>
               <span className="decision-badge muted">
                 {props.lastDiffRun ? `${props.lastDiffRun.fromSnapshotId} → ${props.lastDiffRun.toSnapshotId}` : 'waiting'}
               </span>
             </div>
             <p>
-              {props.lastDiffRun
+              {diffLineage.state === 'current' && props.lastDiffRun
                 ? `${props.lastDiffRun.meaningChangeSummary || 'Diff captured.'} Structure changed: ${String(props.lastDiffRun.structureDigestChanged)}.`
-                : 'Run Diff after two snapshots are available.'}
+                : diffLineage.state === 'stale'
+                  ? `Latest Diff is stale. ${diffLineage.reasons[0]}`
+                  : 'Run Diff after two snapshots are available.'}
             </p>
           </li>
           <li>
             <div className="decision-meta">
-              <span className={`decision-badge ${props.lastOrgRetrieveRun ? 'good' : 'muted'}`}>Org retrieve</span>
+              <span className={`decision-badge ${lineageTone(orgRetrieveLineage)}`}>Org retrieve</span>
               <span className="decision-badge muted">
                 {props.lastOrgRetrieveRun ? formatTimestamp(props.lastOrgRetrieveRun.completedAt) : 'waiting'}
               </span>
             </div>
             <p>
-              {props.lastOrgRetrieveRun
-                ? `Latest pipeline ran ${props.lastOrgRetrieveRun.stepSummary.length} staged step${props.lastOrgRetrieveRun.stepSummary.length === 1 ? '' : 's'}.`
-                : 'Run Org Retrieve when the rebuild path should include auth and metadata retrieval from this workspace.'}
+              {orgRetrieveLineage.state === 'current' && props.lastOrgRetrieveRun
+                ? `Latest pipeline ran ${props.lastOrgRetrieveRun.stepSummary.length} staged step${props.lastOrgRetrieveRun.stepSummary.length === 1 ? '' : 's'} for the current Browser handoff.`
+                : orgRetrieveLineage.state === 'stale'
+                  ? `Latest Org Retrieve is stale. ${orgRetrieveLineage.reasons[0]}`
+                  : orgRetrieveLineage.reasons[0]}
             </p>
           </li>
         </ul>
@@ -335,7 +357,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
           onClick={props.onRunDiff}
           disabled={
             props.loading ||
-            diffBlockedBySourceParity ||
+            diffBlockedByRefreshLineage ||
             props.fromSnapshot.trim().length === 0 ||
             props.toSnapshot.trim().length === 0 ||
             props.fromSnapshot.trim() === props.toSnapshot.trim()
@@ -346,14 +368,12 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
       </div>
       <p className="muted">
         Run Refresh to auto-fill the latest snapshot pair for diff. Diff stays fail-closed until both snapshot IDs
-        are present and distinct.
+        are present, distinct, and still belong to the current Browser handoff.
       </p>
-      {diffBlockedBySourceParity && props.retrieveHandoff ? (
+      {diffBlockedByRefreshLineage ? (
         <ul className="issue-list">
           <li>
-            <strong>Fail closed.</strong> Latest refresh source path (`{props.lastRefreshRun?.sourcePath || 'n/a'}`)
-            does not match Browser handoff parse path (`{props.retrieveHandoff.parsePath}`). Re-run `Retrieve Cart`
-            and `Run Refresh` before diff.
+            <strong>Fail closed.</strong> {refreshLineage.reasons[0] ?? 'Latest Refresh no longer belongs to the current Browser handoff. Re-run Retrieve Cart and Run Refresh before diff.'}
           </li>
         </ul>
       ) : null}
@@ -369,6 +389,9 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
             <span className={`decision-badge ${props.lastDiffRun.structureDigestChanged ? 'bad' : 'muted'}`}>
               Structure changed: {String(props.lastDiffRun.structureDigestChanged)}
             </span>
+            <span className={`decision-badge ${lineageTone(diffLineage)}`}>
+              Lineage: {diffLineage.state}
+            </span>
           </div>
           <p><strong>From:</strong> {props.lastDiffRun.fromSnapshotId}</p>
           <p><strong>To:</strong> {props.lastDiffRun.toSnapshotId}</p>
@@ -376,6 +399,15 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
           <p><strong>Node delta:</strong> +{props.lastDiffRun.addedNodeCount} / -{props.lastDiffRun.removedNodeCount}</p>
           <p><strong>Edge delta:</strong> +{props.lastDiffRun.addedEdgeCount} / -{props.lastDiffRun.removedEdgeCount}</p>
           <p><strong>Drift summary:</strong> {props.lastDiffRun.driftSummary || 'n/a'}</p>
+          {diffLineage.state !== 'current' ? (
+            <ul className="issue-list">
+              {diffLineage.reasons.map((reason) => (
+                <li key={reason}>
+                  <strong>Diff lineage stale.</strong> {reason}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </article>
       ) : null}
 
@@ -436,6 +468,9 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
           <div className="decision-meta">
             <span className="decision-badge good">Status: {props.lastOrgRetrieveRun.status}</span>
             <span className="decision-badge muted">Alias: {props.lastOrgRetrieveRun.alias}</span>
+            <span className={`decision-badge ${lineageTone(orgRetrieveLineage)}`}>
+              Lineage: {orgRetrieveLineage.state}
+            </span>
           </div>
           <p><strong>Completed:</strong> {formatTimestamp(props.lastOrgRetrieveRun.completedAt)}</p>
           <p><strong>Project path:</strong> {props.lastOrgRetrieveRun.projectPath}</p>
@@ -455,6 +490,15 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
               </li>
             ))}
           </ul>
+          {orgRetrieveLineage.state !== 'current' ? (
+            <ul className="issue-list">
+              {orgRetrieveLineage.reasons.map((reason) => (
+                <li key={reason}>
+                  <strong>Org Retrieve lineage stale.</strong> {reason}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </article>
       ) : null}
     </>

@@ -5,6 +5,10 @@ import type { QueryResponse } from '../../lib/ask-client';
 import { runOrgRetrieve } from '../../lib/org-client';
 import { getRefreshDiff, runRefresh } from '../../lib/refresh-client';
 import { assessRetrieveHandoff } from '../browser/retrieve-handoff';
+import {
+  assessRefreshRunLineage,
+  buildWorkflowLineage
+} from './workflow-lineage';
 import type {
   OrgRetrieveRunView,
   RefreshDiffView,
@@ -59,28 +63,6 @@ function parseRefreshRun(response: QueryResponse): RefreshRunView | null {
     driftSummary: String(driftEvaluation.summary ?? ''),
     driftViolationCount: Number(driftEvaluation.violationCount ?? 0)
   };
-}
-
-function normalizeRuntimePath(value: string): string {
-  return value
-    .trim()
-    .replace(/\\/g, '/')
-    .replace(/\/+/g, '/')
-    .replace(/\/$/, '')
-    .toLowerCase();
-}
-
-function refreshSourceMatchesHandoff(
-  refreshRun: RefreshRunView | null,
-  retrieveHandoff: RefreshRetrieveHandoffView | null
-): boolean {
-  if (!refreshRun || !retrieveHandoff) {
-    return true;
-  }
-  if (!refreshRun.sourcePath || !retrieveHandoff.parsePath) {
-    return false;
-  }
-  return normalizeRuntimePath(refreshRun.sourcePath) === normalizeRuntimePath(retrieveHandoff.parsePath);
 }
 
 function parseRefreshDiff(response: QueryResponse): RefreshDiffView | null {
@@ -331,7 +313,19 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
         setLastRefreshRun(null);
       } else {
         const parsedRun = parseRefreshRun(result);
-        setLastRefreshRun(parsedRun);
+        setLastRefreshRun(
+          parsedRun
+            ? {
+                ...parsedRun,
+                lineage:
+                  buildWorkflowLineage(
+                    options.retrieveHandoff,
+                    options.retrieveSelections,
+                    options.orgAlias
+                  ) ?? undefined
+              }
+            : null
+        );
         if (parsedRun?.snapshotId) {
           rememberRefreshSnapshot(parsedRun.snapshotId);
         }
@@ -352,9 +346,16 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
     options.setCopied(false);
     options.setErrorText('');
 
-    if (!refreshSourceMatchesHandoff(lastRefreshRun, options.retrieveHandoff)) {
+    const refreshLineage = assessRefreshRunLineage(
+      lastRefreshRun,
+      options.retrieveHandoff,
+      options.retrieveSelections,
+      options.orgAlias
+    );
+
+    if (refreshLineage.state !== 'current') {
       const message =
-        'Diff blocked because the latest Refresh snapshot source path does not match the current Browser handoff parse path. Run Retrieve Cart and Refresh again before diff.';
+        `Diff blocked until the latest Refresh belongs to the current Browser handoff. ${refreshLineage.reasons[0] ?? 'Run Retrieve Cart and Refresh again before diff.'}`;
       const response: QueryResponse = {
         ok: false,
         statusCode: 400,
@@ -412,7 +413,21 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
         options.setErrorText(options.resolveErrorMessage(result));
         setLastDiffRun(null);
       } else {
-        setLastDiffRun(parseRefreshDiff(result));
+        const parsedDiff = parseRefreshDiff(result);
+        setLastDiffRun(
+          parsedDiff
+            ? {
+                ...parsedDiff,
+                refreshSnapshotId: lastRefreshRun?.snapshotId,
+                lineage:
+                  buildWorkflowLineage(
+                    options.retrieveHandoff,
+                    options.retrieveSelections,
+                    options.orgAlias
+                  ) ?? undefined
+              }
+            : null
+        );
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected refresh diff failure';
@@ -477,7 +492,22 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
         options.setErrorText(options.resolveErrorMessage(result));
         setLastOrgRetrieveRun(null);
       } else {
-        setLastOrgRetrieveRun(parseOrgRetrieveRun(result));
+        const parsedOrgRetrieve = parseOrgRetrieveRun(result);
+        setLastOrgRetrieveRun(
+          parsedOrgRetrieve
+            ? {
+                ...parsedOrgRetrieve,
+                runRetrieve: orgRunRetrieve,
+                lineage: orgRunRetrieve
+                  ? buildWorkflowLineage(
+                      options.retrieveHandoff,
+                      options.retrieveSelections,
+                      options.orgAlias
+                    ) ?? undefined
+                  : undefined
+              }
+            : null
+        );
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected org retrieve failure';
