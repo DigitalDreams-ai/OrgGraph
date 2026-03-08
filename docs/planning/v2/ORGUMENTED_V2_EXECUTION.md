@@ -72,6 +72,7 @@ Materially true now:
 - org-retrieve summaries now distinguish handoff-backed pipeline runs from auth-only runs, so the staged workflow cannot silently treat a non-retrieve pipeline step as current rebuild evidence
 - `Refresh & Build` now presents a numbered four-stage operator sequence (`Retrieve Cart`, `Refresh Semantic State`, `Compare Snapshot Drift`, `Run Org Pipeline`) with deterministic state badges and one explicit next action
 - refresh workspace labels and runbook steps now use the same operator language, reducing the last retrieve -> refresh handoff ambiguity between Browser, Refresh, and the real-org quickstart
+- wave5 retrieve -> refresh -> diff handoff closure is now materially complete (`B008`, `D005`, `G007`, `G008`), with the primary operator path visible and executable without raw JSON
 - flow grounding now prioritizes explicit flow-name asks over weak object-token inference (prevents false `no automation found for the` fallbacks)
 - flow grounding now adds deterministic targeted evidence retry for explicit flow-name asks when first-pass evidence ranking misses the named flow
 - flow grounding now tolerates quoted/article-prefixed flow references (for example `Flow "the X" reads and writes`) and keeps explicit-flow asks off the generic object fallback path
@@ -170,14 +171,9 @@ Rules:
 - lock runtime-unavailable vs tool-missing behavior across remaining workspace surfaces
 - add explicit regression tests for readiness + org status surfaces
 
-2. Wave5 finish slice:
-- close retrieve -> refresh -> diff handoff proof gaps for real-org workflows
-- lock staged summaries and fail-closed guidance when handoff is incomplete
-
-Wave5 handoff-proof slice now in progress on top of current main:
-- keep refresh, diff, and org-retrieve summaries explicitly current-vs-stale against the latest Browser handoff
-- close the remaining real-org proof gap for retrieve -> refresh -> diff -> org-retrieve without raw JSON fallback
-- make the staged operator sequence self-explanatory enough that a real-org operator can follow the handoff path without inferring button order from backend summary cards
+2. Wave7 finish slice:
+- deepen packet usefulness for approval and retrieved-metadata review scenarios
+- keep reads/writes/change-impact synthesis specific enough to serve as a primary operator artifact
 
 3. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage
