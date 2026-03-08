@@ -90,12 +90,15 @@ sf org display --target-org shulman-uat --json
 
 Inside Orgumented:
 1. Open `Org Browser`.
-2. In `Search Org Files And Metadata`, type:
+2. Check the `Catalog coverage` badge in the top browser card.
+3. If it shows `limited`, read the discovery warning text before assuming the list is full-org coverage.
+4. In `Search Org Files And Metadata`, type:
    - `Opportunity`
-3. Click `Search`.
-4. Wait for matching results to appear.
-5. Use checkboxes next to the item(s) you want.
-6. Click `Retrieve Cart`.
+5. Click `Search`.
+6. Wait for matching family rows to appear.
+7. Click the triangle on the family row you want. This loads the actual child tree for that family.
+8. Use checkboxes next to the family, folder, or item(s) you want.
+9. Click `Retrieve Cart`.
 
 Expected result:
 - retrieve succeeds
@@ -103,10 +106,11 @@ Expected result:
 - no empty-selection failure
 
 If you get no results:
-1. Click `Refresh Types`.
+1. Click `Browse All`.
 2. Click `Load Trees`.
 3. Click the triangle on a family row to expand nested members, then select via checkbox.
-4. Click `Retrieve Cart` again.
+4. If `Catalog coverage` still shows `limited`, review the discovery warnings before treating the visible list as complete org inventory.
+5. Click `Retrieve Cart` again.
 
 ## 4) Verify Handoff In Refresh & Build
 
