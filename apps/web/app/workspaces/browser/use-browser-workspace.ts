@@ -17,6 +17,7 @@ import type {
   MetadataSelection,
   MetadataSelectionSummary
 } from './types';
+import { filterMetadataCatalogTypes } from './browser-explorer';
 
 interface UseBrowserWorkspaceOptions {
   activeAlias: string;
@@ -184,6 +185,7 @@ function parseStoredRetrieveHandoff(raw: string | null): StoredRetrieveHandoffSt
 
 export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const [metadataSearch, setMetadataSearch] = useState('');
+  const [metadataFamilySearch, setMetadataFamilySearch] = useState('');
   const [metadataMemberSearch, setMetadataMemberSearch] = useState('');
   const [metadataLimitRaw, setMetadataLimitRaw] = useState(String(DEFAULT_METADATA_LIMIT));
   const [metadataForceRefresh, setMetadataForceRefresh] = useState(false);
@@ -202,8 +204,9 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   const metadataSelectionsPreview = useMemo(() => JSON.stringify(metadataSelected, null, 2), [metadataSelected]);
   const selectionSummary = useMemo(() => buildSelectionSummary(metadataSelected), [metadataSelected]);
   const visibleCatalogTypes = useMemo(
-    () => (metadataCatalog?.types ?? []).map((entry) => entry.type),
-    [metadataCatalog]
+    () =>
+      filterMetadataCatalogTypes(metadataCatalog?.types ?? [], metadataFamilySearch).map((entry) => entry.type),
+    [metadataCatalog, metadataFamilySearch]
   );
 
   useEffect(() => {
@@ -253,6 +256,7 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
 
   function clearFilters(): void {
     setMetadataSearch('');
+    setMetadataFamilySearch('');
     setMetadataMemberSearch('');
     setMetadataForceRefresh(false);
     setMetadataSearchResults([]);
@@ -553,8 +557,8 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     }
   }
 
-  async function loadVisibleMembers(): Promise<void> {
-    const visibleTypes = (metadataCatalog?.types ?? []).map((entry) => entry.type);
+  async function loadVisibleMembers(overrideVisibleTypes?: string[]): Promise<void> {
+    const visibleTypes = overrideVisibleTypes ?? visibleCatalogTypes;
     if (visibleTypes.length === 0) {
       return;
     }
@@ -656,6 +660,8 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   return {
     metadataSearch,
     setMetadataSearch,
+    metadataFamilySearch,
+    setMetadataFamilySearch,
     metadataMemberSearch,
     setMetadataMemberSearch,
     metadataLimitRaw,

@@ -31,6 +31,10 @@ export interface MetadataCatalogCoveragePanel extends MetadataCatalogCoverage {
   nextStep: string;
 }
 
+function normalizeMetadataFilterValue(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
 function splitMemberPath(member: string): string[] {
   if (member.includes('/')) {
     return member.split('/').filter((part) => part.length > 0);
@@ -89,6 +93,35 @@ export function buildMemberTree(memberNames: string[]): MemberTreeNode[] {
       }));
 
   return finalize(root);
+}
+
+export function filterMetadataCatalogTypes(
+  types: MetadataCatalogPayload['types'],
+  filterValue: string
+): MetadataCatalogPayload['types'] {
+  const trimmed = filterValue.trim();
+  if (trimmed.length === 0) {
+    return types;
+  }
+
+  const normalizedFilter = normalizeMetadataFilterValue(trimmed);
+
+  return types.filter((typeRow) => {
+    const candidates = [
+      typeRow.type,
+      typeRow.directoryName ?? '',
+      typeRow.suffix ?? '',
+      ...(typeRow.childXmlNames ?? [])
+    ];
+
+    return candidates.some((candidate) => {
+      const lowered = candidate.toLowerCase();
+      if (lowered.includes(trimmed.toLowerCase())) {
+        return true;
+      }
+      return normalizeMetadataFilterValue(candidate).includes(normalizedFilter);
+    });
+  });
 }
 
 function addCoverageReason(reasons: string[], reason: string): void {
