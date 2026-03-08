@@ -1,6 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import {
+  assessMetadataCatalogCoverage,
+  buildMemberTree,
+  type MemberTreeNode
+} from './browser-explorer';
 import type {
   MetadataCatalogPayload,
   MetadataMembersPayload,
@@ -138,82 +143,13 @@ function formatFamilyDescriptor(typeRow: MetadataCatalogPayload['types'][number]
   return descriptors;
 }
 
-interface MemberTreeNode {
-  key: string;
-  label: string;
-  memberNames: string[];
-  children: MemberTreeNode[];
-  isLeaf: boolean;
-}
-
-interface MutableMemberTreeNode {
-  key: string;
-  label: string;
-  memberNames: Set<string>;
-  children: Map<string, MutableMemberTreeNode>;
-  isLeaf: boolean;
-}
-
-function splitMemberPath(member: string): string[] {
-  if (member.includes('/')) {
-    return member.split('/').filter((part) => part.length > 0);
-  }
-  if (member.includes('.')) {
-    return member.split('.').filter((part) => part.length > 0);
-  }
-  return [member];
-}
-
-function buildMemberTree(memberNames: string[]): MemberTreeNode[] {
-  const root = new Map<string, MutableMemberTreeNode>();
-
-  for (const memberName of memberNames) {
-    const segments = splitMemberPath(memberName);
-    if (segments.length === 0) {
-      continue;
-    }
-    let current = root;
-    const pathParts: string[] = [];
-    for (let index = 0; index < segments.length; index += 1) {
-      const segment = segments[index];
-      pathParts.push(segment);
-      const nodeKey = pathParts.join('/');
-      let node = current.get(segment);
-      if (!node) {
-        node = {
-          key: nodeKey,
-          label: segment,
-          memberNames: new Set<string>(),
-          children: new Map<string, MutableMemberTreeNode>(),
-          isLeaf: false
-        };
-        current.set(segment, node);
-      }
-      node.memberNames.add(memberName);
-      if (index === segments.length - 1) {
-        node.isLeaf = true;
-      }
-      current = node.children;
-    }
-  }
-
-  const finalize = (nodes: Map<string, MutableMemberTreeNode>): MemberTreeNode[] =>
-    Array.from(nodes.values())
-      .sort((left, right) => left.label.localeCompare(right.label))
-      .map((node) => ({
-        key: node.key,
-        label: node.label,
-        memberNames: Array.from(node.memberNames).sort((left, right) => left.localeCompare(right)),
-        children: finalize(node.children),
-        isLeaf: node.isLeaf
-      }));
-
-  return finalize(root);
-}
-
 export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
   const expectedAlias = props.activeAlias || props.selectedAlias;
   const retrieveHandoff = assessRetrieveHandoff(props.lastMetadataRetrieve, expectedAlias);
+  const catalogCoverage = useMemo(
+    () => assessMetadataCatalogCoverage(props.metadataCatalog, props.metadataWarnings),
+    [props.metadataCatalog, props.metadataWarnings]
+  );
   const groupedSearchResults = groupSearchResults(props.metadataSearchResults);
   const familyDescriptors = useMemo(
     () =>
@@ -235,11 +171,15 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       props.onLoadMembers(type);
     }
   };
-  const toggleSearchFamily = (type: string): void => {
+  const toggleSearchFamily = (type: string, shouldLoadMembers: boolean): void => {
+    const nextOpen = !Boolean(expandedSearchFamilies[type]);
     setExpandedSearchFamilies((current) => ({
       ...current,
-      [type]: !(current[type] ?? true)
+      [type]: nextOpen
     }));
+    if (nextOpen && shouldLoadMembers) {
+      props.onLoadMembers(type);
+    }
   };
   const toggleMemberNode = (type: string, nodeKey: string): void => {
     const key = `${type}:${nodeKey}`;
@@ -275,12 +215,17 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
   const renderMemberTreeNodes = (
     type: string,
     nodes: MemberTreeNode[],
-    typeSelectionState: 'none' | 'partial' | 'all'
+    typeSelectionState: 'none' | 'partial' | 'all',
+    searchMatchedMembers?: ReadonlySet<string>
   ): JSX.Element[] =>
     nodes.map((node) => {
       const selectionState = nodeSelectionState(type, node.memberNames);
       const hasChildren = node.children.length > 0;
       const nodeExpanded = hasChildren ? isMemberNodeExpanded(type, node.key) : false;
+      const matchedLeafCount = searchMatchedMembers
+        ? node.memberNames.filter((memberName) => searchMatchedMembers.has(memberName)).length
+        : 0;
+      const hasSearchMatch = matchedLeafCount > 0;
       return (
         <li key={`${type}:${node.key}`}>
           <div className="member-tree-row">
@@ -306,8 +251,12 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                 typeSelectionState === 'all'
                   ? 'included via family selection'
                   : node.isLeaf
-                    ? 'select this single item'
-                    : `${node.memberNames.length} nested item(s) • check to include this folder`
+                    ? hasSearchMatch
+                      ? 'matched by search • check for only this item'
+                      : 'select this single item'
+                    : hasSearchMatch
+                      ? `${matchedLeafCount} matched descendant(s) • check to include this folder`
+                      : `${node.memberNames.length} nested item(s) • check to include this folder`
               }
               onChange={(checked) =>
                 node.isLeaf && node.memberNames.length === 1
@@ -318,7 +267,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           </div>
           {hasChildren && nodeExpanded ? (
             <ul className="member-list member-tree-children">
-              {renderMemberTreeNodes(type, node.children, typeSelectionState)}
+              {renderMemberTreeNodes(type, node.children, typeSelectionState, searchMatchedMembers)}
             </ul>
           ) : null}
         </li>
@@ -337,10 +286,21 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           <div className="decision-meta">
             <span className="decision-badge good">Active alias: {props.activeAlias || 'n/a'}</span>
             <span className="decision-badge muted">Selected alias: {props.selectedAlias || 'n/a'}</span>
+            <span className={`decision-badge ${catalogCoverage.state === 'full' ? 'good' : 'bad'}`}>
+              Catalog coverage: {catalogCoverage.state}
+            </span>
           </div>
           <p><strong>Catalog source:</strong> {props.metadataCatalog?.source || 'not loaded'}</p>
           <p><strong>Refreshed:</strong> {formatTimestamp(props.metadataCatalog?.refreshedAt)}</p>
           <p><strong>Total types:</strong> {props.metadataCatalog?.totalTypes ?? 0}</p>
+          <p className="muted">{catalogCoverage.summary}</p>
+          {catalogCoverage.reasons.length > 1 ? (
+            <ul className="issue-list">
+              {catalogCoverage.reasons.slice(1).map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+          ) : null}
         </article>
 
         <article className="sub-card">
@@ -458,7 +418,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       <article className="sub-card">
         <p className="panel-caption">Quick workflow</p>
         <ol className="workflow-step-list">
-          <li>Search by name or click Browse All to load every family.</li>
+          <li>Search by name or click Browse All to load the current family catalog.</li>
           <li>Check any row you want in the retrieve cart (family, folder, or single item).</li>
           <li>Run <strong>Retrieve Cart</strong>, then continue in <strong>Refresh &amp; Build</strong>.</li>
         </ol>
@@ -488,8 +448,20 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           {groupedSearchResults.length > 0 ? (
             <div className="org-browser-frame org-browser-frame-search">
               {groupedSearchResults.map((group) => {
-                const isExpanded = expandedSearchFamilies[group.type] ?? true;
+                const isExpanded = Boolean(expandedSearchFamilies[group.type]);
                 const descriptors = familyDescriptors.get(group.type) ?? [];
+                const membersPayload = props.metadataMembersByType[group.type];
+                const members = membersPayload?.members || [];
+                const memberTree = buildMemberTree(members.map((member) => member.name));
+                const typeSelectionState = props.getTypeSelectionState(group.type);
+                const membersLoaded = Boolean(membersPayload);
+                const shouldAutoLoadMembers =
+                  !membersLoaded && props.metadataLoadingType !== group.type && !props.loading;
+                const matchedMemberNames = new Set(
+                  group.results
+                    .filter((result) => result.kind === 'member')
+                    .map((result) => result.name)
+                );
                 return (
                   <section key={group.type} className={`metadata-family metadata-family-search ${isExpanded ? 'is-open' : ''}`}>
                     <div className="metadata-family-head">
@@ -498,7 +470,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                         className="metadata-family-chevron"
                         aria-expanded={isExpanded}
                         aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${group.type} search results`}
-                        onClick={() => toggleSearchFamily(group.type)}
+                        onClick={() => toggleSearchFamily(group.type, shouldAutoLoadMembers)}
                       >
                         <span aria-hidden>{isExpanded ? '▾' : '▸'}</span>
                       </button>
@@ -525,29 +497,27 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                       </span>
                     </div>
                     {isExpanded ? (
-                      <ul className="member-list explorer-list">
-                        {group.results.map((result) => (
-                          <li key={`${result.kind}:${result.type}:${result.name}`} className="explorer-item">
-                            <SelectionCheckbox
-                              checked={result.kind === 'member' ? props.isMemberSelected(result.type, result.name) : props.getTypeSelectionState(result.type) === 'all'}
-                              disabled={result.kind === 'member' && props.getTypeSelectionState(result.type) === 'all'}
-                              label={result.name}
-                              hint={
-                                result.kind === 'member'
-                                  ? `${group.type} • matched ${result.matchField} • check for only this item`
-                                  : `${group.type} • check to include all nested items`
-                              }
-                              onChange={(checked) =>
-                                result.kind === 'member'
-                                  ? props.onSetMemberSelected(result.type, result.name, checked)
-                                  : props.onSetTypeSelected(result.type, checked)
-                              }
-                            />
-                          </li>
-                        ))}
-                      </ul>
+                      <>
+                        <p className="muted">
+                          {matchedMemberNames.size > 0
+                            ? `${matchedMemberNames.size} matched item${matchedMemberNames.size === 1 ? '' : 's'} in this family. Expand folders below to inspect the full loaded tree.`
+                            : 'No direct member match was returned. Expand the family tree below to inspect available child items.'}
+                        </p>
+                        {props.metadataLoadingType === group.type ? <p className="muted">Loading family items...</p> : null}
+                        {members.length > 0 ? (
+                          <ul className="member-list member-tree-root">
+                            {renderMemberTreeNodes(group.type, memberTree, typeSelectionState, matchedMemberNames)}
+                          </ul>
+                        ) : membersLoaded ? (
+                          <p className="muted">
+                            No child items were returned for this family. It may still be valid metadata with zero discoverable child items in the current org.
+                          </p>
+                        ) : (
+                          <p className="muted">Loading child items. If this remains empty, run Force Refresh and try again.</p>
+                        )}
+                      </>
                     ) : (
-                      <p className="muted metadata-family-collapsed-hint">Click the triangle to review matched items in this family.</p>
+                      <p className="muted metadata-family-collapsed-hint">Click the triangle to load and browse child items in this family.</p>
                     )}
                   </section>
                 );
@@ -568,6 +538,9 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
 
       <p className="panel-caption">Browse by metadata family</p>
       <p className="muted">Showing {props.metadataCatalog?.types.length ?? 0} family rows from the current catalog. Use the triangles to expand families and browse child items.</p>
+      {catalogCoverage.state !== 'full' ? (
+        <p className="muted">Catalog coverage is limited. Review the discovery warnings and coverage notes above before treating this as full org inventory.</p>
+      ) : null}
       <div className="org-browser-frame">
         {(props.metadataCatalog?.types || []).map((typeRow) => {
           const membersPayload = props.metadataMembersByType[typeRow.type];

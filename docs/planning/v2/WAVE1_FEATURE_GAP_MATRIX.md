@@ -35,7 +35,7 @@ Purpose:
 | G021 | Release Ops | Release and rollback discipline for packaged desktop | Reduces production deployment risk | Wave12 | Release checklist and rollback proof complete | Open |
 | G022 | Stabilization | Post-release hotfix window before Stage 2 expansion | Protects quality and trust before scope growth | Wave13 | Stabilization exit criteria satisfied | Open |
 | G023 | Governance | Locked no-restart execution policy with objective rebuild triggers | Prevents churn and preserves progress toward Stage 1 gates | Wave11 | Pivot-lock rules are codified and used as active execution policy | In Progress |
-| G024 | Org Browser | Complete metadata-family coverage with explicit and reliable tree expansion | Operators must browse by familiar family and expand child items without hidden gestures | Wave11 | Browser lists full discovered families and every family row expands/collapses with deterministic child loading | In Progress |
+| G024 | Org Browser | Complete metadata-family coverage with explicit and reliable tree expansion from both browse and search surfaces | Operators must browse by familiar family and expand child items without hidden gestures or ambiguous coverage state | Wave11 | Browser lists full discovered families and every family row expands/collapses with deterministic child loading | In Progress |
 
 ## Mapping Rule
 
