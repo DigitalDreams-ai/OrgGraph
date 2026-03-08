@@ -92,13 +92,14 @@ Inside Orgumented:
 1. Open `Org Browser`.
 2. Check the `Catalog coverage` badge in the top browser card.
 3. If it shows `limited`, read the discovery warning text before assuming the list is full-org coverage.
-4. In `Search Org Files And Metadata`, type:
+4. If the family list is too broad, use `Filter Metadata Families` to narrow the explorer without changing the retrieve cart.
+5. In `Search Org Files And Metadata`, type:
    - `Opportunity`
-5. Click `Search`.
-6. Wait for matching family rows to appear.
-7. Click `Expand` on the family row you want. This loads the actual child tree for that family.
-8. Use checkboxes next to the family, folder, or item(s) you want.
-9. Click `Retrieve Cart`.
+6. Click `Search Names`.
+7. Wait for matching family rows to appear.
+8. Click the triangle on the family row you want. This loads the actual child tree for that family.
+9. Use checkboxes next to the family, folder, or item(s) you want.
+10. Click `Retrieve Cart`.
 
 Expected result:
 - retrieve succeeds
@@ -107,10 +108,11 @@ Expected result:
 
 If you get no results:
 1. Click `Load All Families`.
-2. Click `Load Visible Items`.
-3. Click `Expand` on a family row to open nested members, then select via checkbox.
-4. If `Catalog coverage` still shows `limited`, review the discovery warnings before treating the visible list as complete org inventory.
-5. Click `Retrieve Cart` again.
+2. Click `Load Visible Trees`.
+3. Click `Expand Visible` if you want every currently visible family row opened in one pass.
+4. Click the triangle on a family row to open nested members, then select via checkbox.
+5. If `Catalog coverage` still shows `limited`, review the discovery warnings before treating the visible list as complete org inventory.
+6. Click `Retrieve Cart` again.
 
 ## 4) Verify Handoff In Refresh & Build
 

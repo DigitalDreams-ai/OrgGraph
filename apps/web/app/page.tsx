@@ -266,6 +266,8 @@ export default function Page(): JSX.Element {
               selectedAlias={connectWorkspace.orgAlias}
               metadataSearch={browserWorkspace.metadataSearch}
               setMetadataSearch={browserWorkspace.setMetadataSearch}
+              metadataFamilySearch={browserWorkspace.metadataFamilySearch}
+              setMetadataFamilySearch={browserWorkspace.setMetadataFamilySearch}
               metadataMemberSearch={browserWorkspace.metadataMemberSearch}
               setMetadataMemberSearch={browserWorkspace.setMetadataMemberSearch}
               metadataLimitRaw={browserWorkspace.metadataLimitRaw}
@@ -288,7 +290,7 @@ export default function Page(): JSX.Element {
               loading={secondaryQueryRunner.loading}
               onRefreshTypes={() => void browserWorkspace.refreshTypes()}
               onRefreshExplorer={() => void browserWorkspace.refreshExplorer()}
-              onLoadVisibleMembers={() => void browserWorkspace.loadVisibleMembers()}
+              onLoadVisibleMembers={(types) => void browserWorkspace.loadVisibleMembers(types)}
               onClearFilters={browserWorkspace.clearFilters}
               onClearSelections={browserWorkspace.clearSelections}
               onLoadMembers={(type) => void browserWorkspace.loadMembers(type)}

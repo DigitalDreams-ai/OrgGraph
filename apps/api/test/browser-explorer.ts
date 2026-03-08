@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import {
   assessMetadataCatalogCoverage,
   describeMetadataCatalogCoverage,
-  buildMemberTree
+  buildMemberTree,
+  filterMetadataCatalogTypes
 } from '../../web/app/workspaces/browser/browser-explorer';
 import type { MetadataCatalogPayload } from '../../web/app/workspaces/browser/types';
 
@@ -34,6 +35,31 @@ function run(): void {
   assert.equal(
     tree.find((node) => node.label === 'flows')?.children[0]?.label,
     'Civil_Rights_Intake_Questionnaire'
+  );
+
+  const filteredByType = filterMetadataCatalogTypes(fullCatalog.types, 'layout');
+  assert.deepEqual(
+    filteredByType.map((entry) => entry.type),
+    ['Layout'],
+    'family filter should match direct type names'
+  );
+
+  const filteredByDescriptor = filterMetadataCatalogTypes(
+    [
+      ...fullCatalog.types,
+      {
+        type: 'CustomField',
+        memberCount: 12,
+        directoryName: 'objects',
+        childXmlNames: ['ValidationRule']
+      }
+    ],
+    'validation rule'
+  );
+  assert.deepEqual(
+    filteredByDescriptor.map((entry) => entry.type),
+    ['CustomField'],
+    'family filter should match normalized descriptor text'
   );
 
   const fullCoverage = assessMetadataCatalogCoverage(fullCatalog, []);
