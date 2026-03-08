@@ -96,7 +96,7 @@ Inside Orgumented:
    - `Opportunity`
 5. Click `Search`.
 6. Wait for matching family rows to appear.
-7. Click the triangle on the family row you want. This loads the actual child tree for that family.
+7. Click `Expand` on the family row you want. This loads the actual child tree for that family.
 8. Use checkboxes next to the family, folder, or item(s) you want.
 9. Click `Retrieve Cart`.
 
@@ -106,9 +106,9 @@ Expected result:
 - no empty-selection failure
 
 If you get no results:
-1. Click `Browse All`.
-2. Click `Load Trees`.
-3. Click the triangle on a family row to expand nested members, then select via checkbox.
+1. Click `Load All Families`.
+2. Click `Load Visible Items`.
+3. Click `Expand` on a family row to open nested members, then select via checkbox.
 4. If `Catalog coverage` still shows `limited`, review the discovery warnings before treating the visible list as complete org inventory.
 5. Click `Retrieve Cart` again.
 
@@ -130,10 +130,13 @@ Expected result:
 ## 5) Ask A Retrieved-Metadata Question
 
 Inside Orgumented `Ask` workspace:
-1. Use this exact question:
+1. In `Latest retrieve`, use one of the generated chips under:
+   - `Grounded prompts from latest retrieve`
+   - or `Follow-up prompts from retrieved items`
+2. If you want to test the explicit Flow path, use this exact question:
    - `Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.`
-2. Click `Run Ask`.
-3. Confirm:
+3. Click `Run Ask`.
+4. Confirm:
    - decision packet is populated
    - citations list includes retrieved files
    - proof ID and replay token are present

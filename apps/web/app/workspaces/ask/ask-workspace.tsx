@@ -2,6 +2,7 @@
 
 import type { AskPayload } from './types';
 import type { MetadataRetrieveResultView, MetadataSelection } from '../browser/types';
+import { buildRetrieveAwarePromptGroups } from './retrieve-aware-prompts';
 
 interface AskWorkspaceProps {
   activeAlias: string;
@@ -45,20 +46,8 @@ const ASK_PRESETS = [
   'Should we approve changing Opportunity.StageName for jane@example.com?'
 ];
 
-function buildRetrieveAwarePresets(
-  latestRetrieveSelections: MetadataSelection[]
-): string[] {
-  const flowPrompts = latestRetrieveSelections
-    .filter((selection) => selection.type === 'Flow' && Array.isArray(selection.members))
-    .flatMap((selection) => selection.members ?? [])
-    .slice(0, 3)
-    .map((flowName) => `Based only on the latest retrieve, explain what Flow ${flowName} reads and writes.`);
-
-  return Array.from(new Set(flowPrompts));
-}
-
 export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
-  const retrieveAwarePresets = buildRetrieveAwarePresets(props.latestRetrieveSelections);
+  const retrieveAwarePrompts = buildRetrieveAwarePromptGroups(props.latestRetrieveSelections);
   return (
     <>
       <h2>Ask</h2>
@@ -109,17 +98,41 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
               <p><strong>Completed:</strong> {props.latestRetrieve.completedAt || 'n/a'}</p>
               <p><strong>Metadata args:</strong> {props.latestRetrieve.metadataArgs.join(', ') || 'n/a'}</p>
               <p><strong>Parse path:</strong> <span className="path-value">{props.latestRetrieve.parsePath || 'n/a'}</span></p>
-              {retrieveAwarePresets.length > 0 ? (
-                <div className="preset-row">
-                  {retrieveAwarePresets.map((preset) => (
-                    <button key={preset} type="button" className="ghost chip-btn" onClick={() => props.setAskQuery(preset)}>
-                      {preset}
-                    </button>
-                  ))}
-                </div>
+              {retrieveAwarePrompts.groundedPrompts.length > 0 ? (
+                <>
+                  <p className="muted"><strong>Grounded prompts from latest retrieve:</strong> these stay tied to the retrieved Flow members.</p>
+                  <div className="preset-row">
+                    {retrieveAwarePrompts.groundedPrompts.map((preset) => (
+                      <button key={preset} type="button" className="ghost chip-btn" onClick={() => props.setAskQuery(preset)}>
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
+                </>
               ) : (
-                <p className="muted">No retrieved Flow member is staged yet. Use Org Browser to retrieve a specific flow, then Ask from that retrieve.</p>
+                <p className="muted">No retrieved Flow member is staged yet. Use Org Browser to retrieve a specific flow, then Ask from that grounded retrieve.</p>
               )}
+              {retrieveAwarePrompts.followUpPrompts.length > 0 ? (
+                <>
+                  <p className="muted"><strong>Follow-up prompts from retrieved items:</strong> these reuse the current Ask flows for the objects and fields you already retrieved.</p>
+                  <div className="preset-row">
+                    {retrieveAwarePrompts.followUpPrompts.map((preset) => (
+                      <button key={preset} type="button" className="ghost chip-btn" onClick={() => props.setAskQuery(preset)}>
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : null}
+              {props.latestRetrieveSelections.length > 0 ? (
+                <p className="muted">
+                  Retrieved selection scope: {props.latestRetrieveSelections.map((selection) => selection.type).join(', ')}.
+                </p>
+              ) : null}
+              {retrieveAwarePrompts.groundedPrompts.length === 0 &&
+              retrieveAwarePrompts.followUpPrompts.length === 0 ? (
+                <p className="muted">No member-level retrieve prompts are available yet. Retrieve specific Flow, CustomObject, or CustomField members from Org Browser first.</p>
+              ) : null}
             </>
           ) : (
             <p className="muted">No retrieve handoff found yet. Use Org Browser, check the metadata you want, run Retrieve Cart, then Ask from that grounded retrieve.</p>
