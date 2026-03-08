@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import {
   assessMetadataCatalogCoverage,
+  describeMetadataCatalogCoverage,
   buildMemberTree,
   type MemberTreeNode
 } from './browser-explorer';
@@ -150,6 +151,10 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
     () => assessMetadataCatalogCoverage(props.metadataCatalog, props.metadataWarnings),
     [props.metadataCatalog, props.metadataWarnings]
   );
+  const catalogCoveragePanel = useMemo(
+    () => describeMetadataCatalogCoverage(props.metadataCatalog, props.metadataWarnings),
+    [props.metadataCatalog, props.metadataWarnings]
+  );
   const groupedSearchResults = groupSearchResults(props.metadataSearchResults);
   const familyDescriptors = useMemo(
     () =>
@@ -193,6 +198,10 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
   const visibleTypeCount = props.metadataCatalog?.types.length ?? 0;
   const totalTypeCount = props.metadataCatalog?.totalTypes ?? 0;
   const catalogIsTruncated = totalTypeCount > visibleTypeCount;
+  const loadedFamilyCount = useMemo(
+    () => Object.keys(props.metadataMembersByType).length,
+    [props.metadataMembersByType]
+  );
   const nodeSelectionState = (
     type: string,
     memberNames: string[]
@@ -350,11 +359,11 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           <label htmlFor="metadataLimit">Search/Member Limit</label>
           <input id="metadataLimit" value={props.metadataLimitRaw} onChange={(e) => props.setMetadataLimitRaw(e.target.value)} />
           <p className="muted input-hint">
-            `Browse All` always loads up to 5000 families for full coverage. This limit applies to Search and member listings.
+            `Load All Families` always loads up to 5000 families for full coverage. This limit applies to Search and member listings.
           </p>
           {catalogIsTruncated ? (
             <p className="muted input-hint">
-              Showing {visibleTypeCount} of {totalTypeCount} metadata families. Increase Search/Member Limit, then click `Browse All`.
+              Showing {visibleTypeCount} of {totalTypeCount} metadata families. Increase Search/Member Limit, then click `Load All Families`.
             </p>
           ) : null}
         </div>
@@ -378,13 +387,34 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
         </label>
       </div>
 
+      <article className="sub-card org-browser-coverage-card">
+        <p className="panel-caption">Catalog coverage</p>
+        <h3>{catalogCoveragePanel.summary}</h3>
+        <div className="decision-meta">
+          <span className={`decision-badge ${catalogCoveragePanel.state === 'full' ? 'good' : catalogCoveragePanel.state === 'limited' ? 'bad' : 'muted'}`}>
+            {catalogCoveragePanel.badgeLabel}
+          </span>
+          <span className="decision-badge muted">{catalogCoveragePanel.sourceLabel}</span>
+          <span className="decision-badge muted">{catalogCoveragePanel.countsLabel}</span>
+          <span className="decision-badge muted">{loadedFamilyCount} loaded tree{loadedFamilyCount === 1 ? '' : 's'}</span>
+        </div>
+        <p className="muted">{catalogCoveragePanel.nextStep}</p>
+        {catalogCoveragePanel.reasons.length > 0 ? (
+          <ul className="citation-list compact-list">
+            {catalogCoveragePanel.reasons.map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+        ) : null}
+      </article>
+
       <div className="action-row">
         <button
           type="button"
           onClick={props.onRefreshTypes}
           disabled={props.loading || props.metadataSearch.trim().length === 0}
         >
-          Search
+          Search Names
         </button>
         <button
           type="button"
@@ -392,7 +422,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           onClick={props.onRefreshExplorer}
           disabled={props.loading}
         >
-          Browse All
+          Load All Families
         </button>
         <button
           type="button"
@@ -400,7 +430,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           onClick={props.onLoadVisibleMembers}
           disabled={props.loading || props.visibleCatalogTypes.length === 0}
         >
-          Load Trees
+          Load Visible Items
         </button>
         <button type="button" onClick={props.onRetrieveSelected} disabled={props.loading || props.selectionSummary.typeCount === 0}>
           Retrieve Cart
@@ -418,14 +448,14 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       <article className="sub-card">
         <p className="panel-caption">Quick workflow</p>
         <ol className="workflow-step-list">
-          <li>Search by name or click Browse All to load the current family catalog.</li>
-          <li>Check any row you want in the retrieve cart (family, folder, or single item).</li>
+          <li>Search by name or click Load All Families to load the current family catalog.</li>
+          <li>Use the family row checkboxes and expand buttons to inspect and select what you want.</li>
           <li>Run <strong>Retrieve Cart</strong>, then continue in <strong>Refresh &amp; Build</strong>.</li>
         </ol>
       </article>
       <p className="muted"><strong>Cart rule:</strong> every checked row is already in the cart.</p>
       <p className="muted">Check a family to include everything nested under it. Check an individual item to include only that item.</p>
-      <p className="muted">Use <strong>Load Trees</strong> to preload child items for the visible families without opening each row manually.</p>
+      <p className="muted">Use <strong>Load Visible Items</strong> to preload child items for the visible families without opening each row manually.</p>
       {props.metadataWarnings.length > 0 ? (
         <article className="sub-card">
           <p className="panel-caption">Discovery warnings</p>
@@ -473,6 +503,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                         onClick={() => toggleSearchFamily(group.type, shouldAutoLoadMembers)}
                       >
                         <span aria-hidden>{isExpanded ? '▾' : '▸'}</span>
+                        <span>{isExpanded ? 'Collapse' : 'Expand'}</span>
                       </button>
                       <div className="metadata-family-main">
                         <SelectionCheckbox
@@ -517,7 +548,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                         )}
                       </>
                     ) : (
-                      <p className="muted metadata-family-collapsed-hint">Click the triangle to load and browse child items in this family.</p>
+                      <p className="muted metadata-family-collapsed-hint">Use Expand to load and browse child items in this family.</p>
                     )}
                   </section>
                 );
@@ -528,7 +559,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
               <p className="muted">No metadata names matched this search yet. Try `Opportunity`, `layout`, a field API name, or an Apex class name.</p>
               <div className="action-row">
                 <button type="button" className="ghost" onClick={props.onRefreshExplorer} disabled={props.loading}>
-                  Browse All
+                  Load All Families
                 </button>
               </div>
             </div>
@@ -537,7 +568,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       ) : null}
 
       <p className="panel-caption">Browse by metadata family</p>
-      <p className="muted">Showing {props.metadataCatalog?.types.length ?? 0} family rows from the current catalog. Use the triangles to expand families and browse child items.</p>
+      <p className="muted">Showing {props.metadataCatalog?.types.length ?? 0} family rows from the current catalog. Use Expand on any row to open that family and browse child items.</p>
       {catalogCoverage.state !== 'full' ? (
         <p className="muted">Catalog coverage is limited. Review the discovery warnings and coverage notes above before treating this as full org inventory.</p>
       ) : null}
@@ -561,6 +592,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                   onClick={() => toggleBrowseFamily(typeRow.type, shouldAutoLoadMembers)}
                 >
                   <span aria-hidden>{isExpanded ? '▾' : '▸'}</span>
+                  <span>{isExpanded ? 'Collapse' : 'Expand'}</span>
                 </button>
                 <div className="metadata-family-main">
                   <SelectionCheckbox
@@ -578,7 +610,9 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                     ))}
                   </div>
                 </div>
-                <span className="metadata-family-count">{typeRow.memberCount}</span>
+                <span className="metadata-family-count">
+                  {membersLoaded ? 'loaded' : 'not loaded'} • {typeRow.memberCount}
+                </span>
               </div>
               {isExpanded ? (
                 <>
@@ -596,16 +630,16 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                   )}
                 </>
               ) : (
-                <p className="muted">Click the triangle to load and browse child items for this family.</p>
+                <p className="muted">Use Expand to load and browse child items for this family.</p>
               )}
             </section>
           );
         })}
         {props.metadataCatalogRequested && (props.metadataCatalog?.types || []).length === 0 ? (
-          <p className="muted">No metadata families were returned yet. Try `Browse All` again with `Force Refresh` enabled.</p>
+          <p className="muted">No metadata families were returned yet. Try `Load All Families` again with `Force Refresh` enabled.</p>
         ) : null}
         {!props.metadataCatalogRequested ? (
-          <p className="muted">Click `Browse All` to load live metadata families before retrieving anything.</p>
+          <p className="muted">Click `Load All Families` to load live metadata families before retrieving anything.</p>
         ) : null}
       </div>
 
