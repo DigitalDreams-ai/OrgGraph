@@ -34,7 +34,7 @@ Purpose:
 | D013 | S3 | Design Consistency | Visual hierarchy and spacing can vary across workspace cards | Incremental UI evolution without unified design pass | Wave10 | Design consistency checklist pass | Open |
 | D014 | S3 | Accessibility | Keyboard/focus behavior incomplete across some controls | Accessibility hardening not yet run end-to-end | Wave10 | Accessibility pass for core flows | In Progress |
 | D015 | S1 | Governance/Execution | Delivery churn risk from platform-reset debate and out-of-order wave starts | Missing locked execution order and objective rebuild triggers | Wave11 | Pivot-lock policy adopted in v2 planning set and followed by active branch queue | In Progress |
-| D016 | S1 | Org Browser | Browse-by-family can still omit metadata families or read limited discovery coverage as full parity in operator flow | Live metadata-type discovery fallback and incomplete search/browse tree parity signaling | Wave11 | Real-org browser pass shows full family catalog + deterministic expand/load behavior for nested items | In Progress |
+| D016 | S1 | Org Browser | Browse-by-family could omit metadata families or read limited discovery coverage as full parity in operator flow | Live metadata-type discovery fallback and incomplete search/browse tree parity signaling | Wave11 | Real-org browser pass shows full family catalog + deterministic expand/load behavior for nested items | Complete |
 
 ## Defect Exit Criteria
 
