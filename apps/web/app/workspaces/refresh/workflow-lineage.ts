@@ -121,7 +121,7 @@ export function assessRefreshRunLineage(
   if (!refreshRun) {
     return {
       state: 'missing',
-      reasons: ['Run Refresh from the current Browser handoff to capture a grounded rebuild summary.']
+      reasons: ['Run Refresh Semantic State from the current Browser handoff to capture a grounded rebuild summary.']
     };
   }
 
@@ -160,7 +160,7 @@ export function assessDiffRunLineage(
   if (!diffRun) {
     return {
       state: 'missing',
-      reasons: ['Run Diff after Refresh captures the current Browser handoff lineage.']
+      reasons: ['Run Compare Snapshot Drift after Refresh Semantic State captures the current Browser handoff lineage.']
     };
   }
 
@@ -204,7 +204,7 @@ export function assessOrgRetrieveRunLineage(
   if (!orgRetrieveRun) {
     return {
       state: 'missing',
-      reasons: ['Run Org Retrieve with Run Retrieve enabled to capture a grounded pipeline result.']
+      reasons: ['Run Org Pipeline with Run Retrieve enabled to capture a grounded pipeline result.']
     };
   }
 

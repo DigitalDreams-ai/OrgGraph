@@ -14,6 +14,7 @@ import {
   assessRefreshRunLineage,
   type WorkflowLineageAssessment
 } from './workflow-lineage';
+import { buildRefreshWorkflowStages, type RefreshWorkflowStage } from './refresh-workflow-state';
 
 interface RefreshWorkspaceProps {
   activeAlias: string;
@@ -65,6 +66,16 @@ function lineageTone(assessment: WorkflowLineageAssessment): 'good' | 'muted' | 
   return 'bad';
 }
 
+function stageTone(stage: RefreshWorkflowStage): 'good' | 'muted' | 'bad' {
+  if (stage.state === 'complete') {
+    return 'good';
+  }
+  if (stage.state === 'ready' || stage.state === 'waiting') {
+    return 'muted';
+  }
+  return 'bad';
+}
+
 export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
   const expectedAlias = props.activeAlias || props.selectedAlias;
   const retrieveHandoff = assessRetrieveHandoff(props.retrieveHandoff, expectedAlias);
@@ -94,11 +105,60 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
   const stagedSelectionPreview = props.retrieveSelections.slice(0, 6);
   const stagedSelectionOverflow = Math.max(stagedSelectionCount - stagedSelectionPreview.length, 0);
   const diffBlockedByRefreshLineage = refreshLineage.state !== 'current';
+  const workflowStages = buildRefreshWorkflowStages({
+    retrieveHandoff: props.retrieveHandoff,
+    retrieveAssessment: retrieveHandoff,
+    retrieveSelections: props.retrieveSelections,
+    refreshLineage,
+    diffLineage,
+    orgRetrieveLineage,
+    lastRefreshRun: props.lastRefreshRun,
+    lastDiffRun: props.lastDiffRun,
+    lastOrgRetrieveRun: props.lastOrgRetrieveRun,
+    fromSnapshot: props.fromSnapshot,
+    toSnapshot: props.toSnapshot,
+    orgRunRetrieve: props.orgRunRetrieve
+  });
+  const nextStage = workflowStages.find((stage) => stage.state !== 'complete');
 
   return (
     <>
       <h2>Refresh &amp; Build</h2>
       <p className="section-lead">Rebuild semantic state, review drift, and keep the retrieve-to-refresh handoff visible instead of treating rebuild as a separate backend step. Refresh now fails closed until Browser handoff is ready.</p>
+
+      <article className="sub-card">
+        <p className="panel-caption">Staged workflow</p>
+        <h3>Operator sequence</h3>
+        <p className="muted">
+          This workspace is a four-step operator flow: retrieve the right metadata, rebuild semantic state,
+          compare drift, then optionally run the end-to-end org pipeline.
+        </p>
+        <div className="refresh-stage-grid">
+          {workflowStages.map((stage) => (
+            <article key={stage.id} className="refresh-stage-card">
+              <div className="decision-meta">
+                <span className={`decision-badge ${stageTone(stage)}`}>{stage.label}</span>
+                <span className={`decision-badge ${stageTone(stage)}`}>State: {stage.state}</span>
+              </div>
+              <p><strong>{stage.summary}</strong></p>
+              <p>{stage.detail}</p>
+            </article>
+          ))}
+        </div>
+        {nextStage ? (
+          <div className="refresh-next-action">
+            <span className={`decision-badge ${stageTone(nextStage)}`}>Next action</span>
+            <p>
+              <strong>{nextStage.label}</strong> {nextStage.action}
+            </p>
+          </div>
+        ) : (
+          <div className="refresh-next-action">
+            <span className="decision-badge good">Workflow current</span>
+            <p><strong>All four stages are current.</strong> You can review the latest summaries below without opening raw JSON.</p>
+          </div>
+        )}
+      </article>
 
       <div className="ops-grid">
         <article className="sub-card">
@@ -232,7 +292,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
               ) : null}
             </>
           ) : (
-            <p className="muted">Run Refresh to capture the latest semantic rebuild summary.</p>
+            <p className="muted">Run Refresh Semantic State to capture the latest semantic rebuild summary.</p>
           )}
         </article>
       </div>
@@ -273,7 +333,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
                 ? `${props.lastRefreshRun.mode} rebuild captured ${props.lastRefreshRun.nodeCount} nodes and ${props.lastRefreshRun.edgeCount} edges for the current Browser handoff.`
                 : refreshLineage.state === 'stale'
                   ? `Latest Refresh is stale. ${refreshLineage.reasons[0]}`
-                  : 'Run Refresh to capture the next grounded snapshot.'}
+                  : 'Run Refresh Semantic State to capture the next grounded snapshot.'}
             </p>
           </li>
           <li>
@@ -288,7 +348,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
                 ? `${props.lastDiffRun.meaningChangeSummary || 'Diff captured.'} Structure changed: ${String(props.lastDiffRun.structureDigestChanged)}.`
                 : diffLineage.state === 'stale'
                   ? `Latest Diff is stale. ${diffLineage.reasons[0]}`
-                  : 'Run Diff after two snapshots are available.'}
+                  : 'Run Compare Snapshot Drift after two snapshots are available.'}
             </p>
           </li>
           <li>
@@ -321,7 +381,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
 
       <div className="action-row">
         <button type="button" onClick={props.onRunRefresh} disabled={props.loading || refreshBlocked}>
-          Run Refresh
+          Refresh Semantic State
         </button>
       </div>
       {refreshBlocked ? (
@@ -363,17 +423,17 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
             props.fromSnapshot.trim() === props.toSnapshot.trim()
           }
         >
-          Run Diff
+          Compare Snapshot Drift
         </button>
       </div>
       <p className="muted">
-        Run Refresh to auto-fill the latest snapshot pair for diff. Diff stays fail-closed until both snapshot IDs
-        are present, distinct, and still belong to the current Browser handoff.
+        Refresh Semantic State auto-fills the latest snapshot pair for diff. Compare Snapshot Drift stays fail-closed
+        until both snapshot IDs are present, distinct, and still belong to the current Browser handoff.
       </p>
       {diffBlockedByRefreshLineage ? (
         <ul className="issue-list">
           <li>
-            <strong>Fail closed.</strong> {refreshLineage.reasons[0] ?? 'Latest Refresh no longer belongs to the current Browser handoff. Re-run Retrieve Cart and Run Refresh before diff.'}
+            <strong>Fail closed.</strong> {refreshLineage.reasons[0] ?? 'Latest Refresh no longer belongs to the current Browser handoff. Re-run Retrieve Cart and Refresh Semantic State before diff.'}
           </li>
         </ul>
       ) : null}
@@ -442,7 +502,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
       </div>
       <div className="action-row">
         <button type="button" onClick={props.onRunOrgRetrieve} disabled={props.loading || orgRetrieveBlocked}>
-          Run Org Retrieve
+          Run Org Pipeline
         </button>
       </div>
       {orgRetrieveBlocked ? (

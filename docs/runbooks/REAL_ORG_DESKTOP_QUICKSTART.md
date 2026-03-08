@@ -118,16 +118,21 @@ If you get no results:
 
 Inside Orgumented:
 1. Click `Open Refresh & Build` from Org Browser (or switch to `Refresh & Build` in rail).
-2. Confirm retrieve handoff card shows selected metadata summary.
-3. Click `Run Refresh` once.
-4. Confirm `From Snapshot ID` and `To Snapshot ID` auto-fill.
-5. Click `Run Diff`.
-6. (Optional) Click `Run Org Retrieve` if you want to execute auth/retrieve/refresh from this workspace.
+2. Confirm the `Staged workflow` card shows:
+   - `1. Retrieve Cart` as `complete`
+   - your staged metadata scope
+   - a `Next action` telling you to refresh semantic state
+3. Click `Refresh Semantic State` once.
+4. Confirm stage `2. Refresh Semantic State` turns `complete`.
+5. Confirm `From Snapshot ID` and `To Snapshot ID` auto-fill when two refresh snapshots are available.
+6. Click `Compare Snapshot Drift`.
+7. (Optional) Click `Run Org Pipeline` if you want to execute auth/retrieve/refresh from this workspace.
 
 Expected result:
 - handoff state is visible without opening raw JSON
-- staged flow is not blocked by missing selections
-- Diff remains disabled until both snapshot IDs are present and different
+- staged flow shows a numbered operator sequence
+- each stage tells you the exact next action when blocked, waiting, or stale
+- Compare Snapshot Drift remains disabled until both snapshot IDs are present and different
 
 ## 5) Ask A Retrieved-Metadata Question
 

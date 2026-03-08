@@ -374,7 +374,7 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
     const to = toSnapshot.trim();
     if (!from || !to) {
       const message =
-        'Diff blocked until both snapshot IDs are set. Run Refresh to auto-fill latest snapshots, then run Diff.';
+        'Diff blocked until both snapshot IDs are set. Run Refresh Semantic State to auto-fill latest snapshots, then run Compare Snapshot Drift.';
       const response: QueryResponse = {
         ok: false,
         statusCode: 400,
