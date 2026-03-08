@@ -940,7 +940,7 @@ async function run(): Promise<void> {
       plan: { intent: string; entities: { object?: string } };
       deterministicAnswer: string;
       proof: { proofId: string; replayToken: string };
-      decisionPacket?: { targetLabel?: string; targetType?: string };
+      decisionPacket?: { summary?: string; targetLabel?: string; targetType?: string };
     };
     assert.equal(askFlowEvidenceCalled.plan.intent, 'automation');
     assert.equal(askFlowEvidenceCalled.plan.entities.object, undefined);
