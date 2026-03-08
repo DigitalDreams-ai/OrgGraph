@@ -124,6 +124,31 @@ export class EvidenceStoreService implements EvidenceStore {
     return ranked;
   }
 
+  listBySourcePath(sourcePath: string, maxResults: number): EvidenceSearchResult[] {
+    const normalizedTarget = this.normalizeSourcePathKey(sourcePath);
+    const limit = Math.max(1, maxResults);
+
+    if (this.isLegacyJsonIndex()) {
+      return this.readLegacyIndex().documents
+        .filter((doc) => this.normalizeSourcePathKey(doc.sourcePath) === normalizedTarget)
+        .slice(0, limit)
+        .map((doc) => ({ ...doc, score: 1 }));
+    }
+
+    const matches: EvidenceSearchResult[] = [];
+    for (const doc of this.readNdjsonDocuments()) {
+      if (this.normalizeSourcePathKey(doc.sourcePath) !== normalizedTarget) {
+        continue;
+      }
+      matches.push({ ...doc, score: 1 });
+      if (matches.length >= limit) {
+        break;
+      }
+    }
+
+    return matches;
+  }
+
   private readLegacyIndex(): { documents: EvidenceDocument[] } {
     if (!fs.existsSync(this.indexPath)) {
       return { documents: [] };
@@ -293,5 +318,9 @@ export class EvidenceStoreService implements EvidenceStore {
   private makeId(filePath: string, index: number, chunkText: string): string {
     const digest = createHash('sha256').update(`${filePath}|${index}|${chunkText}`).digest('hex');
     return `ev_${digest.slice(0, 24)}`;
+  }
+
+  private normalizeSourcePathKey(sourcePath: string): string {
+    return sourcePath.replace(/\\/g, '/').toLowerCase();
   }
 }

@@ -18,6 +18,7 @@ export interface EvidenceSearchResult {
 export interface EvidenceStore {
   reindexFromFixtures(rootPath: string): { documentCount: number; sourcePath: string };
   search(query: string, maxResults: number): EvidenceSearchResult[];
+  listBySourcePath(sourcePath: string, maxResults: number): EvidenceSearchResult[];
   getDocumentCount(): number;
   getIndexPath(): string;
 }
