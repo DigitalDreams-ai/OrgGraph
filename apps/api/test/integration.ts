@@ -790,7 +790,11 @@ async function run(): Promise<void> {
     assert.equal(askFlowEvidence.plan.entities.object, undefined);
     assert.match(askFlowEvidence.deterministicAnswer, /reads:/i);
     assert.match(askFlowEvidence.deterministicAnswer, /writes:/i);
+    assert.match(askFlowEvidence.deterministicAnswer, /read objects:/i);
+    assert.match(askFlowEvidence.deterministicAnswer, /write objects:/i);
     assert.match(askFlowEvidence.deterministicAnswer, /Opportunity\.StageName/i);
+    assert.match(askFlowEvidence.deterministicAnswer, /read objects: Account/i);
+    assert.match(askFlowEvidence.deterministicAnswer, /write objects: Opportunity/i);
     assert.doesNotMatch(askFlowEvidence.deterministicAnswer, /no automation found for/i);
     assert.equal(askFlowEvidence.decisionPacket?.kind, 'high_risk_change_review');
     assert.equal(askFlowEvidence.decisionPacket?.focus, 'breakage');
@@ -803,6 +807,8 @@ async function run(): Promise<void> {
     );
     assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /reads:/i);
     assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /writes:/i);
+    assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /read objects:/i);
+    assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /write objects:/i);
     assert.ok(
       (askFlowEvidence.decisionPacket?.nextActions ?? []).some((item) => item.label === 'Run permission check')
     );

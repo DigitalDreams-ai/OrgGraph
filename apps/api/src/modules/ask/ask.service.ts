@@ -44,6 +44,8 @@ interface FlowEvidenceSummary {
   matchedCount: number;
   readFields: string[];
   writeFields: string[];
+  readObjects: string[];
+  writeObjects: string[];
   referencedObjects: string[];
   triggerTypes: string[];
 }
@@ -941,6 +943,8 @@ export class AskService {
             matchedCount: 0,
             readFields: [],
             writeFields: [],
+            readObjects: [],
+            writeObjects: [],
             referencedObjects: [],
             triggerTypes: []
           },
@@ -1440,7 +1444,7 @@ export class AskService {
     evidenceHits: EvidenceSearchResult[]
   ): FlowEvidenceSummary {
     const flowNameVariants = this.buildFlowNameVariants(flowName);
-    const flowEvidence = evidenceHits.filter((hit) => {
+    const matchingFlowEvidence = evidenceHits.filter((hit) => {
       const sourceLower = hit.sourcePath.toLowerCase();
       const chunkLower = hit.chunkText.toLowerCase();
       const compactSource = this.compactFlowToken(sourceLower);
@@ -1454,27 +1458,52 @@ export class AskService {
       });
     });
 
-    if (flowEvidence.length === 0) {
+    if (matchingFlowEvidence.length === 0) {
       return {
         explanation: `no retrieved flow evidence matched ${flowName}.`,
         matchedCount: 0,
         readFields: [],
         writeFields: [],
+        readObjects: [],
+        writeObjects: [],
         referencedObjects: [],
         triggerTypes: []
       };
     }
 
+    const flowEvidence = this.dedupeCitations(
+      matchingFlowEvidence.flatMap((hit) => [
+        hit,
+        ...this.evidence.listBySourcePath(hit.sourcePath, 24)
+      ])
+    );
+    const flowEvidenceBySource = new Map<string, string[]>();
+    for (const hit of flowEvidence) {
+      const current = flowEvidenceBySource.get(hit.sourcePath) ?? [];
+      current.push(hit.chunkText);
+      flowEvidenceBySource.set(hit.sourcePath, current);
+    }
+
     const referencedObjects = new Set<string>();
+    const readObjects = new Set<string>();
+    const writeObjects = new Set<string>();
     const triggerTypes = new Set<string>();
     const readFields = new Set<string>();
     const writeFields = new Set<string>();
 
-    for (const hit of flowEvidence) {
-      const chunk = hit.chunkText;
+    for (const sourceChunks of flowEvidenceBySource.values()) {
+      const chunk = sourceChunks.join('');
       const chunkObjects = this.collectTagValues(chunk, 'object');
       for (const objectName of chunkObjects) {
         referencedObjects.add(objectName);
+      }
+      for (const objectName of this.collectObjectsFromSectionTag(chunk, 'recordLookups')) {
+        readObjects.add(objectName);
+      }
+      for (const sectionTag of ['recordUpdates', 'recordCreates', 'recordDeletes']) {
+        for (const objectName of this.collectObjectsFromSectionTag(chunk, sectionTag)) {
+          writeObjects.add(objectName);
+        }
       }
       for (const trigger of this.collectTagValues(chunk, 'recordTriggerType')) {
         triggerTypes.add(trigger);
@@ -1506,26 +1535,39 @@ export class AskService {
       }
     }
 
-    const objectSummary =
-      referencedObjects.size > 0
-        ? `objects: ${[...referencedObjects].sort().join(', ')}`
-        : 'objects: not explicit in retrieved snippet';
+    for (const objectName of this.extractObjectsFromFieldSet(readFields)) {
+      readObjects.add(objectName);
+    }
+    for (const objectName of this.extractObjectsFromFieldSet(writeFields)) {
+      writeObjects.add(objectName);
+    }
+    for (const objectName of [...readObjects, ...writeObjects]) {
+      referencedObjects.add(objectName);
+    }
+
+    const readObjectSummary = this.describeValueSet(readObjects, 'read objects');
+    const writeObjectSummary = this.describeValueSet(writeObjects, 'write objects');
+    const objectSummary = this.describeValueSet(referencedObjects, 'objects');
     const triggerSummary =
-      triggerTypes.size > 0
-        ? `trigger types: ${[...triggerTypes].sort().join(', ')}`
-        : 'trigger types: not explicit in retrieved snippet';
+      this.describeValueSet(triggerTypes, 'trigger types');
     const readSummary = this.describeFieldSet(readFields, 'reads');
     const writeSummary = this.describeFieldSet(writeFields, 'writes');
     const readFieldList = [...readFields].sort((a, b) => a.localeCompare(b));
     const writeFieldList = [...writeFields].sort((a, b) => a.localeCompare(b));
+    const readObjectList = [...readObjects].sort((a, b) => a.localeCompare(b));
+    const writeObjectList = [...writeObjects].sort((a, b) => a.localeCompare(b));
     const referencedObjectList = [...referencedObjects].sort((a, b) => a.localeCompare(b));
     const triggerTypeList = [...triggerTypes].sort((a, b) => a.localeCompare(b));
 
     return {
-      explanation: `retrieved flow evidence found for ${flowName}; ${flowEvidence.length} citation(s); ${readSummary}; ${writeSummary}; ${objectSummary}; ${triggerSummary}.`,
+      explanation:
+        `retrieved flow evidence found for ${flowName}; ${flowEvidence.length} citation(s); ` +
+        `${readSummary}; ${writeSummary}; ${readObjectSummary}; ${writeObjectSummary}; ${objectSummary}; ${triggerSummary}.`,
       matchedCount: flowEvidence.length,
       readFields: readFieldList,
       writeFields: writeFieldList,
+      readObjects: readObjectList,
+      writeObjects: writeObjectList,
       referencedObjects: referencedObjectList,
       triggerTypes: triggerTypeList
     };
@@ -1541,6 +1583,8 @@ export class AskService {
     const coverageScore = Math.min(1, input.citationCount / 6);
     const readFields = [...new Set(input.summary.readFields)];
     const writeFields = [...new Set(input.summary.writeFields)];
+    const readObjects = [...new Set(input.summary.readObjects)];
+    const writeObjects = [...new Set(input.summary.writeObjects)];
     const referencedObjects = [...new Set(input.summary.referencedObjects)];
     const triggerTypes = [...new Set(input.summary.triggerTypes)];
     const hasReads = readFields.length > 0;
@@ -1562,14 +1606,10 @@ export class AskService {
       riskScore >= 0.7 ? 'high' : riskScore >= 0.4 ? 'medium' : 'low';
     const readSummary = this.describeFieldSet(new Set(readFields), 'reads');
     const writeSummary = this.describeFieldSet(new Set(writeFields), 'writes');
-    const objectSummary =
-      referencedObjects.length > 0
-        ? `objects: ${referencedObjects.join(', ')}`
-        : 'objects: not explicit in retrieved snippet';
-    const triggerSummary =
-      triggerTypes.length > 0
-        ? `trigger types: ${triggerTypes.join(', ')}`
-        : 'trigger types: not explicit in retrieved snippet';
+    const readObjectSummary = this.describeValueSet(new Set(readObjects), 'read objects');
+    const writeObjectSummary = this.describeValueSet(new Set(writeObjects), 'write objects');
+    const objectSummary = this.describeValueSet(new Set(referencedObjects), 'objects');
+    const triggerSummary = this.describeValueSet(new Set(triggerTypes), 'trigger types');
     const topCitationSources = [
       ...new Set(
         input.citationSourceLabels
@@ -1633,7 +1673,7 @@ export class AskService {
       targetType: 'flow',
       summary:
         input.summary.matchedCount > 0
-          ? `Flow ${input.flowName} read/write summary grounded by ${input.summary.matchedCount} citation(s): ${readSummary}; ${writeSummary}.`
+          ? `Flow ${input.flowName} read/write summary grounded by ${input.summary.matchedCount} citation(s): ${readSummary}; ${writeSummary}; ${readObjectSummary}; ${writeObjectSummary}.`
           : `Flow ${input.flowName} is not grounded by the current retrieve evidence yet.`,
       riskScore,
       riskLevel,
@@ -1650,6 +1690,8 @@ export class AskService {
           : 'top citation sources unavailable',
         `${writeFields.length} explicit write field(s) identified`,
         `${readFields.length} explicit read field(s) identified`,
+        readObjectSummary,
+        writeObjectSummary,
         writeSummary,
         readSummary,
         objectSummary,
@@ -1670,7 +1712,7 @@ export class AskService {
         topAutomationNames: [input.flowName]
       },
       changeImpact: {
-        summary: `${readSummary}; ${writeSummary}; ${objectSummary}; ${triggerSummary}.`,
+        summary: `${readSummary}; ${writeSummary}; ${readObjectSummary}; ${writeObjectSummary}; ${objectSummary}; ${triggerSummary}.`,
         impactPathCount: topImpactedSources.length,
         topImpactedSources
       },
@@ -1747,6 +1789,21 @@ export class AskService {
     return [...fields];
   }
 
+  private collectObjectsFromSectionTag(chunk: string, sectionTag: string): string[] {
+    const objects = new Set<string>();
+    const sectionPattern = new RegExp(
+      `<${sectionTag}>([\\s\\S]{0,420}?)</${sectionTag}>`,
+      'gi'
+    );
+    for (const section of chunk.matchAll(sectionPattern)) {
+      const sectionBody = section[1];
+      for (const objectName of this.collectTagValues(sectionBody, 'object')) {
+        objects.add(objectName);
+      }
+    }
+    return [...objects];
+  }
+
   private addFlowField(target: Set<string>, rawValue: string, objects: string[]): void {
     const normalized = rawValue.trim().replace(/^\{!/, '').replace(/\}$/, '');
     if (normalized.length === 0) {
@@ -1766,11 +1823,34 @@ export class AskService {
     target.add(normalized);
   }
 
+  private extractObjectsFromFieldSet(fields: Set<string>): string[] {
+    const objects = new Set<string>();
+    for (const field of fields) {
+      const separator = field.indexOf('.');
+      if (separator <= 0) {
+        continue;
+      }
+      objects.add(field.slice(0, separator));
+    }
+    return [...objects];
+  }
+
   private describeFieldSet(fields: Set<string>, label: string): string {
     if (fields.size === 0) {
       return `${label}: not explicit in retrieved flow evidence`;
     }
     const sorted = [...fields].sort((a, b) => a.localeCompare(b));
+    const visible = sorted.slice(0, 6);
+    const remaining = sorted.length - visible.length;
+    const suffix = remaining > 0 ? ` (+${remaining} more)` : '';
+    return `${label}: ${visible.join(', ')}${suffix}`;
+  }
+
+  private describeValueSet(values: Set<string>, label: string): string {
+    if (values.size === 0) {
+      return `${label}: not explicit in retrieved flow evidence`;
+    }
+    const sorted = [...values].sort((a, b) => a.localeCompare(b));
     const visible = sorted.slice(0, 6);
     const remaining = sorted.length - visible.length;
     const suffix = remaining > 0 ? ` (+${remaining} more)` : '';
