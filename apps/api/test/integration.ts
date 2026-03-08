@@ -939,13 +939,89 @@ async function run(): Promise<void> {
     const askFlowEvidenceCalled = (await askFlowEvidenceCalledRes.json()) as {
       plan: { intent: string; entities: { object?: string } };
       deterministicAnswer: string;
-      decisionPacket?: { targetLabel?: string; targetType?: string };
+      proof: { proofId: string; replayToken: string };
+      decisionPacket?: { summary?: string; targetLabel?: string; targetType?: string };
     };
     assert.equal(askFlowEvidenceCalled.plan.intent, 'automation');
     assert.equal(askFlowEvidenceCalled.plan.entities.object, undefined);
     assert.doesNotMatch(askFlowEvidenceCalled.deterministicAnswer, /no automation found for the/i);
+    assert.equal(typeof askFlowEvidenceCalled.proof.proofId, 'string');
+    assert.equal(typeof askFlowEvidenceCalled.proof.replayToken, 'string');
     assert.equal(askFlowEvidenceCalled.decisionPacket?.targetLabel, 'Civil_Rights_Intake_Questionnaire');
     assert.equal(askFlowEvidenceCalled.decisionPacket?.targetType, 'flow');
+
+    const askFlowEvidenceCalledRepeatRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query:
+          'Based only on the latest retrieve, explain what Flow called Civil_Rights_Intake_Questionnaire reads and writes.'
+      })
+    });
+    assert.equal(
+      askFlowEvidenceCalledRepeatRes.status,
+      201,
+      'repeated ask flow evidence (called flow name) should return 201'
+    );
+    const askFlowEvidenceCalledRepeat = (await askFlowEvidenceCalledRepeatRes.json()) as {
+      deterministicAnswer: string;
+      proof: { proofId: string; replayToken: string };
+      decisionPacket?: { summary?: string; targetLabel?: string; targetType?: string };
+    };
+    assert.equal(
+      askFlowEvidenceCalledRepeat.deterministicAnswer,
+      askFlowEvidenceCalled.deterministicAnswer,
+      'repeated flow grounding ask should preserve deterministic answer'
+    );
+    assert.equal(
+      askFlowEvidenceCalledRepeat.proof.proofId,
+      askFlowEvidenceCalled.proof.proofId,
+      'repeated flow grounding ask should preserve proof id'
+    );
+    assert.equal(
+      askFlowEvidenceCalledRepeat.proof.replayToken,
+      askFlowEvidenceCalled.proof.replayToken,
+      'repeated flow grounding ask should preserve replay token'
+    );
+    assert.equal(
+      askFlowEvidenceCalledRepeat.decisionPacket?.summary,
+      askFlowEvidenceCalled.decisionPacket?.summary,
+      'repeated flow grounding ask should preserve packet summary'
+    );
+    assert.equal(
+      askFlowEvidenceCalledRepeat.decisionPacket?.targetLabel,
+      askFlowEvidenceCalled.decisionPacket?.targetLabel
+    );
+    assert.equal(
+      askFlowEvidenceCalledRepeat.decisionPacket?.targetType,
+      askFlowEvidenceCalled.decisionPacket?.targetType
+    );
+
+    const askFlowEvidenceCalledReplayRes = await fetch(`${base}/ask/replay`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ replayToken: askFlowEvidenceCalled.proof.replayToken })
+    });
+    assert.equal(
+      askFlowEvidenceCalledReplayRes.status,
+      201,
+      'flow grounding replay should return 201'
+    );
+    const askFlowEvidenceCalledReplay = (await askFlowEvidenceCalledReplayRes.json()) as {
+      replayToken: string;
+      proofId: string;
+      matched: boolean;
+      corePayloadMatched: boolean;
+      replayed: { deterministicAnswer: string };
+    };
+    assert.equal(askFlowEvidenceCalledReplay.replayToken, askFlowEvidenceCalled.proof.replayToken);
+    assert.equal(askFlowEvidenceCalledReplay.proofId, askFlowEvidenceCalled.proof.proofId);
+    assert.equal(askFlowEvidenceCalledReplay.matched, true);
+    assert.equal(askFlowEvidenceCalledReplay.corePayloadMatched, true);
+    assert.equal(
+      askFlowEvidenceCalledReplay.replayed.deterministicAnswer,
+      askFlowEvidenceCalled.deterministicAnswer
+    );
 
     const askFlowEvidencePathRes = await fetch(`${base}/ask`, {
       method: 'POST',
