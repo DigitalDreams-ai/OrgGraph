@@ -72,6 +72,7 @@ Materially true now:
 - flow grounding now prioritizes explicit flow-name asks over weak object-token inference (prevents false `no automation found for the` fallbacks)
 - flow grounding now adds deterministic targeted evidence retry for explicit flow-name asks when first-pass evidence ranking misses the named flow
 - flow grounding now tolerates quoted/article-prefixed flow references (for example `Flow "the X" reads and writes`) and keeps explicit-flow asks off the generic object fallback path
+- wave6 replay hardening now locks repeated-proof parity for the grounded flow ask family, including the real-operator phrasing `Flow called Civil_Rights_Intake_Questionnaire reads and writes`
 - flow grounding now also accepts `Flow called <name>` / `Flow named <name>` phrasing and can infer a flow target from citation source paths when query extraction misses
 - flow grounding now normalizes flow file-path/file-name asks (for example `.../flows/<name>.flow-meta.xml`) to the correct flow target instead of drifting into object-field fallback
 - flow asks now fail closed with explicit `flow-name-unresolved` remediation when no exact flow API name can be resolved, preventing generic `no automation found ...` fallback responses
