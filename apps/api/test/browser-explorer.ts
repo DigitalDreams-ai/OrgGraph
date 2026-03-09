@@ -126,7 +126,7 @@ function run(): void {
   assert.match(unavailableCoverage.summary, /not loaded yet/i);
   const unavailablePanel = describeMetadataCatalogCoverage(null, []);
   assert.equal(unavailablePanel.badgeLabel, 'Not loaded');
-  assert.match(unavailablePanel.nextStep, /load all families/i);
+  assert.match(unavailablePanel.nextStep, /load full family catalog/i);
 
   console.log('browser explorer test passed');
 }
