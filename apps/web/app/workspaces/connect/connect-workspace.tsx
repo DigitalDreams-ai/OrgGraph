@@ -30,6 +30,7 @@ interface ConnectWorkspaceProps {
   browserSeeded: boolean;
   selectedAliasReady: boolean;
   runtimeUnavailable: boolean;
+  runtimeBlocked: boolean;
   restoreAlias: string;
   loading: boolean;
   onRefreshOverview: () => void;
@@ -98,6 +99,17 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
 
       <label htmlFor="orgAlias">Selected Alias</label>
       <input id="orgAlias" value={props.orgAlias} onChange={(e) => props.setOrgAlias(e.target.value)} />
+
+      {props.runtimeBlocked && !props.runtimeUnavailable ? (
+        <article className="sub-card warn">
+          <p className="panel-caption">Runtime gate</p>
+          <h3>Desktop API is reachable but not ready</h3>
+          <p>
+            Tool and session values below are still live diagnostics, but Ask, Refresh, and rebuild workflows remain blocked until readiness
+            returns to <strong>ready</strong>.
+          </p>
+        </article>
+      ) : null}
 
       <div className="ops-grid">
         <article className="sub-card">

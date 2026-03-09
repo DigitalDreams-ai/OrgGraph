@@ -21,6 +21,7 @@ interface OperatorRailProps {
   orgStatus: OrgStatusPayload | null;
   orgPreflight: OrgPreflightPayload | null;
   runtimeUnavailable: boolean;
+  runtimeBlocked: boolean;
   toolStatusSource: 'runtime_unavailable' | 'live' | 'unknown';
   onCopy: () => void;
 }
@@ -98,6 +99,7 @@ export function OperatorRail(props: OperatorRailProps): JSX.Element {
         <p><strong>sf Installed:</strong> {sfInstalledLabel}</p>
         <p><strong>CCI Installed:</strong> {cciInstalledLabel}</p>
         <p><strong>Tool Source:</strong> {toolSourceLabel}</p>
+        <p><strong>Runtime Gate:</strong> {props.runtimeBlocked ? (props.runtimeUnavailable ? 'unreachable' : 'blocked') : 'ready'}</p>
       </div>
 
       <div className="sub-card">
