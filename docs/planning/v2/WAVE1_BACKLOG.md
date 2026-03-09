@@ -20,7 +20,7 @@ Purpose:
 
 | ID | Priority | Area | Backlog Item | Target Wave | Acceptance Gate | Status |
 |---|---|---|---|---|---|---|
-| B001 | P0 | Runtime | Eliminate packaged bootstrap drift-budget startup failures for standard operator startup | Wave2 | Packaged app starts cleanly with deterministic bootstrap in smoke and manual launch | In Progress |
+| B001 | P0 | Runtime | Eliminate packaged bootstrap drift-budget startup failures for standard operator startup | Wave2 | Packaged app starts cleanly with deterministic bootstrap in smoke and repeated packaged launch proof | In Progress |
 | B025 | P0 | Governance | Lock stabilization-first execution order and prevent architecture churn/restart drift | Wave11 | v2 planning set enforces no-restart policy, ordered wave sequence, and objective rebuild triggers | In Progress |
 | B002 | P0 | Runtime | Ensure runtime unavailability never masquerades as missing `sf`/`cci` tools | Wave2 | Tool status and runtime status are always disambiguated in desktop UI | Complete |
 | B003 | P0 | Determinism | Lock replay parity for high-risk query family after planner hardening | Wave6 | Replay parity assertions pass for repeated benchmark asks | Complete |
