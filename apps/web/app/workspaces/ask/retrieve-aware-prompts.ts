@@ -28,18 +28,22 @@ export function buildRetrieveAwarePromptGroups(
   const objectMembers = collectMembers(latestRetrieveSelections, 'CustomObject').slice(0, 3);
   const fieldMembers = collectMembers(latestRetrieveSelections, 'CustomField').slice(0, 4);
 
-  const groundedPrompts = flowMembers.map(
-    (flowName) => `Based only on the latest retrieve, explain what Flow ${flowName} reads and writes.`
-  );
+  const groundedPrompts = uniqueSorted([
+    ...flowMembers.map(
+      (flowName) => `Based only on the latest retrieve, explain what Flow ${flowName} reads and writes.`
+    ),
+    ...fieldMembers.flatMap((fieldName) => [
+      `Based only on the latest retrieve, what touches ${fieldName}?`,
+      `Based only on the latest retrieve, what automations update ${fieldName}?`
+    ]),
+    ...objectMembers.map(
+      (objectName) => `Based only on the latest retrieve, what runs on object ${objectName}?`
+    )
+  ]);
 
   const followUpPrompts = [
-    ...fieldMembers.flatMap((fieldName) => [
-      `What touches ${fieldName}?`,
-      `Who can edit ${fieldName}?`,
-      `What automations update ${fieldName}?`
-    ]),
+    ...fieldMembers.map((fieldName) => `Who can edit ${fieldName}?`),
     ...objectMembers.flatMap((objectName) => [
-      `What runs on object ${objectName}?`,
       `Who can edit object ${objectName}?`
     ])
   ];

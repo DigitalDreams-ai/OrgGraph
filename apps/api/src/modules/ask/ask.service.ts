@@ -11,6 +11,7 @@ import { EvidenceStoreService } from '../evidence/evidence-store.service';
 import type { EvidenceSearchResult } from '../evidence/evidence.types';
 import { LlmService } from '../llm/llm.service';
 import { PlannerService } from '../planner/planner.service';
+import type { AskPlan } from '../planner/planner.types';
 import { QueriesService } from '../queries/queries.service';
 import { AskMetricsStoreService } from './ask-metrics-store.service';
 import { AskProofStoreService } from './ask-proof-store.service';
@@ -636,6 +637,18 @@ export class AskService {
 
     const latestRetrieveFlowQuery =
       latestRetrieveRequested && plan.intent === 'automation' && /\bflow\b/i.test(input.query);
+    const latestRetrieveScopedImpactQuery =
+      latestRetrieveRequested &&
+      plan.intent === 'impact' &&
+      Boolean(plan.entities.field) &&
+      (evidenceScope
+        ? this.evidenceScopeContainsField(evidenceScope, plan.entities.field as string)
+        : false);
+    const latestRetrieveScopedAutomationQuery =
+      latestRetrieveRequested &&
+      plan.intent === 'automation' &&
+      !latestRetrieveFlowQuery &&
+      (evidenceScope ? this.isScopedAutomationQuerySupported(plan, evidenceScope) : false);
 
     if (latestRetrieveRequested && !evidenceScope) {
       answer =
@@ -653,9 +666,14 @@ export class AskService {
         'EVIDENCE_SCOPE_UNAVAILABLE',
         'latest-retrieve-only query was executed without an evidence scope'
       );
-    } else if (latestRetrieveRequested && !latestRetrieveFlowQuery) {
+    } else if (
+      latestRetrieveRequested &&
+      !latestRetrieveFlowQuery &&
+      !latestRetrieveScopedImpactQuery &&
+      !latestRetrieveScopedAutomationQuery
+    ) {
       answer =
-        'Refused: latest-retrieve-only Ask is currently supported only for explicit Flow read/write review asks. This query would require graph-wide analysis outside the scoped retrieve.';
+        'Refused: latest-retrieve-only Ask is currently supported only for explicit Flow read/write asks and explicit retrieved field/object impact or automation asks. This query would require graph-wide analysis outside the scoped retrieve.';
       deterministicAnswer = answer;
       confidence = 0.18;
       consistency = {
@@ -922,6 +940,7 @@ export class AskService {
           evidenceScope
         );
       const object = this.normalizeAutomationObject(plan.entities.object);
+      const scopedAutomationTarget = plan.entities.field ?? object;
       if (requestedFlowName) {
         let flowEvidenceSummary = this.buildFlowEvidenceSummary(requestedFlowName, citationHits);
         if (flowEvidenceSummary.matchedCount === 0) {
@@ -1057,6 +1076,55 @@ export class AskService {
           'FLOW_NAME_UNRESOLVED',
           'flow-targeted ask did not resolve an exact flow name'
         );
+      } else if (latestRetrieveRequested && evidenceScope && scopedAutomationTarget) {
+        let scopedSummary = this.buildScopedMetadataEvidenceSummary({
+          targetLabel: scopedAutomationTarget,
+          targetType: plan.entities.field ? 'field' : 'object',
+          citationHits,
+          mode: 'automation'
+        });
+        if (scopedSummary.matchedCount === 0) {
+          const scopedEvidenceHits = this.resolveScopedMetadataEvidence(evidenceScope);
+          if (scopedEvidenceHits.length > 0) {
+            citationHits = this.dedupeCitations([...citationHits, ...scopedEvidenceHits]).slice(
+              0,
+              Math.max(maxCitations, scopedEvidenceHits.length)
+            );
+            citations = this.mapCitationHits(citationHits);
+            scopedSummary = this.buildScopedMetadataEvidenceSummary({
+              targetLabel: scopedAutomationTarget,
+              targetType: plan.entities.field ? 'field' : 'object',
+              citationHits,
+              mode: 'automation'
+            });
+            executionTrace.push(
+              'automation.scope=direct-source-fallback',
+              `automation.scopedFallbackHits=${String(scopedEvidenceHits.length)}`
+            );
+          }
+        }
+        answer = scopedSummary.explanation;
+        deterministicAnswer = scopedSummary.explanation;
+        confidence = scopedSummary.matchedCount > 0 ? 0.74 : 0.48;
+        executionTrace.push(
+          'automation.scope=latest-retrieve',
+          `automation.scopedTarget=${scopedAutomationTarget}`,
+          `automation.scopedMatches=${String(scopedSummary.matchedCount)}`
+        );
+        consistency = {
+          checked: consistencyCheck,
+          aligned: true,
+          reason: consistencyCheck
+            ? 'latest-retrieve automation answer is constrained to scoped evidence hits only'
+            : 'consistency check disabled'
+        };
+        if (scopedSummary.matchedCount === 0) {
+          reject(
+            'analysis.automation',
+            'NO_AUTOMATION_MATCH',
+            `no scoped retrieve evidence matched ${scopedAutomationTarget}`
+          );
+        }
       } else {
         const result = await this.analysis.automation(
           object ?? 'Case',
@@ -1086,19 +1154,53 @@ export class AskService {
     } else if (plan.intent === 'impact') {
       operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.CONSTRAIN);
       const field = plan.entities.field ?? 'Opportunity.StageName';
-      const result = await this.analysis.impact(
-        field,
-        undefined,
-        false,
-        false,
-        false,
-        includeLowConfidence
-      );
-      answer = result.explanation;
-      deterministicAnswer = result.explanation;
-      confidence = result.paths.length > 0 ? 0.8 : 0.55;
-      if (consistencyCheck) {
-        const verification = await this.analysis.impact(
+      if (latestRetrieveRequested && evidenceScope && this.evidenceScopeContainsField(evidenceScope, field)) {
+        let scopedSummary = this.buildScopedMetadataEvidenceSummary({
+          targetLabel: field,
+          targetType: 'field',
+          citationHits,
+          mode: 'impact'
+        });
+        if (scopedSummary.matchedCount === 0) {
+          const scopedEvidenceHits = this.resolveScopedMetadataEvidence(evidenceScope);
+          if (scopedEvidenceHits.length > 0) {
+            citationHits = this.dedupeCitations([...citationHits, ...scopedEvidenceHits]).slice(
+              0,
+              Math.max(maxCitations, scopedEvidenceHits.length)
+            );
+            citations = this.mapCitationHits(citationHits);
+            scopedSummary = this.buildScopedMetadataEvidenceSummary({
+              targetLabel: field,
+              targetType: 'field',
+              citationHits,
+              mode: 'impact'
+            });
+            executionTrace.push(
+              'impact.scope=direct-source-fallback',
+              `impact.scopedFallbackHits=${String(scopedEvidenceHits.length)}`
+            );
+          }
+        }
+        answer = scopedSummary.explanation;
+        deterministicAnswer = scopedSummary.explanation;
+        confidence = scopedSummary.matchedCount > 0 ? 0.76 : 0.5;
+        executionTrace.push(
+          'impact.scope=latest-retrieve',
+          `impact.scopedField=${field}`,
+          `impact.scopedMatches=${String(scopedSummary.matchedCount)}`
+        );
+        consistency = {
+          checked: consistencyCheck,
+          aligned: true,
+          reason: consistencyCheck
+            ? 'latest-retrieve impact answer is constrained to scoped evidence hits only'
+            : 'consistency check disabled'
+        };
+        if (scopedSummary.matchedCount === 0) {
+          reject('analysis.impact', 'NO_IMPACT_PATHS', `no scoped retrieve evidence matched ${field}`);
+        }
+      } else {
+        const result = await this.analysis.impact(
           field,
           undefined,
           false,
@@ -1106,25 +1208,38 @@ export class AskService {
           false,
           includeLowConfidence
         );
-        const aligned =
-          verification.totalPaths === result.totalPaths &&
-          verification.explanation === result.explanation;
-        consistency = {
-          checked: true,
-          aligned,
-          reason: aligned
-            ? 'ask impact answer matches /impact deterministic output'
-            : 'ask impact answer diverged from /impact deterministic output'
-        };
-      } else {
-        consistency = {
-          checked: false,
-          aligned: true,
-          reason: 'consistency check disabled'
-        };
-      }
-      if (result.paths.length === 0) {
-        reject('analysis.impact', 'NO_IMPACT_PATHS', 'no impact paths found for requested field');
+        answer = result.explanation;
+        deterministicAnswer = result.explanation;
+        confidence = result.paths.length > 0 ? 0.8 : 0.55;
+        if (consistencyCheck) {
+          const verification = await this.analysis.impact(
+            field,
+            undefined,
+            false,
+            false,
+            false,
+            includeLowConfidence
+          );
+          const aligned =
+            verification.totalPaths === result.totalPaths &&
+            verification.explanation === result.explanation;
+          consistency = {
+            checked: true,
+            aligned,
+            reason: aligned
+              ? 'ask impact answer matches /impact deterministic output'
+              : 'ask impact answer diverged from /impact deterministic output'
+          };
+        } else {
+          consistency = {
+            checked: false,
+            aligned: true,
+            reason: 'consistency check disabled'
+          };
+        }
+        if (result.paths.length === 0) {
+          reject('analysis.impact', 'NO_IMPACT_PATHS', 'no impact paths found for requested field');
+        }
       }
     } else {
       reject('planner.default', 'NO_DETERMINISTIC_INTENT', 'no deterministic graph intent matched query');
@@ -1522,6 +1637,163 @@ export class AskService {
     }, []);
   }
 
+  private listEvidenceScopeSelections(evidenceScope: AskEvidenceScope): AskEvidenceSelection[] {
+    return evidenceScope.selections && evidenceScope.selections.length > 0
+      ? evidenceScope.selections
+      : this.buildSelectionsFromMetadataArgs(evidenceScope.metadataArgs);
+  }
+
+  private evidenceScopeContainsField(evidenceScope: AskEvidenceScope, field: string): boolean {
+    const normalizedField = field.trim();
+    if (!normalizedField) {
+      return false;
+    }
+    for (const selection of this.listEvidenceScopeSelections(evidenceScope)) {
+      if (selection.type.trim().toLowerCase() !== 'customfield') {
+        continue;
+      }
+      if ((selection.members ?? []).some((member) => member.trim() === normalizedField)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private evidenceScopeContainsObject(evidenceScope: AskEvidenceScope, objectName: string): boolean {
+    const normalizedObject = objectName.trim();
+    if (!normalizedObject) {
+      return false;
+    }
+    for (const selection of this.listEvidenceScopeSelections(evidenceScope)) {
+      const normalizedType = selection.type.trim().toLowerCase();
+      if (normalizedType === 'customobject') {
+        if ((selection.members ?? []).some((member) => member.trim() === normalizedObject)) {
+          return true;
+        }
+      }
+      if (normalizedType === 'customfield') {
+        if (
+          (selection.members ?? []).some((member) => {
+            const [memberObject] = member.split('.', 2);
+            return memberObject?.trim() === normalizedObject;
+          })
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private isScopedAutomationQuerySupported(plan: AskPlan, evidenceScope: AskEvidenceScope): boolean {
+    if (plan.entities.field) {
+      return this.evidenceScopeContainsField(evidenceScope, plan.entities.field);
+    }
+    const object = this.normalizeAutomationObject(plan.entities.object);
+    if (object) {
+      return this.evidenceScopeContainsObject(evidenceScope, object);
+    }
+    return false;
+  }
+
+  private resolveScopedMetadataEvidence(evidenceScope: AskEvidenceScope): EvidenceSearchResult[] {
+    const files = new Set<string>();
+
+    for (const selection of this.listEvidenceScopeSelections(evidenceScope)) {
+      const members = selection.members ?? [];
+      if (members.length === 0) {
+        const familyDirectory = this.resolveMetadataFamilyDirectory(selection.type);
+        if (familyDirectory) {
+          this.collectScopedFiles(path.join(evidenceScope.parsePath, familyDirectory), files);
+        }
+        continue;
+      }
+
+      for (const member of members) {
+        const rule = this.resolveSelectionSourceRule(evidenceScope.parsePath, selection.type, member);
+        if (rule?.exactPath) {
+          files.add(rule.exactPath.replace(/\//g, path.sep));
+        }
+        if (rule?.prefixPath) {
+          this.collectScopedFiles(rule.prefixPath.replace(/\//g, path.sep), files);
+        }
+      }
+    }
+
+    const hits: EvidenceSearchResult[] = [];
+    for (const file of files) {
+      hits.push(...this.resolveSourcePathEvidence(file));
+    }
+    return this.dedupeCitations(hits).slice(0, 64);
+  }
+
+  private collectScopedFiles(targetPath: string, files: Set<string>): void {
+    if (!fs.existsSync(targetPath)) {
+      return;
+    }
+    const stat = fs.statSync(targetPath);
+    if (stat.isFile()) {
+      files.add(targetPath);
+      return;
+    }
+    for (const entry of fs.readdirSync(targetPath, { withFileTypes: true })) {
+      const entryPath = path.join(targetPath, entry.name);
+      if (entry.isDirectory()) {
+        this.collectScopedFiles(entryPath, files);
+      } else if (entry.isFile()) {
+        files.add(entryPath);
+      }
+    }
+  }
+
+  private resolveSourcePathEvidence(sourcePath: string): EvidenceSearchResult[] {
+    const indexedHits = this.evidence.listBySourcePath(sourcePath, 24);
+    if (indexedHits.length > 0) {
+      return indexedHits;
+    }
+    if (!fs.existsSync(sourcePath) || fs.statSync(sourcePath).isDirectory()) {
+      return [];
+    }
+    const raw = fs.readFileSync(sourcePath, 'utf8');
+    if (raw.trim().length === 0) {
+      return [];
+    }
+    return [
+      {
+        id: `ev_scoped_${stableId(sourcePath)}`,
+        sourcePath,
+        sourceType: this.inferScopedEvidenceSourceType(sourcePath),
+        chunkText: raw,
+        entityTags: this.extractScopedEvidenceEntityTags(sourcePath, raw),
+        score: 1
+      }
+    ];
+  }
+
+  private inferScopedEvidenceSourceType(sourcePath: string): string {
+    const normalized = sourcePath.replace(/\\/g, '/').toLowerCase();
+    if (normalized.includes('/flows/')) return 'flow';
+    if (normalized.includes('/objects/')) return 'object';
+    if (normalized.includes('/layouts/')) return 'layout';
+    if (normalized.includes('/classes/')) return 'apex-class';
+    if (normalized.includes('/triggers/')) return 'apex-trigger';
+    if (normalized.includes('/permissionsets/')) return 'permission-set';
+    if (normalized.includes('/profiles/')) return 'profile';
+    return path.extname(sourcePath).replace(/^\./, '') || 'metadata';
+  }
+
+  private extractScopedEvidenceEntityTags(sourcePath: string, raw: string): string[] {
+    const tags = new Set<string>();
+    const baseName = path.basename(sourcePath).replace(/(?:\.[^.]+)+$/i, '');
+    if (baseName) {
+      tags.add(baseName);
+    }
+    for (const match of raw.match(/\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\b/g) ?? []) {
+      tags.add(match);
+    }
+    return [...tags].sort((left, right) => left.localeCompare(right));
+  }
+
   private addEvidenceScopeRules(
     prefixMatches: Set<string>,
     exactMatches: Set<string>,
@@ -1687,6 +1959,62 @@ export class AskService {
     if (normalizedType === 'custompermission') return 'custompermissions';
     if (normalizedType === 'quickaction') return 'quickactions';
     return undefined;
+  }
+
+  private buildScopedMetadataEvidenceSummary(input: {
+    targetLabel: string;
+    targetType: 'field' | 'object';
+    citationHits: EvidenceSearchResult[];
+    mode: 'impact' | 'automation';
+  }): { explanation: string; matchedCount: number; sourceLabels: string[] } {
+    const relevantHits = input.citationHits.filter((hit) =>
+      this.scopedMetadataHitMatchesTarget(hit, input.targetLabel, input.targetType)
+    );
+    const sourceLabels = [
+      ...new Set(
+        relevantHits
+          .map((hit) => this.toCitationSourceLabel(hit.sourcePath))
+          .map((label) => label.trim())
+          .filter((label) => label.length > 0)
+      )
+    ]
+      .sort((left, right) => left.localeCompare(right))
+      .slice(0, 5);
+    const matchedCount = relevantHits.length;
+    const sourceSummary =
+      sourceLabels.length > 0 ? sourceLabels.join(', ') : 'no scoped citation sources';
+    const modeLabel = input.mode === 'impact' ? 'impact' : 'automation';
+    const explanation =
+      matchedCount > 0
+        ? `latest-retrieve evidence found for ${input.targetLabel}; ${matchedCount} scoped citation(s); top ${modeLabel} sources: ${sourceSummary}. This summary is limited to the current retrieve scope, not full graph analysis.`
+        : `no latest-retrieve evidence matched ${input.targetLabel}. Re-retrieve the relevant metadata and rerun Ask before relying on this ${modeLabel} summary.`;
+    return {
+      explanation,
+      matchedCount,
+      sourceLabels
+    };
+  }
+
+  private scopedMetadataHitMatchesTarget(
+    hit: EvidenceSearchResult,
+    targetLabel: string,
+    targetType: 'field' | 'object'
+  ): boolean {
+    const haystack = `${hit.sourcePath} ${hit.chunkText} ${hit.entityTags.join(' ')}`.toLowerCase();
+    const normalizedTarget = targetLabel.trim().toLowerCase();
+    if (!normalizedTarget) {
+      return false;
+    }
+    if (targetType === 'object') {
+      return haystack.includes(normalizedTarget);
+    }
+    const [objectName, fieldName] = targetLabel
+      .split('.', 2)
+      .map((value) => value?.trim().toLowerCase());
+    if (haystack.includes(normalizedTarget)) {
+      return true;
+    }
+    return Boolean(objectName && fieldName && haystack.includes(objectName) && haystack.includes(fieldName));
   }
 
   private normalizeEvidenceSourcePath(sourcePath: string): string {
