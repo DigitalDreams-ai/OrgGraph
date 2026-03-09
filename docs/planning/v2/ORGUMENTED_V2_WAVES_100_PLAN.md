@@ -25,7 +25,7 @@ The following are now true in main and should not be re-planned as open:
 
 2. Wave4 browser resilience:
 - stale empty live metadata cache is bypassed and re-queried
-- browser includes one-click visible-family member preload (`Load Visible Items`)
+- browser includes one-click visible-family member preload (`Load Visible Children`)
 
 3. Wave10 boundary hardening:
 - major clipping/overflow defects in core Ask/Analyze/Diagnostics surfaces were reduced with stronger grid minima and wrapping rules

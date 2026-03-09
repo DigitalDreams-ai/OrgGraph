@@ -44,7 +44,7 @@ Out of scope:
 ## Current Checkpoint
 
 Implemented on `dna-org-browser-tree-selection`:
-- action labels now use direct operator semantics (`Search`, `Browse All`, `Load Trees`, `Retrieve Cart`)
+- action labels now use direct operator semantics (`Search`, `Load Full Family Catalog`, `Load Visible Children`, `Retrieve Cart`)
 - search and browse both use checkbox-first staging with explicit family vs item hints
 - expanding a family now auto-loads nested members for tree-style browsing
 - selection summaries and copy now use family/item wording instead of mixed type/member add verbs
