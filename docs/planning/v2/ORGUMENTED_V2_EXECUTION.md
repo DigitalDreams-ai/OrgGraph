@@ -53,6 +53,7 @@ Materially true now:
 - org browser now surfaces explicit catalog-coverage state (`full`, `limited`, `unavailable`) so fallback or truncated family discovery cannot silently read as complete org inventory
 - wave11 browser refinement is back in progress: coverage state and explorer expansion affordances still need stronger operator-facing clarity before browser parity can stay closed
 - live metadata catalog cache version is bumped again so older partial family caches are force-refreshed before the remaining browser parity work
+- wave11 browser fallback hardening now preserves richer stale live-catalog caches when fresh metadata-type discovery fails, preventing regression back to the tiny seed-family catalog when a usable cached family inventory already exists
 - org browser now separates name search from family filtering, uses triangle-first family rows, adds `Expand Visible` / `Collapse Visible`, and scopes `Load Visible Trees` to the currently filtered family explorer so operators can browse the full discovered catalog more like a standard org browser
 - Ask now surfaces the latest retrieve handoff directly in the workspace, separates grounded Flow prompts from general follow-up prompts, and generates one-click asks from retrieved Flow, CustomObject, and CustomField members
 - Ask now passes the latest retrieve handoff into `/ask` as explicit evidence scope, so retrieve-grounded Flow review no longer depends on ambient browser state or local-storage-only UI assumptions

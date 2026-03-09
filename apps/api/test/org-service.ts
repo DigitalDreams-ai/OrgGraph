@@ -8,6 +8,7 @@ class StubToolAdapter {
   calls: Array<{ command: string; args: string[]; cwd?: string }> = [];
   inaccessibleAliases = new Set<string>();
   cciAliases = new Set<string>(['orgumented-sandbox']);
+  metadataTypesShouldFail = false;
 
   private ok(stdout = '{"status":"ok"}') {
     return { exitCode: 0, stdout, stderr: '', elapsedMs: 12 };
@@ -108,6 +109,9 @@ class StubToolAdapter {
   async listMetadataTypes(alias: string, cwd: string) {
     const args = ['org', 'list', 'metadata-types', '--target-org', alias, '--json'];
     this.calls.push({ command: 'sf', args, cwd });
+    if (this.metadataTypesShouldFail) {
+      return { exitCode: 1, stdout: '', stderr: 'metadata-types failed', elapsedMs: 12 };
+    }
     return this.ok(
       JSON.stringify({
         result: {
@@ -452,6 +456,57 @@ async function run(): Promise<void> {
     assert.ok(
       cacheOnlyCatalog.types.some((item) => item.type === 'AnimationRule' && item.memberCount === 0),
       'cache-backed catalog should preserve families even when a cached row has no members array yet'
+    );
+
+    fs.writeFileSync(
+      liveCatalogCachePath,
+      JSON.stringify(
+        {
+          cacheVersion: 5,
+          refreshedAt: new Date().toISOString(),
+          types: [
+            {
+              type: 'AnimationRule',
+              directoryName: 'animationRules',
+              inFolder: false,
+              metaFile: false,
+              suffix: 'animationRule',
+              childXmlNames: []
+            },
+            {
+              type: 'Bot',
+              directoryName: 'bots',
+              inFolder: false,
+              metaFile: false,
+              suffix: 'bot',
+              childXmlNames: []
+            }
+          ]
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+    toolAdapter.metadataTypesShouldFail = true;
+    const staleFallbackCatalog = await service.metadataCatalog({ refresh: false, limit: 50 });
+    toolAdapter.metadataTypesShouldFail = false;
+    assert.equal(staleFallbackCatalog.source, 'cache');
+    assert.ok(
+      staleFallbackCatalog.types.some((item) => item.type === 'AnimationRule'),
+      'stale cache fallback should preserve richer cached metadata families'
+    );
+    assert.ok(
+      staleFallbackCatalog.types.some((item) => item.type === 'Bot'),
+      'stale cache fallback should retain non-seed metadata families when live discovery fails'
+    );
+    assert.ok(
+      staleFallbackCatalog.warnings.some((warning) => warning.includes('cache version mismatch')),
+      'stale cache fallback should disclose cache version mismatch'
+    );
+    assert.ok(
+      staleFallbackCatalog.warnings.some((warning) => warning.includes('using stale live metadata cache')),
+      'stale cache fallback should disclose cached fallback usage'
     );
 
     const liveSearch = await service.metadataSearch({

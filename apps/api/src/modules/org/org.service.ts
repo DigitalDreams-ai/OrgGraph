@@ -1334,6 +1334,7 @@ export class OrgService {
       path.dirname(parsePath),
       includeSearchOnlyTypes ? 'metadata-live-search-cache.json' : 'metadata-live-catalog-cache.json'
     );
+    let staleCacheFallback: DiscoveryMetadataIndex | undefined;
 
     if (!refresh && fs.existsSync(cachePath)) {
       try {
@@ -1351,54 +1352,26 @@ export class OrgService {
             childXmlNames?: unknown;
           }>;
         };
-        if (parsed.cacheVersion !== OrgService.LIVE_METADATA_CACHE_VERSION) {
-          warnings.push(`live metadata cache version mismatch; refreshing from org: ${cachePath}`);
-        } else if (Array.isArray(parsed.types)) {
-          const typeMembers = new Map<string, string[]>();
-          const typeCatalog = new Map<string, MetadataTypeCatalogEntry>();
-          for (const item of parsed.types) {
-            if (!item || typeof item.type !== 'string') {
-              continue;
+        if (Array.isArray(parsed.types)) {
+          const cacheIndex = this.parseCachedLiveMetadataIndex(parsed, refreshedAt);
+          if (cacheIndex) {
+            if (parsed.cacheVersion !== OrgService.LIVE_METADATA_CACHE_VERSION) {
+              warnings.push(`live metadata cache version mismatch; refreshing from org: ${cachePath}`);
+              staleCacheFallback = {
+                ...cacheIndex,
+                source: 'cache'
+              };
+            } else {
+              return {
+                source: 'metadata_api',
+                refreshedAt: cacheIndex.refreshedAt,
+                typeMembers: cacheIndex.typeMembers,
+                typeCatalog: cacheIndex.typeCatalog,
+                warnings
+              };
             }
-            const type = item.type.trim();
-            if (!type) {
-              continue;
-            }
-            const members = Array.isArray(item.members)
-              ? item.members
-                .map((member) => String(member).trim())
-                .filter((member) => member.length > 0)
-                .sort((a, b) => a.localeCompare(b))
-              : [];
-            typeMembers.set(type, members);
-            const directoryName = typeof item.directoryName === 'string' ? item.directoryName.trim() : '';
-            const suffix = typeof item.suffix === 'string' ? item.suffix.trim() : '';
-            const childXmlNames = Array.isArray(item.childXmlNames)
-              ? item.childXmlNames
-                  .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
-                  .filter((entry) => entry.length > 0)
-                  .sort((left, right) => left.localeCompare(right))
-              : [];
-            typeCatalog.set(type, {
-              type,
-              directoryName: directoryName || undefined,
-              inFolder: item.inFolder === true,
-              metaFile: item.metaFile === true,
-              suffix: suffix || undefined,
-              childXmlNames,
-              childFamilyCount: childXmlNames.length
-            });
-          }
-          if (typeMembers.size === 0 && this.countMetadataMembers(typeMembers) === 0) {
-            warnings.push(`live metadata cache was empty; refreshing from org: ${cachePath}`);
           } else {
-            return {
-              source: 'metadata_api',
-              refreshedAt: parsed.refreshedAt ?? refreshedAt,
-              typeMembers,
-              typeCatalog,
-              warnings
-            };
+            warnings.push(`live metadata cache was empty; refreshing from org: ${cachePath}`);
           }
         }
       } catch {
@@ -1411,6 +1384,16 @@ export class OrgService {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       warnings.push(`sf CLI unavailable for live metadata discovery: ${message}`);
+      if (staleCacheFallback) {
+        warnings.push(`using stale live metadata cache because sf CLI discovery is unavailable: ${cachePath}`);
+        return {
+          source: 'cache',
+          refreshedAt: staleCacheFallback.refreshedAt,
+          typeMembers: staleCacheFallback.typeMembers,
+          typeCatalog: staleCacheFallback.typeCatalog,
+          warnings
+        };
+      }
       return {
         source: 'metadata_api',
         refreshedAt,
@@ -1426,6 +1409,16 @@ export class OrgService {
     warnings.push(...liveMetadataTypes.warnings);
 
     const usingMetadataTypeFallback = liveMetadataTypes.types.length === 0;
+    if (usingMetadataTypeFallback && staleCacheFallback) {
+      warnings.push(`using stale live metadata cache because metadata family discovery failed: ${cachePath}`);
+      return {
+        source: 'cache',
+        refreshedAt: staleCacheFallback.refreshedAt,
+        typeMembers: staleCacheFallback.typeMembers,
+        typeCatalog: staleCacheFallback.typeCatalog,
+        warnings
+      };
+    }
     const catalogTypes =
       liveMetadataTypes.types.length > 0
         ? liveMetadataTypes.types
@@ -1475,6 +1468,16 @@ export class OrgService {
 
     if (typeMembers.size === 0) {
       warnings.push('live metadata discovery returned no entries; cache not updated');
+      if (staleCacheFallback) {
+        warnings.push(`using stale live metadata cache because live member discovery returned no entries: ${cachePath}`);
+        return {
+          source: 'cache',
+          refreshedAt: staleCacheFallback.refreshedAt,
+          typeMembers: staleCacheFallback.typeMembers,
+          typeCatalog: staleCacheFallback.typeCatalog,
+          warnings
+        };
+      }
     } else if (usingMetadataTypeFallback) {
       warnings.push('live metadata family discovery unavailable; using non-cached fallback family set');
     } else {
@@ -1516,6 +1519,72 @@ export class OrgService {
       typeMembers,
       typeCatalog,
       warnings
+    };
+  }
+
+  private parseCachedLiveMetadataIndex(
+    parsed: {
+      refreshedAt?: string;
+      types?: Array<{
+        type?: unknown;
+        members?: unknown;
+        directoryName?: unknown;
+        inFolder?: unknown;
+        metaFile?: unknown;
+        suffix?: unknown;
+        childXmlNames?: unknown;
+      }>;
+    },
+    fallbackRefreshedAt: string
+  ): Pick<DiscoveryMetadataIndex, 'refreshedAt' | 'typeMembers' | 'typeCatalog'> | undefined {
+    if (!Array.isArray(parsed.types)) {
+      return undefined;
+    }
+
+    const typeMembers = new Map<string, string[]>();
+    const typeCatalog = new Map<string, MetadataTypeCatalogEntry>();
+    for (const item of parsed.types) {
+      if (!item || typeof item.type !== 'string') {
+        continue;
+      }
+      const type = item.type.trim();
+      if (!type) {
+        continue;
+      }
+      const members = Array.isArray(item.members)
+        ? item.members
+            .map((member) => String(member).trim())
+            .filter((member) => member.length > 0)
+            .sort((a, b) => a.localeCompare(b))
+        : [];
+      typeMembers.set(type, members);
+      const directoryName = typeof item.directoryName === 'string' ? item.directoryName.trim() : '';
+      const suffix = typeof item.suffix === 'string' ? item.suffix.trim() : '';
+      const childXmlNames = Array.isArray(item.childXmlNames)
+        ? item.childXmlNames
+            .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
+            .filter((entry) => entry.length > 0)
+            .sort((left, right) => left.localeCompare(right))
+        : [];
+      typeCatalog.set(type, {
+        type,
+        directoryName: directoryName || undefined,
+        inFolder: item.inFolder === true,
+        metaFile: item.metaFile === true,
+        suffix: suffix || undefined,
+        childXmlNames,
+        childFamilyCount: childXmlNames.length
+      });
+    }
+
+    if (typeMembers.size === 0 && this.countMetadataMembers(typeMembers) === 0) {
+      return undefined;
+    }
+
+    return {
+      refreshedAt: parsed.refreshedAt ?? fallbackRefreshedAt,
+      typeMembers,
+      typeCatalog
     };
   }
 
