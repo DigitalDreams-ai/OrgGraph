@@ -1334,7 +1334,9 @@ export class OrgService {
       path.dirname(parsePath),
       includeSearchOnlyTypes ? 'metadata-live-search-cache.json' : 'metadata-live-catalog-cache.json'
     );
-    let staleCacheFallback: DiscoveryMetadataIndex | undefined;
+    let staleCacheFallback:
+      | Pick<DiscoveryMetadataIndex, 'refreshedAt' | 'typeMembers' | 'typeCatalog'>
+      | undefined;
 
     if (!refresh && fs.existsSync(cachePath)) {
       try {
@@ -1357,10 +1359,7 @@ export class OrgService {
           if (cacheIndex) {
             if (parsed.cacheVersion !== OrgService.LIVE_METADATA_CACHE_VERSION) {
               warnings.push(`live metadata cache version mismatch; refreshing from org: ${cachePath}`);
-              staleCacheFallback = {
-                ...cacheIndex,
-                source: 'cache'
-              };
+              staleCacheFallback = cacheIndex;
             } else {
               return {
                 source: 'metadata_api',
