@@ -100,7 +100,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
               <p><strong>Parse path:</strong> <span className="path-value">{props.latestRetrieve.parsePath || 'n/a'}</span></p>
               {retrieveAwarePrompts.groundedPrompts.length > 0 ? (
                 <>
-                  <p className="muted"><strong>Grounded prompts from latest retrieve:</strong> these stay tied to the retrieved Flow members.</p>
+                  <p className="muted"><strong>Grounded prompts from latest retrieve:</strong> these stay tied to the retrieved Flow members and Ask now fails closed if that retrieve scope is missing.</p>
                   <div className="preset-row">
                     {retrieveAwarePrompts.groundedPrompts.map((preset) => (
                       <button key={preset} type="button" className="ghost chip-btn" onClick={() => props.setAskQuery(preset)}>
@@ -124,6 +124,9 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                   </div>
                 </>
               ) : null}
+              <p className="muted">
+                <strong>Scope rule:</strong> `latest retrieve` is enforced only for explicit Flow read/write prompts today. Other field/object approval questions still use the current semantic state unless they say otherwise.
+              </p>
               {props.latestRetrieveSelections.length > 0 ? (
                 <p className="muted">
                   Retrieved selection scope: {props.latestRetrieveSelections.map((selection) => selection.type).join(', ')}.

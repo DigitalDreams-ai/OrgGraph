@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { runAskRequest, type QueryResponse } from '../../lib/ask-client';
 import type { AskPayload } from './types';
+import type { MetadataRetrieveResultView, MetadataSelection } from '../browser/types';
 
 interface UseAskWorkspaceOptions {
+  latestRetrieve: MetadataRetrieveResultView | null;
+  latestRetrieveSelections: MetadataSelection[];
   presentResponse: (response: QueryResponse) => void;
   resolveErrorMessage: (response: QueryResponse) => string;
   setLoading: (loading: boolean) => void;
@@ -17,6 +20,33 @@ interface RunAskRequestOptions {
   maxCitations: number;
   consistencyCheck: boolean;
   includeLowConfidence: boolean;
+  evidenceScope?: {
+    kind: 'latest_retrieve';
+    alias?: string;
+    parsePath: string;
+    metadataArgs: string[];
+    selections?: MetadataSelection[];
+  };
+}
+
+function buildEvidenceScope(
+  latestRetrieve: MetadataRetrieveResultView | null,
+  latestRetrieveSelections: MetadataSelection[]
+): RunAskRequestOptions['evidenceScope'] | undefined {
+  if (!latestRetrieve || !latestRetrieve.parsePath.trim()) {
+    return undefined;
+  }
+
+  return {
+    kind: 'latest_retrieve',
+    alias: latestRetrieve.alias || undefined,
+    parsePath: latestRetrieve.parsePath,
+    metadataArgs: latestRetrieve.metadataArgs,
+    selections: latestRetrieveSelections.map((selection) => ({
+      type: selection.type,
+      members: Array.isArray(selection.members) ? [...selection.members] : undefined
+    }))
+  };
 }
 
 export function useAskWorkspace(options: UseAskWorkspaceOptions) {
@@ -78,7 +108,8 @@ export function useAskWorkspace(options: UseAskWorkspaceOptions) {
         query: askQuery,
         maxCitations,
         consistencyCheck,
-        includeLowConfidence
+        includeLowConfidence,
+        evidenceScope: buildEvidenceScope(options.latestRetrieve, options.latestRetrieveSelections)
       },
       () => {
         setAskElaboration('');
@@ -94,7 +125,8 @@ export function useAskWorkspace(options: UseAskWorkspaceOptions) {
         query: `Provide a concise operator explanation for: ${askQuery}`,
         maxCitations,
         consistencyCheck,
-        includeLowConfidence
+        includeLowConfidence,
+        evidenceScope: buildEvidenceScope(options.latestRetrieve, options.latestRetrieveSelections)
       },
       (parsed) => {
         setAskElaboration(parsed.answer || parsed.deterministicAnswer || 'No elaboration returned.');

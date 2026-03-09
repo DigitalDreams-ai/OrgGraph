@@ -55,6 +55,9 @@ Materially true now:
 - live metadata catalog cache version is bumped again so older partial family caches are force-refreshed before the remaining browser parity work
 - org browser now separates name search from family filtering, uses triangle-first family rows, adds `Expand Visible` / `Collapse Visible`, and scopes `Load Visible Trees` to the currently filtered family explorer so operators can browse the full discovered catalog more like a standard org browser
 - Ask now surfaces the latest retrieve handoff directly in the workspace, separates grounded Flow prompts from general follow-up prompts, and generates one-click asks from retrieved Flow, CustomObject, and CustomField members
+- Ask now passes the latest retrieve handoff into `/ask` as explicit evidence scope, so retrieve-grounded Flow review no longer depends on ambient browser state or local-storage-only UI assumptions
+- latest-retrieve enforcement is now fail-closed for the currently supported path: explicit Flow read/write asks use the staged retrieve scope, while unsupported latest-retrieve asks refuse instead of silently falling back to unconstrained graph analysis
+- the supported Flow path now synthesizes read/write summaries directly from the retrieved flow file when global evidence index paths differ from the staged parse path, preserving deterministic behavior across fixture and packaged-desktop runtimes
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces

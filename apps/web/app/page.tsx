@@ -42,13 +42,6 @@ export default function Page(): JSX.Element {
     setCopied: responseInspector.setCopied,
     setErrorText: responseInspector.setErrorText
   });
-  const askWorkspace = useAskWorkspace({
-    presentResponse: responseInspector.presentResponse,
-    resolveErrorMessage: resolveQueryErrorMessage,
-    setLoading: secondaryQueryRunner.setLoading,
-    setCopied: responseInspector.setCopied,
-    setErrorText: responseInspector.setErrorText
-  });
   const proofsWorkspace = useProofsWorkspace({
     presentResponse: responseInspector.presentResponse,
     resolveErrorMessage: resolveQueryErrorMessage,
@@ -66,6 +59,15 @@ export default function Page(): JSX.Element {
   const browserWorkspace = useBrowserWorkspace({
     activeAlias: connectWorkspace.activeAlias,
     sessionStatus: connectWorkspace.sessionStatus,
+    presentResponse: responseInspector.presentResponse,
+    resolveErrorMessage: resolveQueryErrorMessage,
+    setLoading: secondaryQueryRunner.setLoading,
+    setCopied: responseInspector.setCopied,
+    setErrorText: responseInspector.setErrorText
+  });
+  const askWorkspace = useAskWorkspace({
+    latestRetrieve: browserWorkspace.lastMetadataRetrieve,
+    latestRetrieveSelections: browserWorkspace.lastRetrievedSelections,
     presentResponse: responseInspector.presentResponse,
     resolveErrorMessage: resolveQueryErrorMessage,
     setLoading: secondaryQueryRunner.setLoading,

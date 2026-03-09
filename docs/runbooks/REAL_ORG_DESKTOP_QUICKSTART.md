@@ -6,7 +6,7 @@ Scope:
 - Windows desktop app (Tauri packaged runtime)
 - Real Salesforce alias from local `sf` keychain
 - Org Browser cart retrieve flow
-- Ask response grounded in latest retrieve
+- Ask response grounded in latest retrieve for the supported explicit Flow read/write path
 
 This runbook uses Git Bash only.
 
@@ -140,13 +140,15 @@ Inside Orgumented `Ask` workspace:
 1. In `Latest retrieve`, use one of the generated chips under:
    - `Grounded prompts from latest retrieve`
    - or `Follow-up prompts from retrieved items`
-2. If you want to test the explicit Flow path, use this exact question:
+2. For strict latest-retrieve-only behavior, use the supported explicit Flow path below. Other Ask questions may still use the current semantic state and are not yet hard-scoped to the staged retrieve.
+3. Use this exact question:
    - `Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.`
-3. Click `Run Ask`.
-4. Confirm:
+4. Click `Run Ask`.
+5. Confirm:
    - decision packet is populated
    - citations list includes retrieved files
    - proof ID and replay token are present
+6. If you intentionally ask a different `Based only on the latest retrieve ...` question outside explicit Flow read/write review, expect a fail-closed refusal instead of a misleading unconstrained answer.
 
 ## 6) Save Evidence
 

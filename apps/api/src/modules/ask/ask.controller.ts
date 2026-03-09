@@ -122,6 +122,58 @@ export class AskController {
       }
     }
 
+    if (body.evidenceScope !== undefined) {
+      if (
+        typeof body.evidenceScope !== 'object' ||
+        body.evidenceScope === null ||
+        Array.isArray(body.evidenceScope)
+      ) {
+        throw new BadRequestException('evidenceScope must be an object');
+      }
+      if (body.evidenceScope.kind !== 'latest_retrieve') {
+        throw new BadRequestException("evidenceScope.kind must be 'latest_retrieve'");
+      }
+      if (
+        typeof body.evidenceScope.parsePath !== 'string' ||
+        body.evidenceScope.parsePath.trim().length === 0
+      ) {
+        throw new BadRequestException('evidenceScope.parsePath must be a non-empty string');
+      }
+      if (
+        !Array.isArray(body.evidenceScope.metadataArgs) ||
+        body.evidenceScope.metadataArgs.some(
+          (entry) => typeof entry !== 'string' || entry.trim().length === 0
+        )
+      ) {
+        throw new BadRequestException('evidenceScope.metadataArgs must be a string array');
+      }
+      if (body.evidenceScope.alias !== undefined && typeof body.evidenceScope.alias !== 'string') {
+        throw new BadRequestException('evidenceScope.alias must be a string');
+      }
+      if (body.evidenceScope.selections !== undefined) {
+        if (!Array.isArray(body.evidenceScope.selections)) {
+          throw new BadRequestException('evidenceScope.selections must be an array');
+        }
+        for (const selection of body.evidenceScope.selections) {
+          if (!selection || typeof selection !== 'object' || Array.isArray(selection)) {
+            throw new BadRequestException('evidenceScope.selections entries must be objects');
+          }
+          if (typeof selection.type !== 'string' || selection.type.trim().length === 0) {
+            throw new BadRequestException('evidenceScope.selections.type must be a non-empty string');
+          }
+          if (
+            selection.members !== undefined &&
+            (!Array.isArray(selection.members) ||
+              selection.members.some(
+                (entry) => typeof entry !== 'string' || entry.trim().length === 0
+              ))
+          ) {
+            throw new BadRequestException('evidenceScope.selections.members must be a string array');
+          }
+        }
+      }
+    }
+
     try {
       return await this.askService.ask(body);
     } catch (error) {

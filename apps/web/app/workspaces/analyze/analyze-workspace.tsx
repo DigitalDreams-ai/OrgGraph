@@ -100,17 +100,17 @@ function buildPermissionScopeAskQuery(
 ): string {
   const target = permissionResult?.field || permissionResult?.object || fieldName || objectName;
   const actor = permissionResult?.user || user;
-  return `Based only on the latest retrieve, explain whether ${actor} can edit ${target} and what permission path gaps still block approval.`;
+  return `Explain whether ${actor} can edit ${target} and what permission path gaps still block approval.`;
 }
 
 function buildAutomationScopeAskQuery(automationResult: AutomationResult | null, objectName: string): string {
   const target = automationResult?.object || objectName;
-  return `Based only on the latest retrieve, explain what automations update ${target} and what should be reviewed before approval.`;
+  return `Explain what automations update ${target} and what should be reviewed before approval.`;
 }
 
 function buildImpactScopeAskQuery(impactResult: ImpactResult | null, fieldName: string): string {
   const target = impactResult?.field || fieldName;
-  return `Based only on the latest retrieve, should we approve changing ${target}? Explain downstream automations and deterministic impact paths.`;
+  return `Should we approve changing ${target}? Explain downstream automations and deterministic impact paths.`;
 }
 
 function buildSystemPermissionAskQuery(
@@ -120,7 +120,7 @@ function buildSystemPermissionAskQuery(
 ): string {
   const actor = systemPermissionResult?.user || user;
   const permission = systemPermissionResult?.permission || systemPermission;
-  return `Based only on the latest retrieve, explain whether ${actor} has ${permission} and what deterministic grant paths support or block approval.`;
+  return `Explain whether ${actor} has ${permission} and what deterministic grant paths support or block approval.`;
 }
 
 type StructuredAnalyzeSummary = {
