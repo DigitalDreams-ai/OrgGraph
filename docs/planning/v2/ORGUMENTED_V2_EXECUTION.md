@@ -61,6 +61,8 @@ Materially true now:
 - Ask now passes the latest retrieve handoff into `/ask` as explicit evidence scope, so retrieve-grounded Flow review no longer depends on ambient browser state or local-storage-only UI assumptions
 - latest-retrieve enforcement is now fail-closed for the currently supported path: explicit Flow read/write asks use the staged retrieve scope, while unsupported latest-retrieve asks refuse instead of silently falling back to unconstrained graph analysis
 - the supported Flow path now synthesizes read/write summaries directly from the retrieved flow file when global evidence index paths differ from the staged parse path, preserving deterministic behavior across fixture and packaged-desktop runtimes
+- latest-retrieve Ask now also supports explicit retrieved field/object impact and automation summaries (`what touches <field>`, `what automations update <field>`, `what runs on object <object>`), using scoped direct-source evidence fallback when indexed evidence paths do not match the staged retrieve path
+- permission-style latest-retrieve asks still fail closed, so retrieve scope is expanded only for the explicitly supported field/object and Flow evidence families
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces

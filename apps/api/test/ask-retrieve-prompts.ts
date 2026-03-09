@@ -13,24 +13,18 @@ function run(): void {
 
   assert.deepEqual(prompts.groundedPrompts, [
     'Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.',
-    'Based only on the latest retrieve, explain what Flow OpportunityStageSync reads and writes.'
+    'Based only on the latest retrieve, explain what Flow OpportunityStageSync reads and writes.',
+    'Based only on the latest retrieve, what automations update Case.Status?',
+    'Based only on the latest retrieve, what automations update Opportunity.StageName?',
+    'Based only on the latest retrieve, what runs on object Case?',
+    'Based only on the latest retrieve, what runs on object Opportunity?',
+    'Based only on the latest retrieve, what touches Case.Status?',
+    'Based only on the latest retrieve, what touches Opportunity.StageName?'
   ]);
 
   assert.ok(
-    prompts.followUpPrompts.includes('What touches Opportunity.StageName?'),
-    'retrieved field prompts should include impact follow-ups'
-  );
-  assert.ok(
     prompts.followUpPrompts.includes('Who can edit Opportunity.StageName?'),
     'retrieved field prompts should include permission follow-ups'
-  );
-  assert.ok(
-    prompts.followUpPrompts.includes('What automations update Case.Status?'),
-    'retrieved field prompts should include automation follow-ups'
-  );
-  assert.ok(
-    prompts.followUpPrompts.includes('What runs on object Opportunity?'),
-    'retrieved object prompts should include automation follow-ups'
   );
   assert.ok(
     prompts.followUpPrompts.includes('Who can edit object Case?'),
@@ -41,11 +35,23 @@ function run(): void {
     { type: 'Flow', members: ['OpportunityStageSync', 'OpportunityStageSync'] },
     { type: 'CustomField', members: ['Opportunity.StageName', 'Opportunity.StageName'] }
   ]);
-  assert.equal(deduped.groundedPrompts.length, 1);
-  assert.equal(
-    deduped.followUpPrompts.filter((prompt) => prompt === 'What touches Opportunity.StageName?').length,
-    1
+  assert.equal(deduped.groundedPrompts.length, 3);
+  assert.ok(
+    deduped.groundedPrompts.includes(
+      'Based only on the latest retrieve, explain what Flow OpportunityStageSync reads and writes.'
+    )
   );
+  assert.ok(
+    deduped.groundedPrompts.includes(
+      'Based only on the latest retrieve, what touches Opportunity.StageName?'
+    )
+  );
+  assert.ok(
+    deduped.groundedPrompts.includes(
+      'Based only on the latest retrieve, what automations update Opportunity.StageName?'
+    )
+  );
+  assert.equal(deduped.followUpPrompts.length, 1);
 
   console.log('ask retrieve prompts test passed');
 }

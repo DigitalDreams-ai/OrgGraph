@@ -1177,12 +1177,100 @@ async function run(): Promise<void> {
     assert.equal(askLatestRetrieveUnsupported.trustLevel, 'refused');
     assert.match(
       askLatestRetrieveUnsupported.deterministicAnswer,
-      /supported only for explicit Flow read\/write review asks/i
+      /supported only for explicit Flow read\/write asks and explicit retrieved field\/object impact or automation asks/i
     );
     assert.ok(
       (askLatestRetrieveUnsupported.refusalReasons ?? []).some((reason) =>
         /grounding_score/i.test(reason)
       )
+    );
+
+    const askLatestRetrieveImpactRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Based only on the latest retrieve, what touches Opportunity.StageName?',
+        evidenceScope: latestRetrieveEvidenceScope
+      })
+    });
+    assert.equal(
+      askLatestRetrieveImpactRes.status,
+      201,
+      'latest retrieve impact ask should return 201'
+    );
+    const askLatestRetrieveImpact = (await askLatestRetrieveImpactRes.json()) as {
+      trustLevel: string;
+      plan: { intent: string };
+      deterministicAnswer: string;
+      consistency: { aligned: boolean; reason: string };
+    };
+    assert.equal(askLatestRetrieveImpact.plan.intent, 'impact');
+    assert.notEqual(askLatestRetrieveImpact.trustLevel, 'refused');
+    assert.match(
+      askLatestRetrieveImpact.deterministicAnswer,
+      /latest-retrieve evidence found for Opportunity\.StageName/i
+    );
+    assert.match(
+      askLatestRetrieveImpact.deterministicAnswer,
+      /current retrieve scope, not full graph analysis/i
+    );
+    assert.equal(askLatestRetrieveImpact.consistency.aligned, true);
+
+    const askLatestRetrieveAutomationRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Based only on the latest retrieve, what automations update Opportunity.StageName?',
+        evidenceScope: latestRetrieveEvidenceScope
+      })
+    });
+    assert.equal(
+      askLatestRetrieveAutomationRes.status,
+      201,
+      'latest retrieve automation ask should return 201'
+    );
+    const askLatestRetrieveAutomation = (await askLatestRetrieveAutomationRes.json()) as {
+      trustLevel: string;
+      plan: { intent: string };
+      deterministicAnswer: string;
+      consistency: { aligned: boolean; reason: string };
+    };
+    assert.equal(askLatestRetrieveAutomation.plan.intent, 'automation');
+    assert.notEqual(askLatestRetrieveAutomation.trustLevel, 'refused');
+    assert.match(
+      askLatestRetrieveAutomation.deterministicAnswer,
+      /latest-retrieve evidence found for Opportunity\.StageName/i
+    );
+    assert.match(
+      askLatestRetrieveAutomation.deterministicAnswer,
+      /top automation sources:/i
+    );
+    assert.equal(askLatestRetrieveAutomation.consistency.aligned, true);
+
+    const askLatestRetrieveObjectAutomationRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Based only on the latest retrieve, what runs on object Opportunity?',
+        evidenceScope: latestRetrieveEvidenceScope
+      })
+    });
+    assert.equal(
+      askLatestRetrieveObjectAutomationRes.status,
+      201,
+      'latest retrieve object automation ask should return 201'
+    );
+    const askLatestRetrieveObjectAutomation =
+      (await askLatestRetrieveObjectAutomationRes.json()) as {
+        trustLevel: string;
+        plan: { intent: string };
+        deterministicAnswer: string;
+      };
+    assert.equal(askLatestRetrieveObjectAutomation.plan.intent, 'automation');
+    assert.notEqual(askLatestRetrieveObjectAutomation.trustLevel, 'refused');
+    assert.match(
+      askLatestRetrieveObjectAutomation.deterministicAnswer,
+      /latest-retrieve evidence found for Opportunity/i
     );
 
     const askImpactRes = await fetch(`${base}/ask`, {

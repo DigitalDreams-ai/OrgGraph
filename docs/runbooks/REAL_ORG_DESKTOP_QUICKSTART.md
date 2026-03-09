@@ -6,7 +6,7 @@ Scope:
 - Windows desktop app (Tauri packaged runtime)
 - Real Salesforce alias from local `sf` keychain
 - Org Browser cart retrieve flow
-- Ask response grounded in latest retrieve for the supported explicit Flow read/write path
+- Ask response grounded in latest retrieve for supported Flow, field-impact, and object/automation prompts
 
 This runbook uses Git Bash only.
 
@@ -140,15 +140,22 @@ Inside Orgumented `Ask` workspace:
 1. In `Latest retrieve`, use one of the generated chips under:
    - `Grounded prompts from latest retrieve`
    - or `Follow-up prompts from retrieved items`
-2. For strict latest-retrieve-only behavior, use the supported explicit Flow path below. Other Ask questions may still use the current semantic state and are not yet hard-scoped to the staged retrieve.
-3. Use this exact question:
+2. For strict latest-retrieve-only behavior, use one of these supported prompt shapes:
+   - `Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.`
+   - `Based only on the latest retrieve, what touches Opportunity.StageName?`
+   - `Based only on the latest retrieve, what automations update Opportunity.StageName?`
+   - `Based only on the latest retrieve, what runs on object Opportunity?`
+3. Use this exact Flow question first:
    - `Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.`
 4. Click `Run Ask`.
 5. Confirm:
    - decision packet is populated
    - citations list includes retrieved files
    - proof ID and replay token are present
-6. If you intentionally ask a different `Based only on the latest retrieve ...` question outside explicit Flow read/write review, expect a fail-closed refusal instead of a misleading unconstrained answer.
+6. Then test one field/object grounded prompt from the same retrieve:
+   - `Based only on the latest retrieve, what touches Opportunity.StageName?`
+   - or `Based only on the latest retrieve, what runs on object Opportunity?`
+7. If you intentionally ask a different `Based only on the latest retrieve ...` question outside the supported Flow read/write or explicit retrieved field/object impact/automation shapes, expect a fail-closed refusal instead of a misleading unconstrained answer.
 
 ## 6) Save Evidence
 
