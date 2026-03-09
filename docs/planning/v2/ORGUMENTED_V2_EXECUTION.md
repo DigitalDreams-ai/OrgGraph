@@ -79,6 +79,7 @@ Materially true now:
 - `Refresh & Build` now presents a numbered four-stage operator sequence (`Retrieve Cart`, `Refresh Semantic State`, `Compare Snapshot Drift`, `Run Org Pipeline`) with deterministic state badges and one explicit next action
 - refresh workspace labels and runbook steps now use the same operator language, reducing the last retrieve -> refresh handoff ambiguity between Browser, Refresh, and the real-org quickstart
 - wave5 retrieve -> refresh -> diff handoff closure is now materially complete (`B008`, `D005`, `G007`, `G008`), with the primary operator path visible and executable without raw JSON
+- packaged desktop smoke now also verifies metadata search plus selective metadata retrieve handoff artifacts whenever a connected org session is available, while remaining explicit-skip in disconnected CI environments so wave5 proof coverage does not create false negatives
 - flow grounding now prioritizes explicit flow-name asks over weak object-token inference (prevents false `no automation found for the` fallbacks)
 - flow grounding now adds deterministic targeted evidence retry for explicit flow-name asks when first-pass evidence ranking misses the named flow
 - flow grounding now tolerates quoted/article-prefixed flow references (for example `Flow "the X" reads and writes`) and keeps explicit-flow asks off the generic object fallback path
