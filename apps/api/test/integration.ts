@@ -1633,6 +1633,7 @@ async function run(): Promise<void> {
         kind: string;
         focus: string;
         targetLabel: string;
+        recommendation: { verdict: string; summary: string };
         riskScore: number;
         riskLevel: string;
         summary: string;
@@ -1646,6 +1647,7 @@ async function run(): Promise<void> {
         permissionImpact: { user: string; summary: string; pathCount: number };
         automationImpact: { summary: string; automationCount: number; topAutomationNames: string[] };
         changeImpact: { summary: string; impactPathCount: number; topImpactedSources: string[] };
+        evidenceGaps: string[];
         nextActions: Array<{ label: string; rationale: string }>;
       };
     };
@@ -1672,10 +1674,13 @@ async function run(): Promise<void> {
     assert.equal(typeof askReview.decisionPacket?.evidenceCoverage.hasAutomationCoverage, 'boolean');
     assert.equal(typeof askReview.decisionPacket?.evidenceCoverage.hasImpactPaths, 'boolean');
     assert.ok((askReview.decisionPacket?.topRiskDrivers.length ?? 0) >= 3);
+    assert.equal(typeof askReview.decisionPacket?.recommendation.verdict, 'string');
+    assert.equal(typeof askReview.decisionPacket?.recommendation.summary, 'string');
     assert.equal(askReview.decisionPacket?.permissionImpact.user, 'jane@example.com');
     assert.equal(typeof askReview.decisionPacket?.permissionImpact.pathCount, 'number');
     assert.equal(typeof askReview.decisionPacket?.automationImpact.automationCount, 'number');
     assert.equal(typeof askReview.decisionPacket?.changeImpact.impactPathCount, 'number');
+    assert.ok((askReview.decisionPacket?.evidenceGaps.length ?? 0) >= 1);
     assert.ok((askReview.decisionPacket?.nextActions.length ?? 0) >= 3);
     assert.ok((askReview.decisionPacket?.automationImpact.topAutomationNames.length ?? 0) >= 1);
     assert.ok((askReview.decisionPacket?.changeImpact.topImpactedSources.length ?? 0) >= 1);
@@ -1750,6 +1755,8 @@ async function run(): Promise<void> {
         summary: string;
         riskLevel: string;
         topRiskDrivers: string[];
+        recommendation: { verdict: string; summary: string };
+        evidenceGaps: string[];
       };
     };
     assert.equal(askReviewRepeat.proof.proofId, askReview.proof.proofId);
@@ -1760,6 +1767,14 @@ async function run(): Promise<void> {
     assert.deepEqual(
       askReviewRepeat.decisionPacket?.topRiskDrivers,
       askReview.decisionPacket?.topRiskDrivers
+    );
+    assert.deepEqual(
+      askReviewRepeat.decisionPacket?.recommendation,
+      askReview.decisionPacket?.recommendation
+    );
+    assert.deepEqual(
+      askReviewRepeat.decisionPacket?.evidenceGaps,
+      askReview.decisionPacket?.evidenceGaps
     );
 
     const askReviewVariantRes = await fetch(`${base}/ask`, {
@@ -1778,6 +1793,7 @@ async function run(): Promise<void> {
       decisionPacket?: {
         focus: string;
         targetLabel: string;
+        recommendation: { verdict: string; summary: string };
         riskScore: number;
         summary: string;
         topRiskDrivers: string[];
@@ -1789,6 +1805,14 @@ async function run(): Promise<void> {
     assert.equal(askReviewVariant.plan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
     assert.equal(askReviewVariant.decisionPacket?.focus, askReview.decisionPacket?.focus);
     assert.equal(askReviewVariant.decisionPacket?.targetLabel, askReview.decisionPacket?.targetLabel);
+    assert.equal(
+      askReviewVariant.decisionPacket?.recommendation.verdict,
+      askReview.decisionPacket?.recommendation.verdict
+    );
+    assert.equal(
+      askReviewVariant.decisionPacket?.recommendation.summary,
+      askReview.decisionPacket?.recommendation.summary
+    );
 
     const askLatestRetrieveReviewUnsupportedRes = await fetch(`${base}/ask`, {
       method: 'POST',

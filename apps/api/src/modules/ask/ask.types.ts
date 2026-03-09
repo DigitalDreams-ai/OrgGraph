@@ -117,6 +117,14 @@ export interface AskDecisionPacket {
   targetLabel: string;
   targetType: 'field' | 'object' | 'flow';
   summary: string;
+  recommendation: {
+    verdict:
+      | 'approve_with_verification'
+      | 'review_before_approval'
+      | 'do_not_approve_yet'
+      | 'needs_more_evidence';
+    summary: string;
+  };
   riskScore: number;
   riskLevel: 'low' | 'medium' | 'high';
   evidenceCoverage: {
@@ -144,6 +152,7 @@ export interface AskDecisionPacket {
     impactPathCount: number;
     topImpactedSources: string[];
   };
+  evidenceGaps: string[];
   nextActions: Array<{
     label: string;
     rationale: string;
