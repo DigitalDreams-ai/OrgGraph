@@ -202,6 +202,33 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
   };
   const isMemberNodeExpanded = (type: string, nodeKey: string): boolean =>
     Boolean(expandedMemberNodes[`${type}:${nodeKey}`]);
+  const toggleFamilyExplicitly = (
+    mode: 'browse' | 'search',
+    type: string,
+    isExpanded: boolean,
+    shouldLoadMembers: boolean
+  ): void => {
+    if (mode === 'browse') {
+      if (isExpanded) {
+        setExpandedBrowseFamilies((current) => ({
+          ...current,
+          [type]: false
+        }));
+        return;
+      }
+      toggleBrowseFamily(type, shouldLoadMembers);
+      return;
+    }
+
+    if (isExpanded) {
+      setExpandedSearchFamilies((current) => ({
+        ...current,
+        [type]: false
+      }));
+      return;
+    }
+    toggleSearchFamily(type, shouldLoadMembers);
+  };
   const visibleTypeCount = props.metadataCatalog?.types.length ?? 0;
   const totalTypeCount = props.metadataCatalog?.totalTypes ?? 0;
   const filteredTypeCount = filteredCatalogTypes.length;
@@ -566,6 +593,15 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                           </div>
                         ) : null}
                       </div>
+                      <div className="metadata-family-actions">
+                        <button
+                          type="button"
+                          className="ghost metadata-family-action-btn"
+                          onClick={() => toggleFamilyExplicitly('search', group.type, isExpanded, shouldAutoLoadMembers)}
+                        >
+                          {isExpanded ? 'Collapse' : membersLoaded ? 'Expand' : 'Load & Expand'}
+                        </button>
+                      </div>
                       <span className="metadata-family-count">
                         {group.results.length} match{group.results.length === 1 ? '' : 'es'}
                       </span>
@@ -591,7 +627,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                         )}
                       </>
                     ) : (
-                      <p className="muted metadata-family-collapsed-hint">Use the triangle to load and browse child items in this family.</p>
+                      <p className="muted metadata-family-collapsed-hint">Use Load &amp; Expand or the triangle to open child items in this family.</p>
                     )}
                   </section>
                 );
@@ -665,6 +701,15 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                     ))}
                   </div>
                 </div>
+                <div className="metadata-family-actions">
+                  <button
+                    type="button"
+                    className="ghost metadata-family-action-btn"
+                    onClick={() => toggleFamilyExplicitly('browse', typeRow.type, isExpanded, shouldAutoLoadMembers)}
+                  >
+                    {isExpanded ? 'Collapse' : membersLoaded ? 'Expand' : 'Load & Expand'}
+                  </button>
+                </div>
                 <span className="metadata-family-count">
                   {membersLoaded ? 'loaded' : 'not loaded'} • {typeRow.memberCount}
                 </span>
@@ -685,7 +730,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                   )}
                 </>
               ) : (
-                <p className="muted">Use the triangle to load and browse child items for this family.</p>
+                <p className="muted">Use Load &amp; Expand or the triangle to open child items for this family.</p>
               )}
             </section>
           );

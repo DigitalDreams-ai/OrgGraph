@@ -966,6 +966,18 @@ pre {
   gap: 0.4rem;
 }
 
+.metadata-family-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+}
+
+.metadata-family-action-btn {
+  min-height: 2rem;
+  padding: 0.3rem 0.65rem;
+  white-space: nowrap;
+}
+
 .metadata-family-count {
   flex: 0 0 auto;
   color: #315886;
@@ -1272,6 +1284,15 @@ details summary {
 
   .browser-family-toolbar {
     flex-direction: column;
+  }
+
+  .metadata-family-head {
+    flex-wrap: wrap;
+  }
+
+  .metadata-family-actions,
+  .metadata-family-count {
+    margin-left: 2.5rem;
   }
 
   .ops-list-item {

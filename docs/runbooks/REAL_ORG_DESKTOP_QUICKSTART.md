@@ -97,7 +97,7 @@ Inside Orgumented:
    - `Opportunity`
 6. Click `Search`.
 7. Wait for matching family rows to appear.
-8. Click the triangle on the family row you want. This loads the actual child tree for that family.
+8. Click `Load & Expand` on the family row you want. The triangle does the same thing if you prefer the tree control.
 9. Use checkboxes next to the family, folder, or item(s) you want.
 10. Click `Retrieve Cart`.
 
@@ -110,7 +110,7 @@ If you get no results:
 1. Click `Load Full Family Catalog`.
 2. Click `Load Visible Children`.
 3. Click `Expand Visible Families` if you want every currently visible family row opened in one pass.
-4. Click the triangle on a family row to open nested members, then select via checkbox.
+4. Click `Load & Expand` on a family row, or use the triangle, to open nested members. Then select via checkbox.
 5. If `Catalog coverage` still shows `limited`, review the discovery warnings before treating the visible list as complete org inventory.
 6. Click `Retrieve Cart` again.
 
