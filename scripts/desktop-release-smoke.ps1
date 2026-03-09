@@ -5,8 +5,12 @@ $logsDir = Join-Path $repoRoot 'logs'
 $exePath = Join-Path $repoRoot 'apps\desktop\src-tauri\target\release\orgumented-desktop.exe'
 $stdoutLog = Join-Path $logsDir 'desktop-release-smoke.stdout.log'
 $stderrLog = Join-Path $logsDir 'desktop-release-smoke.stderr.log'
+$relaunchStdoutLog = Join-Path $logsDir 'desktop-release-smoke-relaunch.stdout.log'
+$relaunchStderrLog = Join-Path $logsDir 'desktop-release-smoke-relaunch.stderr.log'
 $healthArtifact = Join-Path $logsDir 'desktop-release-smoke-health.json'
 $readyArtifact = Join-Path $logsDir 'desktop-release-smoke-ready.json'
+$relaunchHealthArtifact = Join-Path $logsDir 'desktop-release-smoke-relaunch-health.json'
+$relaunchReadyArtifact = Join-Path $logsDir 'desktop-release-smoke-relaunch-ready.json'
 $askArtifact = Join-Path $logsDir 'desktop-release-smoke-ask.json'
 $askRepeatArtifact = Join-Path $logsDir 'desktop-release-smoke-ask-repeat.json'
 $proofArtifact = Join-Path $logsDir 'desktop-release-smoke-proof.json'
@@ -316,36 +320,30 @@ function Wait-ForReady {
   throw "Timed out waiting for packaged desktop runtime readiness at $Url after $Attempts attempts with $DelaySeconds second delay. ProcessState=$processState`nSTDOUT:`n$stdoutTail`nSTDERR:`n$stderrTail"
 }
 
-if (-not (Test-Path $exePath)) {
-  throw "Packaged desktop executable missing at $exePath. Run 'pnpm desktop:build' first."
-}
-
-New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
-Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $proofArtifact, $recentProofsArtifact, $replayArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $resultArtifact -ErrorAction SilentlyContinue
-
-$desktopProcess = $null
-$sessionBefore = $null
-$sessionRestoreStatus = 'not-needed'
-$sessionConnectStatus = 'skipped-no-aliases'
-$sessionSwitchStatus = 'skipped'
-$sessionConnectAlias = $null
-$sessionSwitchAlias = $null
-$launchAttemptsUsed = 0
-
-try {
-  Stop-PackagedProcesses
-  Wait-PortReleased -LocalPort 3100
+function Start-PackagedDesktop {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$ExecutablePath,
+    [Parameter(Mandatory = $true)]
+    [string]$StdoutLogPath,
+    [Parameter(Mandatory = $true)]
+    [string]$StderrLogPath,
+    [string]$ReadyUrl = 'http://127.0.0.1:3100/ready'
+  )
 
   $launchAttempts = [Math]::Max(1, [int]($env:ORGUMENTED_DESKTOP_SMOKE_LAUNCH_ATTEMPTS ?? '2'))
   $launchRetryDelaySeconds = [Math]::Max(1, [int]($env:ORGUMENTED_DESKTOP_SMOKE_LAUNCH_RETRY_DELAY_SECONDS ?? '2'))
+  $desktopProcess = $null
 
   for ($launchAttempt = 1; $launchAttempt -le $launchAttempts; $launchAttempt += 1) {
-    Remove-Item $stdoutLog, $stderrLog -ErrorAction SilentlyContinue
-    $desktopProcess = Start-Process -FilePath $exePath -WorkingDirectory (Split-Path $exePath) -RedirectStandardOutput $stdoutLog -RedirectStandardError $stderrLog -PassThru
-    $launchAttemptsUsed = $launchAttempt
+    Remove-Item $StdoutLogPath, $StderrLogPath -ErrorAction SilentlyContinue
+    $desktopProcess = Start-Process -FilePath $ExecutablePath -WorkingDirectory (Split-Path $ExecutablePath) -RedirectStandardOutput $StdoutLogPath -RedirectStandardError $StderrLogPath -PassThru
     try {
-      Wait-ForReady -Url 'http://127.0.0.1:3100/ready' -DesktopProcess $desktopProcess -StdoutLogPath $stdoutLog -StderrLogPath $stderrLog
-      break
+      Wait-ForReady -Url $ReadyUrl -DesktopProcess $desktopProcess -StdoutLogPath $StdoutLogPath -StderrLogPath $StderrLogPath
+      return @{
+        Process = $desktopProcess
+        LaunchAttemptsUsed = $launchAttempt
+      }
     } catch {
       $message = $_.Exception.Message
       $canRetry = $launchAttempt -lt $launchAttempts -and $message -like '*exited before readiness*'
@@ -362,6 +360,35 @@ try {
       Start-Sleep -Seconds $launchRetryDelaySeconds
     }
   }
+
+  throw "Packaged desktop failed to reach readiness after $launchAttempts launch attempts."
+}
+
+if (-not (Test-Path $exePath)) {
+  throw "Packaged desktop executable missing at $exePath. Run 'pnpm desktop:build' first."
+}
+
+New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
+Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $proofArtifact, $recentProofsArtifact, $replayArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $resultArtifact -ErrorAction SilentlyContinue
+Remove-Item $relaunchStdoutLog, $relaunchStderrLog, $relaunchHealthArtifact, $relaunchReadyArtifact -ErrorAction SilentlyContinue
+
+$desktopProcess = $null
+$sessionBefore = $null
+$sessionRestoreStatus = 'not-needed'
+$sessionConnectStatus = 'skipped-no-aliases'
+$sessionSwitchStatus = 'skipped'
+$sessionConnectAlias = $null
+$sessionSwitchAlias = $null
+$launchAttemptsUsed = 0
+$relaunchAttemptsUsed = 0
+$relaunchVerified = $false
+
+try {
+  Stop-PackagedProcesses
+  Wait-PortReleased -LocalPort 3100
+  $launchResult = Start-PackagedDesktop -ExecutablePath $exePath -StdoutLogPath $stdoutLog -StderrLogPath $stderrLog
+  $desktopProcess = $launchResult.Process
+  $launchAttemptsUsed = $launchResult.LaunchAttemptsUsed
 
   $health = Invoke-JsonGet -Url 'http://127.0.0.1:3100/health' -ArtifactPath $healthArtifact
   if ($health.status -ne 'ok') {
@@ -493,11 +520,42 @@ try {
     }
   }
 
+  if ($desktopProcess -and -not $desktopProcess.HasExited) {
+    Stop-Process -Id $desktopProcess.Id -Force -ErrorAction SilentlyContinue
+  }
+  Stop-PackagedProcesses
+  Wait-PortReleased -LocalPort 3100
+
+  $relaunchResult = Start-PackagedDesktop -ExecutablePath $exePath -StdoutLogPath $relaunchStdoutLog -StderrLogPath $relaunchStderrLog
+  $desktopProcess = $relaunchResult.Process
+  $relaunchAttemptsUsed = $relaunchResult.LaunchAttemptsUsed
+
+  $relaunchHealth = Invoke-JsonGet -Url 'http://127.0.0.1:3100/health' -ArtifactPath $relaunchHealthArtifact
+  if ($relaunchHealth.status -ne 'ok') {
+    throw "Relaunch health check did not return status=ok"
+  }
+
+  $relaunchReady = Invoke-JsonGet -Url 'http://127.0.0.1:3100/ready' -ArtifactPath $relaunchReadyArtifact
+  if ($relaunchReady.status -ne 'ready') {
+    throw "Relaunch ready check did not return status=ready"
+  }
+  if (($relaunchReady.checks.db.nodeCount ?? 0) -le 0 -or ($relaunchReady.checks.db.edgeCount ?? 0) -le 0) {
+    throw "Relaunch ready check reported an empty graph runtime."
+  }
+  if (-not ($relaunchReady.checks.evidence.ok)) {
+    throw "Relaunch ready check reported missing evidence index."
+  }
+  $relaunchVerified = $true
+
   $artifacts = @(
     'logs/desktop-release-smoke.stdout.log'
     'logs/desktop-release-smoke.stderr.log'
+    'logs/desktop-release-smoke-relaunch.stdout.log'
+    'logs/desktop-release-smoke-relaunch.stderr.log'
     'logs/desktop-release-smoke-health.json'
     'logs/desktop-release-smoke-ready.json'
+    'logs/desktop-release-smoke-relaunch-health.json'
+    'logs/desktop-release-smoke-relaunch-ready.json'
     'logs/desktop-release-smoke-ask.json'
     'logs/desktop-release-smoke-ask-repeat.json'
     'logs/desktop-release-smoke-proof.json'
@@ -538,6 +596,8 @@ try {
     sessionSwitchAlias = $sessionSwitchAlias
     sessionRestoreStatus = $sessionRestoreStatus
     launchAttemptsUsed = $launchAttemptsUsed
+    relaunchVerified = $relaunchVerified
+    relaunchAttemptsUsed = $relaunchAttemptsUsed
     artifacts = $artifacts
   } | ConvertTo-Json -Depth 8 | Set-Content -Path $resultArtifact
 
