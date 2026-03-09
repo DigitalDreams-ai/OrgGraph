@@ -4,7 +4,12 @@ import { Injectable } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import { AppConfigService } from '../../config/app-config.service';
 import { resolveEvidenceIndexPath } from '../../common/path';
-import type { EvidenceDocument, EvidenceSearchResult, EvidenceStore } from './evidence.types';
+import type {
+  EvidenceDocument,
+  EvidenceSearchOptions,
+  EvidenceSearchResult,
+  EvidenceStore
+} from './evidence.types';
 
 @Injectable()
 export class EvidenceStoreService implements EvidenceStore {
@@ -91,7 +96,7 @@ export class EvidenceStoreService implements EvidenceStore {
     return this.indexPath;
   }
 
-  search(query: string, maxResults: number): EvidenceSearchResult[] {
+  search(query: string, maxResults: number, options?: EvidenceSearchOptions): EvidenceSearchResult[] {
     const tokens = this.tokenize(query);
     if (tokens.length === 0) {
       return [];
@@ -100,6 +105,7 @@ export class EvidenceStoreService implements EvidenceStore {
     if (this.isLegacyJsonIndex()) {
       const docs = this.readLegacyIndex().documents;
       return docs
+        .filter((doc) => this.matchesSearchOptions(doc.sourcePath, options))
         .map((doc) => ({ doc, score: this.score(tokens, doc) }))
         .filter((item) => item.score > 0)
         .sort((a, b) => b.score - a.score || a.doc.id.localeCompare(b.doc.id))
@@ -110,6 +116,9 @@ export class EvidenceStoreService implements EvidenceStore {
     const limit = Math.max(1, maxResults);
     const ranked: EvidenceSearchResult[] = [];
     for (const doc of this.readNdjsonDocuments()) {
+      if (!this.matchesSearchOptions(doc.sourcePath, options)) {
+        continue;
+      }
       const score = this.score(tokens, doc);
       if (score <= 0) {
         continue;
@@ -322,5 +331,27 @@ export class EvidenceStoreService implements EvidenceStore {
 
   private normalizeSourcePathKey(sourcePath: string): string {
     return sourcePath.replace(/\\/g, '/').toLowerCase();
+  }
+
+  private matchesSearchOptions(sourcePath: string, options?: EvidenceSearchOptions): boolean {
+    if (!options) {
+      return true;
+    }
+
+    const normalized = this.normalizeSourcePathKey(sourcePath);
+    const exactMatches =
+      options.sourcePathEquals?.map((entry) => this.normalizeSourcePathKey(entry)).filter(Boolean) ?? [];
+    const prefixMatches =
+      options.sourcePathPrefixes?.map((entry) => this.normalizeSourcePathKey(entry)).filter(Boolean) ?? [];
+
+    if (exactMatches.length === 0 && prefixMatches.length === 0) {
+      return true;
+    }
+
+    if (exactMatches.includes(normalized)) {
+      return true;
+    }
+
+    return prefixMatches.some((prefix) => normalized.startsWith(prefix));
   }
 }

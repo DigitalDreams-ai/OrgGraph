@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import fs from 'node:fs';
+import path from 'node:path';
 import { COMPOSITION_OPERATORS, DERIVATION_RELATIONS } from '@orgumented/ontology';
 import type { CompositionOperator } from '@orgumented/ontology';
 import { AnalysisService } from '../analysis/analysis.service';
@@ -25,6 +26,8 @@ import type {
   AskSimulationResponse,
   AskSimulationRiskProfile,
   AskDecisionPacket,
+  AskEvidenceScope,
+  AskEvidenceSelection,
   AskProofListResponse,
   AskPolicyValidateRequest,
   AskPolicyValidateResponse,
@@ -568,6 +571,8 @@ export class AskService {
     proof: AskProofArtifact;
   }> {
     const plan = this.planner.plan(input.query);
+    const latestRetrieveRequested = /\blatest retrieve\b/i.test(input.query);
+    const evidenceScope = this.normalizeEvidenceScope(input.evidenceScope);
     const includeLowConfidence = input.includeLowConfidence === true;
     const consistencyCheck =
       input.consistencyCheck ?? this.configService.askConsistencyCheckEnabled();
@@ -585,13 +590,13 @@ export class AskService {
       ambiguityMaxThreshold: this.configService.askAmbiguityMaxThreshold()
     };
 
-    let citationHits = this.evidence.search(input.query, maxCitations);
+    let citationHits = this.searchEvidence(input.query, maxCitations, evidenceScope);
     if (citationHits.length === 0) {
       const fallbackTerms = [plan.entities.field, plan.entities.object, plan.entities.user]
         .filter((x): x is string => Boolean(x))
         .join(' ');
       if (fallbackTerms.length > 0) {
-        citationHits = this.evidence.search(fallbackTerms, maxCitations);
+        citationHits = this.searchEvidence(fallbackTerms, maxCitations, evidenceScope);
       }
     }
     citationHits = this.dedupeCitations(citationHits);
@@ -609,6 +614,17 @@ export class AskService {
     };
     const operatorsExecuted: CompositionOperator[] = [COMPOSITION_OPERATORS.SPECIALIZE];
     const executionTrace: string[] = [`intent=${plan.intent}`, `traceLevel=${traceLevel}`];
+    if (latestRetrieveRequested) {
+      executionTrace.push('retrieveScope.requested=true');
+    }
+    if (evidenceScope) {
+      executionTrace.push(
+        `retrieveScope.kind=${evidenceScope.kind}`,
+        `retrieveScope.alias=${evidenceScope.alias || 'n/a'}`,
+        `retrieveScope.metadataArgs=${String(evidenceScope.metadataArgs.length)}`,
+        `retrieveScope.selections=${String(evidenceScope.selections?.length ?? 0)}`
+      );
+    }
     const rejectedBranches: AskRejectedBranch[] = [];
     const reject = (
       branch: string,
@@ -618,7 +634,42 @@ export class AskService {
       rejectedBranches.push({ branch, reasonCode, reason });
     };
 
-    if (plan.intent === 'review' && plan.reviewWorkflow) {
+    const latestRetrieveFlowQuery =
+      latestRetrieveRequested && plan.intent === 'automation' && /\bflow\b/i.test(input.query);
+
+    if (latestRetrieveRequested && !evidenceScope) {
+      answer =
+        'Refused: this query requested latest-retrieve-only evidence, but no retrieve handoff scope was supplied. Re-run Ask from the current retrieve card.';
+      deterministicAnswer = answer;
+      confidence = 0.18;
+      consistency = {
+        checked: consistencyCheck,
+        aligned: true,
+        reason: 'query requested latest-retrieve-only evidence without a supplied retrieve handoff scope'
+      };
+      executionTrace.push('retrieveScope.failClosed=missing');
+      reject(
+        'evidence.scope',
+        'EVIDENCE_SCOPE_UNAVAILABLE',
+        'latest-retrieve-only query was executed without an evidence scope'
+      );
+    } else if (latestRetrieveRequested && !latestRetrieveFlowQuery) {
+      answer =
+        'Refused: latest-retrieve-only Ask is currently supported only for explicit Flow read/write review asks. This query would require graph-wide analysis outside the scoped retrieve.';
+      deterministicAnswer = answer;
+      confidence = 0.18;
+      consistency = {
+        checked: consistencyCheck,
+        aligned: true,
+        reason: 'latest-retrieve-only constraint is not yet supported for this Ask intent family'
+      };
+      executionTrace.push('retrieveScope.failClosed=unsupported-intent');
+      reject(
+        'evidence.scope',
+        'EVIDENCE_SCOPE_UNSUPPORTED',
+        'latest-retrieve-only query attempted an unsupported intent family'
+      );
+    } else if (plan.intent === 'review' && plan.reviewWorkflow) {
       operatorsExecuted.push(
         COMPOSITION_OPERATORS.OVERLAY,
         COMPOSITION_OPERATORS.CONSTRAIN,
@@ -863,16 +914,19 @@ export class AskService {
       const flowQueryRequested = /\bflow\b/i.test(input.query);
       const requestedFlowNameFromQuery = this.extractRequestedFlowName(input.query);
       const requestedFlowName =
-        requestedFlowNameFromQuery ??
-        (flowQueryRequested && this.shouldInferFlowNameFromCitations(input.query)
-          ? this.inferRequestedFlowNameFromCitations(citationHits)
-          : undefined);
+        this.resolveScopedFlowNameAlias(
+          requestedFlowNameFromQuery ??
+          (flowQueryRequested && this.shouldInferFlowNameFromCitations(input.query)
+            ? this.inferRequestedFlowNameFromCitations(citationHits)
+            : undefined),
+          evidenceScope
+        );
       const object = this.normalizeAutomationObject(plan.entities.object);
       if (requestedFlowName) {
         let flowEvidenceSummary = this.buildFlowEvidenceSummary(requestedFlowName, citationHits);
         if (flowEvidenceSummary.matchedCount === 0) {
           const targetedFlowHits = this.dedupeCitations(
-            this.evidence.search(`flow ${requestedFlowName}`, Math.max(12, maxCitations * 4))
+            this.searchEvidence(`flow ${requestedFlowName}`, Math.max(12, maxCitations * 4), evidenceScope)
           );
           if (targetedFlowHits.length > 0) {
             citationHits = this.dedupeCitations([...citationHits, ...targetedFlowHits]).slice(
@@ -884,6 +938,21 @@ export class AskService {
             executionTrace.push(
               `automation.flowEvidence.retry=targeted-name`,
               `automation.flowEvidence.retryHits=${String(targetedFlowHits.length)}`
+            );
+          }
+        }
+        if (flowEvidenceSummary.matchedCount === 0 && evidenceScope) {
+          const scopedFlowHits = this.resolveScopedFlowEvidence(requestedFlowName, evidenceScope);
+          if (scopedFlowHits.length > 0) {
+            citationHits = this.dedupeCitations([...citationHits, ...scopedFlowHits]).slice(
+              0,
+              Math.max(maxCitations, scopedFlowHits.length)
+            );
+            citations = this.mapCitationHits(citationHits);
+            flowEvidenceSummary = this.buildFlowEvidenceSummary(requestedFlowName, citationHits);
+            executionTrace.push(
+              'automation.flowEvidence.retry=direct-source',
+              `automation.flowEvidence.directSourceHits=${String(scopedFlowHits.length)}`
             );
           }
         }
@@ -1285,6 +1354,343 @@ export class AskService {
     };
 
     return { response, proof };
+  }
+
+  private searchEvidence(
+    query: string,
+    maxResults: number,
+    evidenceScope?: AskEvidenceScope
+  ): EvidenceSearchResult[] {
+    const options = evidenceScope ? this.buildEvidenceSearchOptions(evidenceScope) : undefined;
+    return this.evidence.search(query, maxResults, options);
+  }
+
+  private buildEvidenceSearchOptions(evidenceScope: AskEvidenceScope):
+    | {
+        sourcePathEquals: string[];
+        sourcePathPrefixes: string[];
+      }
+    | undefined {
+    const exactMatches = new Set<string>();
+    const prefixMatches = new Set<string>();
+    const selections =
+      evidenceScope.selections && evidenceScope.selections.length > 0
+        ? evidenceScope.selections
+        : this.buildSelectionsFromMetadataArgs(evidenceScope.metadataArgs);
+
+    for (const selection of selections) {
+      this.addEvidenceScopeRules(prefixMatches, exactMatches, evidenceScope.parsePath, selection);
+    }
+
+    if (exactMatches.size === 0 && prefixMatches.size === 0) {
+      return undefined;
+    }
+
+    return {
+      sourcePathEquals: [...exactMatches],
+      sourcePathPrefixes: [...prefixMatches]
+    };
+  }
+
+  private resolveScopedFlowEvidence(
+    flowName: string,
+    evidenceScope: AskEvidenceScope
+  ): EvidenceSearchResult[] {
+    const canonicalFlowName = this.resolveScopedFlowNameAlias(flowName, evidenceScope) ?? flowName;
+    const rule = this.resolveSelectionSourceRule(evidenceScope.parsePath, 'Flow', canonicalFlowName);
+    if (!rule?.exactPath) {
+      return [];
+    }
+    const indexedHits = this.evidence.listBySourcePath(rule.exactPath, 24);
+    if (indexedHits.length > 0) {
+      return indexedHits;
+    }
+
+    const flowPath = path.join(evidenceScope.parsePath, 'flows', `${canonicalFlowName}.flow-meta.xml`);
+    if (!fs.existsSync(flowPath)) {
+      return [];
+    }
+
+    const raw = fs.readFileSync(flowPath, 'utf8');
+    if (raw.trim().length === 0) {
+      return [];
+    }
+
+    return [
+      {
+        id: `ev_scoped_${stableId(flowPath)}`,
+        sourcePath: flowPath,
+        sourceType: 'flow',
+        chunkText: raw,
+        entityTags: [canonicalFlowName],
+        score: 1
+      }
+    ];
+  }
+
+  private resolveScopedFlowNameAlias(
+    flowName: string | undefined,
+    evidenceScope?: AskEvidenceScope
+  ): string | undefined {
+    if (!flowName || !evidenceScope) {
+      return flowName;
+    }
+
+    const compactRequested = this.compactFlowToken(flowName);
+    if (!compactRequested) {
+      return flowName;
+    }
+
+    const candidates = new Set<string>();
+    for (const selection of evidenceScope.selections ?? []) {
+      if (selection.type.trim().toLowerCase() !== 'flow') {
+        continue;
+      }
+      for (const member of selection.members ?? []) {
+        const normalizedMember = this.normalizeRequestedFlowName(member);
+        if (normalizedMember) {
+          candidates.add(normalizedMember);
+        }
+      }
+    }
+
+    for (const metadataArg of evidenceScope.metadataArgs ?? []) {
+      const [typeRaw, memberRaw] = metadataArg.split(':', 2);
+      if (typeRaw?.trim().toLowerCase() !== 'flow') {
+        continue;
+      }
+      const normalizedMember = this.normalizeRequestedFlowName(memberRaw);
+      if (normalizedMember) {
+        candidates.add(normalizedMember);
+      }
+    }
+
+    for (const candidate of candidates) {
+      if (this.compactFlowToken(candidate) === compactRequested) {
+        return candidate;
+      }
+    }
+
+    return flowName;
+  }
+
+  private normalizeEvidenceScope(evidenceScope?: AskEvidenceScope): AskEvidenceScope | undefined {
+    if (!evidenceScope) {
+      return undefined;
+    }
+
+    const parsePath = evidenceScope.parsePath?.trim();
+    if (!parsePath) {
+      return undefined;
+    }
+
+    const metadataArgs = (evidenceScope.metadataArgs ?? [])
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0);
+    const selections = (evidenceScope.selections ?? [])
+      .filter((selection) => selection && typeof selection.type === 'string' && selection.type.trim().length > 0)
+      .map((selection) => ({
+        type: selection.type.trim(),
+        members: (selection.members ?? [])
+          .map((member) => member.trim())
+          .filter((member) => member.length > 0)
+      }));
+
+    return {
+      kind: 'latest_retrieve',
+      alias: evidenceScope.alias?.trim() || undefined,
+      parsePath,
+      metadataArgs,
+      selections
+    };
+  }
+
+  private buildSelectionsFromMetadataArgs(metadataArgs: string[]): AskEvidenceSelection[] {
+    return metadataArgs.reduce<AskEvidenceSelection[]>((acc, metadataArg) => {
+      const [typeRaw, memberRaw] = metadataArg.split(':', 2);
+      const type = typeRaw?.trim();
+      const member = memberRaw?.trim();
+      if (!type) {
+        return acc;
+      }
+      if (!member) {
+        acc.push({ type });
+        return acc;
+      }
+      acc.push({ type, members: [member] });
+      return acc;
+    }, []);
+  }
+
+  private addEvidenceScopeRules(
+    prefixMatches: Set<string>,
+    exactMatches: Set<string>,
+    parsePath: string,
+    selection: AskEvidenceSelection
+  ): void {
+    const members = selection.members ?? [];
+    if (members.length === 0) {
+      const familyDirectory = this.resolveMetadataFamilyDirectory(selection.type);
+      if (!familyDirectory) {
+        return;
+      }
+      prefixMatches.add(this.normalizeEvidenceSourcePath(path.join(parsePath, familyDirectory)));
+      return;
+    }
+
+    for (const member of members) {
+      const rule = this.resolveSelectionSourceRule(parsePath, selection.type, member);
+      if (!rule) {
+        continue;
+      }
+      if (rule.exactPath) {
+        exactMatches.add(rule.exactPath);
+      }
+      if (rule.prefixPath) {
+        prefixMatches.add(rule.prefixPath);
+      }
+    }
+  }
+
+  private resolveSelectionSourceRule(
+    parsePath: string,
+    type: string,
+    member: string
+  ): { exactPath?: string; prefixPath?: string } | undefined {
+    const normalizedType = type.trim().toLowerCase();
+    const normalizedMember = member.trim();
+    if (!normalizedMember) {
+      return undefined;
+    }
+
+    if (normalizedType === 'flow') {
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(
+          path.join(parsePath, 'flows', `${normalizedMember}.flow-meta.xml`)
+        )
+      };
+    }
+
+    if (normalizedType === 'customobject') {
+      return {
+        prefixPath: this.normalizeEvidenceSourcePath(path.join(parsePath, 'objects', normalizedMember))
+      };
+    }
+
+    if (normalizedType === 'customfield') {
+      const [objectName, fieldName] = normalizedMember.split('.', 2);
+      if (!objectName || !fieldName) {
+        return undefined;
+      }
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(
+          path.join(parsePath, 'objects', objectName, 'fields', `${fieldName}.field-meta.xml`)
+        )
+      };
+    }
+
+    if (normalizedType === 'layout') {
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(
+          path.join(parsePath, 'layouts', `${normalizedMember}.layout-meta.xml`)
+        )
+      };
+    }
+
+    if (normalizedType === 'apexclass') {
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(path.join(parsePath, 'classes', `${normalizedMember}.cls`))
+      };
+    }
+
+    if (normalizedType === 'apextrigger') {
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(
+          path.join(parsePath, 'triggers', `${normalizedMember}.trigger`)
+        )
+      };
+    }
+
+    if (normalizedType === 'permissionset') {
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(
+          path.join(parsePath, 'permissionsets', `${normalizedMember}.permissionset-meta.xml`)
+        )
+      };
+    }
+
+    if (normalizedType === 'profile') {
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(
+          path.join(parsePath, 'profiles', `${normalizedMember}.profile-meta.xml`)
+        )
+      };
+    }
+
+    if (normalizedType === 'permissionsetgroup') {
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(
+          path.join(parsePath, 'permissionsetgroups', `${normalizedMember}.permissionsetgroup-meta.xml`)
+        )
+      };
+    }
+
+    if (normalizedType === 'connectedapp') {
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(
+          path.join(parsePath, 'connectedapps', `${normalizedMember}.connectedApp-meta.xml`)
+        )
+      };
+    }
+
+    if (normalizedType === 'custompermission') {
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(
+          path.join(parsePath, 'custompermissions', `${normalizedMember}.customPermission-meta.xml`)
+        )
+      };
+    }
+
+    if (normalizedType === 'quickaction') {
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(
+          path.join(parsePath, 'quickactions', `${normalizedMember}.quickAction-meta.xml`)
+        )
+      };
+    }
+
+    if (normalizedType === 'flexipage') {
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(
+          path.join(parsePath, 'flexipages', `${normalizedMember}.flexipage-meta.xml`)
+        )
+      };
+    }
+
+    return undefined;
+  }
+
+  private resolveMetadataFamilyDirectory(type: string): string | undefined {
+    const normalizedType = type.trim().toLowerCase();
+    if (normalizedType === 'flow') return 'flows';
+    if (normalizedType === 'customobject' || normalizedType === 'customfield' || normalizedType === 'recordtype') {
+      return 'objects';
+    }
+    if (normalizedType === 'layout') return 'layouts';
+    if (normalizedType === 'flexipage') return 'flexipages';
+    if (normalizedType === 'apexclass') return 'classes';
+    if (normalizedType === 'apextrigger') return 'triggers';
+    if (normalizedType === 'permissionset') return 'permissionsets';
+    if (normalizedType === 'profile') return 'profiles';
+    if (normalizedType === 'permissionsetgroup') return 'permissionsetgroups';
+    if (normalizedType === 'connectedapp') return 'connectedapps';
+    if (normalizedType === 'custompermission') return 'custompermissions';
+    if (normalizedType === 'quickaction') return 'quickactions';
+    return undefined;
+  }
+
+  private normalizeEvidenceSourcePath(sourcePath: string): string {
+    return sourcePath.replace(/\\/g, '/').toLowerCase();
   }
 
   private extractRequestedFlowName(query: string): string | undefined {

@@ -9,6 +9,8 @@ export type AskRejectionReasonCode =
   | 'NO_IMPACT_PATHS'
   | 'NO_AUTOMATION_MATCH'
   | 'FLOW_NAME_UNRESOLVED'
+  | 'EVIDENCE_SCOPE_UNAVAILABLE'
+  | 'EVIDENCE_SCOPE_UNSUPPORTED'
   | 'NO_DETERMINISTIC_INTENT'
   | 'POLICY_ENVELOPE_REJECTED';
 
@@ -18,9 +20,23 @@ export interface AskRejectedBranch {
   reason: string;
 }
 
+export interface AskEvidenceSelection {
+  type: string;
+  members?: string[];
+}
+
+export interface AskEvidenceScope {
+  kind: 'latest_retrieve';
+  alias?: string;
+  parsePath: string;
+  metadataArgs: string[];
+  selections?: AskEvidenceSelection[];
+}
+
 export interface AskRequest {
   query: string;
   context?: Record<string, string | number | boolean>;
+  evidenceScope?: AskEvidenceScope;
   maxCitations?: number;
   includeLowConfidence?: boolean;
   consistencyCheck?: boolean;

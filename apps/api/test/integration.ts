@@ -22,6 +22,22 @@ async function run(): Promise<void> {
   const metaContextPath = path.join(workspaceRoot, 'data', 'meta', 'context.integration.json');
   fs.mkdirSync(path.join(workspaceRoot, 'data'), { recursive: true });
   const sfParseFixturePath = fs.mkdtempSync(path.join(workspaceRoot, 'data', 'tmp-sf-parse-'));
+  const latestRetrieveEvidenceScope = {
+    kind: 'latest_retrieve' as const,
+    alias: 'fixture-org',
+    parsePath: sfParseFixturePath,
+    metadataArgs: [
+      'Flow:OpportunityStageSync',
+      'Flow:Civil_Rights_Intake_Questionnaire',
+      'CustomObject:Opportunity',
+      'CustomField:Opportunity.StageName'
+    ],
+    selections: [
+      { type: 'Flow', members: ['OpportunityStageSync', 'Civil_Rights_Intake_Questionnaire'] },
+      { type: 'CustomObject', members: ['Opportunity'] },
+      { type: 'CustomField', members: ['Opportunity.StageName'] }
+    ]
+  };
 
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   fs.cpSync(path.join(workspaceRoot, 'fixtures', 'permissions'), sfParseFixturePath, { recursive: true });
@@ -769,13 +785,15 @@ async function run(): Promise<void> {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         query:
-          'Based only on the latest retrieve, explain what Flow OpportunityStageSync reads and writes.'
+          'Based only on the latest retrieve, explain what Flow OpportunityStageSync reads and writes.',
+        evidenceScope: latestRetrieveEvidenceScope
       })
     });
     assert.equal(askFlowEvidenceRes.status, 201, 'ask flow evidence should return 201');
     const askFlowEvidence = (await askFlowEvidenceRes.json()) as {
       plan: { intent: string; entities: { object?: string } };
       deterministicAnswer: string;
+      citations?: Array<{ sourcePath?: string }>;
       decisionPacket?: {
         kind?: string;
         focus?: string;
@@ -796,6 +814,12 @@ async function run(): Promise<void> {
     assert.match(askFlowEvidence.deterministicAnswer, /read objects: Account/i);
     assert.match(askFlowEvidence.deterministicAnswer, /write objects: Opportunity/i);
     assert.doesNotMatch(askFlowEvidence.deterministicAnswer, /no automation found for/i);
+    assert.ok(
+      (askFlowEvidence.citations ?? []).every((citation) =>
+        /OpportunityStageSync\.flow-meta\.xml$/i.test(String(citation.sourcePath ?? ''))
+      ),
+      'retrieve-scoped flow ask should cite only the selected flow source path'
+    );
     assert.equal(askFlowEvidence.decisionPacket?.kind, 'high_risk_change_review');
     assert.equal(askFlowEvidence.decisionPacket?.focus, 'breakage');
     assert.equal(askFlowEvidence.decisionPacket?.targetLabel, 'OpportunityStageSync');
@@ -823,7 +847,8 @@ async function run(): Promise<void> {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         query:
-          'Based only on the latest retrieve, explain what Flow Opportunity Stage Sync reads and writes.'
+          'Based only on the latest retrieve, explain what Flow Opportunity Stage Sync reads and writes.',
+        evidenceScope: latestRetrieveEvidenceScope
       })
     });
     assert.equal(askFlowEvidenceSpacedRes.status, 201, 'ask flow evidence (spaced name) should return 201');
@@ -842,7 +867,8 @@ async function run(): Promise<void> {
       body: JSON.stringify({
         query:
           'Based only on the latest retrieve, explain what Flow Opportunity Stage Sync reads and writes with deterministic evidence citations.',
-        maxCitations: 1
+        maxCitations: 1,
+        evidenceScope: latestRetrieveEvidenceScope
       })
     });
     assert.equal(
@@ -868,7 +894,8 @@ async function run(): Promise<void> {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         query:
-          'Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.'
+          'Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.',
+        evidenceScope: latestRetrieveEvidenceScope
       })
     });
     assert.equal(
@@ -913,7 +940,8 @@ async function run(): Promise<void> {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         query:
-          'Based only on the latest retrieve, explain what Flow "the Civil_Rights_Intake_Questionnaire" reads and writes.'
+          'Based only on the latest retrieve, explain what Flow "the Civil_Rights_Intake_Questionnaire" reads and writes.',
+        evidenceScope: latestRetrieveEvidenceScope
       })
     });
     assert.equal(
@@ -934,7 +962,8 @@ async function run(): Promise<void> {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         query:
-          'Based only on the latest retrieve, explain what Flow called Civil_Rights_Intake_Questionnaire reads and writes.'
+          'Based only on the latest retrieve, explain what Flow called Civil_Rights_Intake_Questionnaire reads and writes.',
+        evidenceScope: latestRetrieveEvidenceScope
       })
     });
     assert.equal(
@@ -961,7 +990,8 @@ async function run(): Promise<void> {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         query:
-          'Based only on the latest retrieve, explain what Flow called Civil_Rights_Intake_Questionnaire reads and writes.'
+          'Based only on the latest retrieve, explain what Flow called Civil_Rights_Intake_Questionnaire reads and writes.',
+        evidenceScope: latestRetrieveEvidenceScope
       })
     });
     assert.equal(
@@ -1034,7 +1064,8 @@ async function run(): Promise<void> {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         query:
-          'Based only on the latest retrieve, explain what Flow C:/tmp/force-app/main/default/flows/Civil_Rights_Intake_Questionnaire.flow-meta.xml reads and writes.'
+          'Based only on the latest retrieve, explain what Flow C:/tmp/force-app/main/default/flows/Civil_Rights_Intake_Questionnaire.flow-meta.xml reads and writes.',
+        evidenceScope: latestRetrieveEvidenceScope
       })
     });
     assert.equal(
@@ -1057,7 +1088,8 @@ async function run(): Promise<void> {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        query: 'Based only on the latest retrieve, explain what Flow reads and writes.'
+        query: 'Based only on the latest retrieve, explain what Flow reads and writes.',
+        evidenceScope: latestRetrieveEvidenceScope
       })
     });
     assert.equal(
@@ -1092,6 +1124,64 @@ async function run(): Promise<void> {
     assert.ok(
       (askFlowEvidenceUnresolved.decisionPacket?.nextActions ?? []).some(
         (item) => item.label === 'Specify exact flow API name'
+      )
+    );
+
+    const askLatestRetrieveMissingScopeRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query:
+          'Based only on the latest retrieve, explain what Flow OpportunityStageSync reads and writes.'
+      })
+    });
+    assert.equal(
+      askLatestRetrieveMissingScopeRes.status,
+      201,
+      'latest retrieve flow ask without scope should fail closed with 201'
+    );
+    const askLatestRetrieveMissingScope = (await askLatestRetrieveMissingScopeRes.json()) as {
+      trustLevel: string;
+      deterministicAnswer: string;
+      refusalReasons?: string[];
+    };
+    assert.equal(askLatestRetrieveMissingScope.trustLevel, 'refused');
+    assert.match(
+      askLatestRetrieveMissingScope.deterministicAnswer,
+      /no retrieve handoff scope was supplied/i
+    );
+    assert.ok(
+      (askLatestRetrieveMissingScope.refusalReasons ?? []).some((reason) =>
+        /grounding_score/i.test(reason)
+      )
+    );
+
+    const askLatestRetrieveUnsupportedRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Based only on the latest retrieve, who can edit Opportunity.StageName?',
+        evidenceScope: latestRetrieveEvidenceScope
+      })
+    });
+    assert.equal(
+      askLatestRetrieveUnsupportedRes.status,
+      201,
+      'latest retrieve unsupported ask should fail closed with 201'
+    );
+    const askLatestRetrieveUnsupported = (await askLatestRetrieveUnsupportedRes.json()) as {
+      trustLevel: string;
+      deterministicAnswer: string;
+      refusalReasons?: string[];
+    };
+    assert.equal(askLatestRetrieveUnsupported.trustLevel, 'refused');
+    assert.match(
+      askLatestRetrieveUnsupported.deterministicAnswer,
+      /supported only for explicit Flow read\/write review asks/i
+    );
+    assert.ok(
+      (askLatestRetrieveUnsupported.refusalReasons ?? []).some((reason) =>
+        /grounding_score/i.test(reason)
       )
     );
 

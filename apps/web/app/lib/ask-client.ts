@@ -13,6 +13,13 @@ interface AskRequestPayload {
   includeLowConfidence?: boolean;
   consistencyCheck?: boolean;
   context?: Record<string, unknown>;
+  evidenceScope?: {
+    kind: 'latest_retrieve';
+    alias?: string;
+    parsePath: string;
+    metadataArgs: string[];
+    selections?: Array<{ type: string; members?: string[] }>;
+  };
 }
 
 interface AskReplayPayload {
