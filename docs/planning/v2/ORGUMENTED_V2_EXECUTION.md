@@ -63,6 +63,7 @@ Materially true now:
 - the supported Flow path now synthesizes read/write summaries directly from the retrieved flow file when global evidence index paths differ from the staged parse path, preserving deterministic behavior across fixture and packaged-desktop runtimes
 - latest-retrieve Ask now also supports explicit retrieved field/object impact and automation summaries (`what touches <field>`, `what automations update <field>`, `what runs on object <object>`), using scoped direct-source evidence fallback when indexed evidence paths do not match the staged retrieve path
 - permission-style latest-retrieve asks still fail closed, so retrieve scope is expanded only for the explicitly supported field/object and Flow evidence families
+- review and retrieve-grounded flow decision packets now surface an explicit recommendation verdict/summary plus deterministic evidence-gap lists, making the packet itself closer to a primary approval/review artifact instead of a summary that still requires operator reconstruction
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
@@ -185,6 +186,7 @@ Rules:
 2. Wave7 finish slice:
 - deepen packet usefulness for approval and retrieved-metadata review scenarios
 - keep reads/writes/change-impact synthesis specific enough to serve as a primary operator artifact
+- extend the benchmark gate from source-specific next actions into recommendation clarity and explicit evidence-gap disclosure
 
 3. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage

@@ -784,6 +784,45 @@ export class AskService {
           ? `${user} retains deterministic access coverage for ${field ?? object}`
           : `${user} lacks deterministic access coverage for ${field ?? object}`
       ];
+      const evidenceGaps = [
+        ...(citations.length < 3
+          ? ['citation coverage is still light; retrieve adjacent metadata before final approval']
+          : []),
+        ...(!perms.granted
+          ? [`${user} has no deterministic permission grant path for ${field ?? object}`]
+          : []),
+        ...(automations.totalAutomations === 0
+          ? [`no deterministic automation coverage matched ${object}`]
+          : []),
+        ...(field && impact.totalPaths === 0
+          ? [`no deterministic impact paths matched ${targetLabel}`]
+          : []),
+        ...perms.warnings
+      ].slice(0, 5);
+      const recommendation: AskDecisionPacket['recommendation'] =
+        riskLevel === 'high'
+          ? {
+              verdict: 'do_not_approve_yet',
+              summary:
+                evidenceGaps.length > 0
+                  ? `Do not approve yet. Resolve: ${evidenceGaps.join('; ')}.`
+                  : `Do not approve yet. Highest-risk evidence is concentrated in ${topAutomationSummary} and ${topImpactSummary}.`
+            }
+          : riskLevel === 'medium'
+            ? {
+                verdict: 'review_before_approval',
+                summary:
+                  evidenceGaps.length > 0
+                    ? `Review before approval. Confirm: ${evidenceGaps.join('; ')}.`
+                    : `Review before approval. Validate ${topAutomationSummary} and ${topImpactSummary} before sign-off.`
+              }
+            : {
+                verdict: citations.length < 3 ? 'review_before_approval' : 'approve_with_verification',
+                summary:
+                  citations.length < 3
+                    ? `Review before approval. Citation coverage is still light; retrieve adjacent metadata and rerun Ask.`
+                    : `Approve with targeted verification. Start with ${topAutomationSummary} and ${topImpactSummary}.`
+              };
       const nextActions: AskDecisionPacket['nextActions'] = [
         {
           label: 'Inspect impacted automation',
@@ -821,6 +860,7 @@ export class AskService {
         targetLabel,
         targetType: plan.reviewWorkflow.targetType,
         summary,
+        recommendation,
         riskScore: reviewRiskScore,
         riskLevel,
         evidenceCoverage,
@@ -843,6 +883,7 @@ export class AskService {
           impactPathCount: impact.totalPaths,
           topImpactedSources
         },
+        evidenceGaps,
         nextActions
       };
       answer =
@@ -2360,6 +2401,30 @@ export class AskService {
     const topImpactedSources = [...new Set([...writeFields, ...readFields, ...referencedObjects])].slice(0, 3);
     const primaryPermissionTarget =
       writeFields[0] ?? readFields[0] ?? referencedObjects[0] ?? input.flowName;
+    const evidenceGaps = [
+      ...(input.summary.matchedCount === 0
+        ? [`no retrieved citations matched ${input.flowName}`]
+        : []),
+      ...(input.citationCount < 3
+        ? ['citation coverage is light for this flow packet']
+        : []),
+      'permission coverage is not evaluated in this flow read/write packet'
+    ].slice(0, 4);
+    const recommendation: AskDecisionPacket['recommendation'] =
+      input.summary.matchedCount === 0
+        ? {
+            verdict: 'needs_more_evidence',
+            summary: `Retrieve the flow family or adjacent metadata before relying on ${input.flowName} as a review artifact.`
+          }
+        : riskLevel === 'high'
+          ? {
+              verdict: 'review_before_approval',
+              summary: `Review before approval. Confirm writes and trigger behavior for ${input.flowName}, then run a permission check for ${primaryPermissionTarget}.`
+            }
+          : {
+              verdict: 'approve_with_verification',
+              summary: `Approve with verification. Confirm write targets and run a permission check for ${primaryPermissionTarget}.`
+            };
     const nextActions: AskDecisionPacket['nextActions'] = [];
     if (input.summary.matchedCount === 0) {
       nextActions.push({
@@ -2409,6 +2474,7 @@ export class AskService {
         input.summary.matchedCount > 0
           ? `Flow ${input.flowName} read/write summary grounded by ${input.summary.matchedCount} citation(s): ${readSummary}; ${writeSummary}; ${readObjectSummary}; ${writeObjectSummary}.`
           : `Flow ${input.flowName} is not grounded by the current retrieve evidence yet.`,
+      recommendation,
       riskScore,
       riskLevel,
       evidenceCoverage: {
@@ -2450,6 +2516,7 @@ export class AskService {
         impactPathCount: topImpactedSources.length,
         topImpactedSources
       },
+      evidenceGaps,
       nextActions: nextActions.slice(0, 6)
     };
   }

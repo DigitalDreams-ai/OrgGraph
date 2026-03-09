@@ -22,8 +22,10 @@ Operator question:
 
 Expected packet outcome:
 - one deterministic review packet
+- explicit recommendation verdict and recommendation summary
 - explicit risk level
 - explicit top risk drivers
+- explicit evidence gaps when coverage is weak
 - permission impact summary
 - automation impact summary
 - change impact summary
@@ -96,7 +98,7 @@ The review-packet path passes only if it achieves all of the following:
 
 - replay parity remains 100 percent
 - proof identity remains stable for repeated identical review asks
-- review packet specificity guard passes (top automation and impact source spotlights are present, and next actions reference concrete sources)
+- review packet specificity guard passes (top automation and impact source spotlights are present, next actions reference concrete sources, and the packet exposes an explicit recommendation plus evidence-gap state)
 - time-to-trusted-answer improves by at least 40 percent versus baseline
 - manual evidence-gathering steps are reduced by at least 2
 - workspace/context switches are reduced by at least 1
@@ -136,7 +138,7 @@ What the harness captures:
 - API-path proxy timing for the review-packet path
 - deterministic proof stability across repeated identical review asks
 - replay parity for the review-packet proof
-- review packet specificity guard state for risk-driver and next-action grounding
+- review packet specificity guard state for risk-driver grounding, recommendation presence, and evidence-gap visibility
 
 Harness runtime behavior:
 - expects `http://127.0.0.1:3100/ready` to already be grounded before the benchmark starts
