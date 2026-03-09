@@ -141,7 +141,7 @@ export function assessMetadataCatalogCoverage(
     return {
       state: 'unavailable',
       summary: 'Metadata family catalog is not loaded yet.',
-      reasons: ['Run Browse All to load the current metadata family catalog.']
+      reasons: ['Run Load Full Family Catalog to load the current metadata family catalog.']
     };
   }
 

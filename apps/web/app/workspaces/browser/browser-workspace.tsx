@@ -390,11 +390,11 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           <label htmlFor="metadataLimit">Search/Member Limit</label>
           <input id="metadataLimit" value={props.metadataLimitRaw} onChange={(e) => props.setMetadataLimitRaw(e.target.value)} />
           <p className="muted input-hint">
-            `Load All Families` always loads up to 5000 families for full coverage. This limit applies to Search and member listings.
+            `Load Full Family Catalog` always loads up to 5000 families for full coverage. This limit applies to Search and member listings.
           </p>
           {catalogIsTruncated ? (
             <p className="muted input-hint">
-              Showing {visibleTypeCount} of {totalTypeCount} metadata families. Increase Search/Member Limit, then click `Load All Families`.
+              Showing {visibleTypeCount} of {totalTypeCount} metadata families. Increase Search/Member Limit, then click `Load Full Family Catalog`.
             </p>
           ) : null}
         </div>

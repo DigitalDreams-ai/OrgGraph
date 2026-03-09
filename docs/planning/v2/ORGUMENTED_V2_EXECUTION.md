@@ -33,11 +33,11 @@ Materially true now:
 - real-org session attach/switch and selective retrieve path is materially functional
 - org browser supports name-first search and grouped explorer/tree selection
 - org browser now uses explicit cart language (`checked row = in cart`) with simpler explorer/retrieve actions
-- org browser action row now uses direct operator language (`Search`, `Browse All`, `Load Trees`, `Retrieve Cart`) and a quick workflow block clarifies checkbox-first selection from search/browse into retrieve cart
-- org browser now includes `Load Trees` to preload member trees for visible families in one pass (up to 20 families) instead of requiring per-family expansion clicks
+- org browser action row now uses direct operator language (`Search`, `Load Full Family Catalog`, `Load Visible Children`, `Retrieve Cart`) and a quick workflow block clarifies checkbox-first selection from search/browse into retrieve cart
+- org browser now includes `Load Visible Children` to preload member trees for visible families in one pass (up to 20 families) instead of requiring per-family expansion clicks
 - org browser metadata search now matches normalized naming patterns (for example, spaced query text against compact/underscored metadata names), and discovery warnings are shown directly in workspace cards
 - org browser now bypasses stale empty live-metadata cache artifacts and re-queries org metadata discovery so search/browse recover automatically after prior failed discovery runs
-- org browser now auto-loads explorer families on first open and uses simpler action labels (`Search`, `Browse All`, `Load Trees`, `Retrieve Cart`) with Enter-to-search support
+- org browser now auto-loads explorer families on first open and uses simpler action labels (`Search`, `Load Full Family Catalog`, `Load Visible Children`, `Retrieve Cart`) with Enter-to-search support
 - org browser now auto-refreshes full family discovery when a connected alias changes, and browse mode enforces full-family coverage (minimum 5000 families) even when search/member limits are set lower
 - org browser live metadata discovery now tolerates trailing sf CLI warning lines in JSON command output, preventing false fallback to the 8-family seed set when `sf org list metadata-types --json` includes update notices
 - org browser live metadata discovery now strips ANSI/noise-prefixed warning lines and extracts the first valid JSON segment from sf CLI output, preventing false seed-family fallback when stdout includes colored warning or update-notice text
@@ -54,7 +54,7 @@ Materially true now:
 - wave11 browser refinement is back in progress: coverage state and explorer expansion affordances still need stronger operator-facing clarity before browser parity can stay closed
 - live metadata catalog cache version is bumped again so older partial family caches are force-refreshed before the remaining browser parity work
 - wave11 browser fallback hardening now preserves richer stale live-catalog caches when fresh metadata-type discovery fails, preventing regression back to the tiny seed-family catalog when a usable cached family inventory already exists
-- org browser now separates name search from family filtering, uses triangle-first family rows, adds `Expand Visible` / `Collapse Visible`, and scopes `Load Visible Trees` to the currently filtered family explorer so operators can browse the full discovered catalog more like a standard org browser
+- org browser now separates name search from family filtering, uses triangle-first family rows, adds `Expand Visible Families` / `Collapse Visible Families`, and scopes `Load Visible Children` to the currently filtered family explorer so operators can browse the full discovered catalog more like a standard org browser
 - wave11 browser copy now makes the operator contract explicit in-product: `Search`, `Load Full Family Catalog`, `Load Visible Children`, and `Expand Visible Families` match the real controls, and limited-coverage runs now show a dedicated warning block that tells the operator not to treat the browser as full org inventory until live coverage is restored
 - Ask now surfaces the latest retrieve handoff directly in the workspace, separates grounded Flow prompts from general follow-up prompts, and generates one-click asks from retrieved Flow, CustomObject, and CustomField members
 - Ask now passes the latest retrieve handoff into `/ask` as explicit evidence scope, so retrieve-grounded Flow review no longer depends on ambient browser state or local-storage-only UI assumptions
