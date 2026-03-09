@@ -641,14 +641,14 @@ export class AskService {
       latestRetrieveRequested &&
       plan.intent === 'impact' &&
       Boolean(plan.entities.field) &&
-      Boolean(evidenceScope) &&
-      this.evidenceScopeContainsField(evidenceScope, plan.entities.field as string);
+      (evidenceScope
+        ? this.evidenceScopeContainsField(evidenceScope, plan.entities.field as string)
+        : false);
     const latestRetrieveScopedAutomationQuery =
       latestRetrieveRequested &&
       plan.intent === 'automation' &&
       !latestRetrieveFlowQuery &&
-      Boolean(evidenceScope) &&
-      this.isScopedAutomationQuerySupported(plan, evidenceScope);
+      (evidenceScope ? this.isScopedAutomationQuerySupported(plan, evidenceScope) : false);
 
     if (latestRetrieveRequested && !evidenceScope) {
       answer =
