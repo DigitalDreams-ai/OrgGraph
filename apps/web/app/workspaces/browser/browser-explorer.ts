@@ -229,7 +229,7 @@ export function describeMetadataCatalogCoverage(
       badgeLabel: 'Not loaded',
       sourceLabel: describeCatalogSource(catalog),
       countsLabel: '0 visible families',
-      nextStep: 'Click Load All Families to pull the current org metadata family catalog.'
+      nextStep: 'Click Load Full Family Catalog to pull the current org metadata family catalog.'
     };
   }
 
@@ -248,10 +248,10 @@ export function describeMetadataCatalogCoverage(
       ? `${visibleTypes} of ${totalTypes} families visible`
       : `${visibleTypes} visible families`;
   const nextStep = coverage.reasons.some((reason) => /truncating the visible family list/i.test(reason))
-    ? 'Increase Search/Member Limit, then run Load All Families again.'
+    ? 'Increase Search/Member Limit, then run Load Full Family Catalog again.'
     : coverage.reasons.some((reason) => /failed/i.test(reason) || /sf CLI is unavailable/i.test(reason))
       ? 'Run Force Refresh, then verify sf CLI metadata-type discovery for the active alias.'
-      : 'Run Load All Families with Force Refresh enabled before treating this as full org inventory.';
+      : 'Run Load Full Family Catalog with Force Refresh enabled before treating this as full org inventory.';
 
   return {
     ...coverage,
