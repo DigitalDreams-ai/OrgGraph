@@ -3,6 +3,12 @@
 import type { ReadyPayload } from '../../shell/use-shell-runtime';
 import type { OrgPreflightIssue, OrgPreflightPayload, OrgStatusPayload } from '../connect/types';
 import type { MetaAdaptPayload, MetaContextPayload } from './types';
+import {
+  buildStructuredSnapshot,
+  deriveRuntimeIssues
+} from './runtime-status';
+import type { RuntimeIssue } from './runtime-status';
+import type { RuntimeGateState } from '../../shell/runtime-gate';
 
 interface SystemWorkspaceProps {
   metaDryRun: boolean;
@@ -14,6 +20,7 @@ interface SystemWorkspaceProps {
   orgStatus: OrgStatusPayload | null;
   orgPreflight: OrgPreflightPayload | null;
   runtimeUnavailable: boolean;
+  runtimeBlocked: boolean;
   toolStatusSource: 'runtime_unavailable' | 'live' | 'unknown';
   metaContext: MetaContextPayload | null;
   metaAdaptResult: MetaAdaptPayload | null;
@@ -23,21 +30,6 @@ interface SystemWorkspaceProps {
   onLoadOrgStatus: () => void;
   onRunPreflight: () => void;
 }
-
-type RuntimeIssue = {
-  code: string;
-  severity: 'error' | 'warning';
-  message: string;
-  remediation: string;
-};
-
-type StructuredSummary = {
-  id: string;
-  title: string;
-  status: 'good' | 'warning' | 'bad';
-  detail: string;
-  nextAction: string;
-};
 
 function formatTimestamp(value?: string): string {
   if (!value) {
@@ -67,92 +59,6 @@ function renderIntentBreakdown(title: string, values: Record<string, number>): J
       </ul>
     </article>
   );
-}
-
-function deriveRuntimeIssues(
-  healthStatus: string,
-  readyStatus: string,
-  readyPayload: ReadyPayload | null
-): RuntimeIssue[] {
-  const issues: RuntimeIssue[] = [];
-
-  if (healthStatus === 'unreachable') {
-    issues.push({
-      code: 'HEALTH_UNREACHABLE',
-      severity: 'error',
-      message: 'Desktop API health endpoint is unreachable.',
-      remediation: 'Relaunch Orgumented desktop and run Refresh Status once the API process is back.'
-    });
-  }
-
-  if (readyStatus === 'unreachable') {
-    issues.push({
-      code: 'READY_UNREACHABLE',
-      severity: 'error',
-      message: 'Desktop API readiness endpoint is unreachable.',
-      remediation: 'Restart Orgumented desktop to restore packaged API readiness checks.'
-    });
-  } else if (readyStatus.startsWith('http_')) {
-    issues.push({
-      code: 'READY_HTTP_FAILURE',
-      severity: 'error',
-      message: `Readiness returned ${readyStatus}.`,
-      remediation: 'Use Refresh & Build to rebuild semantic state, then rerun Refresh Status.'
-    });
-  }
-
-  const checks = readyPayload?.checks;
-  const bootstrap = checks?.bootstrap;
-  const db = checks?.db;
-  const fixtures = checks?.fixtures;
-  const evidence = checks?.evidence;
-
-  if (bootstrap?.ok === false) {
-    issues.push({
-      code: 'BOOTSTRAP_FAILED',
-      severity: 'error',
-      message: bootstrap.message || `Runtime bootstrap state is ${bootstrap.status || 'failed'}.`,
-      remediation: 'Open Refresh & Build and run Refresh Semantic State to reground runtime bootstrap.'
-    });
-  }
-
-  if (db?.ok === false) {
-    issues.push({
-      code: 'GRAPH_NOT_GROUNDED',
-      severity: 'error',
-      message: `Graph store is not grounded (nodes ${db.nodeCount ?? 0}, edges ${db.edgeCount ?? 0}).`,
-      remediation: 'Run Refresh Semantic State after a successful metadata retrieve to repopulate the graph.'
-    });
-  }
-
-  if (fixtures?.ok === false) {
-    issues.push({
-      code: 'FIXTURES_MISSING',
-      severity: 'warning',
-      message: `Fixtures source path is not present (${fixtures.sourcePath || 'n/a'}).`,
-      remediation: 'Run Org Browser retrieve, then Refresh Semantic State to regenerate the parse tree.'
-    });
-  }
-
-  if (evidence?.ok === false) {
-    issues.push({
-      code: 'EVIDENCE_MISSING',
-      severity: 'warning',
-      message: `Evidence index path is missing or empty (${evidence.indexPath || 'n/a'}).`,
-      remediation: 'Run Refresh Semantic State and Ask once to regenerate deterministic evidence artifacts.'
-    });
-  }
-
-  if (!checks && readyPayload?.message) {
-    issues.push({
-      code: 'READY_MESSAGE_ONLY',
-      severity: 'warning',
-      message: readyPayload.message,
-      remediation: 'Rerun Refresh Status and inspect runtime logs if the issue persists.'
-    });
-  }
-
-  return issues;
 }
 
 function renderRuntimeActionChecklist(issues: RuntimeIssue[]): JSX.Element {
@@ -214,142 +120,20 @@ function renderRelationMultipliers(payload: MetaContextPayload | null): JSX.Elem
   );
 }
 
-function buildStructuredSnapshot(input: {
-  runtimeUnavailable: boolean;
-  healthStatus: string;
-  readyStatus: string;
-  runtimeIssues: RuntimeIssue[];
-  orgStatus: OrgStatusPayload | null;
-  preflightIssues: OrgPreflightIssue[];
-  preflightChecks: OrgPreflightPayload['checks'] | undefined;
-}): StructuredSummary[] {
-  const runtimeErrors = input.runtimeIssues.filter((issue) => issue.severity === 'error').length;
-  const runtimeWarnings = input.runtimeIssues.filter((issue) => issue.severity === 'warning').length;
-
-  const runtimeSummary: StructuredSummary = input.runtimeUnavailable
-    ? {
-        id: 'runtime',
-        title: 'Runtime reachability',
-        status: 'bad',
-        detail: 'Desktop runtime is unavailable, so readiness and tooling probes are blocked.',
-        nextAction: 'Use Refresh Status after relaunching Orgumented.'
-      }
-    : runtimeErrors > 0
-      ? {
-          id: 'runtime',
-          title: 'Runtime readiness',
-          status: 'bad',
-          detail: `${runtimeErrors} readiness error(s) detected (health=${input.healthStatus}, ready=${input.readyStatus}).`,
-          nextAction: 'Open Refresh & Build and run Refresh Semantic State.'
-        }
-      : runtimeWarnings > 0
-        ? {
-            id: 'runtime',
-            title: 'Runtime readiness',
-            status: 'warning',
-            detail: `${runtimeWarnings} readiness warning(s) detected (fixtures/evidence may be incomplete).`,
-            nextAction: 'Run retrieve + refresh to repopulate parse/evidence paths.'
-          }
-        : {
-            id: 'runtime',
-            title: 'Runtime readiness',
-            status: 'good',
-            detail: `Health and readiness are stable (health=${input.healthStatus}, ready=${input.readyStatus}).`,
-            nextAction: 'No runtime recovery action required.'
-          };
-
-  const sfInstalled = input.orgStatus?.sf?.installed === true;
-  const cciInstalled = input.orgStatus?.cci?.installed === true;
-  const preflightErrors = input.preflightIssues.filter((issue) => (issue.severity || '').toLowerCase() === 'error').length;
-  const preflightWarnings = input.preflightIssues.filter((issue) => (issue.severity || '').toLowerCase() === 'warning').length;
-
-  const toolingSummary: StructuredSummary = input.runtimeUnavailable
-    ? {
-        id: 'tooling',
-        title: 'Toolchain status',
-        status: 'bad',
-        detail: 'sf/cci checks are unavailable while runtime is unreachable.',
-        nextAction: 'Restore runtime first, then rerun Org Status and Preflight.'
-      }
-    : !sfInstalled || !cciInstalled
-      ? {
-          id: 'tooling',
-          title: 'Toolchain status',
-          status: 'bad',
-          detail: `Tooling is degraded (sf=${sfInstalled ? 'installed' : 'missing'}, cci=${cciInstalled ? 'installed' : 'missing'}).`,
-          nextAction: 'Install missing tools and rerun Preflight.'
-        }
-      : preflightErrors > 0
-        ? {
-            id: 'tooling',
-            title: 'Toolchain status',
-            status: 'bad',
-            detail: `${preflightErrors} blocking preflight error(s) detected for the selected alias.`,
-            nextAction: 'Follow preflight remediation items before retrieve/ask.'
-          }
-        : preflightWarnings > 0
-          ? {
-              id: 'tooling',
-              title: 'Toolchain status',
-              status: 'warning',
-              detail: `${preflightWarnings} warning(s) remain (non-blocking but should be cleaned up).`,
-              nextAction: 'Run preflight checklist actions to remove warnings.'
-            }
-          : {
-              id: 'tooling',
-              title: 'Toolchain status',
-              status: 'good',
-              detail: 'sf/cci are installed and no preflight issues are currently reported.',
-              nextAction: 'Toolchain is ready for retrieve, refresh, and ask.'
-            };
-
-  const sessionConnected =
-    input.runtimeUnavailable
-      ? undefined
-      : input.orgStatus?.session?.status === 'connected' || input.preflightChecks?.sessionConnected === true;
-  const aliasAuthenticated = input.preflightChecks?.aliasAuthenticated;
-  const cciAliasAvailable = input.preflightChecks?.cciAliasAvailable;
-
-  const sessionSummary: StructuredSummary = input.runtimeUnavailable
-    ? {
-        id: 'session',
-        title: 'Session state',
-        status: 'bad',
-        detail: 'Session state cannot be validated while runtime is unavailable.',
-        nextAction: 'Relaunch runtime, then run Refresh Overview.'
-      }
-    : sessionConnected && aliasAuthenticated === true
-      ? {
-          id: 'session',
-          title: 'Session state',
-          status: cciAliasAvailable === false ? 'warning' : 'good',
-          detail:
-            cciAliasAvailable === false
-              ? 'Session is connected, but CCI alias bridging is still pending.'
-              : 'Session is connected and alias authentication is healthy.',
-          nextAction:
-            cciAliasAvailable === false
-              ? 'Use Bridge CCI Alias, then rerun Preflight.'
-              : 'No session recovery action required.'
-        }
-      : {
-          id: 'session',
-          title: 'Session state',
-          status: 'bad',
-          detail: 'Session is not yet ready for deterministic operator workflows.',
-          nextAction: 'Run Attach/Switch Active Alias and rerun Preflight.'
-        };
-
-  return [runtimeSummary, toolingSummary, sessionSummary];
-}
-
 export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
   const runtimeIssues = deriveRuntimeIssues(props.healthStatus, props.readyStatus, props.readyPayload);
   const readyChecks = props.readyPayload?.checks;
   const preflightIssues = props.orgPreflight?.issues ?? [];
   const preflightChecks = props.orgPreflight?.checks;
+  const runtimeGateState: RuntimeGateState = props.runtimeUnavailable
+    ? 'unreachable'
+    : props.runtimeBlocked
+      ? 'blocked'
+      : props.readyStatus === 'unknown'
+        ? 'unknown'
+        : 'ready';
   const structuredSnapshot = buildStructuredSnapshot({
-    runtimeUnavailable: props.runtimeUnavailable,
+    runtimeGateState,
     healthStatus: props.healthStatus,
     readyStatus: props.readyStatus,
     runtimeIssues,
@@ -369,6 +153,8 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
         : 'status not loaded';
   const toolingMessage = props.runtimeUnavailable
     ? 'Runtime is currently unreachable. Relaunch Orgumented desktop, then run Refresh Status before checking toolchain state.'
+    : props.runtimeBlocked
+      ? 'Runtime readiness is fail-closed. Tool and session values below are still live diagnostics, but deterministic workflows remain blocked until readiness returns to ready.'
     : props.orgStatus?.sf?.message || props.orgStatus?.cci?.message || 'Tooling messages look healthy.';
 
   return (
@@ -466,6 +252,11 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
               {props.runtimeUnavailable ? (
                 <p className="muted">
                   Runtime-unavailable status blocks tool checks. `sf` and `cci` are shown as unavailable, not missing.
+                </p>
+              ) : props.runtimeBlocked ? (
+                <p className="muted">
+                  Runtime is reachable but fail-closed. Tool and session values remain live, but deterministic workflows stay blocked until
+                  readiness returns to `ready`.
                 </p>
               ) : null}
               <div className="analysis-stat-grid">

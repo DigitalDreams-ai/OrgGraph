@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { OperatorRail } from './shell/operator-rail';
+import { deriveRuntimeGateState, isRuntimeBlocked } from './shell/runtime-gate';
 import { useShellPreferences } from './shell/use-shell-preferences';
 import { useSecondaryQueryRunner } from './shell/use-secondary-query-runner';
 import { resolveQueryErrorMessage, useResponseInspector } from './shell/use-response-inspector';
@@ -107,10 +108,13 @@ export default function Page(): JSX.Element {
     runQuery: secondaryQueryRunner.runQuery,
     loadOrgStatus: () => connectWorkspace.loadToolStatus()
   });
-  const runtimeUnavailable =
-    connectWorkspace.runtimeUnavailable ||
-    shellRuntime.healthStatus === 'unreachable' ||
-    shellRuntime.readyStatus === 'unreachable';
+  const runtimeGateState = deriveRuntimeGateState({
+    healthStatus: shellRuntime.healthStatus,
+    readyStatus: shellRuntime.readyStatus,
+    orgRuntimeUnavailable: connectWorkspace.runtimeUnavailable
+  });
+  const runtimeUnavailable = runtimeGateState === 'unreachable';
+  const runtimeBlocked = isRuntimeBlocked(runtimeGateState);
   const openAskFromAnalyze = (query: string): void => {
     askWorkspace.setAskQuery(query);
     setUiTab('ask');
@@ -244,6 +248,7 @@ export default function Page(): JSX.Element {
               browserSeeded={connectWorkspace.browserSeeded}
               selectedAliasReady={connectWorkspace.selectedAliasReady}
               runtimeUnavailable={runtimeUnavailable}
+              runtimeBlocked={runtimeBlocked}
               restoreAlias={connectWorkspace.restoreAlias}
               loading={secondaryQueryRunner.loading}
               onRefreshOverview={() => void connectWorkspace.refreshOverview()}
@@ -406,6 +411,7 @@ export default function Page(): JSX.Element {
               orgStatus={connectWorkspace.orgStatus}
               orgPreflight={connectWorkspace.orgPreflight}
               runtimeUnavailable={runtimeUnavailable}
+              runtimeBlocked={runtimeBlocked}
               toolStatusSource={connectWorkspace.toolStatusSource}
               metaContext={systemWorkspace.metaContext}
               metaAdaptResult={systemWorkspace.metaAdaptResult}
@@ -435,6 +441,7 @@ export default function Page(): JSX.Element {
           orgStatus={connectWorkspace.orgStatus}
           orgPreflight={connectWorkspace.orgPreflight}
           runtimeUnavailable={runtimeUnavailable}
+          runtimeBlocked={runtimeBlocked}
           toolStatusSource={connectWorkspace.toolStatusSource}
           onCopy={() => void responseInspector.copyJson()}
         />

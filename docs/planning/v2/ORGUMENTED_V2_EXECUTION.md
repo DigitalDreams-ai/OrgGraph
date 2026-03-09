@@ -113,6 +113,7 @@ Materially true now:
 - runtime bootstrap now performs a final guarded recovery pass after repeated recoverable drift failures by clearing full runtime semantic artifacts (DB/index/state/snapshots) and retrying once more with rebaseline before failing closed
 - runtime-unavailable signaling is now shared across Connect, Operator Rail, and Settings/Diagnostics (shell reachability + connect runtime detection), reducing false tool-missing interpretation outside Org Sessions
 - Connect, Operator Rail, and Settings/Diagnostics now show explicit tool-status source labels (`runtime blocked`, `live status`, `status not loaded`) so runtime loss cannot be misread as missing `sf`/`cci`
+- wave2 runtime-gate follow-up now distinguishes `runtime blocked` from `runtime unavailable` across Connect, Operator Rail, and Settings/Diagnostics, so fail-closed `/ready` states no longer erase live tool/session diagnostics while deterministic workflows remain visibly blocked
 - fallback error copy now distinguishes API non-response failures from normal request-validation failures
 - session action labels now distinguish quick top-bar attach from explicit connect/switch controls in Org Sessions
 - session alias switch now reuses connect auth/bridge flow so missing CCI alias registrations are remediated during switch, not only during explicit connect
