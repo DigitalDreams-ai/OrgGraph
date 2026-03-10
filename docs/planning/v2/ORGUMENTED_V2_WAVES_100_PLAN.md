@@ -353,7 +353,7 @@ Exit:
 2. `dna-wave5-handoff-proof-guard`: close real-org retrieve -> refresh -> diff handoff proof and fail-closed guidance gaps.
 3. `dna-wave6-grounding-expansion`: deepen grounded Ask coverage and reduce weak fallback paths.
    - preferred next Ask-depth substrate is the semantic-frame-v1 contract in `ORGUMENTED_V2_SEMANTIC_FRAME_V1.md`
-   - impact-family semantic-frame gating is already active; automation-family semantic-frame rollout is now in shadow mode before any broader Ask-family replacement
+   - impact-family and bounded field/object automation semantic-frame gating are now active; next work should extend semantic-frame coverage to the next narrow Ask family before any broader Ask-family replacement
 4. `dna-wave7-decision-packet-quality-baseline`: raise packet quality to approval-workflow acceptance.
 
 ## Cross-Wave Non-Negotiable Gates

@@ -795,6 +795,44 @@ async function run(): Promise<void> {
     assert.equal(askAutomation.plan.semanticFrame?.target?.selected, 'Opportunity');
     assert.equal(askAutomation.plan.semanticFrame?.admissibility.status, 'accepted');
 
+    const askBlockedAutomationRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: 'What automations update this?' })
+    });
+    assert.equal(
+      askBlockedAutomationRes.status,
+      201,
+      'blocked automation ask should return 201'
+    );
+    const askBlockedAutomation = (await askBlockedAutomationRes.json()) as {
+      trustLevel: string;
+      deterministicAnswer: string;
+      plan: {
+        intent: string;
+        semanticFrame?: {
+          admissibility: { status: string; reason: string | null };
+        };
+      };
+      proof: { rejectedBranches: Array<{ reasonCode: string }> };
+    };
+    assert.equal(askBlockedAutomation.plan.intent, 'automation');
+    assert.equal(askBlockedAutomation.plan.semanticFrame?.admissibility.status, 'blocked');
+    assert.equal(
+      askBlockedAutomation.plan.semanticFrame?.admissibility.reason,
+      'no_grounded_target'
+    );
+    assert.equal(askBlockedAutomation.trustLevel, 'refused');
+    assert.match(
+      askBlockedAutomation.deterministicAnswer,
+      /could not ground a deterministic field or object target from the query/i
+    );
+    assert.ok(
+      askBlockedAutomation.proof.rejectedBranches.some(
+        (branch) => branch.reasonCode === 'SEMANTIC_FRAME_BLOCKED'
+      )
+    );
+
     const askFlowEvidenceRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

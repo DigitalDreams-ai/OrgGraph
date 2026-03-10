@@ -66,8 +66,8 @@ Materially true now:
 - Ask-depth planning now prefers a narrow semantic-frame contract (`ORGUMENTED_V2_SEMANTIC_FRAME_V1.md`) before any parser-framework decision, so planner evolution is driven by typed intent, grounding, and admissibility needs rather than tool-first churn
 - wave6 semantic-frame shadow mode is now started for the `impact_analysis` family: planner output carries a replay-safe `semanticFrame` contract for impact asks
 - impact Ask now also treats semantic-frame admissibility as the active execution gate, so ungrounded or unsupported targets fail closed before the old default-field path can run
-- wave6 semantic-frame shadow mode now also covers the bounded automation family: `what automations update <field>` and `what runs on object <object>` emit replay-safe `automation_path_explanation` frames with explicit `graph_global` vs `latest_retrieve` source mode
-- flow read/write asks remain on the legacy planner path in this slice; semantic-frame rollout is still intentionally bounded to impact active-gating plus automation shadow-mode only
+- wave6 semantic-frame rollout now also actively gates the bounded automation family: `what automations update <field>` and `what runs on object <object>` use replay-safe `automation_path_explanation` frames with explicit `graph_global` vs `latest_retrieve` source mode, and ungrounded automation asks fail closed before fallback execution
+- flow read/write asks remain on the legacy planner path in this slice; semantic-frame rollout is still intentionally bounded to impact + field/object automation asks only
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
@@ -144,7 +144,7 @@ Materially true now:
 
 Still unresolved:
 - planner/compiler still needs deeper typed coverage beyond current query families
-- semantic-frame v1 is authoritative only for the impact family; automation now emits shadow-mode frames but broader Ask families still rely on the legacy planner path
+- semantic-frame v1 is authoritative for impact and bounded field/object automation asks; broader Ask families still rely on the legacy planner path
 - decision packet quality is not yet benchmark-accepted for approval use
 - explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
 - proofs/history still needs full label-first lifecycle closure beyond current baseline auto-selection
@@ -213,7 +213,7 @@ Rules:
 - close clean-machine quickstart proof and release/rollback evidence gates
 
 Preferred wave6 follow-on after the current packet-quality work:
-- expand semantic-frame active gating from impact into the bounded automation family after shadow-mode parity holds
+- expand semantic-frame coverage from impact + bounded field/object automation into the next narrow Ask family without widening scope to generic freeform routing
 - keep proving better grounding and admissibility behavior without replay regression
 
 ## Execution Cadence (Mandatory)

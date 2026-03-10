@@ -928,20 +928,59 @@ export class AskService {
         );
       }
     } else if (plan.intent === 'automation') {
-      operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.INTERSECT);
-      const flowQueryRequested = /\bflow\b/i.test(input.query);
-      const requestedFlowNameFromQuery = this.extractRequestedFlowName(input.query);
-      const requestedFlowName =
-        this.resolveScopedFlowNameAlias(
-          requestedFlowNameFromQuery ??
-          (flowQueryRequested && this.shouldInferFlowNameFromCitations(input.query)
-            ? this.inferRequestedFlowNameFromCitations(citationHits)
-            : undefined),
-          evidenceScope
+      const automationFrame = plan.semanticFrame;
+      if (
+        automationFrame?.intent === 'automation_path_explanation' &&
+        automationFrame.admissibility.status !== 'accepted'
+      ) {
+        const frameReason = automationFrame.admissibility.reason ?? 'semantic_frame_blocked';
+        const targetLabel =
+          automationFrame.target?.raw ??
+          plan.entities.field ??
+          plan.entities.object ??
+          'the requested target';
+        answer =
+          frameReason === 'no_grounded_target'
+            ? 'Refused: automation Ask could not ground a deterministic field or object target from the query. Specify an exact field like `Object.Field` or an object like `object Opportunity` and try again.'
+            : `Refused: automation Ask blocked execution for \`${targetLabel}\` because the planner semantic frame was not admissible.`;
+        deterministicAnswer = answer;
+        confidence = 0.18;
+        consistency = {
+          checked: consistencyCheck,
+          aligned: true,
+          reason: `automation semantic frame blocked execution with reason ${frameReason}`
+        };
+        executionTrace.push(
+          'automation.semanticFrame=blocked',
+          `automation.semanticFrame.reason=${frameReason}`,
+          `automation.semanticFrame.target=${targetLabel}`
         );
-      const object = this.normalizeAutomationObject(plan.entities.object);
-      const scopedAutomationTarget = plan.entities.field ?? object;
-      if (requestedFlowName) {
+        reject(
+          'planner.semanticFrame',
+          'SEMANTIC_FRAME_BLOCKED',
+          `automation semantic frame blocked execution: ${frameReason}`
+        );
+      } else {
+        operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.INTERSECT);
+        const flowQueryRequested = /\bflow\b/i.test(input.query);
+        const requestedFlowNameFromQuery = this.extractRequestedFlowName(input.query);
+        const requestedFlowName =
+          this.resolveScopedFlowNameAlias(
+            requestedFlowNameFromQuery ??
+            (flowQueryRequested && this.shouldInferFlowNameFromCitations(input.query)
+              ? this.inferRequestedFlowNameFromCitations(citationHits)
+              : undefined),
+            evidenceScope
+          );
+        const object =
+          automationFrame?.target?.kind === 'object' && automationFrame.target.selected
+            ? this.normalizeAutomationObject(automationFrame.target.selected)
+            : this.normalizeAutomationObject(plan.entities.object);
+        const scopedAutomationTarget =
+          automationFrame?.target?.kind === 'field' && automationFrame.target.selected
+            ? automationFrame.target.selected
+            : plan.entities.field ?? object;
+        if (requestedFlowName) {
         let flowEvidenceSummary = this.buildFlowEvidenceSummary(requestedFlowName, citationHits);
         if (flowEvidenceSummary.matchedCount === 0) {
           const targetedFlowHits = this.dedupeCitations(
@@ -1008,7 +1047,7 @@ export class AskService {
             `no retrieved flow evidence matched ${requestedFlowName}`
           );
         }
-      } else if (flowQueryRequested && !object) {
+        } else if (flowQueryRequested && !object) {
         const flowSuggestions = this
           .rankFlowNamesFromCitations(citationHits)
           .map(([name]) => name)
@@ -1076,7 +1115,7 @@ export class AskService {
           'FLOW_NAME_UNRESOLVED',
           'flow-targeted ask did not resolve an exact flow name'
         );
-      } else if (latestRetrieveRequested && evidenceScope && scopedAutomationTarget) {
+        } else if (latestRetrieveRequested && evidenceScope && scopedAutomationTarget) {
         let scopedSummary = this.buildScopedMetadataEvidenceSummary({
           targetLabel: scopedAutomationTarget,
           targetType: plan.entities.field ? 'field' : 'object',
@@ -1125,7 +1164,7 @@ export class AskService {
             `no scoped retrieve evidence matched ${scopedAutomationTarget}`
           );
         }
-      } else {
+        } else {
         const result = await this.analysis.automation(
           object ?? 'Case',
           undefined,
@@ -1150,6 +1189,7 @@ export class AskService {
             'no automation relation matched for requested object'
           );
         }
+      }
       }
     } else if (plan.intent === 'impact') {
       const impactFrame = plan.semanticFrame;
