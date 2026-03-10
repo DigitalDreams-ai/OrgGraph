@@ -777,8 +777,23 @@ async function run(): Promise<void> {
       body: JSON.stringify({ query: 'What runs on object Opportunity?' })
     });
     assert.equal(askAutomationRes.status, 201, 'ask automation should return 201');
-    const askAutomation = (await askAutomationRes.json()) as { plan: { intent: string } };
+    const askAutomation = (await askAutomationRes.json()) as {
+      plan: {
+        intent: string;
+        semanticFrame?: {
+          intent: string;
+          sourceMode: string;
+          target?: { selected?: string; kind?: string };
+          admissibility: { status: string; reason: string | null };
+        };
+      };
+    };
     assert.equal(askAutomation.plan.intent, 'automation');
+    assert.equal(askAutomation.plan.semanticFrame?.intent, 'automation_path_explanation');
+    assert.equal(askAutomation.plan.semanticFrame?.sourceMode, 'graph_global');
+    assert.equal(askAutomation.plan.semanticFrame?.target?.kind, 'object');
+    assert.equal(askAutomation.plan.semanticFrame?.target?.selected, 'Opportunity');
+    assert.equal(askAutomation.plan.semanticFrame?.admissibility.status, 'accepted');
 
     const askFlowEvidenceRes = await fetch(`${base}/ask`, {
       method: 'POST',
@@ -1246,11 +1261,27 @@ async function run(): Promise<void> {
     );
     const askLatestRetrieveAutomation = (await askLatestRetrieveAutomationRes.json()) as {
       trustLevel: string;
-      plan: { intent: string };
+      plan: {
+        intent: string;
+        semanticFrame?: {
+          intent: string;
+          sourceMode: string;
+          target?: { selected?: string; kind?: string };
+          admissibility: { status: string; reason: string | null };
+        };
+      };
       deterministicAnswer: string;
       consistency: { aligned: boolean; reason: string };
     };
     assert.equal(askLatestRetrieveAutomation.plan.intent, 'automation');
+    assert.equal(askLatestRetrieveAutomation.plan.semanticFrame?.intent, 'automation_path_explanation');
+    assert.equal(askLatestRetrieveAutomation.plan.semanticFrame?.sourceMode, 'latest_retrieve');
+    assert.equal(askLatestRetrieveAutomation.plan.semanticFrame?.target?.kind, 'field');
+    assert.equal(
+      askLatestRetrieveAutomation.plan.semanticFrame?.target?.selected,
+      'Opportunity.StageName'
+    );
+    assert.equal(askLatestRetrieveAutomation.plan.semanticFrame?.admissibility.status, 'accepted');
     assert.notEqual(askLatestRetrieveAutomation.trustLevel, 'refused');
     assert.match(
       askLatestRetrieveAutomation.deterministicAnswer,
@@ -1278,10 +1309,32 @@ async function run(): Promise<void> {
     const askLatestRetrieveObjectAutomation =
       (await askLatestRetrieveObjectAutomationRes.json()) as {
         trustLevel: string;
-        plan: { intent: string };
+        plan: {
+          intent: string;
+          semanticFrame?: {
+            intent: string;
+            sourceMode: string;
+            target?: { selected?: string; kind?: string };
+            admissibility: { status: string; reason: string | null };
+          };
+        };
         deterministicAnswer: string;
       };
     assert.equal(askLatestRetrieveObjectAutomation.plan.intent, 'automation');
+    assert.equal(
+      askLatestRetrieveObjectAutomation.plan.semanticFrame?.intent,
+      'automation_path_explanation'
+    );
+    assert.equal(askLatestRetrieveObjectAutomation.plan.semanticFrame?.sourceMode, 'latest_retrieve');
+    assert.equal(askLatestRetrieveObjectAutomation.plan.semanticFrame?.target?.kind, 'object');
+    assert.equal(
+      askLatestRetrieveObjectAutomation.plan.semanticFrame?.target?.selected,
+      'Opportunity'
+    );
+    assert.equal(
+      askLatestRetrieveObjectAutomation.plan.semanticFrame?.admissibility.status,
+      'accepted'
+    );
     assert.notEqual(askLatestRetrieveObjectAutomation.trustLevel, 'refused');
     assert.match(
       askLatestRetrieveObjectAutomation.deterministicAnswer,

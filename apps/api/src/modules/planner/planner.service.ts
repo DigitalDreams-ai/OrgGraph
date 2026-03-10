@@ -72,18 +72,70 @@ export class PlannerService {
     object?: string,
     field?: string
   ): AskSemanticFrameV1 | undefined {
-    if (intent !== 'impact') {
+    if (intent === 'impact') {
+      const sourceMode: AskSemanticFrameSourceMode = /\blatest retrieve\b/i.test(normalizedQuery)
+        ? 'latest_retrieve'
+        : 'graph_global';
+      const target = this.buildMetadataTarget(field, object);
+
+      return {
+        version: 'v1',
+        intent: 'impact_analysis',
+        target: target ?? undefined,
+        sourceMode,
+        scope: {
+          snapshot: 'current',
+          orgSession: 'active'
+        },
+        modifiers: {
+          includeAutomation: true,
+          includePermissions: false,
+          includeEvidence: true,
+          includeProof: false
+        },
+        admissibility: field
+          ? {
+              status: 'accepted',
+              reason: null
+            }
+          : target
+          ? {
+              status: 'blocked',
+              reason: 'unsupported_target_kind'
+            }
+          : {
+              status: 'blocked',
+              reason: 'no_grounded_target'
+            },
+        ambiguity: field
+          ? {
+              status: 'clear',
+              issues: []
+            }
+          : target
+          ? {
+              status: 'unsupported_question',
+              issues: ['unsupported_target_kind']
+            }
+          : {
+              status: 'insufficient_evidence',
+              issues: ['no_grounded_target']
+            }
+      };
+    }
+
+    if (intent !== 'automation' || !this.shouldEmitAutomationSemanticFrame(normalizedQuery, object, field)) {
       return undefined;
     }
 
     const sourceMode: AskSemanticFrameSourceMode = /\blatest retrieve\b/i.test(normalizedQuery)
       ? 'latest_retrieve'
       : 'graph_global';
-    const target = this.buildImpactTarget(field, object);
+    const target = this.buildMetadataTarget(field, object);
 
     return {
       version: 'v1',
-      intent: 'impact_analysis',
+      intent: 'automation_path_explanation',
       target: target ?? undefined,
       sourceMode,
       scope: {
@@ -96,29 +148,19 @@ export class PlannerService {
         includeEvidence: true,
         includeProof: false
       },
-      admissibility: field
+      admissibility: target
         ? {
             status: 'accepted',
             reason: null
-          }
-        : target
-        ? {
-            status: 'blocked',
-            reason: 'unsupported_target_kind'
           }
         : {
             status: 'blocked',
             reason: 'no_grounded_target'
           },
-      ambiguity: field
+      ambiguity: target
         ? {
             status: 'clear',
             issues: []
-          }
-        : target
-        ? {
-            status: 'unsupported_question',
-            issues: ['unsupported_target_kind']
           }
         : {
             status: 'insufficient_evidence',
@@ -127,7 +169,19 @@ export class PlannerService {
     };
   }
 
-  private buildImpactTarget(field?: string, object?: string): AskSemanticFrameTarget | null {
+  private shouldEmitAutomationSemanticFrame(
+    normalizedQuery: string,
+    object?: string,
+    field?: string
+  ): boolean {
+    if (field || object) {
+      return true;
+    }
+
+    return /\bwhat automations update this\b/i.test(normalizedQuery);
+  }
+
+  private buildMetadataTarget(field?: string, object?: string): AskSemanticFrameTarget | null {
     if (field) {
       return {
         kind: 'field',

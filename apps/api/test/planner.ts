@@ -57,13 +57,41 @@ function run(): void {
   const autoPlan = planner.plan('What runs on object Opportunity?');
   assert.equal(autoPlan.intent, 'automation');
   assert.equal(autoPlan.entities.object, 'Opportunity');
-  assert.equal(autoPlan.semanticFrame, undefined);
+  assert.equal(autoPlan.semanticFrame?.version, 'v1');
+  assert.equal(autoPlan.semanticFrame?.intent, 'automation_path_explanation');
+  assert.equal(autoPlan.semanticFrame?.sourceMode, 'graph_global');
+  assert.equal(autoPlan.semanticFrame?.target?.kind, 'object');
+  assert.equal(autoPlan.semanticFrame?.target?.selected, 'Opportunity');
+  assert.equal(autoPlan.semanticFrame?.admissibility.status, 'accepted');
+  assert.equal(autoPlan.semanticFrame?.ambiguity.status, 'clear');
+
+  const autoFieldPlan = planner.plan('What automations update Opportunity.StageName?');
+  assert.equal(autoFieldPlan.intent, 'automation');
+  assert.equal(autoFieldPlan.entities.field, 'Opportunity.StageName');
+  assert.equal(autoFieldPlan.semanticFrame?.intent, 'automation_path_explanation');
+  assert.equal(autoFieldPlan.semanticFrame?.target?.kind, 'field');
+  assert.equal(autoFieldPlan.semanticFrame?.target?.selected, 'Opportunity.StageName');
+  assert.equal(autoFieldPlan.semanticFrame?.admissibility.status, 'accepted');
+
+  const latestRetrieveAutoPlan = planner.plan(
+    'Based only on the latest retrieve, what runs on object Opportunity?'
+  );
+  assert.equal(latestRetrieveAutoPlan.intent, 'automation');
+  assert.equal(latestRetrieveAutoPlan.semanticFrame?.sourceMode, 'latest_retrieve');
+
+  const blockedAutoPlan = planner.plan('What automations update this?');
+  assert.equal(blockedAutoPlan.intent, 'automation');
+  assert.equal(blockedAutoPlan.semanticFrame?.intent, 'automation_path_explanation');
+  assert.equal(blockedAutoPlan.semanticFrame?.admissibility.status, 'blocked');
+  assert.equal(blockedAutoPlan.semanticFrame?.admissibility.reason, 'no_grounded_target');
+  assert.equal(blockedAutoPlan.semanticFrame?.ambiguity.status, 'insufficient_evidence');
 
   const flowEvidencePlan = planner.plan(
     'Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.'
   );
   assert.equal(flowEvidencePlan.intent, 'automation');
   assert.equal(flowEvidencePlan.entities.object, undefined);
+  assert.equal(flowEvidencePlan.semanticFrame, undefined);
 
   const flowEvidenceSpacedPlan = planner.plan(
     'Based only on the latest retrieve, explain what Flow Opportunity Stage Sync reads and writes.'
