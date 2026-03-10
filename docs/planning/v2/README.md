@@ -87,6 +87,11 @@ Purpose:
 - capture of proof/replay IDs from runbook executions
 - Wave12 release-readiness input artifact
 
+15. `docs/planning/v2/ORGUMENTED_V2_SEMANTIC_FRAME_V1.md`
+- proposed Ask interpretation contract for Stage 1
+- narrow semantic-frame model for intent, target grounding, admissibility, and fail-closed clarification
+- wave6 planner/compiler-depth input artifact
+
 ## Wave1 Baseline Artifacts
 
 1. `docs/planning/v2/WAVE1_BACKLOG.md`
