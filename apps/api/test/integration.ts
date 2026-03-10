@@ -1239,6 +1239,13 @@ async function run(): Promise<void> {
       trustLevel: string;
       deterministicAnswer: string;
       refusalReasons?: string[];
+      proof?: {
+        rejectedBranches?: Array<{
+          branch: string;
+          reasonCode: string;
+          reason: string;
+        }>;
+      };
       plan?: {
         intent?: string;
         semanticFrame?: {
@@ -1273,11 +1280,20 @@ async function run(): Promise<void> {
     assert.equal(askLatestRetrieveUnsupported.trustLevel, 'refused');
     assert.match(
       askLatestRetrieveUnsupported.deterministicAnswer,
-      /supported only for explicit Flow read\/write asks and explicit retrieved field\/object impact or automation asks/i
+      /latest-retrieve-only permission Ask is not supported/i
     );
     assert.ok(
-      (askLatestRetrieveUnsupported.refusalReasons ?? []).some((reason) =>
-        /grounding_score/i.test(reason)
+      (askLatestRetrieveUnsupported.proof?.rejectedBranches ?? []).some(
+        (branch) =>
+          branch.reasonCode === 'SEMANTIC_FRAME_BLOCKED' &&
+          /permission semantic frame blocked execution: evidence_scope_unsupported/i.test(
+            branch.reason
+          )
+      )
+    );
+    assert.ok(
+      (askLatestRetrieveUnsupported.proof?.rejectedBranches ?? []).some(
+        (branch) => branch.reasonCode === 'SEMANTIC_FRAME_BLOCKED'
       )
     );
 

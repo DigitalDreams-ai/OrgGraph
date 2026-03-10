@@ -134,7 +134,7 @@ Mandatory:
 | wave3 | sessions and toolchain reliability | B004, B005 | Complete | Session state persists active alias/switch timestamps and restore alias remains deterministic across relaunch |
 | wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
 | wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |
-| wave6 | ask planner/compiler depth | B003, B009 | In Progress | Replay-safe grounding expansion for additional metadata families |
+| wave6 | ask planner/compiler depth | B003, B009 | In Progress | Semantic-frame rollout for the next bounded Ask family beyond impact, automation, and perms |
 | wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | Open | Structured triage without raw JSON dependence |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first reopen/replay/export complete |
@@ -237,12 +237,13 @@ Scope:
 - adopt a narrow semantic-frame contract before committing to any parser framework choice
 - start semantic-frame shadow mode on one bounded Ask family before any routing replacement
 - promote semantic-frame admissibility to the active execution gate for that family once parity is proven
+- expand that active-gate pattern incrementally across bounded families without widening latest-retrieve support beyond explicit proven cases
 
 Exit:
 - planner/integration/replay tests pass for selected families
 - measurable fallback-rate reduction on real metadata asks
 - explicit named metadata asks do not degrade to weak stop-word object inference
-- semantic-frame v1 is either implemented for one selected Ask family or rejected with measured reasons
+- semantic-frame v1 is active for impact + bounded automation + bounded perms asks, with the next family chosen by measured operator value
 
 ## wave7 - Decision Packet Quality
 
