@@ -277,14 +277,13 @@ This contract should not be adopted broadly unless it proves:
 
 ## Tooling Position
 
-This file does not require `Langium` or `Chevrotain`.
+This file does not require a parser framework choice up front.
 
 It defines the contract first.
 
 After the contract exists, Orgumented can evaluate whether the implementation should be:
 - custom typed compiler logic
 - a small parser/combinator layer
-- `Chevrotain`
 - another bounded parser strategy
 
 Decision rule:

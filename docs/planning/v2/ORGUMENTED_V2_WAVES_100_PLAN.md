@@ -235,6 +235,7 @@ Scope:
 - metadata-family routing and flow/object/field grounding
 - stable compiler rule IDs and replay-safe traces
 - adopt a narrow semantic-frame contract before committing to any parser framework choice
+- start semantic-frame shadow mode on one bounded Ask family before any routing replacement
 
 Exit:
 - planner/integration/replay tests pass for selected families

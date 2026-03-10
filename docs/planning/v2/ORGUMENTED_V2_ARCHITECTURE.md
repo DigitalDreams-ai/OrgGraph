@@ -198,14 +198,14 @@ Strong candidates to borrow now:
 
 Build-vs-borrow gate:
 - custom-build only the Salesforce semantic moat
-- borrow generic validation, provenance, policy, and parser substrate unless measured evidence says otherwise
+- borrow generic validation, provenance, and policy substrate where it materially reduces bespoke infrastructure cost
+- keep Ask planner depth on a contract-first path; only choose an implementation substrate after the semantic frame proves value
 
 ### Evaluate Next
 
 Candidates worth explicit evaluation:
-- `Langium` or `Chevrotain` for grammar/compiler work
+- a narrow semantic-frame implementation substrate if shadow-mode execution proves value
 - `Souffle` or another Datalog-style reasoning substrate
-- `Tree-sitter` for richer parsing infrastructure
 - `SHACL` or related semantic constraint tooling
 
 ### Reject for Now

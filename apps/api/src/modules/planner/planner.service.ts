@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import type { AskPlan, AskIntent, AskReviewWorkflow } from './planner.types';
+import type {
+  AskPlan,
+  AskIntent,
+  AskReviewWorkflow,
+  AskSemanticFrameSourceMode,
+  AskSemanticFrameTarget,
+  AskSemanticFrameV1
+} from './planner.types';
 
 @Injectable()
 export class PlannerService {
@@ -54,8 +61,94 @@ export class PlannerService {
       entities: { user, object, field },
       graphCalls,
       evidenceCalls: ['evidence.search'],
-      reviewWorkflow
+      reviewWorkflow,
+      semanticFrame: this.buildSemanticFrame(intent, normalizedQuery, object, field)
     };
+  }
+
+  private buildSemanticFrame(
+    intent: AskIntent,
+    normalizedQuery: string,
+    object?: string,
+    field?: string
+  ): AskSemanticFrameV1 | undefined {
+    if (intent !== 'impact') {
+      return undefined;
+    }
+
+    const sourceMode: AskSemanticFrameSourceMode = /\blatest retrieve\b/i.test(normalizedQuery)
+      ? 'latest_retrieve'
+      : 'graph_global';
+    const target = this.buildImpactTarget(field, object);
+
+    return {
+      version: 'v1',
+      intent: 'impact_analysis',
+      target: target ?? undefined,
+      sourceMode,
+      scope: {
+        snapshot: 'current',
+        orgSession: 'active'
+      },
+      modifiers: {
+        includeAutomation: true,
+        includePermissions: false,
+        includeEvidence: true,
+        includeProof: false
+      },
+      admissibility: target
+        ? {
+            status: 'accepted',
+            reason: null
+          }
+        : {
+            status: 'blocked',
+            reason: 'no_grounded_target'
+          },
+      ambiguity: target
+        ? {
+            status: 'clear',
+            issues: []
+          }
+        : {
+            status: 'insufficient_evidence',
+            issues: ['no_grounded_target']
+          }
+    };
+  }
+
+  private buildImpactTarget(field?: string, object?: string): AskSemanticFrameTarget | null {
+    if (field) {
+      return {
+        kind: 'field',
+        raw: field,
+        candidates: [
+          {
+            id: field,
+            kind: 'field',
+            source: 'metadata'
+          }
+        ],
+        selected: field
+      };
+    }
+
+    if (object) {
+      return {
+        kind: 'object',
+        raw: object,
+        candidates: [
+          {
+            id: object,
+            kind: 'object',
+            source: 'metadata'
+          }
+        ],
+        selected: object
+      };
+    }
+
+    return null;
   }
 
   private normalizeQuery(input: string): { normalizedQuery: string; rewriteRules: string[] } {

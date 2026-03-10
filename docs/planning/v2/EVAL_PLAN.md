@@ -16,7 +16,8 @@ Working description:
   - `W3C PROV / PROV-O` for provenance vocabulary
 - next evaluation targets:
   - `OPA / Rego` for declarative policy evaluation
-  - `Langium` / `Chevrotain` / `Souffle` / `SHACL` for future planner, grammar, or constraint depth where justified
+  - semantic-frame-first planner hardening and only then a bounded implementation substrate where justified
+  - `Souffle` / `SHACL` for future constraint depth where justified
 
 Reference source:
 - `docs/planning/archive/pre-v2-2026-03-01/SEMANTIC_STACK_BUILD_VS_BORROW.md`

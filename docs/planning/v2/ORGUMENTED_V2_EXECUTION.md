@@ -64,6 +64,7 @@ Materially true now:
 - latest-retrieve Ask now also supports explicit retrieved field/object impact and automation summaries (`what touches <field>`, `what automations update <field>`, `what runs on object <object>`), using scoped direct-source evidence fallback when indexed evidence paths do not match the staged retrieve path
 - permission-style latest-retrieve asks still fail closed, so retrieve scope is expanded only for the explicitly supported field/object and Flow evidence families
 - Ask-depth planning now prefers a narrow semantic-frame contract (`ORGUMENTED_V2_SEMANTIC_FRAME_V1.md`) before any parser-framework decision, so planner evolution is driven by typed intent, grounding, and admissibility needs rather than tool-first churn
+- wave6 semantic-frame shadow mode is now started for the `impact_analysis` family: planner output carries a replay-safe `semanticFrame` contract for impact asks while the existing runtime behavior remains unchanged
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model
 - desktop card/grid constraints now use wider auto-fit minima and wrapped preformatted text to reduce clipping in Ask, evidence, and diagnostics surfaces
@@ -140,7 +141,7 @@ Materially true now:
 
 Still unresolved:
 - planner/compiler still needs deeper typed coverage beyond current query families
-- semantic-frame v1 is still planning-only and has not yet replaced any production planner family
+- semantic-frame v1 is only in shadow mode for the impact family and has not yet replaced production routing for any Ask family
 - decision packet quality is not yet benchmark-accepted for approval use
 - explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
 - proofs/history still needs full label-first lifecycle closure beyond current baseline auto-selection
