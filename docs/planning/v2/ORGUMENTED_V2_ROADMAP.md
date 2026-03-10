@@ -111,6 +111,7 @@ As of March 1, 2026:
 - reduce regex-heavy routing
 - improve ontology-aware planning
 - evaluate borrowed compiler/reasoning substrate where justified
+- introduce a narrow semantic-frame contract before choosing a parser framework, so Ask depth expands through typed intent/grounding/admissibility rather than parser-first churn
 
 ### Priority 3: Decision-packet adoption
 - make proof artifacts usable in real review workflows
@@ -141,6 +142,7 @@ Do not:
 1. close runtime/session reliability (wave2 + wave3)
 2. close org browser and retrieve-handoff parity (wave4 + wave5)
 3. strengthen Ask grounding and packet quality (wave6 + wave7)
+   - semantic-frame v1 defines the preferred wave6 direction for Ask interpretation hardening
 4. close structured analyze/proofs workflows (wave8 + wave9)
 5. finish layout/accessibility hardening (wave10)
 6. complete defect/CI/release discipline (wave11 + wave12)

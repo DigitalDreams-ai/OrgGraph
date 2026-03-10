@@ -234,11 +234,13 @@ Scope:
 - intent/entity extraction hardening
 - metadata-family routing and flow/object/field grounding
 - stable compiler rule IDs and replay-safe traces
+- adopt a narrow semantic-frame contract before committing to any parser framework choice
 
 Exit:
 - planner/integration/replay tests pass for selected families
 - measurable fallback-rate reduction on real metadata asks
 - explicit named metadata asks do not degrade to weak stop-word object inference
+- semantic-frame v1 is either implemented for one selected Ask family or rejected with measured reasons
 
 ## wave7 - Decision Packet Quality
 
@@ -348,6 +350,7 @@ Exit:
 1. `dna-wave2-startup-drift-recovery`: finish packaged runtime startup/drift parity hardening.
 2. `dna-wave5-handoff-proof-guard`: close real-org retrieve -> refresh -> diff handoff proof and fail-closed guidance gaps.
 3. `dna-wave6-grounding-expansion`: deepen grounded Ask coverage and reduce weak fallback paths.
+   - preferred next Ask-depth substrate is the semantic-frame-v1 contract in `ORGUMENTED_V2_SEMANTIC_FRAME_V1.md`
 4. `dna-wave7-decision-packet-quality-baseline`: raise packet quality to approval-workflow acceptance.
 
 ## Cross-Wave Non-Negotiable Gates
