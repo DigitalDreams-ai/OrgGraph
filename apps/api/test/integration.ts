@@ -705,7 +705,15 @@ async function run(): Promise<void> {
     assert.equal(askPermsRes.status, 201, 'ask perms should return 201');
     const askPerms = (await askPermsRes.json()) as {
       status: string;
-      plan: { intent: string };
+      plan: {
+        intent: string;
+        semanticFrame?: {
+          intent: string;
+          sourceMode: string;
+          target?: { selected?: string; kind?: string };
+          admissibility: { status: string; reason: string | null };
+        };
+      };
       citations: unknown[];
       mode: string;
       trustLevel: string;
@@ -718,6 +726,11 @@ async function run(): Promise<void> {
     };
     assert.equal(askPerms.status, 'implemented');
     assert.equal(askPerms.plan.intent, 'perms');
+    assert.equal(askPerms.plan.semanticFrame?.intent, 'permission_path_explanation');
+    assert.equal(askPerms.plan.semanticFrame?.sourceMode, 'graph_global');
+    assert.equal(askPerms.plan.semanticFrame?.target?.kind, 'object');
+    assert.equal(askPerms.plan.semanticFrame?.target?.selected, 'Case');
+    assert.equal(askPerms.plan.semanticFrame?.admissibility.status, 'accepted');
     assert.ok(askPerms.citations.length > 0, 'ask should include citations');
     assert.equal(askPerms.mode, 'deterministic');
     assert.equal(askPerms.llm.used, false);
@@ -1226,7 +1239,37 @@ async function run(): Promise<void> {
       trustLevel: string;
       deterministicAnswer: string;
       refusalReasons?: string[];
+      plan?: {
+        intent?: string;
+        semanticFrame?: {
+          intent: string;
+          sourceMode: string;
+          target?: { selected?: string; kind?: string };
+          admissibility: { status: string; reason: string | null };
+        };
+      };
     };
+    assert.equal(askLatestRetrieveUnsupported.plan?.intent, 'perms');
+    assert.equal(
+      askLatestRetrieveUnsupported.plan?.semanticFrame?.intent,
+      'permission_path_explanation'
+    );
+    assert.equal(
+      askLatestRetrieveUnsupported.plan?.semanticFrame?.sourceMode,
+      'latest_retrieve'
+    );
+    assert.equal(
+      askLatestRetrieveUnsupported.plan?.semanticFrame?.target?.selected,
+      'Opportunity.StageName'
+    );
+    assert.equal(
+      askLatestRetrieveUnsupported.plan?.semanticFrame?.admissibility.status,
+      'blocked'
+    );
+    assert.equal(
+      askLatestRetrieveUnsupported.plan?.semanticFrame?.admissibility.reason,
+      'evidence_scope_unsupported'
+    );
     assert.equal(askLatestRetrieveUnsupported.trustLevel, 'refused');
     assert.match(
       askLatestRetrieveUnsupported.deterministicAnswer,

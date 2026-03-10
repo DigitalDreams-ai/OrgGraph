@@ -9,6 +9,13 @@ function run(): void {
   assert.equal(permsPlan.entities.user, 'jane@example.com');
   assert.equal(permsPlan.entities.object, 'Case');
   assert.equal(typeof permsPlan.normalizedQuery, 'string');
+  assert.equal(permsPlan.semanticFrame?.version, 'v1');
+  assert.equal(permsPlan.semanticFrame?.intent, 'permission_path_explanation');
+  assert.equal(permsPlan.semanticFrame?.sourceMode, 'graph_global');
+  assert.equal(permsPlan.semanticFrame?.target?.kind, 'object');
+  assert.equal(permsPlan.semanticFrame?.target?.selected, 'Case');
+  assert.equal(permsPlan.semanticFrame?.admissibility.status, 'accepted');
+  assert.equal(permsPlan.semanticFrame?.ambiguity.status, 'clear');
 
   const complexEmailPermsPlan = planner.plan(
     'Can _john.shbu0nbf92ei.98wz66bcffvd.lb7cpijolxkf.rvguteb2fgug@litify.com.uat edit object Opportunity?'
@@ -108,6 +115,27 @@ function run(): void {
   const normalizedPermPlan = planner.plan('Who can edit object Opportunity?');
   assert.equal(normalizedPermPlan.intent, 'perms');
   assert.ok(normalizedPermPlan.rewriteRules?.includes('perm_who_can_edit'));
+  assert.equal(normalizedPermPlan.semanticFrame?.intent, 'permission_path_explanation');
+  assert.equal(normalizedPermPlan.semanticFrame?.target?.selected, 'Opportunity');
+  assert.equal(normalizedPermPlan.semanticFrame?.admissibility.status, 'accepted');
+
+  const latestRetrievePermPlan = planner.plan(
+    'Based only on the latest retrieve, who can edit Opportunity.StageName?'
+  );
+  assert.equal(latestRetrievePermPlan.intent, 'perms');
+  assert.equal(latestRetrievePermPlan.semanticFrame?.intent, 'permission_path_explanation');
+  assert.equal(latestRetrievePermPlan.semanticFrame?.sourceMode, 'latest_retrieve');
+  assert.equal(latestRetrievePermPlan.semanticFrame?.target?.kind, 'field');
+  assert.equal(
+    latestRetrievePermPlan.semanticFrame?.target?.selected,
+    'Opportunity.StageName'
+  );
+  assert.equal(latestRetrievePermPlan.semanticFrame?.admissibility.status, 'blocked');
+  assert.equal(
+    latestRetrievePermPlan.semanticFrame?.admissibility.reason,
+    'evidence_scope_unsupported'
+  );
+  assert.equal(latestRetrievePermPlan.semanticFrame?.ambiguity.status, 'unsupported_question');
 
   const normalizedAutoPlan = planner.plan('Which flows run on object Opportunity?');
   assert.equal(normalizedAutoPlan.intent, 'automation');
