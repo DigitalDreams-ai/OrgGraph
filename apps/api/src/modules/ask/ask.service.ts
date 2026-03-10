@@ -649,6 +649,11 @@ export class AskService {
       plan.intent === 'automation' &&
       !latestRetrieveFlowQuery &&
       (evidenceScope ? this.isScopedAutomationQuerySupported(plan, evidenceScope) : false);
+    const latestRetrieveScopedPermQuery =
+      latestRetrieveRequested &&
+      plan.intent === 'perms' &&
+      Boolean(evidenceScope) &&
+      plan.semanticFrame?.intent === 'permission_path_explanation';
 
     if (latestRetrieveRequested && !evidenceScope) {
       answer =
@@ -670,7 +675,8 @@ export class AskService {
       latestRetrieveRequested &&
       !latestRetrieveFlowQuery &&
       !latestRetrieveScopedImpactQuery &&
-      !latestRetrieveScopedAutomationQuery
+      !latestRetrieveScopedAutomationQuery &&
+      !latestRetrieveScopedPermQuery
     ) {
       answer =
         'Refused: latest-retrieve-only Ask is currently supported only for explicit Flow read/write asks and explicit retrieved field/object impact or automation asks. This query would require graph-wide analysis outside the scoped retrieve.';
@@ -908,24 +914,67 @@ export class AskService {
         reject('analysis.impact', 'NO_IMPACT_PATHS', 'no impact paths found for release scenario');
       }
     } else if (plan.intent === 'perms') {
-      operatorsExecuted.push(COMPOSITION_OPERATORS.CONSTRAIN, COMPOSITION_OPERATORS.INTERSECT);
-      const user = plan.entities.user ?? 'jane@example.com';
-      const object = plan.entities.object ?? 'Case';
-      const result = await this.queries.perms(user, object, plan.entities.field);
-      answer = result.explanation;
-      deterministicAnswer = result.explanation;
-      confidence = result.granted ? 0.86 : 0.62;
-      consistency = {
-        checked: false,
-        aligned: true,
-        reason: 'perms intent uses deterministic query directly'
-      };
-      if (!result.granted) {
-        reject(
-          'queries.perms',
-          'NO_OBJECT_OR_FIELD_GRANT',
-          'no granting path found for requested principal/object'
+      const permsFrame = plan.semanticFrame;
+      if (
+        permsFrame?.intent === 'permission_path_explanation' &&
+        permsFrame.admissibility.status !== 'accepted'
+      ) {
+        const frameReason = permsFrame.admissibility.reason ?? 'semantic_frame_blocked';
+        const targetLabel =
+          permsFrame.target?.raw ??
+          plan.entities.field ??
+          plan.entities.object ??
+          'the requested target';
+        answer =
+          frameReason === 'evidence_scope_unsupported'
+            ? 'Refused: latest-retrieve-only permission Ask is not supported. Permission reasoning still requires graph-wide access analysis outside the scoped retrieve.'
+            : `Refused: permission Ask blocked execution for \`${targetLabel}\` because the planner semantic frame was not admissible.`;
+        deterministicAnswer = answer;
+        confidence = 0.18;
+        consistency = {
+          checked: false,
+          aligned: true,
+          reason: `permission semantic frame blocked execution with reason ${frameReason}`
+        };
+        executionTrace.push(
+          'perms.semanticFrame=blocked',
+          `perms.semanticFrame.reason=${frameReason}`,
+          `perms.semanticFrame.target=${targetLabel}`
         );
+        reject(
+          'planner.semanticFrame',
+          'SEMANTIC_FRAME_BLOCKED',
+          `permission semantic frame blocked execution: ${frameReason}`
+        );
+      } else {
+        operatorsExecuted.push(COMPOSITION_OPERATORS.CONSTRAIN, COMPOSITION_OPERATORS.INTERSECT);
+        const user = plan.entities.user ?? 'jane@example.com';
+        const field =
+          permsFrame?.target?.kind === 'field' && permsFrame.target.selected
+            ? permsFrame.target.selected
+            : plan.entities.field;
+        const objectFromField =
+          typeof field === 'string' && field.includes('.') ? field.split('.')[0] : undefined;
+        const object =
+          permsFrame?.target?.kind === 'object' && permsFrame.target.selected
+            ? permsFrame.target.selected
+            : plan.entities.object ?? objectFromField ?? 'Case';
+        const result = await this.queries.perms(user, object, field);
+        answer = result.explanation;
+        deterministicAnswer = result.explanation;
+        confidence = result.granted ? 0.86 : 0.62;
+        consistency = {
+          checked: false,
+          aligned: true,
+          reason: 'perms intent uses deterministic query directly'
+        };
+        if (!result.granted) {
+          reject(
+            'queries.perms',
+            'NO_OBJECT_OR_FIELD_GRANT',
+            'no granting path found for requested principal/object'
+          );
+        }
       }
     } else if (plan.intent === 'automation') {
       const automationFrame = plan.semanticFrame;
