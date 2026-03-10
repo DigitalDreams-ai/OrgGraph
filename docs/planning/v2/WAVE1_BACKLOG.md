@@ -46,6 +46,7 @@ Purpose:
 | B022 | P3 | Telemetry | Add structured non-sensitive runtime telemetry for diagnostics correlation | Wave8 | Failure signatures and timings are traceable without exposing secrets | Open |
 | B023 | P3 | Automation | Expand deterministic test corpus for edge metadata families | Wave11 | Regression corpus includes expanded metadata family scenarios | Open |
 | B024 | P3 | Stabilization | Post-release hotfix/stabilization window before Stage 2 expansion | Wave13 | No unresolved P0/P1 within stabilization window | Open |
+| B027 | P2 | Ask | Add deterministic metadata-component usage lookup by metadata name/fullName (not Salesforce record Id) | Wave6 | Operator can ask where a retrieved component such as an Email Template, Flow, Layout, or Apex class is referenced using grounded metadata names; Salesforce record-Id usage asks fail closed with explicit unsupported guidance | Open |
 
 ## Wave1 Completion Criteria
 
