@@ -25,6 +25,13 @@ function run(): void {
   assert.equal(impactPlan.intent, 'impact');
   assert.equal(impactPlan.entities.field, 'Opportunity.StageName');
   assert.equal(impactPlan.entities.object, 'Opportunity');
+  assert.equal(impactPlan.semanticFrame?.version, 'v1');
+  assert.equal(impactPlan.semanticFrame?.intent, 'impact_analysis');
+  assert.equal(impactPlan.semanticFrame?.sourceMode, 'graph_global');
+  assert.equal(impactPlan.semanticFrame?.target?.kind, 'field');
+  assert.equal(impactPlan.semanticFrame?.target?.selected, 'Opportunity.StageName');
+  assert.equal(impactPlan.semanticFrame?.admissibility.status, 'accepted');
+  assert.equal(impactPlan.semanticFrame?.ambiguity.status, 'clear');
 
   const customImpactPlan = planner.plan(
     'What touches litify_pm__Matter__c.litify_pm__Status__c?'
@@ -32,10 +39,22 @@ function run(): void {
   assert.equal(customImpactPlan.intent, 'impact');
   assert.equal(customImpactPlan.entities.field, 'litify_pm__Matter__c.litify_pm__Status__c');
   assert.equal(customImpactPlan.entities.object, 'litify_pm__Matter__c');
+  assert.equal(customImpactPlan.semanticFrame?.target?.kind, 'field');
+  assert.equal(
+    customImpactPlan.semanticFrame?.target?.selected,
+    'litify_pm__Matter__c.litify_pm__Status__c'
+  );
+
+  const objectImpactPlan = planner.plan('What changes if object Opportunity is updated?');
+  assert.equal(objectImpactPlan.intent, 'impact');
+  assert.equal(objectImpactPlan.entities.object, 'Opportunity');
+  assert.equal(objectImpactPlan.semanticFrame?.target?.kind, 'object');
+  assert.equal(objectImpactPlan.semanticFrame?.target?.selected, 'Opportunity');
 
   const autoPlan = planner.plan('What runs on object Opportunity?');
   assert.equal(autoPlan.intent, 'automation');
   assert.equal(autoPlan.entities.object, 'Opportunity');
+  assert.equal(autoPlan.semanticFrame, undefined);
 
   const flowEvidencePlan = planner.plan(
     'Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.'
@@ -66,6 +85,19 @@ function run(): void {
   const normalizedImpactPlan = planner.plan('What changes if Opportunity.StageName is updated?');
   assert.equal(normalizedImpactPlan.intent, 'impact');
   assert.ok(normalizedImpactPlan.rewriteRules?.includes('impact_what_changes_if'));
+  assert.equal(normalizedImpactPlan.semanticFrame?.admissibility.status, 'accepted');
+
+  const latestRetrieveImpactPlan = planner.plan(
+    'Based only on the latest retrieve, what touches Opportunity.StageName?'
+  );
+  assert.equal(latestRetrieveImpactPlan.intent, 'impact');
+  assert.equal(latestRetrieveImpactPlan.semanticFrame?.sourceMode, 'latest_retrieve');
+
+  const ungroundedImpactPlan = planner.plan('What touches this?');
+  assert.equal(ungroundedImpactPlan.intent, 'impact');
+  assert.equal(ungroundedImpactPlan.semanticFrame?.admissibility.status, 'blocked');
+  assert.equal(ungroundedImpactPlan.semanticFrame?.admissibility.reason, 'no_grounded_target');
+  assert.equal(ungroundedImpactPlan.semanticFrame?.ambiguity.status, 'insufficient_evidence');
 
   const reviewRiskPlan = planner.plan('What is the real risk of changing Opportunity.StageName?');
   assert.equal(reviewRiskPlan.intent, 'review');

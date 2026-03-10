@@ -1200,11 +1200,26 @@ async function run(): Promise<void> {
     );
     const askLatestRetrieveImpact = (await askLatestRetrieveImpactRes.json()) as {
       trustLevel: string;
-      plan: { intent: string };
+      plan: {
+        intent: string;
+        semanticFrame?: {
+          intent: string;
+          sourceMode: string;
+          target?: { selected?: string; kind?: string };
+          admissibility: { status: string; reason: string | null };
+        };
+      };
       deterministicAnswer: string;
       consistency: { aligned: boolean; reason: string };
     };
     assert.equal(askLatestRetrieveImpact.plan.intent, 'impact');
+    assert.equal(askLatestRetrieveImpact.plan.semanticFrame?.intent, 'impact_analysis');
+    assert.equal(askLatestRetrieveImpact.plan.semanticFrame?.sourceMode, 'latest_retrieve');
+    assert.equal(
+      askLatestRetrieveImpact.plan.semanticFrame?.target?.selected,
+      'Opportunity.StageName'
+    );
+    assert.equal(askLatestRetrieveImpact.plan.semanticFrame?.admissibility.status, 'accepted');
     assert.notEqual(askLatestRetrieveImpact.trustLevel, 'refused');
     assert.match(
       askLatestRetrieveImpact.deterministicAnswer,
@@ -1280,10 +1295,23 @@ async function run(): Promise<void> {
     });
     assert.equal(askImpactRes.status, 201, 'ask impact should return 201');
     const askImpact = (await askImpactRes.json()) as {
-      plan: { intent: string };
+      plan: {
+        intent: string;
+        semanticFrame?: {
+          intent: string;
+          sourceMode: string;
+          target?: { selected?: string; kind?: string };
+          admissibility: { status: string; reason: string | null };
+        };
+      };
       consistency: { checked: boolean; aligned: boolean; reason: string };
     };
     assert.equal(askImpact.plan.intent, 'impact');
+    assert.equal(askImpact.plan.semanticFrame?.intent, 'impact_analysis');
+    assert.equal(askImpact.plan.semanticFrame?.sourceMode, 'graph_global');
+    assert.equal(askImpact.plan.semanticFrame?.target?.kind, 'field');
+    assert.equal(askImpact.plan.semanticFrame?.target?.selected, 'Opportunity.StageName');
+    assert.equal(askImpact.plan.semanticFrame?.admissibility.status, 'accepted');
     assert.equal(askImpact.consistency.checked, true);
     assert.equal(askImpact.consistency.aligned, true);
 
