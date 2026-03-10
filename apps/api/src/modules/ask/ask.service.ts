@@ -654,6 +654,11 @@ export class AskService {
       plan.intent === 'perms' &&
       Boolean(evidenceScope) &&
       plan.semanticFrame?.intent === 'permission_path_explanation';
+    const latestRetrieveScopedReviewApprovalQuery =
+      latestRetrieveRequested &&
+      plan.intent === 'review' &&
+      Boolean(evidenceScope) &&
+      plan.semanticFrame?.intent === 'approval_decision';
 
     if (latestRetrieveRequested && !evidenceScope) {
       answer =
@@ -676,7 +681,8 @@ export class AskService {
       !latestRetrieveFlowQuery &&
       !latestRetrieveScopedImpactQuery &&
       !latestRetrieveScopedAutomationQuery &&
-      !latestRetrieveScopedPermQuery
+      !latestRetrieveScopedPermQuery &&
+      !latestRetrieveScopedReviewApprovalQuery
     ) {
       answer =
         'Refused: latest-retrieve-only Ask is currently supported only for explicit Flow read/write asks and explicit retrieved field/object impact or automation asks. This query would require graph-wide analysis outside the scoped retrieve.';
@@ -694,192 +700,229 @@ export class AskService {
         'latest-retrieve-only query attempted an unsupported intent family'
       );
     } else if (plan.intent === 'review' && plan.reviewWorkflow) {
-      operatorsExecuted.push(
-        COMPOSITION_OPERATORS.OVERLAY,
-        COMPOSITION_OPERATORS.CONSTRAIN,
-        COMPOSITION_OPERATORS.INTERSECT
-      );
-      const user = plan.entities.user ?? 'jane@example.com';
-      const object = plan.entities.object ?? 'Opportunity';
-      const field = plan.entities.field;
-      const targetLabel = plan.reviewWorkflow.targetLabel;
-      const perms = await this.queries.perms(user, object, field);
-      const automations = await this.analysis.automation(
-        object,
-        undefined,
-        false,
-        false,
-        includeLowConfidence
-      );
-      const impact = field
-        ? await this.analysis.impact(field, undefined, false, false, false, includeLowConfidence)
-        : {
-            field: object,
-            paths: [],
-            totalPaths: 0,
-            explanation: `field-level impact unavailable for object-scoped review of ${object}`
-          };
+      const reviewFrame = plan.semanticFrame;
+      if (
+        reviewFrame?.intent === 'approval_decision' &&
+        reviewFrame.admissibility.status !== 'accepted'
+      ) {
+        const frameReason = reviewFrame.admissibility.reason ?? 'semantic_frame_blocked';
+        const targetLabel =
+          reviewFrame.target?.raw ??
+          plan.reviewWorkflow.targetLabel ??
+          plan.entities.field ??
+          plan.entities.object ??
+          'the requested target';
+        answer =
+          frameReason === 'evidence_scope_unsupported'
+            ? 'Refused: latest-retrieve-only approval review Ask is not supported. Approval review still requires graph-wide permission, automation, and impact analysis outside the scoped retrieve.'
+            : frameReason === 'no_grounded_target'
+              ? `Refused: approval review Ask could not ground a deterministic review target for \`${targetLabel}\`. Specify the exact object or field you want reviewed and try again.`
+              : `Refused: approval review Ask blocked execution for \`${targetLabel}\` because the planner semantic frame was not admissible.`;
+        deterministicAnswer = answer;
+        confidence = 0.18;
+        consistency = {
+          checked: consistencyCheck,
+          aligned: true,
+          reason: `review semantic frame blocked execution with reason ${frameReason}`
+        };
+        executionTrace.push(
+          'review.semanticFrame=blocked',
+          `review.semanticFrame.reason=${frameReason}`,
+          `review.semanticFrame.target=${targetLabel}`
+        );
+        reject(
+          'planner.semanticFrame',
+          'SEMANTIC_FRAME_BLOCKED',
+          `review semantic frame blocked execution: ${frameReason}`
+        );
+      } else {
+        operatorsExecuted.push(
+          COMPOSITION_OPERATORS.OVERLAY,
+          COMPOSITION_OPERATORS.CONSTRAIN,
+          COMPOSITION_OPERATORS.INTERSECT
+        );
+        const user = plan.entities.user ?? 'jane@example.com';
+        const object = plan.entities.object ?? 'Opportunity';
+        const field = plan.entities.field;
+        const targetLabel = plan.reviewWorkflow.targetLabel;
+        const perms = await this.queries.perms(user, object, field);
+        const automations = await this.analysis.automation(
+          object,
+          undefined,
+          false,
+          false,
+          includeLowConfidence
+        );
+        const impact = field
+          ? await this.analysis.impact(field, undefined, false, false, false, includeLowConfidence)
+          : {
+              field: object,
+              paths: [],
+              totalPaths: 0,
+              explanation: `field-level impact unavailable for object-scoped review of ${object}`
+            };
 
-      const reviewRiskScore = Number(
-        Math.min(
-          1,
-          (perms.granted ? 0.2 : 0.45) +
-            Math.min(0.25, automations.totalAutomations / 12) +
-            Math.min(0.3, impact.totalPaths / 18)
-        ).toFixed(3)
-      );
-      const riskLevel: AskDecisionPacket['riskLevel'] =
-        reviewRiskScore >= 0.7 ? 'high' : reviewRiskScore >= 0.4 ? 'medium' : 'low';
-      const recommendedAction =
-        plan.reviewWorkflow.focus === 'approval'
-          ? riskLevel === 'high'
-            ? 'do not approve yet'
-            : riskLevel === 'medium'
-              ? 'review before approving'
-              : 'approve with targeted verification'
-          : plan.reviewWorkflow.focus === 'breakage'
-            ? `expect ${impact.totalPaths} deterministic impact path(s)`
-            : `${riskLevel} review risk`;
-      const summary =
-        plan.reviewWorkflow.focus === 'approval'
-          ? `High-risk change review for ${targetLabel}: ${recommendedAction}.`
-          : plan.reviewWorkflow.focus === 'breakage'
-            ? `Change review for ${targetLabel}: ${recommendedAction}.`
-            : `High-risk change review for ${targetLabel}: ${recommendedAction}.`;
-      const evidenceCoverage = {
-        citationCount: citations.length,
-        hasPermissionPaths: perms.totalPaths > 0,
-        hasAutomationCoverage: automations.totalAutomations > 0,
-        hasImpactPaths: impact.totalPaths > 0
-      };
-      const topAutomationNames = [...new Set(automations.automations.map((item) => item.name))].slice(0, 3);
-      const topImpactedSources = [...new Set(impact.paths.map((item) => item.from))].slice(0, 3);
-      const topAutomationSummary =
-        topAutomationNames.length > 0 ? topAutomationNames.join(', ') : 'no deterministic automation names';
-      const topImpactSummary =
-        topImpactedSources.length > 0 ? topImpactedSources.join(', ') : 'no deterministic impact sources';
-      const topCitationSources = [
-        ...new Set(citations.map((citation) => this.toCitationSourceLabel(citation.sourcePath)))
-      ]
-        .sort((a, b) => a.localeCompare(b))
-        .slice(0, 3);
-      const topCitationSummary =
-        topCitationSources.length > 0
-          ? topCitationSources.join(', ')
-          : 'citation source labels unavailable';
-      const automationSpotlight =
-        topAutomationNames.length > 0
-          ? `top automation sources: ${topAutomationSummary}`
-          : `no deterministic automation names matched ${object}`;
-      const impactSpotlight =
-        topImpactedSources.length > 0
-          ? `top impact sources: ${topImpactSummary}`
-          : `no deterministic impact sources matched ${targetLabel}`;
-      const citationSpotlight =
-        topCitationSources.length > 0
-          ? `top citation sources: ${topCitationSummary}`
-          : 'top citation sources unavailable';
-      const topRiskDrivers = [
-        `${citations.length} citation(s) ground this decision packet`,
-        citationSpotlight,
-        `${impact.totalPaths} impact path(s) reference ${targetLabel}`,
-        `${automations.totalAutomations} automation item(s) touch ${object}`,
-        automationSpotlight,
-        impactSpotlight,
-        perms.granted
-          ? `${user} retains deterministic access coverage for ${field ?? object}`
-          : `${user} lacks deterministic access coverage for ${field ?? object}`
-      ];
-      const nextActions: AskDecisionPacket['nextActions'] = [
-        {
-          label: 'Inspect impacted automation',
-          rationale:
-            automations.totalAutomations > 0
-              ? `review the highest-scoring automations before changing the target. Start with ${topAutomationSummary}.`
-              : 'confirm no hidden automation exists outside the current snapshot'
-        },
-        {
-          label: 'Inspect permissions',
-          rationale: perms.explanation
-        },
-        {
-          label: field ? 'Inspect impact paths' : 'Open proof for object review',
-          rationale:
-            impact.totalPaths > 0
-              ? `${impact.explanation} Start with ${topImpactSummary}.`
-              : impact.explanation
-        },
-        {
-          label: 'Inspect citation sources',
-          rationale: `Validate decision grounding against: ${topCitationSummary}.`
+        const reviewRiskScore = Number(
+          Math.min(
+            1,
+            (perms.granted ? 0.2 : 0.45) +
+              Math.min(0.25, automations.totalAutomations / 12) +
+              Math.min(0.3, impact.totalPaths / 18)
+          ).toFixed(3)
+        );
+        const riskLevel: AskDecisionPacket['riskLevel'] =
+          reviewRiskScore >= 0.7 ? 'high' : reviewRiskScore >= 0.4 ? 'medium' : 'low';
+        const recommendedAction =
+          plan.reviewWorkflow.focus === 'approval'
+            ? riskLevel === 'high'
+              ? 'do not approve yet'
+              : riskLevel === 'medium'
+                ? 'review before approving'
+                : 'approve with targeted verification'
+            : plan.reviewWorkflow.focus === 'breakage'
+              ? `expect ${impact.totalPaths} deterministic impact path(s)`
+              : `${riskLevel} review risk`;
+        const summary =
+          plan.reviewWorkflow.focus === 'approval'
+            ? `High-risk change review for ${targetLabel}: ${recommendedAction}.`
+            : plan.reviewWorkflow.focus === 'breakage'
+              ? `Change review for ${targetLabel}: ${recommendedAction}.`
+              : `High-risk change review for ${targetLabel}: ${recommendedAction}.`;
+        const evidenceCoverage = {
+          citationCount: citations.length,
+          hasPermissionPaths: perms.totalPaths > 0,
+          hasAutomationCoverage: automations.totalAutomations > 0,
+          hasImpactPaths: impact.totalPaths > 0
+        };
+        const topAutomationNames = [...new Set(automations.automations.map((item) => item.name))].slice(0, 3);
+        const topImpactedSources = [...new Set(impact.paths.map((item) => item.from))].slice(0, 3);
+        const topAutomationSummary =
+          topAutomationNames.length > 0 ? topAutomationNames.join(', ') : 'no deterministic automation names';
+        const topImpactSummary =
+          topImpactedSources.length > 0 ? topImpactedSources.join(', ') : 'no deterministic impact sources';
+        const topCitationSources = [
+          ...new Set(citations.map((citation) => this.toCitationSourceLabel(citation.sourcePath)))
+        ]
+          .sort((a, b) => a.localeCompare(b))
+          .slice(0, 3);
+        const topCitationSummary =
+          topCitationSources.length > 0
+            ? topCitationSources.join(', ')
+            : 'citation source labels unavailable';
+        const automationSpotlight =
+          topAutomationNames.length > 0
+            ? `top automation sources: ${topAutomationSummary}`
+            : `no deterministic automation names matched ${object}`;
+        const impactSpotlight =
+          topImpactedSources.length > 0
+            ? `top impact sources: ${topImpactSummary}`
+            : `no deterministic impact sources matched ${targetLabel}`;
+        const citationSpotlight =
+          topCitationSources.length > 0
+            ? `top citation sources: ${topCitationSummary}`
+            : 'top citation sources unavailable';
+        const topRiskDrivers = [
+          `${citations.length} citation(s) ground this decision packet`,
+          citationSpotlight,
+          `${impact.totalPaths} impact path(s) reference ${targetLabel}`,
+          `${automations.totalAutomations} automation item(s) touch ${object}`,
+          automationSpotlight,
+          impactSpotlight,
+          perms.granted
+            ? `${user} retains deterministic access coverage for ${field ?? object}`
+            : `${user} lacks deterministic access coverage for ${field ?? object}`
+        ];
+        const nextActions: AskDecisionPacket['nextActions'] = [
+          {
+            label: 'Inspect impacted automation',
+            rationale:
+              automations.totalAutomations > 0
+                ? `review the highest-scoring automations before changing the target. Start with ${topAutomationSummary}.`
+                : 'confirm no hidden automation exists outside the current snapshot'
+          },
+          {
+            label: 'Inspect permissions',
+            rationale: perms.explanation
+          },
+          {
+            label: field ? 'Inspect impact paths' : 'Open proof for object review',
+            rationale:
+              impact.totalPaths > 0
+                ? `${impact.explanation} Start with ${topImpactSummary}.`
+                : impact.explanation
+          },
+          {
+            label: 'Inspect citation sources',
+            rationale: `Validate decision grounding against: ${topCitationSummary}.`
+          }
+        ];
+        if (citations.length < 3) {
+          nextActions.unshift({
+            label: 'Retrieve broader metadata scope',
+            rationale:
+              'only limited citations grounded this packet. Retrieve adjacent metadata families and rerun Ask before approval.'
+          });
         }
-      ];
-      if (citations.length < 3) {
-        nextActions.unshift({
-          label: 'Retrieve broader metadata scope',
-          rationale:
-            'only limited citations grounded this packet. Retrieve adjacent metadata families and rerun Ask before approval.'
-        });
-      }
-      decisionPacket = {
-        kind: 'high_risk_change_review',
-        focus: plan.reviewWorkflow.focus,
-        targetLabel,
-        targetType: plan.reviewWorkflow.targetType,
-        summary,
-        riskScore: reviewRiskScore,
-        riskLevel,
-        evidenceCoverage,
-        topRiskDrivers,
-        permissionImpact: {
-          user,
-          summary: perms.explanation,
-          granted: perms.granted,
-          pathCount: perms.totalPaths,
-          principalCount: perms.principalsChecked.length,
-          warnings: perms.warnings
-        },
-        automationImpact: {
-          summary: automations.explanation,
-          automationCount: automations.totalAutomations,
-          topAutomationNames
-        },
-        changeImpact: {
-          summary: impact.explanation,
-          impactPathCount: impact.totalPaths,
-          topImpactedSources
-        },
-        nextActions
-      };
-      answer =
-        `${summary} Permission impact: ${perms.explanation}. ` +
-        `Automation impact: ${automations.explanation}. ` +
-        `Change impact: ${impact.explanation}.`;
-      executionTrace.push(
-        `review.compilerRule=${plan.reviewWorkflow.compilerRuleId}`,
-        `review.action=${plan.reviewWorkflow.action}`,
-        `review.focus=${plan.reviewWorkflow.focus}`,
-        `review.target=${targetLabel}`,
-        `review.citation.sources=${String(topCitationSources.length)}`,
-        `review.perms.granted=${String(perms.granted)}`,
-        `review.automation.count=${String(automations.totalAutomations)}`,
-        `review.impact.paths=${String(impact.totalPaths)}`
-      );
-      confidence =
-        riskLevel === 'high' ? 0.91 : riskLevel === 'medium' ? 0.86 : 0.82;
-      consistency = {
-        checked: consistencyCheck,
-        aligned: true,
-        reason: 'review intent composes perms, automation, and impact into one deterministic review packet'
-      };
-      if (!perms.granted) {
-        reject('queries.perms', 'NO_OBJECT_OR_FIELD_GRANT', 'review packet found no deterministic access grant');
-      }
-      if (automations.totalAutomations === 0) {
-        reject('analysis.automation', 'NO_AUTOMATION_MATCH', 'review packet found no automation coverage');
-      }
-      if (field && impact.totalPaths === 0) {
-        reject('analysis.impact', 'NO_IMPACT_PATHS', 'review packet found no deterministic impact paths');
+        decisionPacket = {
+          kind: 'high_risk_change_review',
+          focus: plan.reviewWorkflow.focus,
+          targetLabel,
+          targetType: plan.reviewWorkflow.targetType,
+          summary,
+          riskScore: reviewRiskScore,
+          riskLevel,
+          evidenceCoverage,
+          topRiskDrivers,
+          permissionImpact: {
+            user,
+            summary: perms.explanation,
+            granted: perms.granted,
+            pathCount: perms.totalPaths,
+            principalCount: perms.principalsChecked.length,
+            warnings: perms.warnings
+          },
+          automationImpact: {
+            summary: automations.explanation,
+            automationCount: automations.totalAutomations,
+            topAutomationNames
+          },
+          changeImpact: {
+            summary: impact.explanation,
+            impactPathCount: impact.totalPaths,
+            topImpactedSources
+          },
+          nextActions
+        };
+        answer =
+          `${summary} Permission impact: ${perms.explanation}. ` +
+          `Automation impact: ${automations.explanation}. ` +
+          `Change impact: ${impact.explanation}.`;
+        executionTrace.push(
+          `review.compilerRule=${plan.reviewWorkflow.compilerRuleId}`,
+          `review.action=${plan.reviewWorkflow.action}`,
+          `review.focus=${plan.reviewWorkflow.focus}`,
+          `review.target=${targetLabel}`,
+          `review.citation.sources=${String(topCitationSources.length)}`,
+          `review.perms.granted=${String(perms.granted)}`,
+          `review.automation.count=${String(automations.totalAutomations)}`,
+          `review.impact.paths=${String(impact.totalPaths)}`
+        );
+        confidence =
+          riskLevel === 'high' ? 0.91 : riskLevel === 'medium' ? 0.86 : 0.82;
+        consistency = {
+          checked: consistencyCheck,
+          aligned: true,
+          reason: 'review intent composes perms, automation, and impact into one deterministic review packet'
+        };
+        if (!perms.granted) {
+          reject('queries.perms', 'NO_OBJECT_OR_FIELD_GRANT', 'review packet found no deterministic access grant');
+        }
+        if (automations.totalAutomations === 0) {
+          reject('analysis.automation', 'NO_AUTOMATION_MATCH', 'review packet found no automation coverage');
+        }
+        if (field && impact.totalPaths === 0) {
+          reject('analysis.impact', 'NO_IMPACT_PATHS', 'review packet found no deterministic impact paths');
+        }
       }
     } else if (plan.intent === 'mixed') {
       operatorsExecuted.push(
