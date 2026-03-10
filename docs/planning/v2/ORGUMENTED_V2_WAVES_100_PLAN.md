@@ -134,7 +134,7 @@ Mandatory:
 | wave3 | sessions and toolchain reliability | B004, B005 | Complete | Session state persists active alias/switch timestamps and restore alias remains deterministic across relaunch |
 | wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
 | wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |
-| wave6 | ask planner/compiler depth | B003, B009 | In Progress | Semantic-frame rollout for the next bounded Ask family beyond impact, automation, and perms |
+| wave6 | ask planner/compiler depth | B003, B009 | In Progress | Promote review approval semantic frames from shadow mode to the active execution gate |
 | wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | Open | Structured triage without raw JSON dependence |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first reopen/replay/export complete |
@@ -243,7 +243,7 @@ Exit:
 - planner/integration/replay tests pass for selected families
 - measurable fallback-rate reduction on real metadata asks
 - explicit named metadata asks do not degrade to weak stop-word object inference
-- semantic-frame v1 is active for impact + bounded automation + bounded perms asks, with the next family chosen by measured operator value
+- semantic-frame v1 is active for impact + bounded automation + bounded perms asks, and shadow mode now also covers bounded review approval asks before any review-family runtime gating
 
 ## wave7 - Decision Packet Quality
 
