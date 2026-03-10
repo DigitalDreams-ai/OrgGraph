@@ -72,6 +72,59 @@ export class PlannerService {
     object?: string,
     field?: string
   ): AskSemanticFrameV1 | undefined {
+    if (intent === 'perms') {
+      const sourceMode: AskSemanticFrameSourceMode = /\blatest retrieve\b/i.test(normalizedQuery)
+        ? 'latest_retrieve'
+        : 'graph_global';
+      const target = this.buildMetadataTarget(field, object);
+      const latestRetrieveUnsupported = sourceMode === 'latest_retrieve';
+
+      return {
+        version: 'v1',
+        intent: 'permission_path_explanation',
+        target: target ?? undefined,
+        sourceMode,
+        scope: {
+          snapshot: 'current',
+          orgSession: 'active'
+        },
+        modifiers: {
+          includeAutomation: false,
+          includePermissions: true,
+          includeEvidence: true,
+          includeProof: false
+        },
+        admissibility: latestRetrieveUnsupported
+          ? {
+              status: 'blocked',
+              reason: 'evidence_scope_unsupported'
+            }
+          : target
+          ? {
+              status: 'accepted',
+              reason: null
+            }
+          : {
+              status: 'blocked',
+              reason: 'no_grounded_target'
+            },
+        ambiguity: latestRetrieveUnsupported
+          ? {
+              status: 'unsupported_question',
+              issues: ['evidence_scope_unsupported']
+            }
+          : target
+          ? {
+              status: 'clear',
+              issues: []
+            }
+          : {
+              status: 'insufficient_evidence',
+              issues: ['no_grounded_target']
+            }
+      };
+    }
+
     if (intent === 'impact') {
       const sourceMode: AskSemanticFrameSourceMode = /\blatest retrieve\b/i.test(normalizedQuery)
         ? 'latest_retrieve'
