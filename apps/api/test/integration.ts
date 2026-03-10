@@ -1568,6 +1568,12 @@ async function run(): Promise<void> {
           focus: string;
           targetLabel: string;
         };
+        semanticFrame?: {
+          intent: string;
+          sourceMode: string;
+          target?: { kind?: string; selected?: string };
+          admissibility: { status: string; reason: string | null };
+        };
       };
       trustLevel: string;
       proof: { proofId: string; replayToken: string };
@@ -1597,6 +1603,11 @@ async function run(): Promise<void> {
     assert.equal(askReview.plan.reviewWorkflow?.action, 'change');
     assert.equal(askReview.plan.reviewWorkflow?.focus, 'approval');
     assert.equal(askReview.plan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
+    assert.equal(askReview.plan.semanticFrame?.intent, 'approval_decision');
+    assert.equal(askReview.plan.semanticFrame?.sourceMode, 'graph_global');
+    assert.equal(askReview.plan.semanticFrame?.target?.kind, 'field');
+    assert.equal(askReview.plan.semanticFrame?.target?.selected, 'Opportunity.StageName');
+    assert.equal(askReview.plan.semanticFrame?.admissibility.status, 'accepted');
     assert.ok(['trusted', 'conditional'].includes(askReview.trustLevel));
     assert.equal(askReview.decisionPacket?.kind, 'high_risk_change_review');
     assert.equal(askReview.decisionPacket?.focus, 'approval');
@@ -1726,6 +1737,54 @@ async function run(): Promise<void> {
     assert.equal(askReviewVariant.plan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
     assert.equal(askReviewVariant.decisionPacket?.focus, askReview.decisionPacket?.focus);
     assert.equal(askReviewVariant.decisionPacket?.targetLabel, askReview.decisionPacket?.targetLabel);
+
+    const askLatestRetrieveReviewUnsupportedRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query:
+          'Based only on the latest retrieve, should we approve changing Opportunity.StageName for jane@example.com?',
+        evidenceScope: latestRetrieveEvidenceScope
+      })
+    });
+    assert.equal(
+      askLatestRetrieveReviewUnsupportedRes.status,
+      201,
+      'latest retrieve review ask should fail closed with 201'
+    );
+    const askLatestRetrieveReviewUnsupported = (await askLatestRetrieveReviewUnsupportedRes.json()) as {
+      trustLevel: string;
+      deterministicAnswer: string;
+      plan?: {
+        intent?: string;
+        semanticFrame?: {
+          intent: string;
+          sourceMode: string;
+          target?: { selected?: string; kind?: string };
+          admissibility: { status: string; reason: string | null };
+        };
+      };
+    };
+    assert.equal(askLatestRetrieveReviewUnsupported.plan?.intent, 'review');
+    assert.equal(askLatestRetrieveReviewUnsupported.plan?.semanticFrame?.intent, 'approval_decision');
+    assert.equal(askLatestRetrieveReviewUnsupported.plan?.semanticFrame?.sourceMode, 'latest_retrieve');
+    assert.equal(
+      askLatestRetrieveReviewUnsupported.plan?.semanticFrame?.target?.selected,
+      'Opportunity.StageName'
+    );
+    assert.equal(
+      askLatestRetrieveReviewUnsupported.plan?.semanticFrame?.admissibility.status,
+      'blocked'
+    );
+    assert.equal(
+      askLatestRetrieveReviewUnsupported.plan?.semanticFrame?.admissibility.reason,
+      'evidence_scope_unsupported'
+    );
+    assert.equal(askLatestRetrieveReviewUnsupported.trustLevel, 'refused');
+    assert.match(
+      askLatestRetrieveReviewUnsupported.deterministicAnswer,
+      /supported only for explicit Flow read\/write asks and explicit retrieved field\/object impact or automation asks/i
+    );
     assert.equal(askReviewVariant.decisionPacket?.riskScore, askReview.decisionPacket?.riskScore);
     assert.equal(askReviewVariant.decisionPacket?.summary, askReview.decisionPacket?.summary);
     assert.deepEqual(

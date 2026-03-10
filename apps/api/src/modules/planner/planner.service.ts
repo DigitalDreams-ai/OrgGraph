@@ -62,7 +62,7 @@ export class PlannerService {
       graphCalls,
       evidenceCalls: ['evidence.search'],
       reviewWorkflow,
-      semanticFrame: this.buildSemanticFrame(intent, normalizedQuery, object, field)
+      semanticFrame: this.buildSemanticFrame(intent, normalizedQuery, object, field, reviewWorkflow)
     };
   }
 
@@ -70,8 +70,65 @@ export class PlannerService {
     intent: AskIntent,
     normalizedQuery: string,
     object?: string,
-    field?: string
+    field?: string,
+    reviewWorkflow?: AskReviewWorkflow
   ): AskSemanticFrameV1 | undefined {
+    if (intent === 'review' && reviewWorkflow?.focus === 'approval') {
+      const sourceMode: AskSemanticFrameSourceMode = /\blatest retrieve\b/i.test(normalizedQuery)
+        ? 'latest_retrieve'
+        : 'graph_global';
+      const target =
+        reviewWorkflow.targetType === 'field'
+          ? this.buildMetadataTarget(reviewWorkflow.targetLabel, undefined)
+          : this.buildMetadataTarget(undefined, reviewWorkflow.targetLabel);
+      const latestRetrieveUnsupported = sourceMode === 'latest_retrieve';
+
+      return {
+        version: 'v1',
+        intent: 'approval_decision',
+        target: target ?? undefined,
+        sourceMode,
+        scope: {
+          snapshot: 'current',
+          orgSession: 'active'
+        },
+        modifiers: {
+          includeAutomation: true,
+          includePermissions: true,
+          includeEvidence: true,
+          includeProof: true
+        },
+        admissibility: latestRetrieveUnsupported
+          ? {
+              status: 'blocked',
+              reason: 'evidence_scope_unsupported'
+            }
+          : target
+          ? {
+              status: 'accepted',
+              reason: null
+            }
+          : {
+              status: 'blocked',
+              reason: 'no_grounded_target'
+            },
+        ambiguity: latestRetrieveUnsupported
+          ? {
+              status: 'unsupported_question',
+              issues: ['evidence_scope_unsupported']
+            }
+          : target
+          ? {
+              status: 'clear',
+              issues: []
+            }
+          : {
+              status: 'insufficient_evidence',
+              issues: ['no_grounded_target']
+            }
+      };
+    }
+
     if (intent === 'perms') {
       const sourceMode: AskSemanticFrameSourceMode = /\blatest retrieve\b/i.test(normalizedQuery)
         ? 'latest_retrieve'

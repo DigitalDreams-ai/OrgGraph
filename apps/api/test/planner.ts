@@ -175,6 +175,13 @@ function run(): void {
   assert.equal(reviewApprovalPlan.entities.user, 'jane@example.com');
   assert.equal(reviewApprovalPlan.reviewWorkflow?.compilerRuleId, 'review_approval_change');
   assert.equal(reviewApprovalPlan.reviewWorkflow?.focus, 'approval');
+  assert.equal(reviewApprovalPlan.semanticFrame?.version, 'v1');
+  assert.equal(reviewApprovalPlan.semanticFrame?.intent, 'approval_decision');
+  assert.equal(reviewApprovalPlan.semanticFrame?.sourceMode, 'graph_global');
+  assert.equal(reviewApprovalPlan.semanticFrame?.target?.kind, 'field');
+  assert.equal(reviewApprovalPlan.semanticFrame?.target?.selected, 'Opportunity.StageName');
+  assert.equal(reviewApprovalPlan.semanticFrame?.admissibility.status, 'accepted');
+  assert.equal(reviewApprovalPlan.semanticFrame?.ambiguity.status, 'clear');
 
   const reviewApprovalVariantPlan = planner.plan(
     'Approve the Opportunity.StageName change for jane@example.com.'
@@ -184,17 +191,35 @@ function run(): void {
   assert.equal(reviewApprovalVariantPlan.reviewWorkflow?.compilerRuleId, 'review_approval_change');
   assert.equal(reviewApprovalVariantPlan.reviewWorkflow?.focus, 'approval');
   assert.equal(reviewApprovalVariantPlan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
+  assert.equal(reviewApprovalVariantPlan.semanticFrame?.intent, 'approval_decision');
+  assert.equal(reviewApprovalVariantPlan.semanticFrame?.target?.selected, 'Opportunity.StageName');
+
+  const latestRetrieveReviewApprovalPlan = planner.plan(
+    'Based only on the latest retrieve, should we approve changing Opportunity.StageName for jane@example.com?'
+  );
+  assert.equal(latestRetrieveReviewApprovalPlan.intent, 'review');
+  assert.equal(latestRetrieveReviewApprovalPlan.semanticFrame?.intent, 'approval_decision');
+  assert.equal(latestRetrieveReviewApprovalPlan.semanticFrame?.sourceMode, 'latest_retrieve');
+  assert.equal(latestRetrieveReviewApprovalPlan.semanticFrame?.target?.selected, 'Opportunity.StageName');
+  assert.equal(latestRetrieveReviewApprovalPlan.semanticFrame?.admissibility.status, 'blocked');
+  assert.equal(
+    latestRetrieveReviewApprovalPlan.semanticFrame?.admissibility.reason,
+    'evidence_scope_unsupported'
+  );
+  assert.equal(latestRetrieveReviewApprovalPlan.semanticFrame?.ambiguity.status, 'unsupported_question');
 
   const reviewBreakagePlan = planner.plan('What breaks if we change Opportunity.StageName?');
   assert.equal(reviewBreakagePlan.intent, 'review');
   assert.equal(reviewBreakagePlan.reviewWorkflow?.compilerRuleId, 'review_breakage_change');
   assert.equal(reviewBreakagePlan.reviewWorkflow?.focus, 'breakage');
+  assert.equal(reviewBreakagePlan.semanticFrame, undefined);
 
   const reviewRiskVariantPlan = planner.plan('Review the change risk for Opportunity.StageName.');
   assert.equal(reviewRiskVariantPlan.intent, 'review');
   assert.equal(reviewRiskVariantPlan.reviewWorkflow?.compilerRuleId, 'review_risk_change');
   assert.equal(reviewRiskVariantPlan.reviewWorkflow?.focus, 'risk');
   assert.equal(reviewRiskVariantPlan.reviewWorkflow?.targetLabel, 'Opportunity.StageName');
+  assert.equal(reviewRiskVariantPlan.semanticFrame, undefined);
 
   const nonReviewApprovalPlan = planner.plan('Should we approve jane@example.com for Opportunity?');
   assert.notEqual(nonReviewApprovalPlan.intent, 'review');
