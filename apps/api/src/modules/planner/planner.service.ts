@@ -96,19 +96,29 @@ export class PlannerService {
         includeEvidence: true,
         includeProof: false
       },
-      admissibility: target
+      admissibility: field
         ? {
             status: 'accepted',
             reason: null
+          }
+        : target
+        ? {
+            status: 'blocked',
+            reason: 'unsupported_target_kind'
           }
         : {
             status: 'blocked',
             reason: 'no_grounded_target'
           },
-      ambiguity: target
+      ambiguity: field
         ? {
             status: 'clear',
             issues: []
+          }
+        : target
+        ? {
+            status: 'unsupported_question',
+            issues: ['unsupported_target_kind']
           }
         : {
             status: 'insufficient_evidence',

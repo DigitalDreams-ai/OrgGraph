@@ -236,6 +236,7 @@ Scope:
 - stable compiler rule IDs and replay-safe traces
 - adopt a narrow semantic-frame contract before committing to any parser framework choice
 - start semantic-frame shadow mode on one bounded Ask family before any routing replacement
+- promote semantic-frame admissibility to the active execution gate for that family once parity is proven
 
 Exit:
 - planner/integration/replay tests pass for selected families

@@ -50,6 +50,9 @@ function run(): void {
   assert.equal(objectImpactPlan.entities.object, 'Opportunity');
   assert.equal(objectImpactPlan.semanticFrame?.target?.kind, 'object');
   assert.equal(objectImpactPlan.semanticFrame?.target?.selected, 'Opportunity');
+  assert.equal(objectImpactPlan.semanticFrame?.admissibility.status, 'blocked');
+  assert.equal(objectImpactPlan.semanticFrame?.admissibility.reason, 'unsupported_target_kind');
+  assert.equal(objectImpactPlan.semanticFrame?.ambiguity.status, 'unsupported_question');
 
   const autoPlan = planner.plan('What runs on object Opportunity?');
   assert.equal(autoPlan.intent, 'automation');

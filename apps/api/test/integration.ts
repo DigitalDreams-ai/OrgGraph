@@ -1315,6 +1315,73 @@ async function run(): Promise<void> {
     assert.equal(askImpact.consistency.checked, true);
     assert.equal(askImpact.consistency.aligned, true);
 
+    const askBlockedImpactRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: 'What touches this?' })
+    });
+    assert.equal(askBlockedImpactRes.status, 201, 'blocked impact ask should return 201');
+    const askBlockedImpact = (await askBlockedImpactRes.json()) as {
+      trustLevel: string;
+      deterministicAnswer: string;
+      refusalReasons?: string[];
+      plan: {
+        intent: string;
+        semanticFrame?: {
+          admissibility: { status: string; reason: string | null };
+        };
+      };
+      proof: { rejectedBranches: Array<{ reasonCode: string }> };
+    };
+    assert.equal(askBlockedImpact.plan.intent, 'impact');
+    assert.equal(askBlockedImpact.plan.semanticFrame?.admissibility.status, 'blocked');
+    assert.equal(askBlockedImpact.plan.semanticFrame?.admissibility.reason, 'no_grounded_target');
+    assert.equal(askBlockedImpact.trustLevel, 'refused');
+    assert.match(
+      askBlockedImpact.deterministicAnswer,
+      /could not ground a deterministic target from the query/i
+    );
+    assert.ok(
+      askBlockedImpact.proof.rejectedBranches.some(
+        (branch) => branch.reasonCode === 'SEMANTIC_FRAME_BLOCKED'
+      )
+    );
+
+    const askUnsupportedImpactRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: 'What changes if object Opportunity is updated?' })
+    });
+    assert.equal(askUnsupportedImpactRes.status, 201, 'unsupported object impact ask should return 201');
+    const askUnsupportedImpact = (await askUnsupportedImpactRes.json()) as {
+      trustLevel: string;
+      deterministicAnswer: string;
+      plan: {
+        intent: string;
+        semanticFrame?: {
+          admissibility: { status: string; reason: string | null };
+          target?: { kind?: string; selected?: string };
+        };
+      };
+      proof: { rejectedBranches: Array<{ reasonCode: string }> };
+    };
+    assert.equal(askUnsupportedImpact.plan.intent, 'impact');
+    assert.equal(askUnsupportedImpact.plan.semanticFrame?.target?.kind, 'object');
+    assert.equal(
+      askUnsupportedImpact.plan.semanticFrame?.admissibility.reason,
+      'unsupported_target_kind'
+    );
+    assert.equal(askUnsupportedImpact.trustLevel, 'refused');
+    assert.match(
+      askUnsupportedImpact.deterministicAnswer,
+      /supports grounded field targets only/i
+    );
+    assert.ok(
+      askUnsupportedImpact.proof.rejectedBranches.some(
+        (branch) => branch.reasonCode === 'SEMANTIC_FRAME_BLOCKED'
+      )
+    );
+
     const askMixedRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

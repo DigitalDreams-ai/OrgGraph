@@ -1152,8 +1152,37 @@ export class AskService {
         }
       }
     } else if (plan.intent === 'impact') {
+      const impactFrame = plan.semanticFrame;
+      if (impactFrame && impactFrame.admissibility.status !== 'accepted') {
+        const frameReason = impactFrame.admissibility.reason ?? 'semantic_frame_blocked';
+        const targetLabel = impactFrame.target?.raw ?? plan.entities.field ?? plan.entities.object ?? 'the requested target';
+        answer =
+          frameReason === 'unsupported_target_kind'
+            ? `Refused: impact Ask currently supports grounded field targets only. \`${targetLabel}\` resolved to an unsupported target kind for this workflow.`
+            : `Refused: impact Ask could not ground a deterministic target from the query. Specify an exact field like \`Object.Field\` and try again.`;
+        deterministicAnswer = answer;
+        confidence = 0.18;
+        consistency = {
+          checked: consistencyCheck,
+          aligned: true,
+          reason: `impact semantic frame blocked execution with reason ${frameReason}`
+        };
+        executionTrace.push(
+          'impact.semanticFrame=blocked',
+          `impact.semanticFrame.reason=${frameReason}`,
+          `impact.semanticFrame.target=${targetLabel}`
+        );
+        reject(
+          'planner.semanticFrame',
+          'SEMANTIC_FRAME_BLOCKED',
+          `impact semantic frame blocked execution: ${frameReason}`
+        );
+      } else {
       operatorsExecuted.push(COMPOSITION_OPERATORS.OVERLAY, COMPOSITION_OPERATORS.CONSTRAIN);
-      const field = plan.entities.field ?? 'Opportunity.StageName';
+      const field =
+        impactFrame?.target?.kind === 'field' && impactFrame.target.selected
+          ? impactFrame.target.selected
+          : plan.entities.field ?? 'Opportunity.StageName';
       if (latestRetrieveRequested && evidenceScope && this.evidenceScopeContainsField(evidenceScope, field)) {
         let scopedSummary = this.buildScopedMetadataEvidenceSummary({
           targetLabel: field,
@@ -1240,6 +1269,7 @@ export class AskService {
         if (result.paths.length === 0) {
           reject('analysis.impact', 'NO_IMPACT_PATHS', 'no impact paths found for requested field');
         }
+      }
       }
     } else {
       reject('planner.default', 'NO_DETERMINISTIC_INTENT', 'no deterministic graph intent matched query');
