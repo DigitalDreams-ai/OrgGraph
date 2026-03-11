@@ -54,6 +54,20 @@ interface FlowEvidenceSummary {
   triggerTypes: string[];
 }
 
+interface ComponentLookupTarget {
+  displayLabel: string;
+  componentName: string;
+  familyHint?:
+    | 'flow'
+    | 'layout'
+    | 'apex_class'
+    | 'apex_trigger'
+    | 'custom_object'
+    | 'custom_field'
+    | 'email_template'
+    | 'tab';
+}
+
 @Injectable()
 export class AskService {
   private static readonly LLM_MIN_CONFIDENCE = 0.6;
@@ -2372,11 +2386,54 @@ export class AskService {
   }
 
   private buildComponentUsageLookupQueries(targetLabel: string): string[] {
-    const normalized = targetLabel.trim();
-    const queries = new Set<string>([normalized]);
-    queries.add(normalized.replace(/\s+/g, '_'));
-    queries.add(normalized.replace(/_/g, ' '));
-    queries.add(normalized.replace(/[^\w.]+/g, ' ').replace(/\s+/g, ' ').trim());
+    const parsed = this.parseComponentLookupTarget(targetLabel);
+    const queries = new Set<string>();
+    this.addComponentUsageQueryVariants(queries, parsed.displayLabel);
+    this.addComponentUsageQueryVariants(queries, parsed.componentName);
+
+    switch (parsed.familyHint) {
+      case 'flow':
+        queries.add(`${parsed.componentName}.flow-meta.xml`);
+        queries.add(`flows/${parsed.componentName}`);
+        queries.add(`Flow:${parsed.componentName}`);
+        break;
+      case 'layout':
+        queries.add(`${parsed.componentName}.layout-meta.xml`);
+        queries.add(`layouts/${parsed.componentName}`);
+        queries.add(`<fullName>${parsed.componentName}</fullName>`);
+        break;
+      case 'apex_class':
+        queries.add(`${parsed.componentName}.cls`);
+        queries.add(`classes/${parsed.componentName}`);
+        queries.add(`class ${parsed.componentName}`);
+        break;
+      case 'apex_trigger':
+        queries.add(`${parsed.componentName}.trigger`);
+        queries.add(`triggers/${parsed.componentName}`);
+        break;
+      case 'custom_object':
+        queries.add(`${parsed.componentName}.object-meta.xml`);
+        queries.add(`objects/${parsed.componentName}`);
+        break;
+      case 'custom_field': {
+        const [, fieldName = parsed.componentName] = parsed.componentName.split('.', 2);
+        queries.add(`${fieldName}.field-meta.xml`);
+        queries.add(`fields/${fieldName}`);
+        break;
+      }
+      case 'email_template':
+        queries.add(`${parsed.componentName}.email`);
+        queries.add(`${parsed.componentName}.email-meta.xml`);
+        queries.add(`emailtemplate ${parsed.componentName}`);
+        break;
+      case 'tab':
+        queries.add(`${parsed.componentName}.tab-meta.xml`);
+        queries.add(`tabs/${parsed.componentName}`);
+        break;
+      default:
+        break;
+    }
+
     return [...queries].filter((query) => query.length > 0);
   }
 
@@ -2422,23 +2479,70 @@ export class AskService {
   }
 
   private inferComponentDefinitionLabels(targetLabel: string): string[] {
-    const normalized = targetLabel.trim().replace(/^the\s+/i, '');
-    const matchers: Array<[RegExp, (name: string) => string[]]> = [
-      [/^flow\s+(.+)$/i, (name) => [`${name}.flow-meta.xml`]],
-      [/^layout\s+(.+)$/i, (name) => [`${name}.layout-meta.xml`]],
-      [/^(?:apex\s+class|class)\s+(.+)$/i, (name) => [`${name}.cls`]],
-      [/^(?:apex\s+trigger|trigger)\s+(.+)$/i, (name) => [`${name}.trigger`]],
-      [/^(?:custom object|object)\s+(.+)$/i, (name) => [`${name}.object-meta.xml`]]
+    const parsed = this.parseComponentLookupTarget(targetLabel);
+    switch (parsed.familyHint) {
+      case 'flow':
+        return [`${parsed.componentName}.flow-meta.xml`];
+      case 'layout':
+        return [`${parsed.componentName}.layout-meta.xml`];
+      case 'apex_class':
+        return [`${parsed.componentName}.cls`];
+      case 'apex_trigger':
+        return [`${parsed.componentName}.trigger`];
+      case 'custom_object':
+        return [`${parsed.componentName}.object-meta.xml`];
+      case 'custom_field': {
+        const [, fieldName = parsed.componentName] = parsed.componentName.split('.', 2);
+        return [`${fieldName}.field-meta.xml`];
+      }
+      case 'email_template':
+        return [`${parsed.componentName}.email`, `${parsed.componentName}.email-meta.xml`];
+      case 'tab':
+        return [`${parsed.componentName}.tab-meta.xml`];
+      default:
+        return [];
+    }
+  }
+
+  private addComponentUsageQueryVariants(target: Set<string>, value: string): void {
+    const normalized = value.trim();
+    if (normalized.length === 0) {
+      return;
+    }
+    target.add(normalized);
+    target.add(normalized.replace(/\s+/g, '_'));
+    target.add(normalized.replace(/_/g, ' '));
+    target.add(normalized.replace(/[^\w.]+/g, ' ').replace(/\s+/g, ' ').trim());
+  }
+
+  private parseComponentLookupTarget(targetLabel: string): ComponentLookupTarget {
+    const displayLabel = targetLabel.trim().replace(/^the\s+/i, '').trim();
+    const matchers: Array<[RegExp, ComponentLookupTarget['familyHint']]> = [
+      [/^flow\s+(.+)$/i, 'flow'],
+      [/^layout\s+(.+)$/i, 'layout'],
+      [/^(?:apex\s+class|class)\s+(.+)$/i, 'apex_class'],
+      [/^(?:apex\s+trigger|trigger)\s+(.+)$/i, 'apex_trigger'],
+      [/^(?:custom object|object)\s+(.+)$/i, 'custom_object'],
+      [/^(?:custom field|field)\s+(.+)$/i, 'custom_field'],
+      [/^(?:email template|template)\s+(.+)$/i, 'email_template'],
+      [/^(?:custom tab|tab)\s+(.+)$/i, 'tab']
     ];
 
-    for (const [pattern, build] of matchers) {
-      const match = normalized.match(pattern);
+    for (const [pattern, familyHint] of matchers) {
+      const match = displayLabel.match(pattern);
       if (match?.[1]) {
-        return build(match[1].trim());
+        return {
+          displayLabel,
+          componentName: match[1].trim(),
+          familyHint
+        };
       }
     }
 
-    return [];
+    return {
+      displayLabel,
+      componentName: displayLabel
+    };
   }
 
   private normalizeAutomationObject(candidate?: string): string | undefined {

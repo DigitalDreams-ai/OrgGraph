@@ -226,6 +226,18 @@ function run(): void {
   assert.equal(componentUsagePlan.semanticFrame?.admissibility.status, 'accepted');
   assert.equal(componentUsagePlan.semanticFrame?.ambiguity.status, 'clear');
 
+  const componentUsageFlowPlan = planner.plan(
+    'Where is Flow Civil_Rights_Intake_Questionnaire used?'
+  );
+  assert.equal(componentUsageFlowPlan.intent, 'unknown');
+  assert.equal(componentUsageFlowPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(componentUsageFlowPlan.semanticFrame?.target?.kind, 'metadata_component');
+  assert.equal(
+    componentUsageFlowPlan.semanticFrame?.target?.selected,
+    'Flow Civil_Rights_Intake_Questionnaire'
+  );
+  assert.equal(componentUsageFlowPlan.semanticFrame?.admissibility.status, 'accepted');
+
   const componentUsageRecordIdPlan = planner.plan('Where is 00X000000000123AAA used?');
   assert.equal(componentUsageRecordIdPlan.intent, 'unknown');
   assert.equal(componentUsageRecordIdPlan.semanticFrame?.intent, 'evidence_lookup');
