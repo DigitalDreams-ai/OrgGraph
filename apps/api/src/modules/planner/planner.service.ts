@@ -386,14 +386,134 @@ export class PlannerService {
       if (selected.length === 0) {
         continue;
       }
+      const normalizedSelection = this.normalizeEvidenceLookupSelection(selected);
       return {
         raw: selected,
-        selected,
-        recordIdUnsupported: /^(?:[a-z0-9]{15}|[a-z0-9]{18})$/i.test(selected)
+        selected: normalizedSelection,
+        recordIdUnsupported: /^(?:[a-z0-9]{15}|[a-z0-9]{18})$/i.test(normalizedSelection)
       };
     }
 
     return null;
+  }
+
+  private normalizeEvidenceLookupSelection(selection: string): string {
+    const normalizedSelection = selection.trim().replace(/\s+/g, ' ');
+    const familyPatterns: Array<[
+      pattern: RegExp,
+      familyLabel: string,
+      extensionPatterns: RegExp[],
+      folderPattern?: RegExp
+    ]> = [
+      [
+        /^(?:flow)\s+(.+)$/i,
+        'Flow',
+        [/\.flow-meta\.xml$/i, /\.flow$/i],
+        /(?:^|\/)flows\/([^/]+)$/i
+      ],
+      [
+        /^(?:layout)\s+(.+)$/i,
+        'Layout',
+        [/\.layout-meta\.xml$/i],
+        /(?:^|\/)layouts\/([^/]+)$/i
+      ],
+      [
+        /^(?:apex\s*class|class)\s+(.+)$/i,
+        'Apex Class',
+        [/\.cls$/i, /\.cls-meta\.xml$/i],
+        /(?:^|\/)classes\/([^/]+)$/i
+      ],
+      [
+        /^(?:apex\s*trigger|trigger)\s+(.+)$/i,
+        'Apex Trigger',
+        [/\.trigger$/i, /\.trigger-meta\.xml$/i],
+        /(?:^|\/)triggers\/([^/]+)$/i
+      ],
+      [
+        /^(?:custom\s*object|customobject|object)\s+(.+)$/i,
+        'Custom Object',
+        [/\.object-meta\.xml$/i],
+        /(?:^|\/)objects\/([^/]+)$/i
+      ],
+      [
+        /^(?:custom\s*field|customfield|field)\s+(.+)$/i,
+        'Custom Field',
+        [/\.field-meta\.xml$/i],
+        /(?:^|\/)objects\/([^/]+)\/fields\/([^/]+)$/i
+      ],
+      [
+        /^(?:email\s*template|emailtemplate|template)\s+(.+)$/i,
+        'Email Template',
+        [/\.email-meta\.xml$/i, /\.email$/i]
+      ],
+      [
+        /^(?:custom\s*tab|customtab|tab)\s+(.+)$/i,
+        'Custom Tab',
+        [/\.tab-meta\.xml$/i],
+        /(?:^|\/)tabs\/([^/]+)$/i
+      ]
+    ];
+
+    for (const [pattern, familyLabel, extensionPatterns, folderPattern] of familyPatterns) {
+      const match = normalizedSelection.match(pattern);
+      const rawComponent = match?.[1]?.trim();
+      if (!rawComponent) {
+        continue;
+      }
+      const componentName = this.normalizeEvidenceLookupComponentName(
+        rawComponent,
+        extensionPatterns,
+        folderPattern,
+        familyLabel === 'Custom Field'
+      );
+      return `${familyLabel} ${componentName}`;
+    }
+
+    return normalizedSelection;
+  }
+
+  private normalizeEvidenceLookupComponentName(
+    value: string,
+    extensionPatterns: RegExp[],
+    folderPattern?: RegExp,
+    isCustomField = false
+  ): string {
+    let normalized = value
+      .trim()
+      .replace(/^["'`]+|["'`]+$/g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/^(?:the|a|an|named|called)\s+/i, '')
+      .trim();
+    const normalizedPath = normalized.replace(/\\/g, '/');
+    if (isCustomField) {
+      const fieldPathMatch = normalizedPath.match(/(?:^|\/)objects\/([^/]+)\/fields\/([^/]+)$/i);
+      if (fieldPathMatch?.[1] && fieldPathMatch?.[2]) {
+        normalized = `${fieldPathMatch[1]}.${fieldPathMatch[2]}`;
+      } else if (normalizedPath.includes('/')) {
+        normalized = normalizedPath.split('/').pop() ?? normalized;
+      }
+    } else if (folderPattern) {
+      const folderMatch = normalizedPath.match(folderPattern);
+      if (folderMatch?.[1]) {
+        normalized = folderMatch[1];
+      } else if (normalizedPath.includes('/')) {
+        normalized = normalizedPath.split('/').pop() ?? normalized;
+      }
+    } else if (normalizedPath.includes('/')) {
+      normalized = normalizedPath.split('/').pop() ?? normalized;
+    }
+
+    for (const extensionPattern of extensionPatterns) {
+      normalized = normalized.replace(extensionPattern, '');
+    }
+
+    normalized = normalized
+      .replace(/^["'`]+|["'`]+$/g, '')
+      .replace(/[.,;:!?]+$/g, '')
+      .replace(/^(?:the|a|an|named|called)\s+/i, '')
+      .trim();
+
+    return normalized.length > 0 ? normalized : value.trim();
   }
 
   private isEvidenceLookupQuery(input: string): boolean {

@@ -2661,12 +2661,12 @@ export class AskService {
     const matchers: Array<[RegExp, ComponentLookupTarget['familyHint']]> = [
       [/^flow\s+(.+)$/i, 'flow'],
       [/^layout\s+(.+)$/i, 'layout'],
-      [/^(?:apex\s+class|class)\s+(.+)$/i, 'apex_class'],
-      [/^(?:apex\s+trigger|trigger)\s+(.+)$/i, 'apex_trigger'],
-      [/^(?:custom object|object)\s+(.+)$/i, 'custom_object'],
-      [/^(?:custom field|field)\s+(.+)$/i, 'custom_field'],
-      [/^(?:email template|template)\s+(.+)$/i, 'email_template'],
-      [/^(?:custom tab|tab)\s+(.+)$/i, 'tab']
+      [/^(?:apex\s*class|class)\s+(.+)$/i, 'apex_class'],
+      [/^(?:apex\s*trigger|trigger)\s+(.+)$/i, 'apex_trigger'],
+      [/^(?:custom\s*object|customobject|object)\s+(.+)$/i, 'custom_object'],
+      [/^(?:custom\s*field|customfield|field)\s+(.+)$/i, 'custom_field'],
+      [/^(?:email\s*template|emailtemplate|template)\s+(.+)$/i, 'email_template'],
+      [/^(?:custom\s*tab|customtab|tab)\s+(.+)$/i, 'tab']
     ];
 
     for (const [pattern, familyHint] of matchers) {
@@ -2674,7 +2674,7 @@ export class AskService {
       if (match?.[1]) {
         return {
           displayLabel,
-          componentName: match[1].trim(),
+          componentName: this.normalizeComponentLookupName(match[1].trim(), familyHint),
           familyHint
         };
       }
@@ -2684,6 +2684,111 @@ export class AskService {
       displayLabel,
       componentName: displayLabel
     };
+  }
+
+  private normalizeComponentLookupName(
+    componentName: string,
+    familyHint?: ComponentLookupTarget['familyHint']
+  ): string {
+    let normalized = componentName
+      .trim()
+      .replace(/^["'`]+|["'`]+$/g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/^(?:the|a|an|named|called)\s+/i, '')
+      .trim();
+    const normalizedPath = normalized.replace(/\\/g, '/');
+    const stripExtensions = (value: string, patterns: RegExp[]): string =>
+      patterns.reduce((current, pattern) => current.replace(pattern, ''), value);
+
+    switch (familyHint) {
+      case 'flow': {
+        const flowPathMatch = normalizedPath.match(/(?:^|\/)flows\/([^/]+)$/i);
+        if (flowPathMatch?.[1]) {
+          normalized = flowPathMatch[1];
+        } else if (normalizedPath.includes('/')) {
+          normalized = normalizedPath.split('/').pop() ?? normalized;
+        }
+        normalized = stripExtensions(normalized, [/\.flow-meta\.xml$/i, /\.flow$/i]);
+        break;
+      }
+      case 'layout': {
+        const layoutPathMatch = normalizedPath.match(/(?:^|\/)layouts\/([^/]+)$/i);
+        if (layoutPathMatch?.[1]) {
+          normalized = layoutPathMatch[1];
+        } else if (normalizedPath.includes('/')) {
+          normalized = normalizedPath.split('/').pop() ?? normalized;
+        }
+        normalized = stripExtensions(normalized, [/\.layout-meta\.xml$/i]);
+        break;
+      }
+      case 'apex_class': {
+        const classPathMatch = normalizedPath.match(/(?:^|\/)classes\/([^/]+)$/i);
+        if (classPathMatch?.[1]) {
+          normalized = classPathMatch[1];
+        } else if (normalizedPath.includes('/')) {
+          normalized = normalizedPath.split('/').pop() ?? normalized;
+        }
+        normalized = stripExtensions(normalized, [/\.cls$/i, /\.cls-meta\.xml$/i]);
+        break;
+      }
+      case 'apex_trigger': {
+        const triggerPathMatch = normalizedPath.match(/(?:^|\/)triggers\/([^/]+)$/i);
+        if (triggerPathMatch?.[1]) {
+          normalized = triggerPathMatch[1];
+        } else if (normalizedPath.includes('/')) {
+          normalized = normalizedPath.split('/').pop() ?? normalized;
+        }
+        normalized = stripExtensions(normalized, [/\.trigger$/i, /\.trigger-meta\.xml$/i]);
+        break;
+      }
+      case 'custom_object': {
+        const objectPathMatch = normalizedPath.match(/(?:^|\/)objects\/([^/]+)$/i);
+        if (objectPathMatch?.[1]) {
+          normalized = objectPathMatch[1];
+        } else if (normalizedPath.includes('/')) {
+          normalized = normalizedPath.split('/').pop() ?? normalized;
+        }
+        normalized = stripExtensions(normalized, [/\.object-meta\.xml$/i]);
+        break;
+      }
+      case 'custom_field': {
+        const fieldPathMatch = normalizedPath.match(/(?:^|\/)objects\/([^/]+)\/fields\/([^/]+)$/i);
+        if (fieldPathMatch?.[1] && fieldPathMatch?.[2]) {
+          normalized = `${fieldPathMatch[1]}.${fieldPathMatch[2]}`;
+        } else if (normalizedPath.includes('/')) {
+          normalized = normalizedPath.split('/').pop() ?? normalized;
+        }
+        normalized = stripExtensions(normalized, [/\.field-meta\.xml$/i]);
+        break;
+      }
+      case 'email_template': {
+        if (normalizedPath.includes('/')) {
+          normalized = normalizedPath.split('/').pop() ?? normalized;
+        }
+        normalized = stripExtensions(normalized, [/\.email-meta\.xml$/i, /\.email$/i]);
+        break;
+      }
+      case 'tab': {
+        const tabPathMatch = normalizedPath.match(/(?:^|\/)tabs\/([^/]+)$/i);
+        if (tabPathMatch?.[1]) {
+          normalized = tabPathMatch[1];
+        } else if (normalizedPath.includes('/')) {
+          normalized = normalizedPath.split('/').pop() ?? normalized;
+        }
+        normalized = stripExtensions(normalized, [/\.tab-meta\.xml$/i]);
+        break;
+      }
+      default:
+        break;
+    }
+
+    normalized = normalized
+      .replace(/^["'`]+|["'`]+$/g, '')
+      .replace(/[.,;:!?]+$/g, '')
+      .replace(/^(?:the|a|an|named|called)\s+/i, '')
+      .trim();
+
+    return normalized.length > 0 ? normalized : componentName.trim();
   }
 
   private normalizeAutomationObject(candidate?: string): string | undefined {
