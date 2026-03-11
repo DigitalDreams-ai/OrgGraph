@@ -406,48 +406,48 @@ export class PlannerService {
       folderPattern?: RegExp
     ]> = [
       [
-        /^(?:flow)\s+(.+)$/i,
+        /^(?:flow)(?:\s+|:\s*)(.+)$/i,
         'Flow',
         [/\.flow-meta\.xml$/i, /\.flow$/i],
         /(?:^|\/)flows\/([^/]+)$/i
       ],
       [
-        /^(?:layout)\s+(.+)$/i,
+        /^(?:layout)(?:\s+|:\s*)(.+)$/i,
         'Layout',
         [/\.layout-meta\.xml$/i],
         /(?:^|\/)layouts\/([^/]+)$/i
       ],
       [
-        /^(?:apex\s*class|class)\s+(.+)$/i,
+        /^(?:apex\s*class|apexclass|class)(?:\s+|:\s*)(.+)$/i,
         'Apex Class',
         [/\.cls$/i, /\.cls-meta\.xml$/i],
         /(?:^|\/)classes\/([^/]+)$/i
       ],
       [
-        /^(?:apex\s*trigger|trigger)\s+(.+)$/i,
+        /^(?:apex\s*trigger|apextrigger|trigger)(?:\s+|:\s*)(.+)$/i,
         'Apex Trigger',
         [/\.trigger$/i, /\.trigger-meta\.xml$/i],
         /(?:^|\/)triggers\/([^/]+)$/i
       ],
       [
-        /^(?:custom\s*object|customobject|object)\s+(.+)$/i,
+        /^(?:custom\s*object|customobject|object)(?:\s+|:\s*)(.+)$/i,
         'Custom Object',
         [/\.object-meta\.xml$/i],
         /(?:^|\/)objects\/([^/]+)$/i
       ],
       [
-        /^(?:custom\s*field|customfield|field)\s+(.+)$/i,
+        /^(?:custom\s*field|customfield|field)(?:\s+|:\s*)(.+)$/i,
         'Custom Field',
         [/\.field-meta\.xml$/i],
         /(?:^|\/)objects\/([^/]+)\/fields\/([^/]+)$/i
       ],
       [
-        /^(?:email\s*template|emailtemplate|template)\s+(.+)$/i,
+        /^(?:email\s*template|emailtemplate|template)(?:\s+|:\s*)(.+)$/i,
         'Email Template',
         [/\.email-meta\.xml$/i, /\.email$/i]
       ],
       [
-        /^(?:custom\s*tab|customtab|tab)\s+(.+)$/i,
+        /^(?:custom\s*tab|customtab|tab)(?:\s+|:\s*)(.+)$/i,
         'Custom Tab',
         [/\.tab-meta\.xml$/i],
         /(?:^|\/)tabs\/([^/]+)$/i

@@ -2659,14 +2659,14 @@ export class AskService {
   private parseComponentLookupTarget(targetLabel: string): ComponentLookupTarget {
     const displayLabel = targetLabel.trim().replace(/^the\s+/i, '').trim();
     const matchers: Array<[RegExp, ComponentLookupTarget['familyHint']]> = [
-      [/^flow\s+(.+)$/i, 'flow'],
-      [/^layout\s+(.+)$/i, 'layout'],
-      [/^(?:apex\s*class|class)\s+(.+)$/i, 'apex_class'],
-      [/^(?:apex\s*trigger|trigger)\s+(.+)$/i, 'apex_trigger'],
-      [/^(?:custom\s*object|customobject|object)\s+(.+)$/i, 'custom_object'],
-      [/^(?:custom\s*field|customfield|field)\s+(.+)$/i, 'custom_field'],
-      [/^(?:email\s*template|emailtemplate|template)\s+(.+)$/i, 'email_template'],
-      [/^(?:custom\s*tab|customtab|tab)\s+(.+)$/i, 'tab']
+      [/^flow(?:\s+|:\s*)(.+)$/i, 'flow'],
+      [/^layout(?:\s+|:\s*)(.+)$/i, 'layout'],
+      [/^(?:apex\s*class|apexclass|class)(?:\s+|:\s*)(.+)$/i, 'apex_class'],
+      [/^(?:apex\s*trigger|apextrigger|trigger)(?:\s+|:\s*)(.+)$/i, 'apex_trigger'],
+      [/^(?:custom\s*object|customobject|object)(?:\s+|:\s*)(.+)$/i, 'custom_object'],
+      [/^(?:custom\s*field|customfield|field)(?:\s+|:\s*)(.+)$/i, 'custom_field'],
+      [/^(?:email\s*template|emailtemplate|template)(?:\s+|:\s*)(.+)$/i, 'email_template'],
+      [/^(?:custom\s*tab|customtab|tab)(?:\s+|:\s*)(.+)$/i, 'tab']
     ];
 
     for (const [pattern, familyHint] of matchers) {
