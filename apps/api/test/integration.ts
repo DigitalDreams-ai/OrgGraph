@@ -1764,6 +1764,9 @@ async function run(): Promise<void> {
           admissibility: { status: string; reason: string | null };
         };
       };
+      proof?: {
+        rejectedBranches?: Array<{ reasonCode?: string; reason?: string }>;
+      };
     };
     assert.equal(askLatestRetrieveReviewUnsupported.plan?.intent, 'review');
     assert.equal(askLatestRetrieveReviewUnsupported.plan?.semanticFrame?.intent, 'approval_decision');
@@ -1783,7 +1786,15 @@ async function run(): Promise<void> {
     assert.equal(askLatestRetrieveReviewUnsupported.trustLevel, 'refused');
     assert.match(
       askLatestRetrieveReviewUnsupported.deterministicAnswer,
-      /supported only for explicit Flow read\/write asks and explicit retrieved field\/object impact or automation asks/i
+      /latest-retrieve-only approval review ask is not supported/i
+    );
+    assert.ok(
+      askLatestRetrieveReviewUnsupported.proof?.rejectedBranches?.some(
+        (branch) =>
+          branch.reasonCode === 'SEMANTIC_FRAME_BLOCKED' &&
+          /evidence_scope_unsupported/i.test(branch.reason ?? '')
+      ),
+      'latest-retrieve review approval ask should record a semantic-frame blocked branch'
     );
     assert.equal(askReviewVariant.decisionPacket?.riskScore, askReview.decisionPacket?.riskScore);
     assert.equal(askReviewVariant.decisionPacket?.summary, askReview.decisionPacket?.summary);
