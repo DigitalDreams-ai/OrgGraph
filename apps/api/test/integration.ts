@@ -1942,6 +1942,80 @@ async function run(): Promise<void> {
       'family-qualified flow usage ask should route through evidence lookup, not fail closed as another family'
     );
 
+    const askFlowCalledComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is Flow called "Civil_Rights_Intake_Questionnaire" used?'
+      })
+    });
+    assert.equal(
+      askFlowCalledComponentUsageRes.status,
+      201,
+      'flow-called component usage ask should return 201'
+    );
+    const askFlowCalledComponentUsage = (await askFlowCalledComponentUsageRes.json()) as {
+      plan?: {
+        semanticFrame?: {
+          intent?: string;
+          target?: { kind?: string; selected?: string };
+        };
+      };
+      deterministicAnswer: string;
+      trustLevel: string;
+    };
+    assert.equal(askFlowCalledComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(
+      askFlowCalledComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Flow Civil_Rights_Intake_Questionnaire'
+    );
+    assert.match(
+      askFlowCalledComponentUsage.deterministicAnswer,
+      /component usage lookup for Flow Civil_Rights_Intake_Questionnaire/i
+    );
+    assert.notEqual(
+      askFlowCalledComponentUsage.trustLevel,
+      'refused',
+      'flow-called component usage ask should normalize to the same deterministic target'
+    );
+
+    const askFlowPathComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is Flow C:/tmp/force-app/main/default/flows/Civil_Rights_Intake_Questionnaire.flow-meta.xml used?'
+      })
+    });
+    assert.equal(
+      askFlowPathComponentUsageRes.status,
+      201,
+      'flow-path component usage ask should return 201'
+    );
+    const askFlowPathComponentUsage = (await askFlowPathComponentUsageRes.json()) as {
+      plan?: {
+        semanticFrame?: {
+          intent?: string;
+          target?: { kind?: string; selected?: string };
+        };
+      };
+      deterministicAnswer: string;
+      trustLevel: string;
+    };
+    assert.equal(askFlowPathComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(
+      askFlowPathComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Flow Civil_Rights_Intake_Questionnaire'
+    );
+    assert.match(
+      askFlowPathComponentUsage.deterministicAnswer,
+      /component usage lookup for Flow Civil_Rights_Intake_Questionnaire/i
+    );
+    assert.notEqual(
+      askFlowPathComponentUsage.trustLevel,
+      'refused',
+      'flow-path component usage ask should normalize to the same deterministic target'
+    );
+
     const askComponentUsageRecordIdRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

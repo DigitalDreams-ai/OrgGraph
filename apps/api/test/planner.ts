@@ -238,6 +238,36 @@ function run(): void {
   );
   assert.equal(componentUsageFlowPlan.semanticFrame?.admissibility.status, 'accepted');
 
+  const componentUsageFlowCalledPlan = planner.plan(
+    'Where is Flow called "Civil_Rights_Intake_Questionnaire" used?'
+  );
+  assert.equal(componentUsageFlowCalledPlan.intent, 'unknown');
+  assert.equal(componentUsageFlowCalledPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageFlowCalledPlan.semanticFrame?.target?.selected,
+    'Flow Civil_Rights_Intake_Questionnaire'
+  );
+
+  const componentUsageFlowPathPlan = planner.plan(
+    'Where is Flow C:/tmp/force-app/main/default/flows/Civil_Rights_Intake_Questionnaire.flow-meta.xml used?'
+  );
+  assert.equal(componentUsageFlowPathPlan.intent, 'unknown');
+  assert.equal(componentUsageFlowPathPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageFlowPathPlan.semanticFrame?.target?.selected,
+    'Flow Civil_Rights_Intake_Questionnaire'
+  );
+
+  const componentUsageLayoutNamedPlan = planner.plan(
+    'Where is Layout named "Opportunity-Opportunity Layout" used?'
+  );
+  assert.equal(componentUsageLayoutNamedPlan.intent, 'unknown');
+  assert.equal(componentUsageLayoutNamedPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageLayoutNamedPlan.semanticFrame?.target?.selected,
+    'Layout Opportunity-Opportunity Layout'
+  );
+
   const componentUsageRecordIdPlan = planner.plan('Where is 00X000000000123AAA used?');
   assert.equal(componentUsageRecordIdPlan.intent, 'unknown');
   assert.equal(componentUsageRecordIdPlan.semanticFrame?.intent, 'evidence_lookup');

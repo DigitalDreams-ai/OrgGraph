@@ -238,6 +238,7 @@ Scope:
 - start semantic-frame shadow mode on one bounded Ask family before any routing replacement
 - promote semantic-frame admissibility to the active execution gate for that family once parity is proven
 - expand that active-gate pattern incrementally across bounded families without widening latest-retrieve support beyond explicit proven cases
+- normalize family-qualified evidence-lookup targets (`Flow called X`, `Flow named X`, and file/path forms) so deterministic component-usage lookup is resilient to common operator phrasing without widening into freeform component search
 
 Exit:
 - planner/integration/replay tests pass for selected families
