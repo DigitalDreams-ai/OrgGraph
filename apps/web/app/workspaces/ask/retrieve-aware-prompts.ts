@@ -7,6 +7,12 @@ export interface RetrieveAwarePromptGroups {
   followUpPrompts: string[];
 }
 
+type ComponentPromptFamily = {
+  type: string;
+  prefix: string;
+  limit: number;
+};
+
 function uniqueSorted(values: string[]): string[] {
   return Array.from(
     new Set(values.map((value) => value.trim()).filter((value) => value.length > 0))
@@ -21,12 +27,31 @@ function collectMembers(selections: MetadataSelection[], type: string): string[]
   );
 }
 
+const COMPONENT_USAGE_PROMPT_FAMILIES: ComponentPromptFamily[] = [
+  { type: 'Flow', prefix: 'Flow', limit: 3 },
+  { type: 'Layout', prefix: 'Layout', limit: 3 },
+  { type: 'ApexClass', prefix: 'Apex Class', limit: 3 },
+  { type: 'ApexTrigger', prefix: 'Apex Trigger', limit: 3 },
+  { type: 'CustomObject', prefix: 'Custom Object', limit: 3 },
+  { type: 'CustomField', prefix: 'Custom Field', limit: 4 },
+  { type: 'EmailTemplate', prefix: 'Email Template', limit: 3 },
+  { type: 'CustomTab', prefix: 'Custom Tab', limit: 3 }
+];
+
 export function buildRetrieveAwarePromptGroups(
   latestRetrieveSelections: MetadataSelection[]
 ): RetrieveAwarePromptGroups {
   const flowMembers = collectMembers(latestRetrieveSelections, 'Flow').slice(0, 3);
   const objectMembers = collectMembers(latestRetrieveSelections, 'CustomObject').slice(0, 3);
   const fieldMembers = collectMembers(latestRetrieveSelections, 'CustomField').slice(0, 4);
+  const componentUsagePrompts = COMPONENT_USAGE_PROMPT_FAMILIES.flatMap((family) =>
+    collectMembers(latestRetrieveSelections, family.type)
+      .slice(0, family.limit)
+      .map(
+        (memberName) =>
+          `Based only on the latest retrieve, where is ${family.prefix} ${memberName} used?`
+      )
+  );
 
   const groundedPrompts = uniqueSorted([
     ...flowMembers.map(
@@ -38,7 +63,8 @@ export function buildRetrieveAwarePromptGroups(
     ]),
     ...objectMembers.map(
       (objectName) => `Based only on the latest retrieve, what runs on object ${objectName}?`
-    )
+    ),
+    ...componentUsagePrompts
   ]);
 
   const followUpPrompts = [

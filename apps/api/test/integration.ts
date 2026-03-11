@@ -1390,6 +1390,58 @@ async function run(): Promise<void> {
     );
     assert.equal(askLatestRetrieveAutomation.consistency.aligned, true);
 
+    const askLatestRetrieveComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Based only on the latest retrieve, where is Flow OpportunityStageSync used?',
+        evidenceScope: latestRetrieveEvidenceScope
+      })
+    });
+    assert.equal(
+      askLatestRetrieveComponentUsageRes.status,
+      201,
+      'latest retrieve component usage ask should return 201'
+    );
+    const askLatestRetrieveComponentUsage =
+      (await askLatestRetrieveComponentUsageRes.json()) as {
+        trustLevel: string;
+        plan?: {
+          semanticFrame?: {
+            intent?: string;
+            sourceMode?: string;
+            target?: { selected?: string; kind?: string };
+            admissibility?: { status?: string; reason?: string | null };
+          };
+        };
+        deterministicAnswer: string;
+      };
+    assert.equal(
+      askLatestRetrieveComponentUsage.plan?.semanticFrame?.intent,
+      'evidence_lookup'
+    );
+    assert.equal(
+      askLatestRetrieveComponentUsage.plan?.semanticFrame?.sourceMode,
+      'latest_retrieve'
+    );
+    assert.equal(
+      askLatestRetrieveComponentUsage.plan?.semanticFrame?.target?.kind,
+      'metadata_component'
+    );
+    assert.equal(
+      askLatestRetrieveComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Flow OpportunityStageSync'
+    );
+    assert.equal(
+      askLatestRetrieveComponentUsage.plan?.semanticFrame?.admissibility?.status,
+      'accepted'
+    );
+    assert.notEqual(askLatestRetrieveComponentUsage.trustLevel, 'refused');
+    assert.match(
+      askLatestRetrieveComponentUsage.deterministicAnswer,
+      /component usage lookup for Flow OpportunityStageSync/i
+    );
+
     const askLatestRetrieveObjectAutomationRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

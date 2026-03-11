@@ -6,7 +6,10 @@ function run(): void {
   const selections: MetadataSelection[] = [
     { type: 'Flow', members: ['Civil_Rights_Intake_Questionnaire', 'OpportunityStageSync'] },
     { type: 'CustomObject', members: ['Opportunity', 'Case'] },
-    { type: 'CustomField', members: ['Opportunity.StageName', 'Case.Status'] }
+    { type: 'CustomField', members: ['Opportunity.StageName', 'Case.Status'] },
+    { type: 'Layout', members: ['Opportunity-Opportunity Layout'] },
+    { type: 'ApexClass', members: ['CaseTypeService'] },
+    { type: 'EmailTemplate', members: ['Customer_Welcome'] }
   ];
 
   const prompts = buildRetrieveAwarePromptGroups(selections);
@@ -19,7 +22,16 @@ function run(): void {
     'Based only on the latest retrieve, what runs on object Case?',
     'Based only on the latest retrieve, what runs on object Opportunity?',
     'Based only on the latest retrieve, what touches Case.Status?',
-    'Based only on the latest retrieve, what touches Opportunity.StageName?'
+    'Based only on the latest retrieve, what touches Opportunity.StageName?',
+    'Based only on the latest retrieve, where is Apex Class CaseTypeService used?',
+    'Based only on the latest retrieve, where is Custom Field Case.Status used?',
+    'Based only on the latest retrieve, where is Custom Field Opportunity.StageName used?',
+    'Based only on the latest retrieve, where is Custom Object Case used?',
+    'Based only on the latest retrieve, where is Custom Object Opportunity used?',
+    'Based only on the latest retrieve, where is Email Template Customer_Welcome used?',
+    'Based only on the latest retrieve, where is Flow Civil_Rights_Intake_Questionnaire used?',
+    'Based only on the latest retrieve, where is Flow OpportunityStageSync used?',
+    'Based only on the latest retrieve, where is Layout Opportunity-Opportunity Layout used?'
   ]);
 
   assert.ok(
@@ -35,10 +47,15 @@ function run(): void {
     { type: 'Flow', members: ['OpportunityStageSync', 'OpportunityStageSync'] },
     { type: 'CustomField', members: ['Opportunity.StageName', 'Opportunity.StageName'] }
   ]);
-  assert.equal(deduped.groundedPrompts.length, 3);
+  assert.equal(deduped.groundedPrompts.length, 5);
   assert.ok(
     deduped.groundedPrompts.includes(
       'Based only on the latest retrieve, explain what Flow OpportunityStageSync reads and writes.'
+    )
+  );
+  assert.ok(
+    deduped.groundedPrompts.includes(
+      'Based only on the latest retrieve, where is Flow OpportunityStageSync used?'
     )
   );
   assert.ok(
@@ -49,6 +66,11 @@ function run(): void {
   assert.ok(
     deduped.groundedPrompts.includes(
       'Based only on the latest retrieve, what automations update Opportunity.StageName?'
+    )
+  );
+  assert.ok(
+    deduped.groundedPrompts.includes(
+      'Based only on the latest retrieve, where is Custom Field Opportunity.StageName used?'
     )
   );
   assert.equal(deduped.followUpPrompts.length, 1);
