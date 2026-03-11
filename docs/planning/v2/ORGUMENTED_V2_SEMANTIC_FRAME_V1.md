@@ -121,6 +121,7 @@ Mapping guidance:
 - `what automations update X` -> `automation_path_explanation`
 - `what runs on object X` -> `automation_path_explanation`
 - `should we approve changing X` -> `approval_decision`
+- `where is Layout Opportunity-Opportunity Layout used` -> `evidence_lookup`
 - `show me the proof for this decision` -> `evidence_lookup`
 
 ### 2. Target
@@ -129,6 +130,7 @@ Allowed v1 target kinds:
 - `object`
 - `field`
 - `flow`
+- `metadata_component`
 - `decision_packet`
 
 Each target must preserve:
@@ -221,6 +223,7 @@ Recommended `blocked` reasons:
 - `unsupported_target_kind`
 - `no_grounded_target`
 - `latest_retrieve_scope_unsupported`
+- `record_id_unsupported`
 - `insufficient_evidence`
 
 This reason must be stored in proof/replay artifacts for refusal paths.
@@ -255,6 +258,8 @@ That means:
 
 ### Slice 4
 - switch one question family at a time from regex-first routing to frame-first routing
+- first bounded `evidence_lookup` support may target metadata component usage lookup by metadata name or fullName only
+- Salesforce record Id lookup remains explicitly blocked in Stage 1
 
 ### Slice 5
 - persist frame + grounding + admissibility into proof artifacts

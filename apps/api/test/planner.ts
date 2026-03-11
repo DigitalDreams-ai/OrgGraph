@@ -214,6 +214,28 @@ function run(): void {
   assert.equal(reviewBreakagePlan.reviewWorkflow?.focus, 'breakage');
   assert.equal(reviewBreakagePlan.semanticFrame, undefined);
 
+  const componentUsagePlan = planner.plan('Where is Layout Opportunity-Opportunity Layout used?');
+  assert.equal(componentUsagePlan.intent, 'unknown');
+  assert.equal(componentUsagePlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(componentUsagePlan.semanticFrame?.sourceMode, 'graph_global');
+  assert.equal(componentUsagePlan.semanticFrame?.target?.kind, 'metadata_component');
+  assert.equal(
+    componentUsagePlan.semanticFrame?.target?.selected,
+    'Layout Opportunity-Opportunity Layout'
+  );
+  assert.equal(componentUsagePlan.semanticFrame?.admissibility.status, 'accepted');
+  assert.equal(componentUsagePlan.semanticFrame?.ambiguity.status, 'clear');
+
+  const componentUsageRecordIdPlan = planner.plan('Where is 00X000000000123AAA used?');
+  assert.equal(componentUsageRecordIdPlan.intent, 'unknown');
+  assert.equal(componentUsageRecordIdPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(componentUsageRecordIdPlan.semanticFrame?.admissibility.status, 'blocked');
+  assert.equal(
+    componentUsageRecordIdPlan.semanticFrame?.admissibility.reason,
+    'record_id_unsupported'
+  );
+  assert.equal(componentUsageRecordIdPlan.semanticFrame?.ambiguity.status, 'unsupported_question');
+
   const reviewRiskVariantPlan = planner.plan('Review the change risk for Opportunity.StageName.');
   assert.equal(reviewRiskVariantPlan.intent, 'review');
   assert.equal(reviewRiskVariantPlan.reviewWorkflow?.compilerRuleId, 'review_risk_change');

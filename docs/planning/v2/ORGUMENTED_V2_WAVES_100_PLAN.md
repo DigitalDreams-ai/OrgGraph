@@ -134,7 +134,7 @@ Mandatory:
 | wave3 | sessions and toolchain reliability | B004, B005 | Complete | Session state persists active alias/switch timestamps and restore alias remains deterministic across relaunch |
 | wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
 | wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |
-| wave6 | ask planner/compiler depth | B003, B009 | In Progress | Decide the next bounded semantic-frame family after review approval gating is active |
+| wave6 | ask planner/compiler depth | B003, B009 | In Progress | Deepen evidence-lookup coverage beyond the first bounded metadata component usage slice |
 | wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | Open | Structured triage without raw JSON dependence |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first reopen/replay/export complete |

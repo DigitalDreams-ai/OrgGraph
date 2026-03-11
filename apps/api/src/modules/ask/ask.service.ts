@@ -659,6 +659,10 @@ export class AskService {
       plan.intent === 'review' &&
       Boolean(evidenceScope) &&
       plan.semanticFrame?.intent === 'approval_decision';
+    const latestRetrieveScopedEvidenceLookupQuery =
+      latestRetrieveRequested &&
+      Boolean(evidenceScope) &&
+      plan.semanticFrame?.intent === 'evidence_lookup';
 
     if (latestRetrieveRequested && !evidenceScope) {
       answer =
@@ -682,7 +686,8 @@ export class AskService {
       !latestRetrieveScopedImpactQuery &&
       !latestRetrieveScopedAutomationQuery &&
       !latestRetrieveScopedPermQuery &&
-      !latestRetrieveScopedReviewApprovalQuery
+      !latestRetrieveScopedReviewApprovalQuery &&
+      !latestRetrieveScopedEvidenceLookupQuery
     ) {
       answer =
         'Refused: latest-retrieve-only Ask is currently supported only for explicit Flow read/write asks and explicit retrieved field/object impact or automation asks. This query would require graph-wide analysis outside the scoped retrieve.';
@@ -699,6 +704,74 @@ export class AskService {
         'EVIDENCE_SCOPE_UNSUPPORTED',
         'latest-retrieve-only query attempted an unsupported intent family'
       );
+    } else if (plan.semanticFrame?.intent === 'evidence_lookup') {
+      const lookupFrame = plan.semanticFrame;
+      if (lookupFrame.admissibility.status !== 'accepted') {
+        const frameReason = lookupFrame.admissibility.reason ?? 'semantic_frame_blocked';
+        const targetLabel =
+          lookupFrame.target?.raw ??
+          lookupFrame.target?.selected ??
+          'the requested component';
+        answer =
+          frameReason === 'record_id_unsupported'
+            ? 'Refused: component usage lookup supports metadata names and fullNames, not Salesforce record Ids. Re-run Ask with the metadata component name.'
+            : `Refused: component usage lookup blocked execution for \`${targetLabel}\` because the planner semantic frame was not admissible.`;
+        deterministicAnswer = answer;
+        confidence = 0.18;
+        consistency = {
+          checked: consistencyCheck,
+          aligned: true,
+          reason: `component usage semantic frame blocked execution with reason ${frameReason}`
+        };
+        executionTrace.push(
+          'lookup.semanticFrame=blocked',
+          `lookup.semanticFrame.reason=${frameReason}`,
+          `lookup.semanticFrame.target=${targetLabel}`
+        );
+        reject(
+          'planner.semanticFrame',
+          'SEMANTIC_FRAME_BLOCKED',
+          `component usage semantic frame blocked execution: ${frameReason}`
+        );
+      } else {
+        operatorsExecuted.push(COMPOSITION_OPERATORS.INTERSECT);
+        const targetLabel =
+          lookupFrame.target?.selected ?? lookupFrame.target?.raw ?? 'the requested component';
+        const lookupQueries = this.buildComponentUsageLookupQueries(targetLabel);
+        citationHits = this.dedupeCitations(
+          lookupQueries.flatMap((query) =>
+            this.searchEvidence(query, Math.max(12, maxCitations * 4), evidenceScope)
+          )
+        );
+        citations = this.mapCitationHits(citationHits);
+        const usageSummary = this.buildComponentUsageEvidenceSummary(targetLabel, citationHits);
+        answer = usageSummary.explanation;
+        deterministicAnswer = answer;
+        confidence =
+          usageSummary.referenceHitCount > 0
+            ? 0.82
+            : usageSummary.matchedCount > 0
+              ? 0.58
+              : 0.24;
+        consistency = {
+          checked: consistencyCheck,
+          aligned: true,
+          reason: 'component usage lookup uses deterministic evidence search over scoped metadata'
+        };
+        executionTrace.push(
+          `lookup.target=${targetLabel}`,
+          `lookup.scope=${lookupFrame.sourceMode}`,
+          `lookup.matches=${String(usageSummary.matchedCount)}`,
+          `lookup.references=${String(usageSummary.referenceHitCount)}`
+        );
+        if (usageSummary.matchedCount === 0) {
+          reject(
+            'evidence.search',
+            'NO_EVIDENCE_LOOKUP_MATCH',
+            `no deterministic component usage evidence matched ${targetLabel}`
+          );
+        }
+      }
     } else if (plan.intent === 'review' && plan.reviewWorkflow) {
       const reviewFrame = plan.semanticFrame;
       if (
@@ -2296,6 +2369,76 @@ export class AskService {
       scoreByFlow.set(flowName, next);
     }
     return [...scoreByFlow.entries()].sort((a, b) => b[1] - a[1]);
+  }
+
+  private buildComponentUsageLookupQueries(targetLabel: string): string[] {
+    const normalized = targetLabel.trim();
+    const queries = new Set<string>([normalized]);
+    queries.add(normalized.replace(/\s+/g, '_'));
+    queries.add(normalized.replace(/_/g, ' '));
+    queries.add(normalized.replace(/[^\w.]+/g, ' ').replace(/\s+/g, ' ').trim());
+    return [...queries].filter((query) => query.length > 0);
+  }
+
+  private buildComponentUsageEvidenceSummary(
+    targetLabel: string,
+    citationHits: EvidenceSearchResult[]
+  ): {
+    explanation: string;
+    matchedCount: number;
+    referenceHitCount: number;
+    sourceLabels: string[];
+  } {
+    const sourceLabels = [
+      ...new Set(
+        citationHits
+          .map((hit) => this.toCitationSourceLabel(hit.sourcePath))
+          .map((label) => label.trim())
+          .filter((label) => label.length > 0)
+      )
+    ].sort((left, right) => left.localeCompare(right));
+    const selfLabels = new Set(
+      this.inferComponentDefinitionLabels(targetLabel).map((label) => label.toLowerCase())
+    );
+    const referenceSourceLabels = sourceLabels.filter((label) => !selfLabels.has(label.toLowerCase()));
+    const matchedCount = citationHits.length;
+    const referenceHitCount = citationHits.filter(
+      (hit) => !selfLabels.has(this.toCitationSourceLabel(hit.sourcePath).toLowerCase())
+    ).length;
+    const topReferenceSources = referenceSourceLabels.slice(0, 5).join(', ');
+    const explanation =
+      referenceHitCount > 0
+        ? `Deterministic component usage lookup for ${targetLabel} found ${referenceHitCount} referencing evidence hit(s) across ${referenceSourceLabels.length} source file(s): ${topReferenceSources}.`
+        : matchedCount > 0
+          ? `Deterministic component usage lookup for ${targetLabel} found only the component definition in the current evidence scope. No separate referencing metadata matched yet.`
+          : `No deterministic component usage evidence matched ${targetLabel}. Search by exact metadata name/fullName or retrieve broader metadata before relying on this lookup.`;
+
+    return {
+      explanation,
+      matchedCount,
+      referenceHitCount,
+      sourceLabels
+    };
+  }
+
+  private inferComponentDefinitionLabels(targetLabel: string): string[] {
+    const normalized = targetLabel.trim().replace(/^the\s+/i, '');
+    const matchers: Array<[RegExp, (name: string) => string[]]> = [
+      [/^flow\s+(.+)$/i, (name) => [`${name}.flow-meta.xml`]],
+      [/^layout\s+(.+)$/i, (name) => [`${name}.layout-meta.xml`]],
+      [/^(?:apex\s+class|class)\s+(.+)$/i, (name) => [`${name}.cls`]],
+      [/^(?:apex\s+trigger|trigger)\s+(.+)$/i, (name) => [`${name}.trigger`]],
+      [/^(?:custom object|object)\s+(.+)$/i, (name) => [`${name}.object-meta.xml`]]
+    ];
+
+    for (const [pattern, build] of matchers) {
+      const match = normalized.match(pattern);
+      if (match?.[1]) {
+        return build(match[1].trim());
+      }
+    }
+
+    return [];
   }
 
   private normalizeAutomationObject(candidate?: string): string | undefined {
