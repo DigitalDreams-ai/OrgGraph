@@ -758,7 +758,31 @@ export class AskService {
           )
         );
         citations = this.mapCitationHits(citationHits);
-        const usageSummary = this.buildComponentUsageEvidenceSummary(targetLabel, citationHits);
+        let usageSummary = this.buildComponentUsageEvidenceSummary(targetLabel, citationHits);
+        if (latestRetrieveRequested && evidenceScope && usageSummary.matchedCount === 0) {
+          let scopedEvidenceHits = this.resolveScopedComponentUsageEvidence(
+            targetLabel,
+            evidenceScope
+          );
+          if (scopedEvidenceHits.length === 0) {
+            scopedEvidenceHits = this.resolveScopedComponentDefinitionEvidence(
+              targetLabel,
+              evidenceScope
+            );
+          }
+          if (scopedEvidenceHits.length > 0) {
+            citationHits = this.dedupeCitations([...citationHits, ...scopedEvidenceHits]).slice(
+              0,
+              Math.max(maxCitations, scopedEvidenceHits.length)
+            );
+            citations = this.mapCitationHits(citationHits);
+            usageSummary = this.buildComponentUsageEvidenceSummary(targetLabel, citationHits);
+            executionTrace.push(
+              'lookup.scope=direct-source-fallback',
+              `lookup.scopedFallbackHits=${String(scopedEvidenceHits.length)}`
+            );
+          }
+        }
         answer = usageSummary.explanation;
         deterministicAnswer = answer;
         confidence =
@@ -1974,6 +1998,123 @@ export class AskService {
       hits.push(...this.resolveSourcePathEvidence(file));
     }
     return this.dedupeCitations(hits).slice(0, 64);
+  }
+
+  private resolveScopedComponentUsageEvidence(
+    targetLabel: string,
+    evidenceScope: AskEvidenceScope
+  ): EvidenceSearchResult[] {
+    const scopedEvidenceHits = this.resolveScopedMetadataEvidence(evidenceScope);
+    if (scopedEvidenceHits.length === 0) {
+      return [];
+    }
+
+    const queryVariants = new Set(
+      this.buildComponentUsageLookupQueries(targetLabel)
+        .map((query) => query.trim().toLowerCase())
+        .filter((query) => query.length > 0)
+    );
+    const componentDefinitionLabels = this.inferComponentDefinitionLabels(targetLabel)
+      .map((label) => label.trim().toLowerCase())
+      .filter((label) => label.length > 0);
+    const parsedTarget = this.parseComponentLookupTarget(targetLabel);
+    queryVariants.add(targetLabel.trim().toLowerCase());
+    queryVariants.add(parsedTarget.componentName.trim().toLowerCase());
+    for (const label of componentDefinitionLabels) {
+      queryVariants.add(label);
+    }
+
+    return scopedEvidenceHits.filter((hit) => {
+      const haystack = [
+        hit.sourcePath,
+        hit.chunkText,
+        ...(hit.entityTags ?? [])
+      ]
+        .join('\n')
+        .toLowerCase();
+      return [...queryVariants].some((query) => haystack.includes(query));
+    });
+  }
+
+  private resolveScopedComponentDefinitionEvidence(
+    targetLabel: string,
+    evidenceScope: AskEvidenceScope
+  ): EvidenceSearchResult[] {
+    const parsedTarget = this.parseComponentLookupTarget(targetLabel);
+    const metadataType = this.resolveComponentLookupMetadataType(parsedTarget.familyHint);
+    if (!metadataType) {
+      return [];
+    }
+
+    const requestedComponent =
+      metadataType === 'Flow'
+        ? this.resolveScopedFlowNameAlias(parsedTarget.componentName, evidenceScope) ??
+          parsedTarget.componentName
+        : parsedTarget.componentName;
+    if (metadataType === 'Flow') {
+      return this.resolveScopedFlowEvidence(requestedComponent, evidenceScope);
+    }
+    const files = new Set<string>();
+
+    for (const selection of this.listEvidenceScopeSelections(evidenceScope)) {
+      if (selection.type.trim().toLowerCase() !== metadataType.trim().toLowerCase()) {
+        continue;
+      }
+      for (const member of selection.members ?? []) {
+        if (!this.componentLookupMatchesSelectionMember(metadataType, requestedComponent, member)) {
+          continue;
+        }
+        const rule = this.resolveSelectionSourceRule(evidenceScope.parsePath, metadataType, member);
+        if (rule?.exactPath) {
+          files.add(rule.exactPath.replace(/\//g, path.sep));
+        }
+        if (rule?.prefixPath) {
+          this.collectScopedFiles(rule.prefixPath.replace(/\//g, path.sep), files);
+        }
+      }
+    }
+
+    const hits: EvidenceSearchResult[] = [];
+    for (const file of files) {
+      hits.push(...this.resolveSourcePathEvidence(file));
+    }
+    return this.dedupeCitations(hits).slice(0, 32);
+  }
+
+  private resolveComponentLookupMetadataType(
+    familyHint: ComponentLookupTarget['familyHint']
+  ): string | undefined {
+    switch (familyHint) {
+      case 'flow':
+        return 'Flow';
+      case 'layout':
+        return 'Layout';
+      case 'apex_class':
+        return 'ApexClass';
+      case 'apex_trigger':
+        return 'ApexTrigger';
+      case 'custom_object':
+        return 'CustomObject';
+      case 'custom_field':
+        return 'CustomField';
+      case 'email_template':
+        return 'EmailTemplate';
+      case 'tab':
+        return 'CustomTab';
+      default:
+        return undefined;
+    }
+  }
+
+  private componentLookupMatchesSelectionMember(
+    metadataType: string,
+    requestedComponent: string,
+    selectedMember: string
+  ): boolean {
+    if (metadataType === 'Flow') {
+      return this.compactFlowToken(selectedMember) === this.compactFlowToken(requestedComponent);
+    }
+    return selectedMember.trim().toLowerCase() === requestedComponent.trim().toLowerCase();
   }
 
   private collectScopedFiles(targetPath: string, files: Set<string>): void {

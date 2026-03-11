@@ -100,7 +100,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
               <p><strong>Parse path:</strong> <span className="path-value">{props.latestRetrieve.parsePath || 'n/a'}</span></p>
               {retrieveAwarePrompts.groundedPrompts.length > 0 ? (
                 <>
-                  <p className="muted"><strong>Grounded prompts from latest retrieve:</strong> these stay tied to the retrieved Flow, CustomObject, and CustomField members that Ask can answer from scoped retrieve evidence today.</p>
+                  <p className="muted"><strong>Grounded prompts from latest retrieve:</strong> these stay tied to retrieved Flow, Layout, Apex, CustomObject, CustomField, Email Template, and Tab members that Ask can answer from scoped retrieve evidence today.</p>
                   <div className="preset-row">
                     {retrieveAwarePrompts.groundedPrompts.map((preset) => (
                       <button key={preset} type="button" className="ghost chip-btn" onClick={() => props.setAskQuery(preset)}>
@@ -110,7 +110,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                   </div>
                 </>
               ) : (
-                <p className="muted">No retrieved Flow member is staged yet. Use Org Browser to retrieve a specific flow, then Ask from that grounded retrieve.</p>
+                <p className="muted">No retrieve-grounded Ask prompts are staged yet. Use Org Browser to retrieve a specific Flow, Layout, Apex, CustomObject, CustomField, Email Template, or Tab member, then Ask from that grounded retrieve.</p>
               )}
               {retrieveAwarePrompts.followUpPrompts.length > 0 ? (
                 <>
@@ -125,7 +125,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                 </>
               ) : null}
               <p className="muted">
-                <strong>Scope rule:</strong> `latest retrieve` is enforced for explicit Flow read/write prompts plus explicit retrieved field/object impact or automation prompts. Permission asks still use the current semantic state unless they say otherwise.
+                <strong>Scope rule:</strong> `latest retrieve` is enforced for explicit Flow read/write prompts, explicit retrieved field/object impact or automation prompts, and bounded metadata-component usage lookup prompts. Permission asks still use the current semantic state unless they say otherwise.
               </p>
               {props.latestRetrieveSelections.length > 0 ? (
                 <p className="muted">
@@ -134,7 +134,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
               ) : null}
               {retrieveAwarePrompts.groundedPrompts.length === 0 &&
               retrieveAwarePrompts.followUpPrompts.length === 0 ? (
-                <p className="muted">No member-level retrieve prompts are available yet. Retrieve specific Flow, CustomObject, or CustomField members from Org Browser first.</p>
+                <p className="muted">No member-level retrieve prompts are available yet. Retrieve specific Flow, Layout, Apex, CustomObject, CustomField, Email Template, or Tab members from Org Browser first.</p>
               ) : null}
             </>
           ) : (

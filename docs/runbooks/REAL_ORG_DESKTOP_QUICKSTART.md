@@ -6,7 +6,7 @@ Scope:
 - Windows desktop app (Tauri packaged runtime)
 - Real Salesforce alias from local `sf` keychain
 - Org Browser cart retrieve flow
-- Ask response grounded in latest retrieve for supported Flow, field-impact, and object/automation prompts
+- Ask response grounded in latest retrieve for supported Flow, field-impact, object/automation, and bounded metadata-component usage prompts
 
 This runbook uses Git Bash only.
 
@@ -145,6 +145,7 @@ Inside Orgumented `Ask` workspace:
    - `Based only on the latest retrieve, what touches Opportunity.StageName?`
    - `Based only on the latest retrieve, what automations update Opportunity.StageName?`
    - `Based only on the latest retrieve, what runs on object Opportunity?`
+   - `Based only on the latest retrieve, where is Flow Civil_Rights_Intake_Questionnaire used?`
 3. Use this exact Flow question first:
    - `Based only on the latest retrieve, explain what Flow Civil_Rights_Intake_Questionnaire reads and writes.`
 4. Click `Run Ask`.
@@ -155,7 +156,10 @@ Inside Orgumented `Ask` workspace:
 6. Then test one field/object grounded prompt from the same retrieve:
    - `Based only on the latest retrieve, what touches Opportunity.StageName?`
    - or `Based only on the latest retrieve, what runs on object Opportunity?`
-7. If you intentionally ask a different `Based only on the latest retrieve ...` question outside the supported Flow read/write or explicit retrieved field/object impact/automation shapes, expect a fail-closed refusal instead of a misleading unconstrained answer.
+7. Then test one bounded component-usage prompt from the same retrieve:
+   - `Based only on the latest retrieve, where is Flow Civil_Rights_Intake_Questionnaire used?`
+   - or, if you retrieved another supported family, `Based only on the latest retrieve, where is Layout <layout-name> used?`
+8. If you intentionally ask a different `Based only on the latest retrieve ...` question outside the supported Flow read/write, explicit retrieved field/object impact/automation, or bounded metadata-component usage shapes, expect a fail-closed refusal instead of a misleading unconstrained answer.
 
 ## 6) Save Evidence
 
