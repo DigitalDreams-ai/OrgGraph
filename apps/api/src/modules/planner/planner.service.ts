@@ -15,15 +15,22 @@ export class PlannerService {
     const { normalizedQuery, rewriteRules } = this.normalizeQuery(normalized);
     const lower = normalizedQuery.toLowerCase();
     const tokens = this.tokenizeQuery(normalizedQuery);
+    const evidenceLookupQuery = this.isEvidenceLookupQuery(normalized);
 
     const user = this.extractUser(normalized);
     const field = this.extractField(normalized);
     const object = this.extractObject(normalized, field) ?? this.extractObject(normalizedQuery, field);
     const reviewWorkflow = this.compileReviewWorkflow(tokens, object, field);
 
-    const hasPerms = /(perm|permission|edit|access|who can edit|who has access|can\s+i)/i.test(lower);
-    const hasAutomation = /(automation|trigger|flow|runs\s+on|what\s+runs|which\s+flows|which\s+triggers)/i.test(lower);
-    const hasImpact = /(impact|break|touches|what\s+touches|blast radius|what changes if)/i.test(lower);
+    const hasPerms =
+      !evidenceLookupQuery &&
+      /(perm|permission|edit|access|who can edit|who has access|can\s+i)/i.test(lower);
+    const hasAutomation =
+      !evidenceLookupQuery &&
+      /(automation|trigger|flow|runs\s+on|what\s+runs|which\s+flows|which\s+triggers)/i.test(lower);
+    const hasImpact =
+      !evidenceLookupQuery &&
+      /(impact|break|touches|what\s+touches|blast radius|what changes if)/i.test(lower);
 
     let intent: AskIntent = 'unknown';
     if (reviewWorkflow) {
@@ -387,6 +394,14 @@ export class PlannerService {
     }
 
     return null;
+  }
+
+  private isEvidenceLookupQuery(input: string): boolean {
+    return (
+      /\bwhere is\s+.+?\s+(?:used|referenced)\b/i.test(input) ||
+      /\bwhat uses\s+.+\b/i.test(input) ||
+      /\bwhat references\s+.+\b/i.test(input)
+    );
   }
 
   private buildMetadataTarget(field?: string, object?: string): AskSemanticFrameTarget | null {

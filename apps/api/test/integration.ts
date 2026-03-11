@@ -1852,6 +1852,44 @@ async function run(): Promise<void> {
       /component usage lookup for Layout Opportunity-Opportunity Layout/i
     );
 
+    const askFlowComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is Flow Civil_Rights_Intake_Questionnaire used?'
+      })
+    });
+    assert.equal(
+      askFlowComponentUsageRes.status,
+      201,
+      'family-qualified flow usage ask should return 201'
+    );
+    const askFlowComponentUsage = (await askFlowComponentUsageRes.json()) as {
+      plan?: {
+        semanticFrame?: {
+          intent?: string;
+          target?: { kind?: string; selected?: string };
+        };
+      };
+      trustLevel: string;
+      deterministicAnswer: string;
+    };
+    assert.equal(askFlowComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(askFlowComponentUsage.plan?.semanticFrame?.target?.kind, 'metadata_component');
+    assert.equal(
+      askFlowComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Flow Civil_Rights_Intake_Questionnaire'
+    );
+    assert.match(
+      askFlowComponentUsage.deterministicAnswer,
+      /component usage lookup for Flow Civil_Rights_Intake_Questionnaire/i
+    );
+    assert.notEqual(
+      askFlowComponentUsage.trustLevel,
+      'refused',
+      'family-qualified flow usage ask should route through evidence lookup, not fail closed as another family'
+    );
+
     const askComponentUsageRecordIdRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
