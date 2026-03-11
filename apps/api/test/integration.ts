@@ -1820,6 +1820,78 @@ async function run(): Promise<void> {
     assert.equal(askReviewReplay.replayToken, askReview.proof.replayToken);
     assert.equal(askReviewReplay.proofId, askReview.proof.proofId);
 
+    const askComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is Layout Opportunity-Opportunity Layout used?'
+      })
+    });
+    assert.equal(askComponentUsageRes.status, 201, 'component usage ask should return 201');
+    const askComponentUsage = (await askComponentUsageRes.json()) as {
+      plan?: {
+        intent?: string;
+        semanticFrame?: {
+          intent?: string;
+          target?: { kind?: string; selected?: string };
+          admissibility?: { status?: string; reason?: string | null };
+        };
+      };
+      deterministicAnswer: string;
+    };
+    assert.equal(askComponentUsage.plan?.intent, 'unknown');
+    assert.equal(askComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(askComponentUsage.plan?.semanticFrame?.target?.kind, 'metadata_component');
+    assert.equal(
+      askComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Layout Opportunity-Opportunity Layout'
+    );
+    assert.equal(askComponentUsage.plan?.semanticFrame?.admissibility?.status, 'accepted');
+    assert.match(
+      askComponentUsage.deterministicAnswer,
+      /component usage lookup for Layout Opportunity-Opportunity Layout/i
+    );
+
+    const askComponentUsageRecordIdRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is 00X000000000123AAA used?'
+      })
+    });
+    assert.equal(askComponentUsageRecordIdRes.status, 201, 'record-id usage ask should return 201');
+    const askComponentUsageRecordId = (await askComponentUsageRecordIdRes.json()) as {
+      trustLevel: string;
+      deterministicAnswer: string;
+      plan?: {
+        semanticFrame?: {
+          intent?: string;
+          admissibility?: { status?: string; reason?: string | null };
+        };
+      };
+      proof?: {
+        rejectedBranches?: Array<{ reasonCode?: string; reason?: string }>;
+      };
+    };
+    assert.equal(askComponentUsageRecordId.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(
+      askComponentUsageRecordId.plan?.semanticFrame?.admissibility?.reason,
+      'record_id_unsupported'
+    );
+    assert.equal(askComponentUsageRecordId.trustLevel, 'refused');
+    assert.match(
+      askComponentUsageRecordId.deterministicAnswer,
+      /supports metadata names and fullNames, not Salesforce record Ids/i
+    );
+    assert.ok(
+      askComponentUsageRecordId.proof?.rejectedBranches?.some(
+        (branch) =>
+          branch.reasonCode === 'SEMANTIC_FRAME_BLOCKED' &&
+          /record_id_unsupported/i.test(branch.reason ?? '')
+      ),
+      'record-id usage ask should record a semantic-frame blocked branch'
+    );
+
     const architectureDecisionRes = await fetch(`${base}/ask/architecture`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

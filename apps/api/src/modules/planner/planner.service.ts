@@ -62,7 +62,7 @@ export class PlannerService {
       graphCalls,
       evidenceCalls: ['evidence.search'],
       reviewWorkflow,
-      semanticFrame: this.buildSemanticFrame(intent, normalizedQuery, object, field, reviewWorkflow)
+      semanticFrame: this.buildSemanticFrame(intent, normalizedQuery, object, field, reviewWorkflow, normalized)
     };
   }
 
@@ -71,7 +71,8 @@ export class PlannerService {
     normalizedQuery: string,
     object?: string,
     field?: string,
-    reviewWorkflow?: AskReviewWorkflow
+    reviewWorkflow?: AskReviewWorkflow,
+    rawQuery?: string
   ): AskSemanticFrameV1 | undefined {
     if (intent === 'review' && reviewWorkflow?.focus === 'approval') {
       const sourceMode: AskSemanticFrameSourceMode = /\blatest retrieve\b/i.test(normalizedQuery)
@@ -235,7 +236,7 @@ export class PlannerService {
     }
 
     if (intent !== 'automation' || !this.shouldEmitAutomationSemanticFrame(normalizedQuery, object, field)) {
-      return undefined;
+      return this.buildEvidenceLookupSemanticFrame(intent, rawQuery ?? normalizedQuery, normalizedQuery);
     }
 
     const sourceMode: AskSemanticFrameSourceMode = /\blatest retrieve\b/i.test(normalizedQuery)
@@ -289,6 +290,103 @@ export class PlannerService {
     }
 
     return /\bwhat automations update this\b/i.test(normalizedQuery);
+  }
+
+  private buildEvidenceLookupSemanticFrame(
+    intent: AskIntent,
+    rawQuery: string,
+    normalizedQuery: string
+  ): AskSemanticFrameV1 | undefined {
+    if (intent !== 'unknown') {
+      return undefined;
+    }
+
+    const lookupTarget = this.extractEvidenceLookupTarget(rawQuery);
+    if (!lookupTarget) {
+      return undefined;
+    }
+
+    const sourceMode: AskSemanticFrameSourceMode = /\blatest retrieve\b/i.test(normalizedQuery)
+      ? 'latest_retrieve'
+      : 'graph_global';
+
+    return {
+      version: 'v1',
+      intent: 'evidence_lookup',
+      target: {
+        kind: 'metadata_component',
+        raw: lookupTarget.raw,
+        candidates: [
+          {
+            id: lookupTarget.selected,
+            kind: 'metadata_component',
+            source: 'query'
+          }
+        ],
+        selected: lookupTarget.selected
+      },
+      sourceMode,
+      scope: {
+        snapshot: 'current',
+        orgSession: 'active'
+      },
+      modifiers: {
+        includeAutomation: false,
+        includePermissions: false,
+        includeEvidence: true,
+        includeProof: false
+      },
+      admissibility: lookupTarget.recordIdUnsupported
+        ? {
+            status: 'blocked',
+            reason: 'record_id_unsupported'
+          }
+        : {
+            status: 'accepted',
+            reason: null
+          },
+      ambiguity: lookupTarget.recordIdUnsupported
+        ? {
+            status: 'unsupported_question',
+            issues: ['record_id_unsupported']
+          }
+        : {
+            status: 'clear',
+            issues: []
+          }
+    };
+  }
+
+  private extractEvidenceLookupTarget(
+    normalizedQuery: string
+  ): { raw: string; selected: string; recordIdUnsupported: boolean } | null {
+    const patterns = [
+      /\bwhere is\s+(.+?)\s+(?:used|referenced)\b/i,
+      /\bwhat uses\s+(.+?)\b/i,
+      /\bwhat references\s+(.+?)\b/i
+    ];
+
+    for (const pattern of patterns) {
+      const match = normalizedQuery.match(pattern);
+      const rawCandidate = match?.[1]?.trim();
+      if (!rawCandidate) {
+        continue;
+      }
+      const selected = rawCandidate
+        .replace(/^the\s+/i, '')
+        .replace(/^["'`]+|["'`]+$/g, '')
+        .trim();
+      if (selected.length === 0) {
+        continue;
+      }
+      return {
+        raw: selected,
+        selected,
+        recordIdUnsupported: /^(?:[a-z0-9]{15}|[a-z0-9]{18})$/i.test(selected)
+      };
+    }
+
+    return null;
   }
 
   private buildMetadataTarget(field?: string, object?: string): AskSemanticFrameTarget | null {

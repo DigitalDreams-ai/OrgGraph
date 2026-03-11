@@ -5,7 +5,12 @@ export type AskSemanticFrameIntent =
   | 'automation_path_explanation'
   | 'approval_decision'
   | 'evidence_lookup';
-export type AskSemanticFrameTargetKind = 'object' | 'field' | 'flow' | 'decision_packet';
+export type AskSemanticFrameTargetKind =
+  | 'object'
+  | 'field'
+  | 'flow'
+  | 'decision_packet'
+  | 'metadata_component';
 export type AskSemanticFrameTargetSource = 'metadata' | 'query' | 'review_workflow';
 export type AskSemanticFrameSourceMode = 'graph_global' | 'latest_retrieve' | 'proof_history';
 export type AskSemanticFrameAdmissibilityStatus = 'accepted' | 'needs_clarification' | 'blocked';
