@@ -238,6 +238,16 @@ function run(): void {
   );
   assert.equal(componentUsageFlowPlan.semanticFrame?.admissibility.status, 'accepted');
 
+  const componentUsageFlowMetadataArgPlan = planner.plan(
+    'Where is Flow:Civil_Rights_Intake_Questionnaire used?'
+  );
+  assert.equal(componentUsageFlowMetadataArgPlan.intent, 'unknown');
+  assert.equal(componentUsageFlowMetadataArgPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageFlowMetadataArgPlan.semanticFrame?.target?.selected,
+    'Flow Civil_Rights_Intake_Questionnaire'
+  );
+
   const componentUsageFlowCalledPlan = planner.plan(
     'Where is Flow called "Civil_Rights_Intake_Questionnaire" used?'
   );
@@ -266,6 +276,16 @@ function run(): void {
   assert.equal(
     componentUsageLayoutNamedPlan.semanticFrame?.target?.selected,
     'Layout Opportunity-Opportunity Layout'
+  );
+
+  const componentUsageCustomFieldMetadataArgPlan = planner.plan(
+    'Where is CustomField:Opportunity.StageName used?'
+  );
+  assert.equal(componentUsageCustomFieldMetadataArgPlan.intent, 'unknown');
+  assert.equal(componentUsageCustomFieldMetadataArgPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageCustomFieldMetadataArgPlan.semanticFrame?.target?.selected,
+    'Custom Field Opportunity.StageName'
   );
 
   const componentUsageRecordIdPlan = planner.plan('Where is 00X000000000123AAA used?');

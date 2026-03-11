@@ -1942,6 +1942,43 @@ async function run(): Promise<void> {
       'family-qualified flow usage ask should route through evidence lookup, not fail closed as another family'
     );
 
+    const askFlowMetadataArgComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is Flow:Civil_Rights_Intake_Questionnaire used?'
+      })
+    });
+    assert.equal(
+      askFlowMetadataArgComponentUsageRes.status,
+      201,
+      'metadata-arg flow usage ask should return 201'
+    );
+    const askFlowMetadataArgComponentUsage = (await askFlowMetadataArgComponentUsageRes.json()) as {
+      plan?: {
+        semanticFrame?: {
+          intent?: string;
+          target?: { kind?: string; selected?: string };
+        };
+      };
+      deterministicAnswer: string;
+      trustLevel: string;
+    };
+    assert.equal(askFlowMetadataArgComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(
+      askFlowMetadataArgComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Flow Civil_Rights_Intake_Questionnaire'
+    );
+    assert.match(
+      askFlowMetadataArgComponentUsage.deterministicAnswer,
+      /component usage lookup for Flow Civil_Rights_Intake_Questionnaire/i
+    );
+    assert.notEqual(
+      askFlowMetadataArgComponentUsage.trustLevel,
+      'refused',
+      'metadata-arg flow usage ask should normalize to the same deterministic target'
+    );
+
     const askFlowCalledComponentUsageRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -2014,6 +2051,47 @@ async function run(): Promise<void> {
       askFlowPathComponentUsage.trustLevel,
       'refused',
       'flow-path component usage ask should normalize to the same deterministic target'
+    );
+
+    const askCustomFieldMetadataArgComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is CustomField:Opportunity.StageName used?'
+      })
+    });
+    assert.equal(
+      askCustomFieldMetadataArgComponentUsageRes.status,
+      201,
+      'metadata-arg custom field usage ask should return 201'
+    );
+    const askCustomFieldMetadataArgComponentUsage =
+      (await askCustomFieldMetadataArgComponentUsageRes.json()) as {
+        plan?: {
+          semanticFrame?: {
+            intent?: string;
+            target?: { kind?: string; selected?: string };
+          };
+        };
+        deterministicAnswer: string;
+        trustLevel: string;
+      };
+    assert.equal(
+      askCustomFieldMetadataArgComponentUsage.plan?.semanticFrame?.intent,
+      'evidence_lookup'
+    );
+    assert.equal(
+      askCustomFieldMetadataArgComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Custom Field Opportunity.StageName'
+    );
+    assert.match(
+      askCustomFieldMetadataArgComponentUsage.deterministicAnswer,
+      /component usage lookup for Custom Field Opportunity.StageName/i
+    );
+    assert.notEqual(
+      askCustomFieldMetadataArgComponentUsage.trustLevel,
+      'refused',
+      'metadata-arg custom field usage ask should normalize to the same deterministic target'
     );
 
     const askComponentUsageRecordIdRes = await fetch(`${base}/ask`, {
