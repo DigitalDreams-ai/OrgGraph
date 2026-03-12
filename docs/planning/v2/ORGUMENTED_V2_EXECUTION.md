@@ -119,6 +119,7 @@ Materially true now:
 - CI now runs packaged desktop smoke in the same Windows validate job (instead of cross-job runtime artifact handoff), reducing Actions artifact storage pressure without dropping trust gates
 - Actions retention cleanup now runs twice daily and keeps the most recent 14 completed runs per workflow by default; runtime-nightly is now weekly with 1-day artifact retention to protect CI storage/minute budget without weakening PR trust gates
 - release checklist now aligns to pnpm-only commands and includes explicit real-org operator workflow evidence requirements
+- wave12 release surfaces now include a dedicated rollback playbook plus release-notes evidence template, keeping release/rollback discipline aligned to the packaged desktop workflow instead of older mixed promotion language
 - real-org desktop quickstart runbook now exists as a single explicit Git Bash workflow for connect, browser retrieve, refresh handoff, and Ask proof capture
 - operator-machine pass evidence for real-org quickstart is now captured with proof/replay IDs in `docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md`
 - operator evidence now includes successful grounded Ask output for both direct flow-name and `Flow called <name>` phrasing with trusted envelopes
@@ -160,6 +161,7 @@ Still unresolved:
 - proofs/history still needs full label-first lifecycle closure beyond current baseline auto-selection
 - layout/accessibility still needs final visual QA lock after latest density guardrail pass
 - clean-machine pass for the new real-org quickstart runbook is still pending
+- rollback proof still needs one executed candidate/known-good validation cycle, even though the canonical playbook now exists
 
 Operational note:
 - desktop smoke should run after desktop build completes; running both in parallel can produce a false process-exit readiness failure

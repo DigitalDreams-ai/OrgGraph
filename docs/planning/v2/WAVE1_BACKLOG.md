@@ -35,7 +35,7 @@ Purpose:
 | B011 | P1 | Proofs/History | Complete label-first proof access; remove token-bookkeeping dependency from primary path | Wave9 | Operator can reopen and replay by label/history alone | In Progress |
 | B012 | P1 | UX/Layout | Remove clipping/overflow/truncation defects across cards/rails/workspaces | Wave10 | No known clipping defects at supported desktop viewport targets | In Progress |
 | B013 | P1 | Quality | Burn down all critical/high Stage 1 defects to zero | Wave11 | P0/P1 defect matrix count reaches zero and stays stable for one cycle | Open |
-| B014 | P1 | Release | Finalize release checklist, rollback path, and operator machine validation | Wave12 | Release candidate checklist fully green with evidence artifacts | Open |
+| B014 | P1 | Release | Finalize release checklist, rollback path, and operator machine validation | Wave12 | Release candidate checklist fully green with evidence artifacts | In Progress |
 | B015 | P2 | Analyze | Deepen explain/analyze workflows to reduce raw JSON dependency | Wave8 | Core analyze tasks complete using structured cards/actions | In Progress |
 | B016 | P2 | Diagnostics | Improve diagnostics readability and operator actionability under failure | Wave8 | Runtime/tool/semantic failure states map to direct operator actions | In Progress |
 | B017 | P2 | Benchmark | Replace fixture-only benchmark narrative with stronger real-org scenario evidence | Wave7 | Real-org benchmark artifact set published and reproducible | In Progress |

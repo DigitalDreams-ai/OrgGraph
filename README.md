@@ -111,6 +111,7 @@ See [ORG_INTEGRATION.md](./docs/runbooks/ORG_INTEGRATION.md), [DESKTOP_DEV_RUNTI
 - Human benchmark runbook: [docs/runbooks/HUMAN_BENCHMARK_CAPTURE.md](./docs/runbooks/HUMAN_BENCHMARK_CAPTURE.md)
 - Production promotion gate: [docs/runbooks/PRODUCTION_PROMOTION.md](./docs/runbooks/PRODUCTION_PROMOTION.md)
 - Release checklist: [docs/releases/RELEASE_CHECKLIST.md](./docs/releases/RELEASE_CHECKLIST.md)
+- Rollback playbook: [docs/releases/ROLLBACK_PLAYBOOK.md](./docs/releases/ROLLBACK_PLAYBOOK.md)
 
 Stage 1 human evidence closeout:
 - archive stale benchmark artifacts first with `pnpm phase17:benchmark:human:reset`

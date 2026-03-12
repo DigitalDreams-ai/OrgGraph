@@ -1,62 +1,64 @@
 # Production Promotion Gate
 
 ## Purpose
-Define the go/no-go process for promoting Orgumented from sandbox metadata to production org metadata.
 
-## Go / No-Go Criteria
-- `GET /ready` is `status=ready` and source path points to retrieved org metadata.
-- `npm run phase7:smoke-live` passes on sandbox.
-- `npm run phase7:regression` passes against baseline snapshot threshold.
-- `/perms`, `/automation`, `/impact`, `/ask` have at least one known-positive and one known-negative validation case reviewed.
-- No new parser warnings that materially change operator conclusions.
+This runbook defines the release go/no-go gate for the packaged Windows desktop app.
 
-## Pre-Promotion Checklist
-1. Run promotion dry-run:
-`npm run phase8:promotion-dry-run`
-2. Create restore point:
-`npm run phase8:restore-point:create`
-3. Capture baseline snapshot:
-`npm run phase7:snapshot`
-4. Validate latest ingest summary:
-`npm run ingest:report`
-5. Confirm secrets are current and scoped:
-`SF_ALIAS`, `SF_BASE_URL`, and Salesforce CLI keychain session for alias
-6. Confirm rollback artifacts exist in `data/refresh/restore-points/<stamp>`
-7. Confirm operator sign-off on validation outputs and append promotion log:
-`ORGUMENTED_OPERATOR=<name> npm run phase8:promotion-log -- promoted`
+Use these authoritative release surfaces for the actual release decision:
+- [Release Checklist](../releases/RELEASE_CHECKLIST.md)
+- [Rollback Playbook](../releases/ROLLBACK_PLAYBOOK.md)
+- [Release Notes](../releases/RELEASE.md)
+- [Real Org Desktop Quickstart](./REAL_ORG_DESKTOP_QUICKSTART.md)
 
-## Rollback Procedure
-1. Stop the local desktop runtime.
-2. Restore known-good snapshot:
-`npm run phase8:restore-point:apply -- <restore-point-stamp>`
-3. Restart the desktop runtime from the previous known-good commit.
-4. Verify:
-- `GET /ready`
-- `GET /perms` known-positive check
+## Promotion Standard
 
-## Secrets Rotation Procedure
-1. Keep `.env` auth config minimal and explicit:
-- `SF_ALIAS=<org-alias>`
-- `SF_BASE_URL=<instance-url>`
-2. Authenticate alias in runtime using Salesforce CLI keychain:
-- `sf org login web --alias <alias> --instance-url <url> --set-default`
-3. Verify runtime session:
-- `sf org display --target-org <alias> --json`
-4. Run live smoke:
-`npm run phase7:smoke-live`
+Do not promote a release candidate unless all of the following are true:
+- packaged smoke passes
+- packaged relaunch reaches `ready`
+- rollback target is identified and documented
+- real-org quickstart evidence is captured
+- release notes include commit SHA, tag, and smoke evidence
 
-## Production Cadence
-- Manual cadence (recommended now): run retrieve + refresh on demand before major analysis sessions.
-- Optional scheduled cadence (later): daily retrieve + incremental refresh with alerting on regression threshold failures.
+## Required Commands
 
-## Retention + Alerts
-- Prune restore-point and promotion-log artifacts:
-`ORGUMENTED_RETENTION_DAYS=30 npm run phase8:retention-prune`
-- Optional alert hook for smoke/regression scripts:
-`ORGUMENTED_ALERT_WEBHOOK_URL=https://...`
+Run from Git Bash:
 
-## Monthly Accuracy Review
-1. Select 10-20 representative business questions.
-2. Run `/perms`, `/automation`, `/impact`, `/ask` and store artifacts.
-3. Record precision findings and parser warning trends.
-4. Create follow-up issues for ontology/parsing improvements before next promotion.
+```bash
+cd /c/Users/sean/Projects/GitHub/OrgGraph
+git checkout main
+git pull --ff-only
+pnpm --reporter=append-only --loglevel=info install --frozen-lockfile
+pnpm --filter api test
+pnpm --filter web typecheck
+pnpm --filter web build
+pnpm desktop:info
+pnpm --reporter=append-only --loglevel=info desktop:build
+pnpm --reporter=append-only --loglevel=info desktop:smoke:release
+```
+
+## Promotion Decision
+
+Promotion is allowed only after:
+1. [Release Checklist](../releases/RELEASE_CHECKLIST.md) is fully complete
+2. [Rollback Playbook](../releases/ROLLBACK_PLAYBOOK.md) inputs are recorded
+3. [Release Notes](../releases/RELEASE.md) are filled in for the candidate
+4. [Real Org Desktop Quickstart](./REAL_ORG_DESKTOP_QUICKSTART.md) evidence is complete
+
+## Tagging
+
+After all gates are green:
+
+```bash
+cd /c/Users/sean/Projects/GitHub/OrgGraph
+git checkout main
+git pull --ff-only
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+## If Promotion Fails
+
+Do not improvise recovery steps here.
+
+Use the canonical rollback procedure:
+- [Rollback Playbook](../releases/ROLLBACK_PLAYBOOK.md)

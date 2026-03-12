@@ -37,4 +37,5 @@
 
 ## Releases
 - [Release Checklist](./releases/RELEASE_CHECKLIST.md)
+- [Rollback Playbook](./releases/ROLLBACK_PLAYBOOK.md)
 - [Release Notes](./releases/RELEASE.md)
