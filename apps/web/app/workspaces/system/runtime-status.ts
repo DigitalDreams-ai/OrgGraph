@@ -19,6 +19,19 @@ export type StructuredSummary = {
   status: 'good' | 'warning' | 'bad';
   detail: string;
   nextAction: string;
+  actions: StructuredRuntimeAction[];
+};
+
+export type StructuredRuntimeActionId =
+  | 'refresh-status'
+  | 'load-org-status'
+  | 'run-preflight'
+  | 'open-connect'
+  | 'open-refresh';
+
+export type StructuredRuntimeAction = {
+  id: StructuredRuntimeActionId;
+  label: string;
 };
 
 export function deriveRuntimeIssues(
@@ -126,7 +139,11 @@ export function buildStructuredSnapshot(input: {
           title: 'Runtime reachability',
           status: 'bad',
           detail: 'Desktop runtime is unavailable, so readiness and tooling probes are blocked.',
-          nextAction: 'Use Refresh Status after relaunching Orgumented.'
+          nextAction: 'Use Refresh Status after relaunching Orgumented.',
+          actions: [
+            { id: 'refresh-status', label: 'Refresh Status' },
+            { id: 'open-refresh', label: 'Open Refresh & Build' }
+          ]
         }
       : input.runtimeGateState === 'blocked'
         ? {
@@ -134,7 +151,11 @@ export function buildStructuredSnapshot(input: {
             title: 'Runtime gate',
             status: 'bad',
             detail: `Desktop runtime is reachable but fail-closed (health=${input.healthStatus}, ready=${input.readyStatus}).`,
-            nextAction: 'Open Refresh & Build and reground runtime readiness before relying on Ask or rebuild workflows.'
+            nextAction: 'Open Refresh & Build and reground runtime readiness before relying on Ask or rebuild workflows.',
+            actions: [
+              { id: 'refresh-status', label: 'Refresh Status' },
+              { id: 'open-refresh', label: 'Open Refresh & Build' }
+            ]
           }
         : runtimeErrors > 0
           ? {
@@ -142,7 +163,11 @@ export function buildStructuredSnapshot(input: {
               title: 'Runtime readiness',
               status: 'bad',
               detail: `${runtimeErrors} readiness error(s) detected (health=${input.healthStatus}, ready=${input.readyStatus}).`,
-              nextAction: 'Open Refresh & Build and run Refresh Semantic State.'
+              nextAction: 'Open Refresh & Build and run Refresh Semantic State.',
+              actions: [
+                { id: 'refresh-status', label: 'Refresh Status' },
+                { id: 'open-refresh', label: 'Open Refresh & Build' }
+              ]
             }
           : runtimeWarnings > 0
             ? {
@@ -150,14 +175,19 @@ export function buildStructuredSnapshot(input: {
                 title: 'Runtime readiness',
                 status: 'warning',
                 detail: `${runtimeWarnings} readiness warning(s) detected (fixtures/evidence may be incomplete).`,
-                nextAction: 'Run retrieve + refresh to repopulate parse/evidence paths.'
+                nextAction: 'Run retrieve + refresh to repopulate parse/evidence paths.',
+                actions: [
+                  { id: 'refresh-status', label: 'Refresh Status' },
+                  { id: 'open-refresh', label: 'Open Refresh & Build' }
+                ]
               }
             : {
                 id: 'runtime',
                 title: 'Runtime readiness',
                 status: 'good',
                 detail: `Health and readiness are stable (health=${input.healthStatus}, ready=${input.readyStatus}).`,
-                nextAction: 'No runtime recovery action required.'
+                nextAction: 'No runtime recovery action required.',
+                actions: [{ id: 'refresh-status', label: 'Refresh Status' }]
               };
 
   const sfInstalled = input.orgStatus?.sf?.installed === true;
@@ -176,7 +206,11 @@ export function buildStructuredSnapshot(input: {
           title: 'Toolchain status',
           status: 'bad',
           detail: 'sf/cci checks are unavailable while runtime is unreachable.',
-          nextAction: 'Restore runtime first, then rerun Org Status and Preflight.'
+          nextAction: 'Restore runtime first, then rerun Org Status and Preflight.',
+          actions: [
+            { id: 'refresh-status', label: 'Refresh Status' },
+            { id: 'load-org-status', label: 'Load Org Status' }
+          ]
         }
       : input.runtimeGateState === 'blocked'
         ? {
@@ -184,7 +218,12 @@ export function buildStructuredSnapshot(input: {
             title: 'Toolchain status',
             status: 'warning',
             detail: 'sf/cci status is still readable, but the runtime gate is fail-closed and operator workflows are blocked.',
-            nextAction: 'Fix runtime readiness first, then treat tool/session status as operationally usable.'
+            nextAction: 'Fix runtime readiness first, then treat tool/session status as operationally usable.',
+            actions: [
+              { id: 'refresh-status', label: 'Refresh Status' },
+              { id: 'load-org-status', label: 'Load Org Status' },
+              { id: 'run-preflight', label: 'Run Preflight' }
+            ]
           }
         : !sfInstalled || !cciInstalled
           ? {
@@ -192,7 +231,12 @@ export function buildStructuredSnapshot(input: {
               title: 'Toolchain status',
               status: 'bad',
               detail: `Tooling is degraded (sf=${sfInstalled ? 'installed' : 'missing'}, cci=${cciInstalled ? 'installed' : 'missing'}).`,
-              nextAction: 'Install missing tools and rerun Preflight.'
+              nextAction: 'Install missing tools and rerun Preflight.',
+              actions: [
+                { id: 'load-org-status', label: 'Load Org Status' },
+                { id: 'run-preflight', label: 'Run Preflight' },
+                { id: 'open-connect', label: 'Open Org Sessions' }
+              ]
             }
           : preflightErrors > 0
             ? {
@@ -200,7 +244,11 @@ export function buildStructuredSnapshot(input: {
                 title: 'Toolchain status',
                 status: 'bad',
                 detail: `${preflightErrors} blocking preflight error(s) detected for the selected alias.`,
-                nextAction: 'Follow preflight remediation items before retrieve/ask.'
+                nextAction: 'Follow preflight remediation items before retrieve/ask.',
+                actions: [
+                  { id: 'run-preflight', label: 'Run Preflight' },
+                  { id: 'open-connect', label: 'Open Org Sessions' }
+                ]
               }
             : preflightWarnings > 0
               ? {
@@ -208,14 +256,19 @@ export function buildStructuredSnapshot(input: {
                   title: 'Toolchain status',
                   status: 'warning',
                   detail: `${preflightWarnings} warning(s) remain (non-blocking but should be cleaned up).`,
-                  nextAction: 'Run preflight checklist actions to remove warnings.'
+                  nextAction: 'Run preflight checklist actions to remove warnings.',
+                  actions: [
+                    { id: 'run-preflight', label: 'Run Preflight' },
+                    { id: 'open-connect', label: 'Open Org Sessions' }
+                  ]
                 }
               : {
                   id: 'tooling',
                   title: 'Toolchain status',
                   status: 'good',
                   detail: 'sf/cci are installed and no preflight issues are currently reported.',
-                  nextAction: 'Toolchain is ready for retrieve, refresh, and ask.'
+                  nextAction: 'Toolchain is ready for retrieve, refresh, and ask.',
+                  actions: [{ id: 'load-org-status', label: 'Load Org Status' }]
                 };
 
   const sessionConnected =
@@ -233,7 +286,11 @@ export function buildStructuredSnapshot(input: {
           title: 'Session state',
           status: 'bad',
           detail: 'Session state cannot be validated while runtime is unavailable.',
-          nextAction: 'Relaunch runtime, then run Refresh Overview.'
+          nextAction: 'Relaunch runtime, then run Refresh Overview.',
+          actions: [
+            { id: 'refresh-status', label: 'Refresh Status' },
+            { id: 'open-connect', label: 'Open Org Sessions' }
+          ]
         }
       : input.runtimeGateState === 'blocked'
         ? {
@@ -241,7 +298,11 @@ export function buildStructuredSnapshot(input: {
             title: 'Session state',
             status: 'warning',
             detail: 'Session details are reachable, but runtime readiness is still fail-closed for deterministic workflows.',
-            nextAction: 'Restore runtime readiness before treating the current session as fully usable.'
+            nextAction: 'Restore runtime readiness before treating the current session as fully usable.',
+            actions: [
+              { id: 'refresh-status', label: 'Refresh Status' },
+              { id: 'open-connect', label: 'Open Org Sessions' }
+            ]
           }
         : sessionConnected && aliasAuthenticated === true
           ? {
@@ -255,14 +316,25 @@ export function buildStructuredSnapshot(input: {
               nextAction:
                 cciAliasAvailable === false
                   ? 'Use Bridge CCI Alias, then rerun Preflight.'
-                  : 'No session recovery action required.'
+                  : 'No session recovery action required.',
+              actions:
+                cciAliasAvailable === false
+                  ? [
+                      { id: 'run-preflight', label: 'Run Preflight' },
+                      { id: 'open-connect', label: 'Open Org Sessions' }
+                    ]
+                  : [{ id: 'open-connect', label: 'Open Org Sessions' }]
             }
           : {
               id: 'session',
               title: 'Session state',
               status: 'bad',
               detail: 'Session is not yet ready for deterministic operator workflows.',
-              nextAction: 'Run Attach/Switch Active Alias and rerun Preflight.'
+              nextAction: 'Run Attach/Switch Active Alias and rerun Preflight.',
+              actions: [
+                { id: 'open-connect', label: 'Open Org Sessions' },
+                { id: 'run-preflight', label: 'Run Preflight' }
+              ]
             };
 
   return [runtimeSummary, toolingSummary, sessionSummary];

@@ -420,6 +420,9 @@ export default function Page(): JSX.Element {
               onRunMetaAdapt={() => void systemWorkspace.runMetaAdapt()}
               onLoadOrgStatus={() => void systemWorkspace.loadOrgStatus()}
               onRunPreflight={() => void connectWorkspace.runPreflight(connectWorkspace.activeAlias)}
+              onRefreshStatus={() => void shellRuntime.refreshStatuses()}
+              onOpenConnect={() => setUiTab('connect')}
+              onOpenRefresh={() => setUiTab('refresh')}
             />
           )}
         </section>
