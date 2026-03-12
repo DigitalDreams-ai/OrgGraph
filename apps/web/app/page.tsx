@@ -374,6 +374,8 @@ export default function Page(): JSX.Element {
               onRunImpact={() => void analyzeWorkspace.runImpactAnalysis()}
               onRunSystemPermission={() => void analyzeWorkspace.runSystemPermissionCheck()}
               onOpenAsk={openAskFromAnalyze}
+              onOpenBrowser={() => setUiTab('browser')}
+              onOpenRefresh={() => setUiTab('refresh')}
             />
           )}
 
