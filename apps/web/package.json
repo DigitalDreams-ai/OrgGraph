@@ -7,6 +7,7 @@
     "prebuild": "node ../../scripts/clean-eadir.mjs",
     "build": "pnpm exec next build",
     "start": "pnpm exec next start",
+    "test:ci": "pnpm test:ask-render && pnpm test:analyze-render && pnpm test:runtime-status && pnpm test:proof-history && pnpm test:workspace-a11y && pnpm test:system-workspace",
     "test:ask-render": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/ask-flow-packet-render.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:analyze-render": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/analyze-render-guards.ts",
