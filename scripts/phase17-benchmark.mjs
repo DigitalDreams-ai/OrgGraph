@@ -262,9 +262,13 @@ function summarizeAskResponse(body) {
           kind: body.decisionPacket.kind,
           focus: body.decisionPacket.focus,
           targetLabel: body.decisionPacket.targetLabel,
+          recommendationVerdict: body.decisionPacket.recommendation?.verdict,
           riskLevel: body.decisionPacket.riskLevel,
           topRiskDriverCount: Array.isArray(body.decisionPacket.topRiskDrivers)
             ? body.decisionPacket.topRiskDrivers.length
+            : 0,
+          evidenceGapCount: Array.isArray(body.decisionPacket.evidenceGaps)
+            ? body.decisionPacket.evidenceGaps.length
             : 0,
           nextActionCount: Array.isArray(body.decisionPacket.nextActions)
             ? body.decisionPacket.nextActions.length
@@ -298,6 +302,11 @@ function buildReviewPacketQuality(decisionPacket) {
   const nextActions = Array.isArray(decisionPacket.nextActions)
     ? decisionPacket.nextActions
     : [];
+  const recommendationVerdict = String(decisionPacket?.recommendation?.verdict ?? '');
+  const recommendationSummary = String(decisionPacket?.recommendation?.summary ?? '');
+  const evidenceGaps = Array.isArray(decisionPacket?.evidenceGaps)
+    ? decisionPacket.evidenceGaps.map((gap) => String(gap))
+    : [];
   const automationAction = nextActions.find(
     (action) => action && String(action.label) === 'Inspect impacted automation'
   );
@@ -321,11 +330,13 @@ function buildReviewPacketQuality(decisionPacket) {
     (topImpactedSources.length > 0
       ? topImpactedSources.some((source) => impactAction.rationale.includes(source))
       : impactAction.rationale.toLowerCase().includes('no impact path found'));
+  const hasRecommendation = recommendationVerdict.length > 0 && recommendationSummary.length > 0;
   const passed =
     hasTopAutomationSpotlight &&
     hasTopImpactSpotlight &&
     hasSpecificAutomationAction &&
-    hasSpecificImpactAction;
+    hasSpecificImpactAction &&
+    hasRecommendation;
 
   return {
     hasDecisionPacket: true,
@@ -333,6 +344,9 @@ function buildReviewPacketQuality(decisionPacket) {
     hasTopImpactSpotlight,
     hasSpecificAutomationAction,
     hasSpecificImpactAction,
+    hasRecommendation,
+    recommendationVerdict,
+    evidenceGapCount: evidenceGaps.length,
     passed
   };
 }

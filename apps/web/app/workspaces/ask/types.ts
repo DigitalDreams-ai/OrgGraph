@@ -9,6 +9,14 @@ export type AskPayload = {
     targetLabel?: string;
     targetType?: string;
     summary?: string;
+    recommendation?: {
+      verdict?:
+        | 'approve_with_verification'
+        | 'review_before_approval'
+        | 'do_not_approve_yet'
+        | 'needs_more_evidence';
+      summary?: string;
+    };
     riskScore?: number;
     riskLevel?: string;
     evidenceCoverage?: {
@@ -36,6 +44,7 @@ export type AskPayload = {
       impactPathCount?: number;
       topImpactedSources?: string[];
     };
+    evidenceGaps?: string[];
     nextActions?: Array<{ label?: string; rationale?: string }>;
   };
   policy?: { policyId?: string };

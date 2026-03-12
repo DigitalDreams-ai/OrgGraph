@@ -246,6 +246,13 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
 
               <div className="packet-stat-grid">
                 <div className="packet-stat">
+                  <span>Recommendation</span>
+                  <strong className="packet-value">
+                    {props.askResult.decisionPacket.recommendation?.verdict || 'n/a'}
+                  </strong>
+                  <p>{props.askResult.decisionPacket.recommendation?.summary || 'No recommendation returned.'}</p>
+                </div>
+                <div className="packet-stat">
                   <span>Permissions</span>
                   <strong className="packet-value">{props.askResult.decisionPacket.permissionImpact?.pathCount ?? 'n/a'} paths</strong>
                   <p>{props.askResult.decisionPacket.permissionImpact?.summary || 'No permission summary returned.'}</p>
@@ -261,6 +268,17 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                   <p>{props.askResult.decisionPacket.changeImpact?.summary || 'No impact summary returned.'}</p>
                 </div>
               </div>
+
+              {props.askResult.decisionPacket.evidenceGaps?.length ? (
+                <div>
+                  <h4>Evidence gaps</h4>
+                  <ul className="proof-inline-list">
+                    {props.askResult.decisionPacket.evidenceGaps.map((gap) => (
+                      <li key={gap}>{gap}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
           ) : null}
           {props.askElaboration ? (
