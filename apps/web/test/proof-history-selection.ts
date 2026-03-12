@@ -34,15 +34,14 @@ const recentProofs: RecentProofItem[] = [
 ];
 
 function run(): void {
-  assert.equal(resolveSelectedHistoryProofId(recentProofs, '', ''), 'proof_alpha');
-  assert.equal(resolveSelectedHistoryProofId(recentProofs, '', 'proof_beta'), 'proof_beta');
-  assert.equal(resolveSelectedHistoryProofId(recentProofs, 'proof_beta', 'proof_alpha'), 'proof_beta');
-  assert.equal(resolveSelectedHistoryProofId(recentProofs, 'missing', ''), 'proof_alpha');
+  assert.equal(resolveSelectedHistoryProofId(recentProofs, ''), 'proof_alpha');
+  assert.equal(resolveSelectedHistoryProofId(recentProofs, 'proof_beta'), 'proof_beta');
+  assert.equal(resolveSelectedHistoryProofId(recentProofs, 'missing'), 'proof_alpha');
 
   assert.equal(resolveSelectedHistoryProof(recentProofs, 'proof_beta')?.proofId, 'proof_beta');
-  assert.equal(resolveSelectedHistoryProof(recentProofs, '', 'proof_alpha')?.replayToken, 'trace_alpha');
+  assert.equal(resolveSelectedHistoryProof(recentProofs, '')?.replayToken, 'trace_alpha');
 
-  const selectedRecentProof = resolveSelectedHistoryProof(recentProofs, 'proof_beta', '');
+  const selectedRecentProof = resolveSelectedHistoryProof(recentProofs, 'proof_beta');
   assert.equal(resolveProofLookupId(selectedRecentProof, 'proof_alpha'), 'proof_beta');
 
   const replayLookup = resolveReplayLookup(selectedRecentProof, 'proof_alpha', 'trace_alpha');
@@ -59,9 +58,9 @@ function run(): void {
 
   const noSelectionMarkup = renderToStaticMarkup(
     React.createElement(ProofsWorkspace, {
-      proofId: 'proof_alpha',
+      proofId: '',
       setProofId: () => undefined,
-      replayToken: 'trace_alpha',
+      replayToken: '',
       setReplayToken: () => undefined,
       recentProofs,
       selectedRecentProof: null,
@@ -92,17 +91,46 @@ function run(): void {
   assert.match(noSelectionMarkup, /disabled="">Replay Selected History/);
   assert.match(noSelectionMarkup, /disabled="">Export Selected History Proof/);
   assert.match(noSelectionMarkup, /disabled="">Export Selected History Replay/);
-  assert.doesNotMatch(noSelectionMarkup, /disabled="">Open by Token/);
-  assert.doesNotMatch(noSelectionMarkup, /disabled="">Replay by Token/);
+  assert.match(noSelectionMarkup, /disabled="">Open by Token/);
+  assert.match(noSelectionMarkup, /disabled="">Replay by Token/);
   assert.match(noSelectionMarkup, /History label: none/);
   assert.match(noSelectionMarkup, /Loaded proof: not opened/);
-  assert.match(noSelectionMarkup, /Advanced tokens: present/);
+  assert.match(noSelectionMarkup, /Advanced tokens: empty/);
 
-  const selectedMarkup = renderToStaticMarkup(
+  const advancedOnlyMarkup = renderToStaticMarkup(
     React.createElement(ProofsWorkspace, {
       proofId: 'proof_alpha',
       setProofId: () => undefined,
       replayToken: 'trace_alpha',
+      setReplayToken: () => undefined,
+      recentProofs,
+      selectedRecentProof: null,
+      selectedProof: null,
+      replayResult: null,
+      metricsExport: null,
+      loading: false,
+      onListRecent: () => undefined,
+      onGetProof: () => undefined,
+      onReplay: () => undefined,
+      onOpenByToken: () => undefined,
+      onReplayByToken: () => undefined,
+      onExportMetrics: () => undefined,
+      onExportProofArtifact: () => undefined,
+      onExportReplayArtifact: () => undefined,
+      onSelectRecentProof: () => undefined,
+      onOpenRecentProof: () => undefined,
+      onReplayRecentProof: () => undefined
+    })
+  );
+  assert.doesNotMatch(advancedOnlyMarkup, /disabled="">Open by Token/);
+  assert.doesNotMatch(advancedOnlyMarkup, /disabled="">Replay by Token/);
+  assert.match(advancedOnlyMarkup, /Advanced tokens: present/);
+
+  const selectedMarkup = renderToStaticMarkup(
+    React.createElement(ProofsWorkspace, {
+      proofId: '',
+      setProofId: () => undefined,
+      replayToken: '',
       setReplayToken: () => undefined,
       recentProofs,
       selectedRecentProof: recentProofs[0],
@@ -129,7 +157,7 @@ function run(): void {
   assert.doesNotMatch(selectedMarkup, /disabled="">Export Selected History Replay/);
   assert.match(selectedMarkup, /History label: selected/);
   assert.match(selectedMarkup, /Loaded proof: not opened/);
-  assert.match(selectedMarkup, /Advanced tokens: present/);
+  assert.match(selectedMarkup, /Advanced tokens: empty/);
 
   const advancedLoadedMarkup = renderToStaticMarkup(
     React.createElement(ProofsWorkspace, {
@@ -177,9 +205,9 @@ function run(): void {
 
   const detailMarkup = renderToStaticMarkup(
     React.createElement(ProofsWorkspace, {
-      proofId: 'proof_alpha',
+      proofId: '',
       setProofId: () => undefined,
-      replayToken: 'trace_alpha',
+      replayToken: '',
       setReplayToken: () => undefined,
       recentProofs,
       selectedRecentProof: recentProofs[0],
@@ -257,7 +285,7 @@ function run(): void {
   );
   assert.match(detailMarkup, /History label: selected/);
   assert.match(detailMarkup, /Loaded proof: selected history/);
-  assert.match(detailMarkup, /Advanced tokens: present/);
+  assert.match(detailMarkup, /Advanced tokens: empty/);
   assert.match(detailMarkup, /<strong><span class="path-value">What touches Opportunity\.StageName\?<\/span><\/strong>/);
   assert.match(detailMarkup, /<strong>Snapshot:<\/strong> <span class="path-value">snap_alpha<\/span>/);
   assert.match(detailMarkup, /<strong>Generated:<\/strong> <span class="path-value">2026-03-01T10:00:00Z<\/span>/);

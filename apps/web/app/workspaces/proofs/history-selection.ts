@@ -8,8 +8,7 @@ function normalize(value: string | undefined): string {
 
 export function resolveSelectedHistoryProofId(
   recentProofs: RecentProofItem[],
-  selectedHistoryProofId: string,
-  fallbackProofId?: string
+  selectedHistoryProofId: string
 ): string {
   const nextSelectedHistoryProofId = normalize(selectedHistoryProofId);
   if (nextSelectedHistoryProofId) {
@@ -19,23 +18,14 @@ export function resolveSelectedHistoryProofId(
     }
   }
 
-  const nextFallbackProofId = normalize(fallbackProofId);
-  if (nextFallbackProofId) {
-    const matchesFallback = recentProofs.some((proof) => proof.proofId === nextFallbackProofId);
-    if (matchesFallback) {
-      return nextFallbackProofId;
-    }
-  }
-
   return recentProofs[0]?.proofId || '';
 }
 
 export function resolveSelectedHistoryProof(
   recentProofs: RecentProofItem[],
-  selectedHistoryProofId: string,
-  fallbackProofId?: string
+  selectedHistoryProofId: string
 ): RecentProofItem | null {
-  const proofId = resolveSelectedHistoryProofId(recentProofs, selectedHistoryProofId, fallbackProofId);
+  const proofId = resolveSelectedHistoryProofId(recentProofs, selectedHistoryProofId);
   return recentProofs.find((proof) => proof.proofId === proofId) ?? null;
 }
 

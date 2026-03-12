@@ -217,8 +217,8 @@ function downloadJsonArtifact(fileName: string, payload: Record<string, unknown>
 }
 
 export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
-  const [proofId, setProofId] = useState('');
-  const [replayToken, setReplayToken] = useState('');
+  const [advancedProofId, setAdvancedProofId] = useState('');
+  const [advancedReplayToken, setAdvancedReplayToken] = useState('');
   const [selectedHistoryProofId, setSelectedHistoryProofId] = useState('');
   const [recentProofs, setRecentProofs] = useState<RecentProofItem[]>([]);
   const [selectedProof, setSelectedProof] = useState<ProofArtifactView | null>(null);
@@ -233,8 +233,6 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
 
   function useRecentProof(proof: RecentProofItem): void {
     setSelectedHistoryProofId(proof.proofId);
-    setProofId(proof.proofId);
-    setReplayToken(proof.replayToken);
   }
 
   function selectRecentProof(proof: RecentProofItem): void {
@@ -277,10 +275,11 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
 
   function syncFromAsk(nextProofId?: string, nextReplayToken?: string): void {
     if (nextProofId) {
-      setProofId(nextProofId);
+      setSelectedHistoryProofId(nextProofId);
     }
-    if (nextReplayToken) {
-      setReplayToken(nextReplayToken);
+    if (nextProofId || nextReplayToken) {
+      setAdvancedProofId('');
+      setAdvancedReplayToken('');
     }
   }
 
@@ -304,12 +303,10 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
           return;
         }
 
-        const nextSelectedId = resolveSelectedHistoryProofId(nextRecentProofs, selectedHistoryProofId, proofId);
+        const nextSelectedId = resolveSelectedHistoryProofId(nextRecentProofs, selectedHistoryProofId);
         const fallbackSelection = nextRecentProofs.find((item) => item.proofId === nextSelectedId) ?? nextRecentProofs[0];
         if (fallbackSelection) {
           setSelectedHistoryProofId(fallbackSelection.proofId);
-          setProofId(fallbackSelection.proofId);
-          setReplayToken(fallbackSelection.replayToken);
         }
       }
     } catch (error) {
@@ -323,7 +320,7 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     }
   }
 
-  async function runProofLookupById(nextProofId: string): Promise<void> {
+  async function runProofLookupById(nextProofId: string, syncAdvancedTokens = false): Promise<void> {
     if (!nextProofId.trim()) {
       reportSelectionRequired('Select a history label first, or provide a proof ID in Advanced token lookup.');
       return;
@@ -341,9 +338,9 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
       } else {
         const nextProof = parseProofArtifact(result);
         setSelectedProof(nextProof);
-        if (nextProof) {
-          setProofId(nextProof.proofId);
-          setReplayToken(nextProof.replayToken);
+        if (nextProof && syncAdvancedTokens) {
+          setAdvancedProofId(nextProof.proofId);
+          setAdvancedReplayToken(nextProof.replayToken);
         }
       }
     } catch (error) {
@@ -399,16 +396,16 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
   }
 
   async function runAdvancedProofLookup(): Promise<void> {
-    const lookupId = resolveProofLookupId(null, proofId);
+    const lookupId = resolveProofLookupId(null, advancedProofId);
     if (!lookupId) {
       reportSelectionRequired('Provide a proof ID in Advanced token lookup before opening by token.');
       return;
     }
-    await runProofLookupById(lookupId);
+    await runProofLookupById(lookupId, true);
   }
 
   async function runAdvancedReplay(): Promise<void> {
-    const lookup = resolveReplayLookup(null, proofId, replayToken);
+    const lookup = resolveReplayLookup(null, advancedProofId, advancedReplayToken);
 
     if (!lookup.proofId && !lookup.replayToken) {
       reportSelectionRequired('Provide a proof ID or replay token in Advanced token lookup before replaying by token.');
@@ -470,8 +467,6 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
         return;
       }
 
-      setProofId(artifact.proofId);
-      setReplayToken(artifact.replayToken);
       const name = sanitizeArtifactName(artifact.query || artifact.proofId);
       downloadJsonArtifact(`orgumented-proof-${name}.json`, artifact as unknown as Record<string, unknown>);
     } catch (error) {
@@ -556,13 +551,13 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     }
   }
 
-  const selectedRecentProof = resolveSelectedHistoryProof(recentProofs, selectedHistoryProofId, proofId);
+  const selectedRecentProof = resolveSelectedHistoryProof(recentProofs, selectedHistoryProofId);
 
   return {
-    proofId,
-    setProofId,
-    replayToken,
-    setReplayToken,
+    proofId: advancedProofId,
+    setProofId: setAdvancedProofId,
+    replayToken: advancedReplayToken,
+    setReplayToken: setAdvancedReplayToken,
     selectedHistoryProofId,
     recentProofs,
     selectedRecentProof,
