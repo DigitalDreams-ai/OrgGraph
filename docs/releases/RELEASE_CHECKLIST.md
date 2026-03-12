@@ -125,7 +125,9 @@ Required metadata:
 - [ ] Candidate desktop binary path recorded
 - [ ] Candidate commit SHA recorded
 - [ ] Candidate tag/version recorded
-- [ ] Release notes drafted in [Release Notes](./RELEASE.md)
+- [ ] [Release Notes](./RELEASE.md) drafted as the canonical candidate evidence record
+- [ ] Real-org operator proof summary recorded in [Release Notes](./RELEASE.md)
+- [ ] Clean-machine operator proof summary recorded in [Release Notes](./RELEASE.md)
 
 Record:
 - commit SHA
@@ -135,6 +137,7 @@ Record:
 - smoke artifact paths
 - quickstart evidence location
 - installer path used for operator proof
+- clean-machine proof results location
 
 ## 7. Rollback Readiness Gate
 
@@ -145,6 +148,7 @@ Record:
 - [ ] Confirm previous smoke artifact exists
 - [ ] Record rollback target in release notes
 - [ ] Record rollback installer path and smoke artifact path using [Release Artifact Paths](./ARTIFACT_PATHS.md) as the format guide
+- [ ] Record rollback target summary in [Release Notes](./RELEASE.md)
 
 Do not release if rollback target is missing.
 
@@ -169,6 +173,7 @@ git status --short
 - [ ] Release checklist complete
 - [ ] Rollback playbook verified
 - [ ] Operator proof complete
+- [ ] [Release Notes](./RELEASE.md) includes smoke evidence, operator proof summary, clean-machine proof summary, and rollback target
 - [ ] Candidate approved for tag/publish
 
 Final release step:

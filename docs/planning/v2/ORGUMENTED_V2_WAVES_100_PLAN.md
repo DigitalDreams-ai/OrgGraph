@@ -351,6 +351,7 @@ Scope:
 - clean-machine proof worksheet tied to the canonical operator-proof results log
 - canonical release artifact-path map shared across release, rollback, and clean-machine proof docs
 - canonical rollback-result template for executed rollback validation
+- canonical release evidence record in `docs/releases/RELEASE.md` that summarizes smoke, operator proof, clean-machine proof, and rollback readiness in one place
 
 Exit:
 - release candidate checklist fully green

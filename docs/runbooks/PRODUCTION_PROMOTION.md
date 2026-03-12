@@ -9,6 +9,7 @@ Use these authoritative release surfaces for the actual release decision:
 - [Rollback Playbook](../releases/ROLLBACK_PLAYBOOK.md)
 - [Release Notes](../releases/RELEASE.md)
 - [Real Org Desktop Quickstart](./REAL_ORG_DESKTOP_QUICKSTART.md)
+- [Clean Machine Operator Proof](./CLEAN_MACHINE_OPERATOR_PROOF.md)
 
 ## Promotion Standard
 
@@ -17,7 +18,8 @@ Do not promote a release candidate unless all of the following are true:
 - packaged relaunch reaches `ready`
 - rollback target is identified and documented
 - real-org quickstart evidence is captured
-- release notes include commit SHA, tag, and smoke evidence
+- clean-machine proof is captured
+- release notes include commit SHA, tag, smoke evidence, clean-machine proof summary, and rollback target
 
 ## Required Commands
 
@@ -41,8 +43,9 @@ pnpm --reporter=append-only --loglevel=info desktop:smoke:release
 Promotion is allowed only after:
 1. [Release Checklist](../releases/RELEASE_CHECKLIST.md) is fully complete
 2. [Rollback Playbook](../releases/ROLLBACK_PLAYBOOK.md) inputs are recorded
-3. [Release Notes](../releases/RELEASE.md) are filled in for the candidate
+3. [Release Notes](../releases/RELEASE.md) are filled in as the canonical candidate evidence record
 4. [Real Org Desktop Quickstart](./REAL_ORG_DESKTOP_QUICKSTART.md) evidence is complete
+5. [Clean Machine Operator Proof](./CLEAN_MACHINE_OPERATOR_PROOF.md) evidence is complete
 
 ## Tagging
 
