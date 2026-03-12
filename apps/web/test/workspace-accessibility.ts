@@ -243,9 +243,9 @@ function run(): void {
       onRunAutomation: () => undefined,
       onRunImpact: () => undefined,
       onRunSystemPermission: () => undefined,
+      onOpenAsk: () => undefined,
       onOpenBrowser: () => undefined,
-      onOpenRefresh: () => undefined,
-      onOpenAsk: () => undefined
+      onOpenRefresh: () => undefined
     })
   );
   assert.match(analyzeMarkup, /for="anUser"/);

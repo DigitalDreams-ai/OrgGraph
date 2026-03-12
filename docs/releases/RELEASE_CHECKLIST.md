@@ -14,6 +14,7 @@ This checklist is not complete until:
 
 Related files:
 - [Release Notes](./RELEASE.md)
+- [Release Artifact Paths](./ARTIFACT_PATHS.md)
 - [Rollback Playbook](./ROLLBACK_PLAYBOOK.md)
 - [Real Org Desktop Quickstart](../runbooks/REAL_ORG_DESKTOP_QUICKSTART.md)
 - [Clean Machine Operator Proof](../runbooks/CLEAN_MACHINE_OPERATOR_PROOF.md)
@@ -80,6 +81,9 @@ Evidence to capture:
 - latest `logs/desktop-release-smoke-*.json`
 - latest `logs/desktop-release-smoke.*.log`
 
+Canonical path reference:
+- [Release Artifact Paths](./ARTIFACT_PATHS.md)
+
 ## 4. Packaged Runtime Evidence Gate
 
 - [ ] Packaged app reaches `ready`
@@ -129,6 +133,7 @@ Record:
 - operator
 - smoke artifact paths
 - quickstart evidence location
+- installer path used for operator proof
 
 ## 7. Rollback Readiness Gate
 
@@ -137,6 +142,7 @@ Record:
 - [ ] Confirm previous installer/binary path is available
 - [ ] Confirm previous smoke artifact exists
 - [ ] Record rollback target in release notes
+- [ ] Record rollback installer path and smoke artifact path using [Release Artifact Paths](./ARTIFACT_PATHS.md) as the format guide
 
 Do not release if rollback target is missing.
 
