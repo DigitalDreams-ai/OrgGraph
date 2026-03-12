@@ -479,7 +479,7 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
       </div>
 
       <div className="analysis-grid">
-        <div className="sub-card analysis-grid-full">
+        <div className="sub-card analysis-grid-full" role="status" aria-live="polite">
           <p className="panel-caption">Structured triage</p>
           <h3>Operator snapshot</h3>
           <ul className="analysis-list">

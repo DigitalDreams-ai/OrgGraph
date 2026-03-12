@@ -2,9 +2,12 @@ import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AskWorkspace } from '../app/workspaces/ask/ask-workspace';
+import { AnalyzeWorkspace } from '../app/workspaces/analyze/analyze-workspace';
 import { BrowserWorkspace } from '../app/workspaces/browser/browser-workspace';
 import { ConnectWorkspace } from '../app/workspaces/connect/connect-workspace';
+import { ProofsWorkspace } from '../app/workspaces/proofs/proofs-workspace';
 import { RefreshWorkspace } from '../app/workspaces/refresh/refresh-workspace';
+import { SystemWorkspace } from '../app/workspaces/system/system-workspace';
 import { WorkspaceNav } from '../app/shell/workspace-nav';
 
 function run(): void {
@@ -208,6 +211,146 @@ function run(): void {
   );
   assert.match(refreshMarkup, /Next action/);
   assert.match(refreshMarkup, /role="status" aria-live="polite"/);
+
+  const analyzeMarkup = renderToStaticMarkup(
+    createElement(AnalyzeWorkspace, {
+      analyzeMode: 'automation',
+      setAnalyzeMode: () => undefined,
+      user: 'sbingham@example.com',
+      setUser: () => undefined,
+      objectName: 'Opportunity',
+      setObjectName: () => undefined,
+      fieldName: 'Opportunity.StageName',
+      setFieldName: () => undefined,
+      systemPermission: 'ManageUsers',
+      setSystemPermission: () => undefined,
+      limitRaw: '25',
+      setLimitRaw: () => undefined,
+      strictMode: true,
+      setStrictMode: () => undefined,
+      explainMode: false,
+      setExplainMode: () => undefined,
+      debugMode: false,
+      setDebugMode: () => undefined,
+      permissionsResult: null,
+      permissionDiagnosis: null,
+      automationResult: null,
+      impactResult: null,
+      systemPermissionResult: null,
+      loading: false,
+      onRunPermissions: () => undefined,
+      onDiagnoseUserMapping: () => undefined,
+      onRunAutomation: () => undefined,
+      onRunImpact: () => undefined,
+      onRunSystemPermission: () => undefined,
+      onOpenAsk: () => undefined
+    })
+  );
+  assert.match(analyzeMarkup, /for="anUser"/);
+  assert.match(analyzeMarkup, /for="anObject"/);
+  assert.match(analyzeMarkup, /for="anField"/);
+  assert.match(analyzeMarkup, /role="status" aria-live="polite"/);
+
+  const proofsMarkup = renderToStaticMarkup(
+    createElement(ProofsWorkspace, {
+      proofId: 'proof_123',
+      setProofId: () => undefined,
+      replayToken: 'trace_123',
+      setReplayToken: () => undefined,
+      recentProofs: [
+        {
+          proofId: 'proof_123',
+          replayToken: 'trace_123',
+          label: 'Opportunity approval',
+          subtitle: 'trusted',
+          query: 'Should we approve changing Opportunity.StageName?',
+          trustLevel: 'trusted',
+          snapshotId: 'snap_123',
+          generatedAt: '2026-03-12T00:00:00Z'
+        }
+      ],
+      selectedRecentProof: {
+        proofId: 'proof_123',
+        replayToken: 'trace_123',
+        label: 'Opportunity approval',
+        subtitle: 'trusted',
+        query: 'Should we approve changing Opportunity.StageName?',
+        trustLevel: 'trusted',
+        snapshotId: 'snap_123',
+        generatedAt: '2026-03-12T00:00:00Z'
+      },
+      selectedProof: null,
+      replayResult: null,
+      metricsExport: null,
+      loading: false,
+      onListRecent: () => undefined,
+      onGetProof: () => undefined,
+      onReplay: () => undefined,
+      onOpenByToken: () => undefined,
+      onReplayByToken: () => undefined,
+      onExportMetrics: () => undefined,
+      onExportProofArtifact: () => undefined,
+      onExportReplayArtifact: () => undefined,
+      onSelectRecentProof: () => undefined,
+      onOpenRecentProof: () => undefined,
+      onReplayRecentProof: () => undefined
+    })
+  );
+  assert.match(proofsMarkup, /for="historySearch"/);
+  assert.match(proofsMarkup, /role="status" aria-live="polite"/);
+  assert.match(proofsMarkup, /role="listbox"/);
+  assert.match(proofsMarkup, /role="option"/);
+
+  const systemMarkup = renderToStaticMarkup(
+    createElement(SystemWorkspace, {
+      metaDryRun: true,
+      setMetaDryRun: () => undefined,
+      healthStatus: 'ok',
+      readyStatus: 'ready',
+      readyDetails: '',
+      readyPayload: {
+        status: 'ready',
+        checks: {
+          bootstrap: { ok: true, status: 'ready' },
+          db: { ok: true, backend: 'sqlite', nodeCount: 20, edgeCount: 40 },
+          fixtures: { ok: true, sourcePath: 'C:\\fixtures' },
+          evidence: { ok: true, indexPath: 'C:\\evidence' }
+        }
+      } as any,
+      orgStatus: {
+        integrationEnabled: true,
+        authMode: 'sf_cli_keychain',
+        alias: 'shulman-uat',
+        sf: { installed: true },
+        cci: { installed: true, version: '4.5.0', versionPinned: true },
+        session: { status: 'connected', activeAlias: 'shulman-uat' }
+      } as any,
+      orgPreflight: {
+        checks: {
+          aliasAuthenticated: true,
+          cciAliasAvailable: true,
+          parsePathPresent: true,
+          sessionConnected: true
+        },
+        issues: []
+      } as any,
+      runtimeUnavailable: false,
+      runtimeBlocked: false,
+      toolStatusSource: 'live',
+      metaContext: null,
+      metaAdaptResult: null,
+      loading: false,
+      onLoadMetaContext: () => undefined,
+      onRunMetaAdapt: () => undefined,
+      onLoadOrgStatus: () => undefined,
+      onRunPreflight: () => undefined,
+      onRefreshStatus: () => undefined,
+      onOpenConnect: () => undefined,
+      onOpenRefresh: () => undefined
+    })
+  );
+  assert.match(systemMarkup, /for="metaDryRun"/);
+  assert.match(systemMarkup, /role="status" aria-live="polite"/);
 
   const navMarkup = renderToStaticMarkup(
     createElement(WorkspaceNav, {

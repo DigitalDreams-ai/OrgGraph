@@ -87,7 +87,7 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
         <button type="button" onClick={props.onExportMetrics} disabled={props.loading}>Export Trust History</button>
       </div>
 
-      <article className="sub-card">
+      <article className="sub-card" role="status" aria-live="polite">
         <p className="panel-caption">Current selection</p>
         <h3>Operator-facing history label</h3>
         {props.selectedRecentProof || props.selectedProof ? (
