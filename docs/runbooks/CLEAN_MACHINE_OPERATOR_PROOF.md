@@ -12,6 +12,9 @@ Reference runbook:
 Canonical evidence log:
 - [Real Org Operator Proof Results](../planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md)
 
+Canonical release evidence record:
+- [Release Notes](../releases/RELEASE.md)
+
 Canonical path reference:
 - [Release Artifact Paths](../releases/ARTIFACT_PATHS.md)
 
@@ -130,3 +133,4 @@ Wave12 is not complete until:
 - this worksheet is executed by a non-author operator
 - the results are appended to the canonical proof-results file
 - the release checklist references that completed evidence
+- [Release Notes](../releases/RELEASE.md) includes the clean-machine proof summary and proof-results link
