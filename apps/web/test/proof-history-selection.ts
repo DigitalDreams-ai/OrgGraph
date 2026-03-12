@@ -94,6 +94,9 @@ function run(): void {
   assert.match(noSelectionMarkup, /disabled="">Export Selected History Replay/);
   assert.doesNotMatch(noSelectionMarkup, /disabled="">Open by Token/);
   assert.doesNotMatch(noSelectionMarkup, /disabled="">Replay by Token/);
+  assert.match(noSelectionMarkup, /History label: none/);
+  assert.match(noSelectionMarkup, /Loaded proof: not opened/);
+  assert.match(noSelectionMarkup, /Advanced tokens: present/);
 
   const selectedMarkup = renderToStaticMarkup(
     React.createElement(ProofsWorkspace, {
@@ -124,6 +127,53 @@ function run(): void {
   assert.doesNotMatch(selectedMarkup, /disabled="">Replay Selected History/);
   assert.doesNotMatch(selectedMarkup, /disabled="">Export Selected History Proof/);
   assert.doesNotMatch(selectedMarkup, /disabled="">Export Selected History Replay/);
+  assert.match(selectedMarkup, /History label: selected/);
+  assert.match(selectedMarkup, /Loaded proof: not opened/);
+  assert.match(selectedMarkup, /Advanced tokens: present/);
+
+  const advancedLoadedMarkup = renderToStaticMarkup(
+    React.createElement(ProofsWorkspace, {
+      proofId: 'proof_beta',
+      setProofId: () => undefined,
+      replayToken: 'trace_beta',
+      setReplayToken: () => undefined,
+      recentProofs,
+      selectedRecentProof: recentProofs[0],
+      selectedProof: {
+        proofId: 'proof_beta',
+        replayToken: 'trace_beta',
+        generatedAt: '2026-03-01T11:00:00Z',
+        snapshotId: 'snap_beta',
+        policyId: 'policy_beta',
+        traceLevel: 'trusted',
+        query: 'Who can edit Opportunity.StageName?',
+        trustLevel: 'conditional',
+        deterministicAnswer: 'Conditional answer',
+        confidence: 0.71,
+        operatorsExecuted: ['planner'],
+        rejectedBranches: [],
+        citationCount: 2,
+        derivationEdgeCount: 4
+      },
+      replayResult: null,
+      metricsExport: null,
+      loading: false,
+      onListRecent: () => undefined,
+      onGetProof: () => undefined,
+      onReplay: () => undefined,
+      onOpenByToken: () => undefined,
+      onReplayByToken: () => undefined,
+      onExportMetrics: () => undefined,
+      onExportProofArtifact: () => undefined,
+      onExportReplayArtifact: () => undefined,
+      onSelectRecentProof: () => undefined,
+      onOpenRecentProof: () => undefined,
+      onReplayRecentProof: () => undefined
+    })
+  );
+  assert.match(advancedLoadedMarkup, /History label: selected/);
+  assert.match(advancedLoadedMarkup, /Loaded proof: advanced token lookup/);
+  assert.match(advancedLoadedMarkup, /Advanced tokens: present/);
 }
 
 run();

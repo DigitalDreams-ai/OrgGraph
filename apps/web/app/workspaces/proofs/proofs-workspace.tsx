@@ -44,6 +44,12 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
       return haystack.includes(search);
     });
   }, [historySearch, props.recentProofs]);
+  const hasAdvancedTokenInput = Boolean(props.proofId.trim() || props.replayToken.trim());
+  const loadedProofSource = props.selectedProof
+    ? props.selectedRecentProof?.proofId === props.selectedProof.proofId
+      ? 'selected history'
+      : 'advanced token lookup'
+    : 'not opened';
 
   return (
     <>
@@ -90,6 +96,17 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
       <article className="sub-card" role="status" aria-live="polite">
         <p className="panel-caption">Current selection</p>
         <h3>Operator-facing history label</h3>
+        <div className="decision-meta">
+          <span className={`decision-badge ${props.selectedRecentProof ? 'good' : 'muted'}`}>
+            History label: {props.selectedRecentProof ? 'selected' : 'none'}
+          </span>
+          <span className={`decision-badge ${props.selectedProof ? 'good' : 'muted'}`}>
+            Loaded proof: {loadedProofSource}
+          </span>
+          <span className={`decision-badge ${hasAdvancedTokenInput ? 'muted' : 'good'}`}>
+            Advanced tokens: {hasAdvancedTokenInput ? 'present' : 'empty'}
+          </span>
+        </div>
         {props.selectedRecentProof || props.selectedProof ? (
           <>
             <p>

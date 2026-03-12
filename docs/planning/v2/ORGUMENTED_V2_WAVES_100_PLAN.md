@@ -290,6 +290,7 @@ Scope:
 - replay/export/reopen stability
 - trust-envelope continuity across restarts
 - strict separation between history-label workflow and advanced token-only debug path
+- explicit current-selection status so mixed history/debug states remain operator-legible
 
 Exit:
 - operator can run history-first proof workflows without token bookkeeping
