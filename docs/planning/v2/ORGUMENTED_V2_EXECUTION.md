@@ -151,6 +151,7 @@ Materially true now:
 - Proofs & History now auto-selects a current label on history refresh so open/replay operations are label-first by default
 - wave10 density guardrails now widen card-grid minima and heading wrapping to reduce clipping/overlap in Ask, Analyze, Proofs, and Diagnostics
 - wave10 accessibility baseline now includes explicit focus-visible rings across core interactive controls and standardized checkbox/radio sizing for keyboard clarity
+- wave10 follow-up now wraps long path/identifier values in Connect, Refresh, and System with explicit `path-value`/`diagnostic-code-block` hooks, and the runtime-status regression gate now render-checks those markup guards so long paths/JSON stay bounded
 
 Still unresolved:
 - planner/compiler still needs deeper typed coverage beyond current query families
