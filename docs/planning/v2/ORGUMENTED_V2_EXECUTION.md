@@ -124,6 +124,7 @@ Materially true now:
 - Proofs & History primary open/replay actions now require a selected history label, while advanced proof ID / replay token lookup is isolated behind explicit `Open by Token` / `Replay by Token` actions so token entry cannot masquerade as the normal history-first workflow
 - Proofs & History primary export actions now also run from the selected history label even when proof/replay artifacts are not already open, keeping export aligned to the history-first workflow instead of requiring an open-first detour
 - Proofs & History current-selection status now explicitly states whether the workspace is being driven by a selected history label or by advanced token lookup, reducing remaining operator ambiguity in mixed debug/history states
+- Proofs & History now keeps manual advanced proof/replay token input isolated from label-first history selection, so selecting or opening a history label no longer marks the normal workflow as token-driven
 - CI heavy Windows jobs are path-gated for minute efficiency
 - PR Autofill now runs on `opened/reopened` only (not every push), and Actions retention now includes an automated cleanup workflow that prunes older completed runs per workflow
 - CI now runs packaged desktop smoke in the same Windows validate job (instead of cross-job runtime artifact handoff), reducing Actions artifact storage pressure without dropping trust gates
