@@ -114,6 +114,7 @@ Materially true now:
 - Ask `Save to history` now executes a true history handoff (sync proof identifiers, switch to Proofs, and refresh recent proof labels) instead of duplicating `Open proof`
 - Proofs & History action row now defaults to label-first wording (`Open/Replay Selected History`), while raw token lookup stays in advanced details with explicit fail-closed guidance when no selection is present
 - Proofs & History now supports label-first artifact export (`Export Selected Proof` / `Export Selected Replay`) so normal audit flows can export JSON artifacts without token-first lookup
+- Proofs & History now keeps the selected history label independent from advanced proof/replay token fields, so primary open/replay actions stay label-first even when debug IDs are typed manually
 - CI heavy Windows jobs are path-gated for minute efficiency
 - PR Autofill now runs on `opened/reopened` only (not every push), and Actions retention now includes an automated cleanup workflow that prunes older completed runs per workflow
 - CI now runs packaged desktop smoke in the same Windows validate job (instead of cross-job runtime artifact handoff), reducing Actions artifact storage pressure without dropping trust gates
@@ -208,7 +209,7 @@ Rules:
 
 4. Wave9 finish slice:
 - complete label-first proof lifecycle (open/replay/export) without token-first dependence in normal workflows
-- keep token fields strictly advanced/debug while preserving replay parity checks
+- keep token fields strictly advanced/debug while preserving replay parity checks and label-first selection semantics
 
 5. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards

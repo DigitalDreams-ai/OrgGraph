@@ -395,6 +395,7 @@ export default function Page(): JSX.Element {
               onExportMetrics={() => void proofsWorkspace.runMetricsExport()}
               onExportProofArtifact={() => proofsWorkspace.exportSelectedProofArtifact()}
               onExportReplayArtifact={() => proofsWorkspace.exportSelectedReplayArtifact()}
+              onSelectRecentProof={proofsWorkspace.selectRecentProof}
               onOpenRecentProof={(proof) => void proofsWorkspace.openRecentProof(proof)}
               onReplayRecentProof={(proof) => void proofsWorkspace.replayRecentProof(proof)}
             />

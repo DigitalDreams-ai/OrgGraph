@@ -8,6 +8,12 @@ import {
   replayAskProof,
   type QueryResponse
 } from '../../lib/ask-client';
+import {
+  resolveProofLookupId,
+  resolveReplayLookup,
+  resolveSelectedHistoryProof,
+  resolveSelectedHistoryProofId
+} from './history-selection';
 import type {
   MetricsExportView,
   ProofArtifactView,
@@ -213,6 +219,7 @@ function downloadJsonArtifact(fileName: string, payload: Record<string, unknown>
 export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
   const [proofId, setProofId] = useState('');
   const [replayToken, setReplayToken] = useState('');
+  const [selectedHistoryProofId, setSelectedHistoryProofId] = useState('');
   const [recentProofs, setRecentProofs] = useState<RecentProofItem[]>([]);
   const [selectedProof, setSelectedProof] = useState<ProofArtifactView | null>(null);
   const [replayResult, setReplayResult] = useState<ReplayResultView | null>(null);
@@ -225,17 +232,22 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
   }
 
   function useRecentProof(proof: RecentProofItem): void {
+    setSelectedHistoryProofId(proof.proofId);
     setProofId(proof.proofId);
     setReplayToken(proof.replayToken);
   }
 
-  async function openRecentProof(proof: RecentProofItem): Promise<void> {
+  function selectRecentProof(proof: RecentProofItem): void {
     useRecentProof(proof);
+  }
+
+  async function openRecentProof(proof: RecentProofItem): Promise<void> {
+    selectRecentProof(proof);
     await runProofLookupById(proof.proofId);
   }
 
   async function replayRecentProof(proof: RecentProofItem): Promise<void> {
-    useRecentProof(proof);
+    selectRecentProof(proof);
     options.setLoading(true);
     options.setCopied(false);
     options.setErrorText('');
@@ -288,12 +300,14 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
         setRecentProofs(nextRecentProofs);
 
         if (nextRecentProofs.length === 0) {
+          setSelectedHistoryProofId('');
           return;
         }
 
-        const hasSelection = nextRecentProofs.some((item) => item.proofId === proofId);
-        const fallbackSelection = hasSelection ? nextRecentProofs.find((item) => item.proofId === proofId) : nextRecentProofs[0];
+        const nextSelectedId = resolveSelectedHistoryProofId(nextRecentProofs, selectedHistoryProofId, proofId);
+        const fallbackSelection = nextRecentProofs.find((item) => item.proofId === nextSelectedId) ?? nextRecentProofs[0];
         if (fallbackSelection) {
+          setSelectedHistoryProofId(fallbackSelection.proofId);
           setProofId(fallbackSelection.proofId);
           setReplayToken(fallbackSelection.replayToken);
         }
@@ -344,11 +358,13 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
   }
 
   async function runProofLookup(): Promise<void> {
-    await runProofLookupById(proofId.trim());
+    await runProofLookupById(resolveProofLookupId(selectedRecentProof, proofId));
   }
 
   async function runReplay(): Promise<void> {
-    if (!proofId.trim() && !replayToken.trim()) {
+    const lookup = resolveReplayLookup(selectedRecentProof, proofId, replayToken);
+
+    if (!lookup.proofId && !lookup.replayToken) {
       reportSelectionRequired(
         'Select a history label first, or provide proof ID/replay token in Advanced token lookup before replay.'
       );
@@ -361,8 +377,8 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
 
     try {
       const result = await replayAskProof({
-        replayToken: replayToken.trim() || undefined,
-        proofId: proofId.trim() || undefined
+        replayToken: lookup.replayToken,
+        proofId: lookup.proofId
       });
       options.presentResponse(result);
       if (result.ok === false) {
@@ -427,19 +443,21 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     downloadJsonArtifact(`orgumented-replay-${name}.json`, replayResult as unknown as Record<string, unknown>);
   }
 
-  const selectedRecentProof = recentProofs.find((proof) => proof.proofId === proofId) ?? null;
+  const selectedRecentProof = resolveSelectedHistoryProof(recentProofs, selectedHistoryProofId, proofId);
 
   return {
     proofId,
     setProofId,
     replayToken,
     setReplayToken,
+    selectedHistoryProofId,
     recentProofs,
     selectedRecentProof,
     selectedProof,
     replayResult,
     metricsExport,
     useRecentProof,
+    selectRecentProof,
     openRecentProof,
     replayRecentProof,
     syncFromAsk,
