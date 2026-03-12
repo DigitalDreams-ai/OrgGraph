@@ -18,26 +18,21 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      run-heavy: ${{ steps.filter.outputs.heavy }}
+      run-heavy: ${{ steps.filter.outputs.run-heavy }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Detect runtime-impacting changes
         id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            heavy:
-              - 'apps/**'
-              - 'packages/**'
-              - 'scripts/**'
-              - 'package.json'
-              - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
-              - '.npmrc'
-              - '.github/requirements-cumulusci.txt'
-              - '.github/workflows/ci.yml'
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          node ./scripts/ci-detect-heavy-changes.mjs --base "$BASE_SHA" --head "$HEAD_SHA"
 
   validate:
     needs: [detect-changes]
