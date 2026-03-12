@@ -396,6 +396,7 @@ export default function Page(): JSX.Element {
               onReplay={() => void proofsWorkspace.runReplay()}
               onOpenByToken={() => void proofsWorkspace.runAdvancedProofLookup()}
               onReplayByToken={() => void proofsWorkspace.runAdvancedReplay()}
+              onClearAdvancedTokens={proofsWorkspace.clearAdvancedTokens}
               onExportMetrics={() => void proofsWorkspace.runMetricsExport()}
               onExportProofArtifact={() => proofsWorkspace.exportSelectedProofArtifact()}
               onExportReplayArtifact={() => proofsWorkspace.exportSelectedReplayArtifact()}

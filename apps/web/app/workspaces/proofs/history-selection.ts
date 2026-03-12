@@ -1,6 +1,6 @@
 'use client';
 
-import type { RecentProofItem } from './types';
+import type { ProofArtifactView, RecentProofItem, ReplayResultView } from './types';
 
 function normalize(value: string | undefined): string {
   return value?.trim() || '';
@@ -47,4 +47,24 @@ export function resolveReplayLookup(
     proofId: nextProofId || undefined,
     replayToken: nextReplayToken || undefined
   };
+}
+
+export function shouldClearAdvancedSelectedProof(
+  selectedRecentProof: RecentProofItem | null,
+  selectedProof: ProofArtifactView | null
+): boolean {
+  return Boolean(selectedProof && selectedProof.proofId !== normalize(selectedRecentProof?.proofId));
+}
+
+export function shouldClearAdvancedReplayResult(
+  selectedRecentProof: RecentProofItem | null,
+  replayResult: ReplayResultView | null
+): boolean {
+  return Boolean(
+    replayResult &&
+      (
+        replayResult.proofId !== normalize(selectedRecentProof?.proofId) ||
+        replayResult.replayToken !== normalize(selectedRecentProof?.replayToken)
+      )
+  );
 }

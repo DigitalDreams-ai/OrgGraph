@@ -12,7 +12,9 @@ import {
   resolveProofLookupId,
   resolveReplayLookup,
   resolveSelectedHistoryProof,
-  resolveSelectedHistoryProofId
+  resolveSelectedHistoryProofId,
+  shouldClearAdvancedReplayResult,
+  shouldClearAdvancedSelectedProof
 } from './history-selection';
 import type {
   MetricsExportView,
@@ -224,6 +226,8 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
   const [selectedProof, setSelectedProof] = useState<ProofArtifactView | null>(null);
   const [replayResult, setReplayResult] = useState<ReplayResultView | null>(null);
   const [metricsExport, setMetricsExport] = useState<MetricsExportView | null>(null);
+
+  const selectedRecentProof = resolveSelectedHistoryProof(recentProofs, selectedHistoryProofId);
 
   function reportSelectionRequired(message: string): void {
     const fallback: QueryResponse = { ok: false, error: { message } };
@@ -551,7 +555,18 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     }
   }
 
-  const selectedRecentProof = resolveSelectedHistoryProof(recentProofs, selectedHistoryProofId);
+  function clearAdvancedTokens(): void {
+    setAdvancedProofId('');
+    setAdvancedReplayToken('');
+
+    if (shouldClearAdvancedSelectedProof(selectedRecentProof, selectedProof)) {
+      setSelectedProof(null);
+    }
+
+    if (shouldClearAdvancedReplayResult(selectedRecentProof, replayResult)) {
+      setReplayResult(null);
+    }
+  }
 
   return {
     proofId: advancedProofId,
@@ -576,6 +591,7 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     runAdvancedReplay,
     runMetricsExport,
     exportSelectedProofArtifact,
-    exportSelectedReplayArtifact
+    exportSelectedReplayArtifact,
+    clearAdvancedTokens
   };
 }

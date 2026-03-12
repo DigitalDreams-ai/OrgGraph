@@ -290,6 +290,7 @@ function run(): void {
       onReplay: () => undefined,
       onOpenByToken: () => undefined,
       onReplayByToken: () => undefined,
+      onClearAdvancedTokens: () => undefined,
       onExportMetrics: () => undefined,
       onExportProofArtifact: () => undefined,
       onExportReplayArtifact: () => undefined,
