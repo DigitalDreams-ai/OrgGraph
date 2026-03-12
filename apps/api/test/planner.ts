@@ -288,6 +288,48 @@ function run(): void {
     'Custom Field Opportunity.StageName'
   );
 
+  const componentUsageApexClassPlan = planner.plan(
+    'Where is Apex Class OpportunityImpactService used?'
+  );
+  assert.equal(componentUsageApexClassPlan.intent, 'unknown');
+  assert.equal(componentUsageApexClassPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageApexClassPlan.semanticFrame?.target?.selected,
+    'Apex Class OpportunityImpactService'
+  );
+  assert.equal(componentUsageApexClassPlan.semanticFrame?.admissibility.status, 'accepted');
+
+  const componentUsageApexClassMetadataArgPlan = planner.plan(
+    'Where is ApexClass:OpportunityImpactService used?'
+  );
+  assert.equal(componentUsageApexClassMetadataArgPlan.intent, 'unknown');
+  assert.equal(componentUsageApexClassMetadataArgPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageApexClassMetadataArgPlan.semanticFrame?.target?.selected,
+    'Apex Class OpportunityImpactService'
+  );
+
+  const componentUsageApexTriggerPlan = planner.plan(
+    'Where is Apex Trigger called "CaseBeforeUpdate" used?'
+  );
+  assert.equal(componentUsageApexTriggerPlan.intent, 'unknown');
+  assert.equal(componentUsageApexTriggerPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageApexTriggerPlan.semanticFrame?.target?.selected,
+    'Apex Trigger CaseBeforeUpdate'
+  );
+  assert.equal(componentUsageApexTriggerPlan.semanticFrame?.admissibility.status, 'accepted');
+
+  const componentUsageApexTriggerPathPlan = planner.plan(
+    'Where is Apex Trigger C:/tmp/force-app/main/default/triggers/CaseBeforeUpdate.trigger used?'
+  );
+  assert.equal(componentUsageApexTriggerPathPlan.intent, 'unknown');
+  assert.equal(componentUsageApexTriggerPathPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageApexTriggerPathPlan.semanticFrame?.target?.selected,
+    'Apex Trigger CaseBeforeUpdate'
+  );
+
   const componentUsageRecordIdPlan = planner.plan('Where is 00X000000000123AAA used?');
   assert.equal(componentUsageRecordIdPlan.intent, 'unknown');
   assert.equal(componentUsageRecordIdPlan.semanticFrame?.intent, 'evidence_lookup');
