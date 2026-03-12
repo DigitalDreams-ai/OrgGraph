@@ -867,6 +867,23 @@ async function run(): Promise<void> {
         targetType?: string;
         topRiskDrivers?: string[];
         changeImpact?: { summary?: string };
+        flowImpact?: {
+          readFieldCount?: number;
+          writeFieldCount?: number;
+          readObjectCount?: number;
+          writeObjectCount?: number;
+          referencedObjectCount?: number;
+          triggerTypes?: string[];
+          topCitationSources?: string[];
+          summaries?: {
+            reads?: string;
+            writes?: string;
+            readObjects?: string;
+            writeObjects?: string;
+            referencedObjects?: string;
+            triggerTypes?: string;
+          };
+        };
         nextActions?: Array<{ label?: string }>;
       };
     };
@@ -899,6 +916,28 @@ async function run(): Promise<void> {
     assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /writes:/i);
     assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /read objects:/i);
     assert.match(askFlowEvidence.decisionPacket?.changeImpact?.summary ?? '', /write objects:/i);
+    assert.equal(askFlowEvidence.decisionPacket?.flowImpact?.readFieldCount, 1);
+    assert.equal(askFlowEvidence.decisionPacket?.flowImpact?.writeFieldCount, 1);
+    assert.equal(askFlowEvidence.decisionPacket?.flowImpact?.readObjectCount, 1);
+    assert.equal(askFlowEvidence.decisionPacket?.flowImpact?.writeObjectCount, 1);
+    assert.equal(askFlowEvidence.decisionPacket?.flowImpact?.referencedObjectCount, 2);
+    assert.deepEqual(askFlowEvidence.decisionPacket?.flowImpact?.triggerTypes, [
+      'CreateAndUpdate',
+      'RecordAfterSave'
+    ]);
+    assert.ok(
+      (askFlowEvidence.decisionPacket?.flowImpact?.topCitationSources ?? []).some((item) =>
+        /OpportunityStageSync/i.test(item)
+      )
+    );
+    assert.match(askFlowEvidence.decisionPacket?.flowImpact?.summaries?.reads ?? '', /Account\.Name/i);
+    assert.match(askFlowEvidence.decisionPacket?.flowImpact?.summaries?.writes ?? '', /Opportunity\.StageName/i);
+    assert.match(askFlowEvidence.decisionPacket?.flowImpact?.summaries?.readObjects ?? '', /Account/i);
+    assert.match(askFlowEvidence.decisionPacket?.flowImpact?.summaries?.writeObjects ?? '', /Opportunity/i);
+    assert.match(
+      askFlowEvidence.decisionPacket?.flowImpact?.summaries?.triggerTypes ?? '',
+      /CreateAndUpdate/i
+    );
     assert.ok(
       (askFlowEvidence.decisionPacket?.nextActions ?? []).some((item) => item.label === 'Run permission check')
     );

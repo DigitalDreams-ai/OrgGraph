@@ -257,6 +257,7 @@ Objective:
 Scope:
 - risk-driver quality
 - reads/writes/change-impact synthesis
+- flow-target packets render flow-specific operator stats instead of generic approval placeholders
 - next-action relevance
 
 Exit:

@@ -75,6 +75,7 @@ Materially true now:
 - wave6 evidence-lookup now normalizes family-qualified target forms such as `Flow called X`, `Flow named "X"`, and flow file/path references (`.../flows/X.flow-meta.xml`) back to the same deterministic metadata-component target before lookup executes
 - wave6 evidence-lookup now also accepts metadata-arg notation such as `Flow:X` and `CustomField:Object.Field`, normalizing those forms to the same deterministic metadata-component targets used by Ask and retrieve handoff flows
 - review and retrieve-grounded flow decision packets now surface an explicit recommendation verdict/summary plus deterministic evidence-gap lists, making the packet itself closer to a primary approval/review artifact instead of a summary that still requires operator reconstruction
+- wave7 follow-up now renders retrieved flow read/write packets with flow-specific operator stats (`Flow signals`, `Reads`, `Writes`, `Flow scope`) instead of the generic approval-style permission placeholder, keeping the packet itself useful as the primary review surface
 - flow read/write asks remain on the legacy planner path in this slice; semantic-frame rollout is still intentionally bounded to impact + field/object automation + graph-global permission asks only
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model
@@ -212,6 +213,7 @@ Rules:
 
 2. Wave7 finish slice:
 - deepen packet usefulness for approval and retrieved-metadata review scenarios
+- keep flow-target packets rendered as flow packets, not generic approval cards
 - keep reads/writes/change-impact synthesis specific enough to serve as a primary operator artifact
 
 3. Wave8 finish slice:
