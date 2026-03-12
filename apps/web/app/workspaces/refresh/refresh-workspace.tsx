@@ -191,8 +191,8 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
               </div>
               <p><strong>Alias:</strong> {props.retrieveHandoff.alias}</p>
               <p><strong>Completed:</strong> {formatTimestamp(props.retrieveHandoff.completedAt)}</p>
-              <p><strong>Parse path:</strong> {props.retrieveHandoff.parsePath}</p>
-              <p><strong>Metadata args:</strong> {props.retrieveHandoff.metadataArgs.join(' ') || 'n/a'}</p>
+              <p><strong>Parse path:</strong> <span className="path-value">{props.retrieveHandoff.parsePath}</span></p>
+              <p><strong>Metadata args:</strong> <span className="path-value">{props.retrieveHandoff.metadataArgs.join(' ') || 'n/a'}</span></p>
               <p><strong>Staged selections:</strong> {stagedSelectionCount}</p>
               {stagedSelectionCount > 0 ? (
                 <>
@@ -276,8 +276,8 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
                   Lineage: {refreshLineage.state}
                 </span>
               </div>
-              <p><strong>Snapshot:</strong> {props.lastRefreshRun.snapshotId}</p>
-              <p><strong>Source path:</strong> {props.lastRefreshRun.sourcePath || 'n/a'}</p>
+              <p><strong>Snapshot:</strong> <span className="path-value">{props.lastRefreshRun.snapshotId}</span></p>
+              <p><strong>Source path:</strong> <span className="path-value">{props.lastRefreshRun.sourcePath || 'n/a'}</span></p>
               <p><strong>Counts:</strong> {props.lastRefreshRun.nodeCount} nodes, {props.lastRefreshRun.edgeCount} edges, {props.lastRefreshRun.evidenceCount} evidence</p>
               <p><strong>Meaning change:</strong> {props.lastRefreshRun.meaningChangeSummary || 'n/a'}</p>
               <p><strong>Drift summary:</strong> {props.lastRefreshRun.driftSummary || 'n/a'}</p>
@@ -533,9 +533,9 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
             </span>
           </div>
           <p><strong>Completed:</strong> {formatTimestamp(props.lastOrgRetrieveRun.completedAt)}</p>
-          <p><strong>Project path:</strong> {props.lastOrgRetrieveRun.projectPath}</p>
-          <p><strong>Parse path:</strong> {props.lastOrgRetrieveRun.parsePath}</p>
-          <p><strong>Metadata args:</strong> {props.lastOrgRetrieveRun.metadataArgs.join(' ') || 'n/a'}</p>
+          <p><strong>Project path:</strong> <span className="path-value">{props.lastOrgRetrieveRun.projectPath}</span></p>
+          <p><strong>Parse path:</strong> <span className="path-value">{props.lastOrgRetrieveRun.parsePath}</span></p>
+          <p><strong>Metadata args:</strong> <span className="path-value">{props.lastOrgRetrieveRun.metadataArgs.join(' ') || 'n/a'}</span></p>
           <ul className="issue-list">
             {props.lastOrgRetrieveRun.stepSummary.map((step) => (
               <li key={`${step.step}-${step.status}`}>

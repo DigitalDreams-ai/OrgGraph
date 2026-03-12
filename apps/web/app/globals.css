@@ -878,6 +878,18 @@ pre {
   word-break: break-word;
 }
 
+.diagnostic-code-block {
+  max-inline-size: 100%;
+}
+
+.debug-details {
+  min-width: 0;
+}
+
+.debug-details summary {
+  cursor: pointer;
+}
+
 .org-browser-frame {
   border: 1px solid #c6d6ee;
   border-radius: 12px;
