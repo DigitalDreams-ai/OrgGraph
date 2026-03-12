@@ -302,11 +302,13 @@ Scope:
 - clipping/overflow/wrapping fixes
 - spacing and hierarchy normalization
 - keyboard/focus behavior for critical controls
+- explicit render guards for path-heavy Analyze/Diagnostics/Proofs surfaces
 
 Exit:
 - zero known clipping defects in Stage 1 surfaces
 - accessibility baseline pass for Ask/Sessions/Browser/Refresh
 - long paths, identifiers, and JSON blocks wrap/scroll without card breakage
+- render regression gates cover path-heavy cards so long graph paths stay bounded
 
 ## wave11 - Bug Burn-Down And CI Quality Lock
 
