@@ -152,6 +152,23 @@ export interface AskDecisionPacket {
     impactPathCount: number;
     topImpactedSources: string[];
   };
+  flowImpact?: {
+    readFieldCount: number;
+    writeFieldCount: number;
+    readObjectCount: number;
+    writeObjectCount: number;
+    referencedObjectCount: number;
+    triggerTypes: string[];
+    topCitationSources: string[];
+    summaries: {
+      reads: string;
+      writes: string;
+      readObjects: string;
+      writeObjects: string;
+      referencedObjects: string;
+      triggerTypes: string;
+    };
+  };
   evidenceGaps: string[];
   nextActions: Array<{
     label: string;

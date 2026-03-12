@@ -48,6 +48,15 @@ const ASK_PRESETS = [
 
 export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
   const retrieveAwarePrompts = buildRetrieveAwarePromptGroups(props.latestRetrieveSelections);
+  const decisionPacket = props.askResult?.decisionPacket;
+  const isFlowPacket = decisionPacket?.targetType === 'flow';
+  const flowImpact = decisionPacket?.flowImpact;
+  const flowSignalsLabel =
+    typeof flowImpact?.readFieldCount === 'number' && typeof flowImpact?.writeFieldCount === 'number'
+      ? `${flowImpact.readFieldCount} read / ${flowImpact.writeFieldCount} write`
+      : 'n/a';
+  const flowScopeLabel =
+    typeof flowImpact?.referencedObjectCount === 'number' ? `${flowImpact.referencedObjectCount} objects` : 'n/a';
   return (
     <>
       <h2>Ask</h2>
@@ -214,33 +223,35 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
               <span className="decision-badge muted">Risk: {props.askResult.decisionPacket.riskLevel}</span>
             ) : null}
           </div>
-          {props.askResult?.decisionPacket ? (
+          {decisionPacket ? (
             <div className="packet-section-stack">
               <div className="packet-stat-grid">
                 <div className="packet-stat">
                   <span>Workflow</span>
-                  <strong className="packet-value">{props.askResult.decisionPacket.focus || 'review'}</strong>
+                  <strong className="packet-value">{decisionPacket.focus || 'review'}</strong>
                 </div>
                 <div className="packet-stat">
                   <span>Target</span>
-                  <strong className="packet-value">{props.askResult.decisionPacket.targetLabel || 'n/a'}</strong>
+                  <strong className="packet-value">{decisionPacket.targetLabel || 'n/a'}</strong>
                 </div>
                 <div className="packet-stat">
-                  <span>Permission model</span>
-                  <strong className="packet-value path-value">{props.askResult.decisionPacket.permissionImpact?.user || 'n/a'}</strong>
+                  <span>{isFlowPacket ? 'Flow signals' : 'Permission model'}</span>
+                  <strong className="packet-value path-value">
+                    {isFlowPacket ? flowSignalsLabel : decisionPacket.permissionImpact?.user || 'n/a'}
+                  </strong>
                 </div>
               </div>
 
               <div>
                 <h4>Top risk drivers</h4>
                 <p className="muted">
-                  Evidence coverage: {props.askResult.decisionPacket.evidenceCoverage?.citationCount ?? 0} citations,
-                  permissions {props.askResult.decisionPacket.evidenceCoverage?.hasPermissionPaths ? 'yes' : 'no'},
-                  automation {props.askResult.decisionPacket.evidenceCoverage?.hasAutomationCoverage ? 'yes' : 'no'},
-                  impact {props.askResult.decisionPacket.evidenceCoverage?.hasImpactPaths ? 'yes' : 'no'}.
+                  Evidence coverage: {decisionPacket.evidenceCoverage?.citationCount ?? 0} citations,
+                  permissions {decisionPacket.evidenceCoverage?.hasPermissionPaths ? 'yes' : 'no'},
+                  automation {decisionPacket.evidenceCoverage?.hasAutomationCoverage ? 'yes' : 'no'},
+                  impact {decisionPacket.evidenceCoverage?.hasImpactPaths ? 'yes' : 'no'}.
                 </p>
                 <ul className="proof-inline-list">
-                  {(props.askResult.decisionPacket.topRiskDrivers || []).map((driver) => (
+                  {(decisionPacket.topRiskDrivers || []).map((driver) => (
                     <li key={driver}>{driver}</li>
                   ))}
                 </ul>
@@ -250,32 +261,58 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                 <div className="packet-stat">
                   <span>Recommendation</span>
                   <strong className="packet-value">
-                    {props.askResult.decisionPacket.recommendation?.verdict || 'n/a'}
+                    {decisionPacket.recommendation?.verdict || 'n/a'}
                   </strong>
-                  <p>{props.askResult.decisionPacket.recommendation?.summary || 'No recommendation returned.'}</p>
+                  <p>{decisionPacket.recommendation?.summary || 'No recommendation returned.'}</p>
                 </div>
-                <div className="packet-stat">
-                  <span>Permissions</span>
-                  <strong className="packet-value">{props.askResult.decisionPacket.permissionImpact?.pathCount ?? 'n/a'} paths</strong>
-                  <p>{props.askResult.decisionPacket.permissionImpact?.summary || 'No permission summary returned.'}</p>
-                </div>
-                <div className="packet-stat">
-                  <span>Automation</span>
-                  <strong className="packet-value">{props.askResult.decisionPacket.automationImpact?.automationCount ?? 'n/a'} items</strong>
-                  <p>{props.askResult.decisionPacket.automationImpact?.summary || 'No automation summary returned.'}</p>
-                </div>
-                <div className="packet-stat">
-                  <span>Change impact</span>
-                  <strong className="packet-value">{props.askResult.decisionPacket.changeImpact?.impactPathCount ?? 'n/a'} paths</strong>
-                  <p>{props.askResult.decisionPacket.changeImpact?.summary || 'No impact summary returned.'}</p>
-                </div>
+                {isFlowPacket ? (
+                  <>
+                    <div className="packet-stat">
+                      <span>Reads</span>
+                      <strong className="packet-value">{flowImpact?.readFieldCount ?? 'n/a'} fields</strong>
+                      <p>{flowImpact?.summaries?.reads || 'No read summary returned.'}</p>
+                    </div>
+                    <div className="packet-stat">
+                      <span>Writes</span>
+                      <strong className="packet-value">{flowImpact?.writeFieldCount ?? 'n/a'} fields</strong>
+                      <p>{flowImpact?.summaries?.writes || 'No write summary returned.'}</p>
+                    </div>
+                    <div className="packet-stat">
+                      <span>Flow scope</span>
+                      <strong className="packet-value">{flowScopeLabel}</strong>
+                      <p>
+                        {flowImpact?.summaries?.readObjects || 'read objects unavailable'};{' '}
+                        {flowImpact?.summaries?.writeObjects || 'write objects unavailable'};{' '}
+                        {flowImpact?.summaries?.triggerTypes || 'trigger types unavailable'}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="packet-stat">
+                      <span>Permissions</span>
+                      <strong className="packet-value">{decisionPacket.permissionImpact?.pathCount ?? 'n/a'} paths</strong>
+                      <p>{decisionPacket.permissionImpact?.summary || 'No permission summary returned.'}</p>
+                    </div>
+                    <div className="packet-stat">
+                      <span>Automation</span>
+                      <strong className="packet-value">{decisionPacket.automationImpact?.automationCount ?? 'n/a'} items</strong>
+                      <p>{decisionPacket.automationImpact?.summary || 'No automation summary returned.'}</p>
+                    </div>
+                    <div className="packet-stat">
+                      <span>Change impact</span>
+                      <strong className="packet-value">{decisionPacket.changeImpact?.impactPathCount ?? 'n/a'} paths</strong>
+                      <p>{decisionPacket.changeImpact?.summary || 'No impact summary returned.'}</p>
+                    </div>
+                  </>
+                )}
               </div>
 
-              {props.askResult.decisionPacket.evidenceGaps?.length ? (
+              {decisionPacket.evidenceGaps?.length ? (
                 <div>
                   <h4>Evidence gaps</h4>
                   <ul className="proof-inline-list">
-                    {props.askResult.decisionPacket.evidenceGaps.map((gap) => (
+                    {decisionPacket.evidenceGaps.map((gap) => (
                       <li key={gap}>{gap}</li>
                     ))}
                   </ul>

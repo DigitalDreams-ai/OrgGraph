@@ -3174,6 +3174,23 @@ export class AskService {
         impactPathCount: topImpactedSources.length,
         topImpactedSources
       },
+      flowImpact: {
+        readFieldCount: readFields.length,
+        writeFieldCount: writeFields.length,
+        readObjectCount: readObjects.length,
+        writeObjectCount: writeObjects.length,
+        referencedObjectCount: referencedObjects.length,
+        triggerTypes,
+        topCitationSources,
+        summaries: {
+          reads: readSummary,
+          writes: writeSummary,
+          readObjects: readObjectSummary,
+          writeObjects: writeObjectSummary,
+          referencedObjects: objectSummary,
+          triggerTypes: triggerSummary
+        }
+      },
       evidenceGaps,
       nextActions: nextActions.slice(0, 6)
     };
