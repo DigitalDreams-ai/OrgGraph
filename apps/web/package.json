@@ -7,7 +7,8 @@
     "prebuild": "node ../../scripts/clean-eadir.mjs",
     "build": "pnpm exec next build",
     "start": "pnpm exec next start",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:runtime-status": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/runtime-status-surfaces.ts"
   },
   "dependencies": {
     "next": "14.2.15",

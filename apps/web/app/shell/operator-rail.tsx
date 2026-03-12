@@ -3,6 +3,7 @@
 import type { ReadyPayload } from './use-shell-runtime';
 import type { AskPayload } from '../workspaces/ask/types';
 import type { OrgPreflightPayload, OrgSessionPayload, OrgStatusPayload } from '../workspaces/connect/types';
+import { describeToolStatusSource, type ToolStatusSource } from './org-status-surface';
 
 interface OperatorRailProps {
   copied: boolean;
@@ -22,7 +23,7 @@ interface OperatorRailProps {
   orgPreflight: OrgPreflightPayload | null;
   runtimeUnavailable: boolean;
   runtimeBlocked: boolean;
-  toolStatusSource: 'runtime_unavailable' | 'live' | 'unknown';
+  toolStatusSource: ToolStatusSource;
   onCopy: () => void;
 }
 
@@ -58,12 +59,7 @@ export function OperatorRail(props: OperatorRailProps): JSX.Element {
   const sessionLabel = props.runtimeUnavailable ? 'runtime unavailable' : props.sessionStatus;
   const sfInstalledLabel = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.sf?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
   const cciInstalledLabel = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
-  const toolSourceLabel =
-    props.toolStatusSource === 'runtime_unavailable'
-      ? 'runtime blocked'
-      : props.toolStatusSource === 'live'
-        ? 'live status'
-        : 'status not loaded';
+  const toolSourceLabel = describeToolStatusSource(props.toolStatusSource);
   const runtimeTriage = deriveRuntimeTriage(props.readyPayload);
 
   return (
