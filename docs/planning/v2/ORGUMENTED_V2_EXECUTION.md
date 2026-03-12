@@ -115,6 +115,7 @@ Materially true now:
 - Proofs & History action row now defaults to label-first wording (`Open/Replay Selected History`), while raw token lookup stays in advanced details with explicit fail-closed guidance when no selection is present
 - Proofs & History now supports label-first artifact export (`Export Selected Proof` / `Export Selected Replay`) so normal audit flows can export JSON artifacts without token-first lookup
 - Proofs & History now keeps the selected history label independent from advanced proof/replay token fields, so primary open/replay actions stay label-first even when debug IDs are typed manually
+- Proofs & History primary open/replay actions now require a selected history label, while advanced proof ID / replay token lookup is isolated behind explicit `Open by Token` / `Replay by Token` actions so token entry cannot masquerade as the normal history-first workflow
 - CI heavy Windows jobs are path-gated for minute efficiency
 - PR Autofill now runs on `opened/reopened` only (not every push), and Actions retention now includes an automated cleanup workflow that prunes older completed runs per workflow
 - CI now runs packaged desktop smoke in the same Windows validate job (instead of cross-job runtime artifact handoff), reducing Actions artifact storage pressure without dropping trust gates

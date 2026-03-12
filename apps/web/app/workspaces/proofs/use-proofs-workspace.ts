@@ -358,16 +358,60 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
   }
 
   async function runProofLookup(): Promise<void> {
-    await runProofLookupById(resolveProofLookupId(selectedRecentProof, proofId));
+    if (!selectedRecentProof?.proofId) {
+      reportSelectionRequired('Select a history label first before opening proof from the primary workflow.');
+      return;
+    }
+    await runProofLookupById(selectedRecentProof.proofId);
   }
 
   async function runReplay(): Promise<void> {
-    const lookup = resolveReplayLookup(selectedRecentProof, proofId, replayToken);
+    if (!selectedRecentProof?.proofId || !selectedRecentProof.replayToken) {
+      reportSelectionRequired('Select a history label first before replaying from the primary workflow.');
+      return;
+    }
+
+    options.setLoading(true);
+    options.setCopied(false);
+    options.setErrorText('');
+
+    try {
+      const result = await replayAskProof({
+        replayToken: selectedRecentProof.replayToken,
+        proofId: selectedRecentProof.proofId
+      });
+      options.presentResponse(result);
+      if (result.ok === false) {
+        options.setErrorText(options.resolveErrorMessage(result));
+        setReplayResult(null);
+      } else {
+        setReplayResult(parseReplayResult(result));
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected replay failure';
+      const fallback: QueryResponse = { ok: false, error: { message } };
+      options.presentResponse(fallback);
+      options.setErrorText('Replay failed. Check API readiness and local runtime health.');
+      setReplayResult(null);
+    } finally {
+      options.setLoading(false);
+    }
+  }
+
+  async function runAdvancedProofLookup(): Promise<void> {
+    const lookupId = resolveProofLookupId(null, proofId);
+    if (!lookupId) {
+      reportSelectionRequired('Provide a proof ID in Advanced token lookup before opening by token.');
+      return;
+    }
+    await runProofLookupById(lookupId);
+  }
+
+  async function runAdvancedReplay(): Promise<void> {
+    const lookup = resolveReplayLookup(null, proofId, replayToken);
 
     if (!lookup.proofId && !lookup.replayToken) {
-      reportSelectionRequired(
-        'Select a history label first, or provide proof ID/replay token in Advanced token lookup before replay.'
-      );
+      reportSelectionRequired('Provide a proof ID or replay token in Advanced token lookup before replaying by token.');
       return;
     }
 
@@ -463,7 +507,9 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     syncFromAsk,
     runProofsRecent,
     runProofLookup,
+    runAdvancedProofLookup,
     runReplay,
+    runAdvancedReplay,
     runMetricsExport,
     exportSelectedProofArtifact,
     exportSelectedReplayArtifact

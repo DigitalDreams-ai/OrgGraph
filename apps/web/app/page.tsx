@@ -148,16 +148,16 @@ export default function Page(): JSX.Element {
   }, [uiTab, proofsWorkspace.recentProofs.length, secondaryQueryRunner.limitRaw]);
 
   useEffect(() => {
-    if (uiTab !== 'proofs' || !proofsWorkspace.proofId.trim()) {
+    if (uiTab !== 'proofs' || !proofsWorkspace.selectedRecentProof?.proofId) {
       return;
     }
 
-    if (proofsWorkspace.selectedProof?.proofId === proofsWorkspace.proofId) {
+    if (proofsWorkspace.selectedProof?.proofId === proofsWorkspace.selectedRecentProof.proofId) {
       return;
     }
 
     void proofsWorkspace.runProofLookup();
-  }, [uiTab, proofsWorkspace.proofId, proofsWorkspace.selectedProof?.proofId]);
+  }, [uiTab, proofsWorkspace.selectedRecentProof?.proofId, proofsWorkspace.selectedProof?.proofId]);
 
   useEffect(() => {
     if (uiTab !== 'browser' || browserWorkspace.metadataCatalogRequested) {
@@ -392,6 +392,8 @@ export default function Page(): JSX.Element {
               onListRecent={() => void proofsWorkspace.runProofsRecent(parseOptionalInt(secondaryQueryRunner.limitRaw) ?? 20)}
               onGetProof={() => void proofsWorkspace.runProofLookup()}
               onReplay={() => void proofsWorkspace.runReplay()}
+              onOpenByToken={() => void proofsWorkspace.runAdvancedProofLookup()}
+              onReplayByToken={() => void proofsWorkspace.runAdvancedReplay()}
               onExportMetrics={() => void proofsWorkspace.runMetricsExport()}
               onExportProofArtifact={() => proofsWorkspace.exportSelectedProofArtifact()}
               onExportReplayArtifact={() => proofsWorkspace.exportSelectedReplayArtifact()}
