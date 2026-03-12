@@ -11,6 +11,7 @@
     "desktop:info": "pnpm --filter desktop info",
     "desktop:smoke:release": "pwsh -NoProfile -File ./scripts/desktop-release-smoke.ps1",
     "ci:detect-changes:test": "node --test ./scripts/ci-detect-heavy-changes.test.mjs",
+    "ci:retention-policy:test": "node --test ./scripts/actions-retention-policy.test.mjs",
     "lint": "pnpm -r lint",
     "mcp:project-memory": "node ./scripts/project-memory-mcp.mjs",
     "test": "pnpm -r test",
