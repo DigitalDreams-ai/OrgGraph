@@ -9,6 +9,7 @@ import {
   deriveRuntimeIssues
 } from './runtime-status';
 import type { RuntimeIssue } from './runtime-status';
+import type { StructuredRuntimeActionId } from './runtime-status';
 import type { RuntimeGateState } from '../../shell/runtime-gate';
 
 interface SystemWorkspaceProps {
@@ -30,6 +31,9 @@ interface SystemWorkspaceProps {
   onRunMetaAdapt: () => void;
   onLoadOrgStatus: () => void;
   onRunPreflight: () => void;
+  onRefreshStatus: () => void;
+  onOpenConnect: () => void;
+  onOpenRefresh: () => void;
 }
 
 function formatTimestamp(value?: string): string {
@@ -151,7 +155,27 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
     ? 'Runtime is currently unreachable. Relaunch Orgumented desktop, then run Refresh Status before checking toolchain state.'
     : props.runtimeBlocked
       ? 'Runtime readiness is fail-closed. Tool and session values below are still live diagnostics, but deterministic workflows remain blocked until readiness returns to ready.'
-    : props.orgStatus?.sf?.message || props.orgStatus?.cci?.message || 'Tooling messages look healthy.';
+      : props.orgStatus?.sf?.message || props.orgStatus?.cci?.message || 'Tooling messages look healthy.';
+
+  function handleStructuredAction(actionId: StructuredRuntimeActionId): void {
+    if (actionId === 'refresh-status') {
+      props.onRefreshStatus();
+      return;
+    }
+    if (actionId === 'load-org-status') {
+      props.onLoadOrgStatus();
+      return;
+    }
+    if (actionId === 'run-preflight') {
+      props.onRunPreflight();
+      return;
+    }
+    if (actionId === 'open-connect') {
+      props.onOpenConnect();
+      return;
+    }
+    props.onOpenRefresh();
+  }
 
   return (
     <>
@@ -346,6 +370,21 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
                 <p>
                   <strong>Next action:</strong> {item.nextAction}
                 </p>
+                {item.actions.length > 0 ? (
+                  <div className="action-row">
+                    {item.actions.map((action) => (
+                      <button
+                        key={`${item.id}-${action.id}`}
+                        type="button"
+                        className="ghost"
+                        onClick={() => handleStructuredAction(action.id)}
+                        disabled={props.loading}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>

@@ -46,6 +46,10 @@ function run(): void {
   assert.equal(unreachableSnapshot[1]?.status, 'bad');
   assert.match(unreachableSnapshot[1]?.detail ?? '', /runtime is unreachable/i);
   assert.match(unreachableSnapshot[1]?.nextAction ?? '', /restore runtime first/i);
+  assert.deepEqual(
+    unreachableSnapshot[1]?.actions.map((action) => action.id),
+    ['refresh-status', 'load-org-status']
+  );
 
   const blockedSnapshot = buildStructuredSnapshot({
     runtimeGateState: 'blocked',
@@ -68,8 +72,16 @@ function run(): void {
   assert.equal(blockedSnapshot[1]?.status, 'warning');
   assert.match(blockedSnapshot[1]?.detail ?? '', /still readable/i);
   assert.match(blockedSnapshot[1]?.nextAction ?? '', /runtime readiness first/i);
+  assert.deepEqual(
+    blockedSnapshot[1]?.actions.map((action) => action.id),
+    ['refresh-status', 'load-org-status', 'run-preflight']
+  );
   assert.equal(blockedSnapshot[2]?.status, 'warning');
   assert.match(blockedSnapshot[2]?.detail ?? '', /fail-closed/i);
+  assert.deepEqual(
+    blockedSnapshot[2]?.actions.map((action) => action.id),
+    ['refresh-status', 'open-connect']
+  );
 }
 
 run();
