@@ -67,11 +67,62 @@ function run(): void {
       onRunAutomation: () => undefined,
       onRunImpact: () => undefined,
       onRunSystemPermission: () => undefined,
-      onOpenAsk: () => undefined
+      onOpenAsk: () => undefined,
+      onOpenBrowser: () => undefined,
+      onOpenRefresh: () => undefined
     } as any)
   );
   assert.match(permissionMarkup, /<span class="path-value">Profile:Sales_User -grants-&gt; Object:Opportunity \| Object:Opportunity -blocks-&gt; Field:Opportunity.StageName<\/span>/);
   assert.match(permissionMarkup, /<p class="path-value">C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\maps\\principal-map\.json<\/p>/);
+
+  const mappingRecoveryMarkup = renderToStaticMarkup(
+    React.createElement(AnalyzeWorkspace, {
+      analyzeMode: 'perms',
+      setAnalyzeMode: () => undefined,
+      user: 'sbingham@example.com',
+      setUser: () => undefined,
+      objectName: 'Opportunity',
+      setObjectName: () => undefined,
+      fieldName: 'Opportunity.StageName',
+      setFieldName: () => undefined,
+      systemPermission: 'ManageUsers',
+      setSystemPermission: () => undefined,
+      limitRaw: '25',
+      setLimitRaw: () => undefined,
+      strictMode: true,
+      setStrictMode: () => undefined,
+      explainMode: false,
+      setExplainMode: () => undefined,
+      debugMode: false,
+      setDebugMode: () => undefined,
+      permissionsResult: null,
+      permissionDiagnosis: {
+        user: 'sbingham@example.com',
+        mapExists: false,
+        mappingStatus: 'unmapped_user',
+        principals: [],
+        warnings: ['Principal map missing.'],
+        stale: false,
+        staleThresholdHours: 24,
+        mapAgeHours: undefined,
+        mapPath: 'C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\maps\\principal-map.json'
+      },
+      automationResult: null,
+      impactResult: null,
+      systemPermissionResult: null,
+      loading: false,
+      onRunPermissions: () => undefined,
+      onDiagnoseUserMapping: () => undefined,
+      onRunAutomation: () => undefined,
+      onRunImpact: () => undefined,
+      onRunSystemPermission: () => undefined,
+      onOpenAsk: () => undefined,
+      onOpenBrowser: () => undefined,
+      onOpenRefresh: () => undefined
+    } as any)
+  );
+  assert.match(mappingRecoveryMarkup, />Open Org Browser</);
+  assert.match(mappingRecoveryMarkup, />Open Refresh &amp; Build</);
 
   const impactMarkup = renderToStaticMarkup(
     React.createElement(AnalyzeWorkspace, {
@@ -122,7 +173,9 @@ function run(): void {
       onRunAutomation: () => undefined,
       onRunImpact: () => undefined,
       onRunSystemPermission: () => undefined,
-      onOpenAsk: () => undefined
+      onOpenAsk: () => undefined,
+      onOpenBrowser: () => undefined,
+      onOpenRefresh: () => undefined
     } as any)
   );
   assert.match(impactMarkup, /<span class="path-value">Field:Opportunity\.StageName<\/span> -&gt; <span class="path-value">Flow:Civil_Rights_Intake_Questionnaire<\/span>/);
@@ -177,7 +230,9 @@ function run(): void {
       onRunAutomation: () => undefined,
       onRunImpact: () => undefined,
       onRunSystemPermission: () => undefined,
-      onOpenAsk: () => undefined
+      onOpenAsk: () => undefined,
+      onOpenBrowser: () => undefined,
+      onOpenRefresh: () => undefined
     } as any)
   );
   assert.match(systemMarkup, /<span class="path-value">Profile:System_Administrator<\/span> -&gt; <span class="path-value">ManageUsers<\/span>/);

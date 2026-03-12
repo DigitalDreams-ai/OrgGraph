@@ -41,6 +41,8 @@ interface AnalyzeWorkspaceProps {
   onRunImpact: () => void;
   onRunSystemPermission: () => void;
   onOpenAsk: (query: string) => void;
+  onOpenBrowser: () => void;
+  onOpenRefresh: () => void;
 }
 
 function formatPath(path: GraphStep[]): string {
@@ -82,6 +84,8 @@ type StructuredAnalyzeActionId =
   | 'run-automation'
   | 'run-impact'
   | 'run-system'
+  | 'open-browser'
+  | 'open-refresh'
   | 'open-ask-permissions'
   | 'open-ask-automation'
   | 'open-ask-impact'
@@ -210,7 +214,11 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
               : 'Mapping context is ready for permission checks.',
         actions: [
           { id: 'diagnose-mapping', label: 'Diagnose User Mapping' },
-          { id: 'run-permissions', label: 'Run Permissions Analysis' }
+          { id: 'run-permissions', label: 'Run Permissions Analysis' },
+          ...(!props.permissionDiagnosis.mapExists ? [{ id: 'open-browser', label: 'Open Org Browser' } as StructuredAnalyzeAction] : []),
+          ...(props.permissionDiagnosis.stale || !props.permissionDiagnosis.mapExists
+            ? [{ id: 'open-refresh', label: 'Open Refresh & Build' } as StructuredAnalyzeAction]
+            : [])
         ]
       });
     }
@@ -359,6 +367,14 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
     }
     if (actionId === 'run-system') {
       props.onRunSystemPermission();
+      return;
+    }
+    if (actionId === 'open-browser') {
+      props.onOpenBrowser();
+      return;
+    }
+    if (actionId === 'open-refresh') {
+      props.onOpenRefresh();
       return;
     }
     if (actionId === 'open-ask-permissions') {
