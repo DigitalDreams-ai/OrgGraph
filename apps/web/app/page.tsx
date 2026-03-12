@@ -420,9 +420,11 @@ export default function Page(): JSX.Element {
               toolStatusSource={connectWorkspace.toolStatusSource}
               metaContext={systemWorkspace.metaContext}
               metaAdaptResult={systemWorkspace.metaAdaptResult}
+              askTrustDashboard={systemWorkspace.askTrustDashboard}
               loading={secondaryQueryRunner.loading}
               onLoadMetaContext={() => void systemWorkspace.loadMetaContext()}
               onRunMetaAdapt={() => void systemWorkspace.runMetaAdapt()}
+              onLoadAskTrustDashboard={() => void systemWorkspace.loadAskTrustDashboard()}
               onLoadOrgStatus={() => void systemWorkspace.loadOrgStatus()}
               onRunPreflight={() => void connectWorkspace.runPreflight(connectWorkspace.activeAlias)}
               onRefreshStatus={() => void shellRuntime.refreshStatuses()}

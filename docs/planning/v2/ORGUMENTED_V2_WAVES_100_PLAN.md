@@ -275,6 +275,7 @@ Scope:
 - deterministic summaries with clear next actions
 - raw JSON as secondary surface only
 - explicit Browser/Refresh recovery actions when automation or impact analysis returns no deterministic matches
+- structured Ask trust telemetry (replay/proof coverage/failure classes) visible from Settings & Diagnostics without raw API inspection
 
 Exit:
 - core analysis tasks complete through card actions
