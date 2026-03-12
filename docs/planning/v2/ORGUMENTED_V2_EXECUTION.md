@@ -83,6 +83,7 @@ Materially true now:
 - wave10 follow-up now enforces larger card-grid minimum widths and path-specific wrapping classes, reducing truncation in decision packets, citations, mapping diagnostics, and diagnostics artifacts
 - wave10 follow-up now hardens Ask proof/context and citation rendering with explicit path-value wrapping, snippet scroll bounds, and denser auto-fit minima to reduce clipping in mid-width desktop layouts
 - wave10 accessibility follow-up now adds live-region semantics to dynamic Ask, Sessions, Browser, and Refresh surfaces and locks label/tab/expansion semantics with a dedicated render-level accessibility smoke test
+- wave11 CI follow-up now runs the embedded web regression suite inside `validate` (`test:ask-render`, `test:analyze-render`, `test:runtime-status`, `test:proof-history`, `test:workspace-a11y`, `test:system-workspace`) so Stage 1 UI regressions are no longer local-only guarantees
 - refresh handoff is staged and fail-closed from browser selections
 - `Run Refresh` now also fails closed until Browser handoff is ready and staged selections are present, preventing rebuild from running on ambiguous retrieve context
 - refresh handoff now also fails closed on alias mismatch and persists latest retrieve/selections across relaunch
@@ -125,6 +126,7 @@ Materially true now:
 - Actions retention cleanup now runs twice daily and keeps the most recent 14 completed runs per workflow by default; runtime-nightly is now weekly with 1-day artifact retention to protect CI storage/minute budget without weakening PR trust gates
 - wave11 retention follow-up now locks that 14-run cleanup policy and the 1-day runtime artifact retention defaults with a repo-local regression test, preventing silent workflow drift
 - wave11 CI follow-up now replaces the external `dorny/paths-filter` dependency with a repo-local change-detection script and unit test so `detect-changes` no longer flakes on third-party action download/auth failures
+- wave11 CI follow-up now also executes the targeted web regression corpus in the Windows `validate` job, so wave8/wave9/wave10 UI safety gates fail in PRs instead of only on local runs
 - wave11 regression corpus now locks edge component-usage families for Apex Class and Apex Trigger prompts, including metadata-arg and path-qualified normalization so those asks cannot drift back into weak generic answers
 - release checklist now aligns to pnpm-only commands and includes explicit real-org operator workflow evidence requirements
 - wave12 release surfaces now include a dedicated rollback playbook plus release-notes evidence template, keeping release/rollback discipline aligned to the packaged desktop workflow instead of older mixed promotion language

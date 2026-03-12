@@ -102,6 +102,9 @@ jobs:
       - name: Build API
         run: pnpm --filter api build
 
+      - name: Test embedded UI regressions
+        run: pnpm --filter web test:ci
+
       - name: Build embedded UI
         run: pnpm --filter web build
 

@@ -31,6 +31,7 @@ The following are now true in main and should not be re-planned as open:
 - major clipping/overflow defects in core Ask/Analyze/Diagnostics surfaces were reduced with stronger grid minima and wrapping rules
 - accessibility smoke coverage is now part of the wave10 finish path for Ask, Sessions, Browser, and Refresh
 - long path/identifier surfaces in Connect, Refresh, and System now use explicit wrappers, and the runtime-status regression gate render-checks those guards so raw JSON and path-heavy summaries stay bounded
+- targeted web regression gates are now part of the wave11 CI lock path, so Ask/Analyze/Proofs/System UI regressions fail in `validate` instead of remaining local-only checks
 
 Remaining work is now primarily around:
 - wave2 runtime convergence closure
@@ -330,6 +331,7 @@ Exit:
 - CI remains strict on runtime-impacting changes
 - CI minutes remain controlled with path-gating and selective heavy-job execution
 - detect-changes remains repo-local and deterministic, without third-party action download dependencies
+- targeted web regression suite runs in `validate` for runtime-impacting PRs, locking Ask/Analyze/Proofs/System accessibility and render guards into GitHub Actions
 
 ## wave12 - Release Readiness And Operator Proof
 
