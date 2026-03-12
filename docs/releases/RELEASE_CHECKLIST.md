@@ -16,6 +16,7 @@ Related files:
 - [Release Notes](./RELEASE.md)
 - [Rollback Playbook](./ROLLBACK_PLAYBOOK.md)
 - [Real Org Desktop Quickstart](../runbooks/REAL_ORG_DESKTOP_QUICKSTART.md)
+- [Clean Machine Operator Proof](../runbooks/CLEAN_MACHINE_OPERATOR_PROOF.md)
 
 ## 1. Prepare The Workstation
 
@@ -94,6 +95,7 @@ Check the latest smoke artifact for:
 ## 5. Real-Org Operator Proof Gate
 
 - [ ] Run [Real Org Desktop Quickstart](../runbooks/REAL_ORG_DESKTOP_QUICKSTART.md)
+- [ ] Run [Clean Machine Operator Proof](../runbooks/CLEAN_MACHINE_OPERATOR_PROOF.md) on a non-author machine
 - [ ] Org Sessions connect proof captured
 - [ ] Org Browser retrieve proof captured
 - [ ] Refresh handoff proof captured
@@ -106,6 +108,12 @@ Required screenshots:
 - Org Browser retrieved selection
 - Refresh & Build handoff state
 - Ask response with trust envelope and citations
+
+Required metadata:
+- candidate commit SHA
+- operator name
+- machine identifier/description
+- alias used
 
 ## 6. Release Candidate Artifacts
 
