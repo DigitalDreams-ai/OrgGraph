@@ -83,6 +83,7 @@ Materially true now:
 - wave10 follow-up now enforces larger card-grid minimum widths and path-specific wrapping classes, reducing truncation in decision packets, citations, mapping diagnostics, and diagnostics artifacts
 - wave10 follow-up now hardens Ask proof/context and citation rendering with explicit path-value wrapping, snippet scroll bounds, and denser auto-fit minima to reduce clipping in mid-width desktop layouts
 - wave10 accessibility follow-up now adds live-region semantics to dynamic Ask, Sessions, Browser, and Refresh surfaces and locks label/tab/expansion semantics with a dedicated render-level accessibility smoke test
+- wave10 follow-up now wraps long proof-history labels, snapshot IDs, policy IDs, and generated timestamps with explicit `path-value` guards so Proofs surfaces stay bounded under long real-org identifiers
 - wave10 accessibility follow-up now extends live-region smoke coverage to Analyze structured triage, Proofs current selection, and Settings & Diagnostics structured snapshot so the remaining dynamic desktop workspaces share the same screen-reader update contract
 - refresh handoff is staged and fail-closed from browser selections
 - `Run Refresh` now also fails closed until Browser handoff is ready and staged selections are present, preventing rebuild from running on ambiguous retrieve context
@@ -130,6 +131,7 @@ Materially true now:
 - release checklist now aligns to pnpm-only commands and includes explicit real-org operator workflow evidence requirements
 - wave12 release surfaces now include a dedicated rollback playbook plus release-notes evidence template, keeping release/rollback discipline aligned to the packaged desktop workflow instead of older mixed promotion language
 - wave12 now also includes a clean-machine operator-proof worksheet so non-author validation has a single explicit capture template instead of ad-hoc notes
+- wave12 release docs now share a canonical artifact-path map so executable, installer, smoke, operator-proof, and rollback evidence locations are recorded in one consistent format
 - wave12 rollback readiness now also includes a canonical rollback-result template so executed rollback validation can be captured in a consistent release-evidence format
 - real-org desktop quickstart runbook now exists as a single explicit Git Bash workflow for connect, browser retrieve, refresh handoff, and Ask proof capture
 - operator-machine pass evidence for real-org quickstart is now captured with proof/replay IDs in `docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md`

@@ -12,6 +12,9 @@ Reference runbook:
 Canonical evidence log:
 - [Real Org Operator Proof Results](../planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md)
 
+Canonical path reference:
+- [Release Artifact Paths](../releases/ARTIFACT_PATHS.md)
+
 ## Definition Of Clean Machine
 
 For this proof, a clean machine means:
@@ -61,6 +64,8 @@ Text fields to record:
 - machine identifier or description
 - alias used
 - candidate commit SHA
+- desktop executable path used
+- installer path used, if installer validation was performed
 - whether `sf` and `cci` were already installed
 - whether Orgumented had been run on that machine before
 - Ask question used
@@ -81,6 +86,8 @@ Copy this block into [Real Org Operator Proof Results](../planning/v2/REAL_ORG_O
 - Date:
 - Candidate commit SHA:
 - Alias:
+- Desktop executable path:
+- Installer path:
 - Prior Orgumented runtime on this machine: yes/no
 
 ### Tooling Check

@@ -92,8 +92,12 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
         <h3>Operator-facing history label</h3>
         {props.selectedRecentProof || props.selectedProof ? (
           <>
-            <p>
-              <strong>{props.selectedRecentProof?.label || props.selectedProof?.query || `Proof ${props.proofId.slice(0, 12)}`}</strong>
+          <p>
+              <strong>
+                <span className="path-value">
+                  {props.selectedRecentProof?.label || props.selectedProof?.query || `Proof ${props.proofId.slice(0, 12)}`}
+                </span>
+              </strong>
             </p>
             <p className="muted">
               {props.selectedRecentProof?.subtitle || `Trust ${props.selectedProof?.trustLevel || 'unknown'} • ${props.selectedProof?.snapshotId || 'snapshot n/a'}`}
@@ -126,9 +130,9 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
                   className={`proof-list-item ${props.selectedRecentProof?.proofId === proof.proofId ? 'active' : ''}`.trim()}
                 >
                   <div>
-                    <strong>{proof.label}</strong>
+                    <strong><span className="path-value">{proof.label}</span></strong>
                     <p>{proof.subtitle}</p>
-                    <p><strong>Trust:</strong> {proof.trustLevel} <strong>Snapshot:</strong> {proof.snapshotId}</p>
+                    <p><strong>Trust:</strong> {proof.trustLevel} <strong>Snapshot:</strong> <span className="path-value">{proof.snapshotId}</span></p>
                   </div>
                   <div className="proof-list-actions">
                     <button
@@ -167,8 +171,8 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
                 <span className="decision-badge muted">Policy: {props.selectedProof.policyId}</span>
                 <span className="decision-badge muted">Trace: {props.selectedProof.traceLevel}</span>
               </div>
-              <p><strong>Snapshot:</strong> {props.selectedProof.snapshotId}</p>
-              <p><strong>Generated:</strong> {props.selectedProof.generatedAt || 'n/a'}</p>
+              <p><strong>Snapshot:</strong> <span className="path-value">{props.selectedProof.snapshotId}</span></p>
+              <p><strong>Generated:</strong> <span className="path-value">{props.selectedProof.generatedAt || 'n/a'}</span></p>
               <p><strong>Deterministic answer:</strong> {props.selectedProof.deterministicAnswer || 'n/a'}</p>
               <p><strong>Confidence:</strong> {typeof props.selectedProof.confidence === 'number' ? props.selectedProof.confidence : 'n/a'}</p>
               <p><strong>Operators:</strong> {props.selectedProof.operatorsExecuted.join(', ') || 'n/a'}</p>
@@ -191,8 +195,8 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
                 <span className={`decision-badge ${props.replayResult.corePayloadMatched ? 'good' : 'bad'}`}>Core payload: {String(props.replayResult.corePayloadMatched)}</span>
                 <span className={`decision-badge ${props.replayResult.metricsMatched ? 'good' : 'bad'}`}>Metrics: {String(props.replayResult.metricsMatched)}</span>
               </div>
-              <p><strong>Policy:</strong> {props.replayResult.policyId}</p>
-              <p><strong>Snapshot:</strong> {props.replayResult.snapshotId}</p>
+              <p><strong>Policy:</strong> <span className="path-value">{props.replayResult.policyId}</span></p>
+              <p><strong>Snapshot:</strong> <span className="path-value">{props.replayResult.snapshotId}</span></p>
               <p><strong>Original trust:</strong> {props.replayResult.original.trustLevel}</p>
               <p><strong>Replayed trust:</strong> {props.replayResult.replayed.trustLevel}</p>
               <p><strong>Original answer:</strong> {props.replayResult.original.deterministicAnswer || 'n/a'}</p>
@@ -215,7 +219,7 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
                   <ul className="proof-inline-list">
                     {props.metricsExport.bySnapshot.slice(0, 3).map((snapshot) => (
                       <li key={snapshot.snapshotId}>
-                        {snapshot.snapshotId}: {snapshot.count} asks, {snapshot.trusted} trusted, {snapshot.refused} refused
+                        <span className="path-value">{snapshot.snapshotId}</span>: {snapshot.count} asks, {snapshot.trusted} trusted, {snapshot.refused} refused
                       </li>
                     ))}
                   </ul>
