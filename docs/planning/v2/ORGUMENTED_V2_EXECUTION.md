@@ -85,6 +85,7 @@ Materially true now:
 - wave10 follow-up now hardens Ask proof/context and citation rendering with explicit path-value wrapping, snippet scroll bounds, and denser auto-fit minima to reduce clipping in mid-width desktop layouts
 - wave10 accessibility follow-up now adds live-region semantics to dynamic Ask, Sessions, Browser, and Refresh surfaces and locks label/tab/expansion semantics with a dedicated render-level accessibility smoke test
 - wave10 follow-up now wraps long proof-history labels, snapshot IDs, policy IDs, and generated timestamps with explicit `path-value` guards so Proofs surfaces stay bounded under long real-org identifiers
+- wave10 regression follow-up now locks Settings & Diagnostics meta-adapt path values (`contextPath`, `auditArtifactPath`) with a render-level guard so long operator-machine paths stay bounded in desktop layouts
 - wave11 CI follow-up now runs the embedded web regression suite inside `validate` (`test:ask-render`, `test:analyze-render`, `test:runtime-status`, `test:proof-history`, `test:workspace-a11y`, `test:system-workspace`) so Stage 1 UI regressions are no longer local-only guarantees
 - wave10 accessibility follow-up now extends live-region smoke coverage to Analyze structured triage, Proofs current selection, and Settings & Diagnostics structured snapshot so the remaining dynamic desktop workspaces share the same screen-reader update contract
 - refresh handoff is staged and fail-closed from browser selections
