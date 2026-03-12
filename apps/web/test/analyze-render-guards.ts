@@ -124,6 +124,55 @@ function run(): void {
   assert.match(mappingRecoveryMarkup, />Open Org Browser</);
   assert.match(mappingRecoveryMarkup, />Open Refresh &amp; Build</);
 
+  const automationRecoveryMarkup = renderToStaticMarkup(
+    React.createElement(AnalyzeWorkspace, {
+      analyzeMode: 'automation',
+      setAnalyzeMode: () => undefined,
+      user: 'sbingham@example.com',
+      setUser: () => undefined,
+      objectName: 'Opportunity',
+      setObjectName: () => undefined,
+      fieldName: 'Opportunity.StageName',
+      setFieldName: () => undefined,
+      systemPermission: 'ManageUsers',
+      setSystemPermission: () => undefined,
+      limitRaw: '25',
+      setLimitRaw: () => undefined,
+      strictMode: true,
+      setStrictMode: () => undefined,
+      explainMode: false,
+      setExplainMode: () => undefined,
+      debugMode: false,
+      setDebugMode: () => undefined,
+      permissionsResult: null,
+      permissionDiagnosis: null,
+      automationResult: {
+        object: 'Opportunity',
+        strictMode: true,
+        minConfidenceApplied: 0.7,
+        automations: [],
+        totalAutomations: 0,
+        truncated: false,
+        relationsChecked: ['updates'],
+        explanation: 'No deterministic automation match found.'
+      },
+      impactResult: null,
+      systemPermissionResult: null,
+      loading: false,
+      onRunPermissions: () => undefined,
+      onDiagnoseUserMapping: () => undefined,
+      onRunAutomation: () => undefined,
+      onRunImpact: () => undefined,
+      onRunSystemPermission: () => undefined,
+      onOpenAsk: () => undefined,
+      onOpenBrowser: () => undefined,
+      onOpenRefresh: () => undefined
+    } as any)
+  );
+  assert.match(automationRecoveryMarkup, />Open Org Browser</);
+  assert.match(automationRecoveryMarkup, />Open Refresh &amp; Build</);
+  assert.doesNotMatch(automationRecoveryMarkup, />Open Ask for Automation Scope</);
+
   const impactMarkup = renderToStaticMarkup(
     React.createElement(AnalyzeWorkspace, {
       analyzeMode: 'impact',
@@ -179,6 +228,56 @@ function run(): void {
     } as any)
   );
   assert.match(impactMarkup, /<span class="path-value">Field:Opportunity\.StageName<\/span> -&gt; <span class="path-value">Flow:Civil_Rights_Intake_Questionnaire<\/span>/);
+
+  const impactRecoveryMarkup = renderToStaticMarkup(
+    React.createElement(AnalyzeWorkspace, {
+      analyzeMode: 'impact',
+      setAnalyzeMode: () => undefined,
+      user: 'sbingham@example.com',
+      setUser: () => undefined,
+      objectName: 'Opportunity',
+      setObjectName: () => undefined,
+      fieldName: 'Opportunity.StageName',
+      setFieldName: () => undefined,
+      systemPermission: 'ManageUsers',
+      setSystemPermission: () => undefined,
+      limitRaw: '25',
+      setLimitRaw: () => undefined,
+      strictMode: true,
+      setStrictMode: () => undefined,
+      explainMode: false,
+      setExplainMode: () => undefined,
+      debugMode: false,
+      setDebugMode: () => undefined,
+      permissionsResult: null,
+      permissionDiagnosis: null,
+      automationResult: null,
+      impactResult: {
+        field: 'Opportunity.StageName',
+        strictMode: true,
+        explainMode: false,
+        minConfidenceApplied: 0.7,
+        paths: [],
+        totalPaths: 0,
+        truncated: false,
+        relationsChecked: ['reads', 'writes'],
+        explanation: 'No deterministic impact path matched the request.'
+      },
+      systemPermissionResult: null,
+      loading: false,
+      onRunPermissions: () => undefined,
+      onDiagnoseUserMapping: () => undefined,
+      onRunAutomation: () => undefined,
+      onRunImpact: () => undefined,
+      onRunSystemPermission: () => undefined,
+      onOpenAsk: () => undefined,
+      onOpenBrowser: () => undefined,
+      onOpenRefresh: () => undefined
+    } as any)
+  );
+  assert.match(impactRecoveryMarkup, />Open Org Browser</);
+  assert.match(impactRecoveryMarkup, />Open Refresh &amp; Build</);
+  assert.doesNotMatch(impactRecoveryMarkup, />Open Ask for Impact Scope</);
 
   const systemMarkup = renderToStaticMarkup(
     React.createElement(AnalyzeWorkspace, {

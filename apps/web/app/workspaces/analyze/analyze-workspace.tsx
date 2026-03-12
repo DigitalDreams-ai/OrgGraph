@@ -234,8 +234,12 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
           title: 'Automation summary',
           status: 'warning',
           detail: 'No automation analysis result loaded for this object context.',
-          nextAction: 'Run Automation Analysis to generate deterministic automation coverage.',
-          actions: [{ id: 'run-automation', label: 'Run Automation Analysis' }]
+          nextAction: 'Run Automation Analysis, or reopen Org Browser / Refresh & Build if metadata coverage is stale or missing.',
+          actions: [
+            { id: 'run-automation', label: 'Run Automation Analysis' },
+            { id: 'open-browser', label: 'Open Org Browser' },
+            { id: 'open-refresh', label: 'Open Refresh & Build' }
+          ]
         }
       ];
     }
@@ -253,14 +257,20 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
         status,
         detail: `${props.automationResult.object}: ${props.automationResult.automations.length}/${props.automationResult.totalAutomations} automation(s) visible.`,
         nextAction: !hasMatches
-          ? 'Validate object API name or relax confidence settings, then rerun.'
+          ? 'Validate object API name or reopen Org Browser / Refresh & Build if metadata coverage may be stale, then rerun.'
           : props.automationResult.truncated
             ? 'Increase Limit to inspect complete automation coverage.'
             : 'Use Open Ask for Automation Scope to create a trust/proof packet.',
-        actions: [
-          { id: 'run-automation', label: 'Run Automation Analysis' },
-          { id: 'open-ask-automation', label: 'Open Ask for Automation Scope' }
-        ]
+        actions: hasMatches
+          ? [
+              { id: 'run-automation', label: 'Run Automation Analysis' },
+              { id: 'open-ask-automation', label: 'Open Ask for Automation Scope' }
+            ]
+          : [
+              { id: 'run-automation', label: 'Run Automation Analysis' },
+              { id: 'open-browser', label: 'Open Org Browser' },
+              { id: 'open-refresh', label: 'Open Refresh & Build' }
+            ]
       }
     ];
   }
@@ -273,8 +283,12 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
           title: 'Impact summary',
           status: 'warning',
           detail: 'No impact analysis result loaded for this field context.',
-          nextAction: 'Run Impact Analysis to generate deterministic downstream paths.',
-          actions: [{ id: 'run-impact', label: 'Run Impact Analysis' }]
+          nextAction: 'Run Impact Analysis, or reopen Org Browser / Refresh & Build if field metadata coverage is stale or missing.',
+          actions: [
+            { id: 'run-impact', label: 'Run Impact Analysis' },
+            { id: 'open-browser', label: 'Open Org Browser' },
+            { id: 'open-refresh', label: 'Open Refresh & Build' }
+          ]
         }
       ];
     }
@@ -292,14 +306,20 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
         status,
         detail: `${props.impactResult.field}: ${props.impactResult.paths.length}/${props.impactResult.totalPaths} impact path(s) visible.`,
         nextAction: !hasPaths
-          ? 'Confirm field API name and refresh metadata before rerunning.'
+          ? 'Confirm field API name and reopen Org Browser / Refresh & Build if metadata coverage may be stale, then rerun.'
           : props.impactResult.truncated
             ? 'Increase Limit to inspect full impact coverage.'
             : 'Use Open Ask for Impact Scope for approval-ready packet output.',
-        actions: [
-          { id: 'run-impact', label: 'Run Impact Analysis' },
-          { id: 'open-ask-impact', label: 'Open Ask for Impact Scope' }
-        ]
+        actions: hasPaths
+          ? [
+              { id: 'run-impact', label: 'Run Impact Analysis' },
+              { id: 'open-ask-impact', label: 'Open Ask for Impact Scope' }
+            ]
+          : [
+              { id: 'run-impact', label: 'Run Impact Analysis' },
+              { id: 'open-browser', label: 'Open Org Browser' },
+              { id: 'open-refresh', label: 'Open Refresh & Build' }
+            ]
       }
     ];
   }
@@ -743,7 +763,7 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
             ...(props.automationResult.automations.length === 0
               ? [
                   'No deterministic automation matched. Check object name, then rerun with lower confidence if needed.',
-                  'Use Ask with the same object context if you need broader policy-aware impact explanation.'
+                  'Reopen Org Browser or Refresh & Build before escalating if metadata coverage looks stale.'
                 ]
               : ['Inspect returned automations before approving schema or logic changes.']),
             ...(props.automationResult.truncated
@@ -751,20 +771,22 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               : [])
           ])}
 
-          <div className="sub-card">
-            <p className="panel-caption">Ask handoff</p>
-            <h3>Open decision packet workflow</h3>
-            <p className="muted">Move this deterministic automation context into Ask for policy-aware trust, proof, and replay artifacts.</p>
-            <div className="action-row">
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => props.onOpenAsk(buildAutomationScopeAskQuery(props.automationResult, props.objectName))}
-              >
-                Open Ask for Automation Scope
-              </button>
+          {props.automationResult.automations.length > 0 ? (
+            <div className="sub-card">
+              <p className="panel-caption">Ask handoff</p>
+              <h3>Open decision packet workflow</h3>
+              <p className="muted">Move this deterministic automation context into Ask for policy-aware trust, proof, and replay artifacts.</p>
+              <div className="action-row">
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => props.onOpenAsk(buildAutomationScopeAskQuery(props.automationResult, props.objectName))}
+                >
+                  Open Ask for Automation Scope
+                </button>
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -820,27 +842,32 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
 
           {renderActionChecklist('Impact triage', [
             ...(props.impactResult.paths.length === 0
-              ? ['No deterministic impact path matched. Confirm field API name and retrieve latest metadata before rerun.']
+              ? [
+                  'No deterministic impact path matched. Confirm field API name and retrieve latest metadata before rerun.',
+                  'Reopen Org Browser or Refresh & Build before escalating if metadata coverage looks stale.'
+                ]
               : ['Inspect each returned impact path and validate downstream automations before change approval.']),
             ...(props.impactResult.truncated
               ? ['Increase `Limit` to inspect full impact coverage.']
               : [])
           ])}
 
-          <div className="sub-card">
-            <p className="panel-caption">Ask handoff</p>
-            <h3>Open approval packet workflow</h3>
-            <p className="muted">Carry this deterministic impact context into Ask to generate an approval-ready packet with trust envelope and next actions.</p>
-            <div className="action-row">
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => props.onOpenAsk(buildImpactScopeAskQuery(props.impactResult, props.fieldName))}
-              >
-                Open Ask for Impact Scope
-              </button>
+          {props.impactResult.paths.length > 0 ? (
+            <div className="sub-card">
+              <p className="panel-caption">Ask handoff</p>
+              <h3>Open approval packet workflow</h3>
+              <p className="muted">Carry this deterministic impact context into Ask to generate an approval-ready packet with trust envelope and next actions.</p>
+              <div className="action-row">
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => props.onOpenAsk(buildImpactScopeAskQuery(props.impactResult, props.fieldName))}
+                >
+                  Open Ask for Impact Scope
+                </button>
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       ) : null}
 
