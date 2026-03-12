@@ -138,10 +138,10 @@ Mandatory:
 | wave6 | ask planner/compiler depth | B003, B009 | In Progress | Deepen evidence-lookup coverage beyond family-qualified metadata component prompts |
 | wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage exposes direct operator actions and no core recovery path depends on raw JSON |
-| wave9 | proofs/history productization | B011 | In Progress | Label-first reopen/replay/export complete |
+| wave9 | proofs/history productization | B011 | In Progress | Label-first selection stays independent from advanced token lookup and reopen/replay/export remain history-first |
 | wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline |
 | wave11 | bug burn-down and CI quality lock | B013, B018, B023 | In Progress | P0/P1 count to zero and stable trust gates |
-| wave12 | release readiness and operator proof | B014, B019 | Open | Clean-machine runbook pass + rollback proof |
+| wave12 | release readiness and operator proof | B014, B019 | In Progress | Clean-machine runbook pass + rollback proof |
 | wave13 | post-100 stabilization | B024 | Open | No P0/P1 regressions during hold window |
 
 ## Pillar To Wave Map
@@ -291,6 +291,7 @@ Scope:
 Exit:
 - operator can run history-first proof workflows without token bookkeeping
 - labels and replay/open/export remain stable across restarts
+- advanced proof ID / replay token lookup stays debug-only and does not drive the active history selection
 
 ## wave10 - Design/Layout/Accessibility Hardening
 
@@ -321,6 +322,7 @@ Exit:
 - P0/P1 = zero and stable for one cycle
 - CI remains strict on runtime-impacting changes
 - CI minutes remain controlled with path-gating and selective heavy-job execution
+- detect-changes remains repo-local and deterministic, without third-party action download dependencies
 
 ## wave12 - Release Readiness And Operator Proof
 
@@ -331,6 +333,8 @@ Scope:
 - release checklist + rollback playbook
 - clean-machine quickstart validation
 - final real-org end-to-end sweep
+- release-notes evidence template tied to packaged desktop smoke, operator proof, and rollback target capture
+- clean-machine proof worksheet tied to the canonical operator-proof results log
 
 Exit:
 - release candidate checklist fully green
