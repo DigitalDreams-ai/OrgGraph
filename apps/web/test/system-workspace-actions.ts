@@ -4,7 +4,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { SystemWorkspace } from '../app/workspaces/system/system-workspace';
 import type { ReadyPayload } from '../app/shell/use-shell-runtime';
 import type { OrgPreflightPayload, OrgStatusPayload } from '../app/workspaces/connect/types';
-import type { AskTrustDashboardPayload } from '../app/workspaces/system/types';
+import type {
+  AskTrustDashboardPayload,
+  MetaAdaptPayload,
+  MetaContextPayload
+} from '../app/workspaces/system/types';
 
 function buildReadyPayload(): ReadyPayload {
   return {
@@ -48,6 +52,42 @@ function buildOrgPreflight(): OrgPreflightPayload {
   } as OrgPreflightPayload;
 }
 
+function buildMetaContext(): MetaContextPayload {
+  return {
+    status: 'implemented',
+    context: {
+      version: 'ctx_v1',
+      updatedAt: '2026-03-12T20:00:00Z',
+      relationMultipliers: {
+        impacts: 1.2,
+        reads: 0.9
+      },
+      provenance: {
+        formulaVersion: 'formula_v1',
+        metricsSampleSize: 12,
+        trustedByIntent: {
+          impact: 7
+        },
+        refusedByIntent: {
+          review: 1
+        }
+      }
+    }
+  };
+}
+
+function buildMetaAdaptResult(): MetaAdaptPayload {
+  return {
+    status: 'implemented',
+    dryRun: true,
+    changed: true,
+    contextPath: 'C:/Users/sean/AppData/Roaming/Orgumented/meta/context-with-a-very-long-path.json',
+    auditArtifactPath: 'C:/Users/sean/AppData/Roaming/Orgumented/meta/audit/very-long-adapt-audit-artifact.json',
+    before: buildMetaContext().context,
+    after: buildMetaContext().context
+  };
+}
+
 function buildAskTrustDashboard(): AskTrustDashboardPayload {
   return {
     status: 'implemented',
@@ -89,8 +129,8 @@ function run(): void {
       runtimeUnavailable: false,
       runtimeBlocked: true,
       toolStatusSource: 'live',
-      metaContext: null,
-      metaAdaptResult: null,
+      metaContext: buildMetaContext(),
+      metaAdaptResult: buildMetaAdaptResult(),
       askTrustDashboard: buildAskTrustDashboard(),
       loading: false,
       onLoadMetaContext: () => undefined,
@@ -117,6 +157,8 @@ function run(): void {
   assert.match(markup, /Replay pass: 90%/);
   assert.match(markup, /Proof coverage: 90%/);
   assert.match(markup, /llm_fallback: 1/);
+  assert.match(markup, /<strong>Context path:<\/strong>\s*<span class="path-value">C:\/Users\/sean\/AppData\/Roaming\/Orgumented\/meta\/context-with-a-very-long-path\.json<\/span>/);
+  assert.match(markup, /<strong>Audit artifact:<\/strong>\s*<span class="path-value">C:\/Users\/sean\/AppData\/Roaming\/Orgumented\/meta\/audit\/very-long-adapt-audit-artifact\.json<\/span>/);
 }
 
 run();

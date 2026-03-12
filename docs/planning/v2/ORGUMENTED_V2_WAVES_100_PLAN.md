@@ -313,6 +313,7 @@ Scope:
 - spacing and hierarchy normalization
 - keyboard/focus behavior for critical controls
 - explicit render guards for path-heavy Analyze/Diagnostics/Proofs surfaces
+- explicit render guards for long operator-machine paths in Settings & Diagnostics
 
 Exit:
 - zero known clipping defects in Stage 1 surfaces
