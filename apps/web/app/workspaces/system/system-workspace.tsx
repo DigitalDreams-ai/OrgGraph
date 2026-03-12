@@ -230,10 +230,10 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
             <p className="muted">All runtime readiness checks passed. Structured diagnostics are healthy.</p>
           )}
           {props.readyDetails ? (
-            <details>
+            <details className="debug-details">
               <summary>Raw readiness JSON</summary>
               <p className="muted">Use this only for deep debugging. Primary triage is captured in the structured snapshot below.</p>
-              <pre>{props.readyDetails}</pre>
+              <pre className="diagnostic-code-block">{props.readyDetails}</pre>
             </details>
           ) : null}
         </article>

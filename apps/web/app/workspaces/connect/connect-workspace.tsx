@@ -166,8 +166,8 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           </div>
           <p><strong>Alias:</strong> {props.selectedAlias?.alias || props.orgPreflight?.alias || props.orgAlias}</p>
           <p><strong>Username:</strong> {props.selectedAlias?.username || 'n/a'}</p>
-          <p><strong>Org ID:</strong> {props.selectedAlias?.orgId || 'n/a'}</p>
-          <p><strong>Instance URL:</strong> {props.selectedAlias?.instanceUrl || 'n/a'}</p>
+          <p><strong>Org ID:</strong> <span className="path-value">{props.selectedAlias?.orgId || 'n/a'}</span></p>
+          <p><strong>Instance URL:</strong> <span className="path-value">{props.selectedAlias?.instanceUrl || 'n/a'}</span></p>
           <p><strong>Authenticated in sf:</strong> {authenticatedLabel}</p>
           <p><strong>CCI alias available:</strong> {cciAliasLabel}</p>
           <p><strong>Parse path present:</strong> {parsePathLabel}</p>
@@ -240,7 +240,7 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           <p className="muted">
             Use `Bridge CCI Alias` first. Run these commands only when the automatic bridge path reports a blocking error.
           </p>
-          <pre>{`# 1) Authenticate in sf keychain
+          <pre className="diagnostic-code-block">{`# 1) Authenticate in sf keychain
 sf org login web --alias ${props.orgAlias} --instance-url https://test.salesforce.com --set-default
 
 # 2) Bridge alias into CCI registry
@@ -248,7 +248,7 @@ sf org login web --alias ${props.orgAlias} --instance-url https://test.salesforc
 cd "%APPDATA%\\Orgumented\\sf-project"
 cci org import ${props.orgAlias} ${props.orgAlias}
 cci org info ${props.orgAlias}`}</pre>
-          <p><strong>Restore alias:</strong> {props.restoreAlias || props.orgSessionHistory?.restoreAlias || 'n/a'}</p>
+          <p><strong>Restore alias:</strong> <span className="path-value">{props.restoreAlias || props.orgSessionHistory?.restoreAlias || 'n/a'}</span></p>
         </article>
 
         <article className="sub-card">
