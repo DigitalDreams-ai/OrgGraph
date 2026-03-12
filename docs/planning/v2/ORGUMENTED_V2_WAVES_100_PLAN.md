@@ -342,6 +342,7 @@ Scope:
 - final real-org end-to-end sweep
 - release-notes evidence template tied to packaged desktop smoke, operator proof, and rollback target capture
 - clean-machine proof worksheet tied to the canonical operator-proof results log
+- canonical rollback-result template for executed rollback validation
 
 Exit:
 - release candidate checklist fully green

@@ -15,6 +15,7 @@ This checklist is not complete until:
 Related files:
 - [Release Notes](./RELEASE.md)
 - [Rollback Playbook](./ROLLBACK_PLAYBOOK.md)
+- [Rollback Result Template](./ROLLBACK_RESULT_TEMPLATE.md)
 - [Real Org Desktop Quickstart](../runbooks/REAL_ORG_DESKTOP_QUICKSTART.md)
 - [Clean Machine Operator Proof](../runbooks/CLEAN_MACHINE_OPERATOR_PROOF.md)
 
@@ -133,6 +134,7 @@ Record:
 ## 7. Rollback Readiness Gate
 
 - [ ] Follow [Rollback Playbook](./ROLLBACK_PLAYBOOK.md)
+- [ ] Prepare [Rollback Result Template](./ROLLBACK_RESULT_TEMPLATE.md)
 - [ ] Identify last known-good tag
 - [ ] Confirm previous installer/binary path is available
 - [ ] Confirm previous smoke artifact exists
