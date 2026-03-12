@@ -29,6 +29,7 @@ The following are now true in main and should not be re-planned as open:
 
 3. Wave10 boundary hardening:
 - major clipping/overflow defects in core Ask/Analyze/Diagnostics surfaces were reduced with stronger grid minima and wrapping rules
+- accessibility smoke coverage is now part of the wave10 finish path for Ask, Sessions, Browser, and Refresh
 
 Remaining work is now primarily around:
 - wave2 runtime convergence closure

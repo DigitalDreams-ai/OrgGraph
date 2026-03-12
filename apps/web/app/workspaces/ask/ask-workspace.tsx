@@ -201,7 +201,9 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
         <article className="sub-card decision-card decision-card-accent">
           <p className="panel-caption">Decision packet</p>
           <h3>Short answer</h3>
-          <p className="decision-answer">{props.askSummary}</p>
+          <p className="decision-answer" role="status" aria-live="polite">
+            {props.askSummary}
+          </p>
           <div className="decision-meta">
             <span className={`decision-badge ${props.trustTone(props.askTrust)}`}>Trust: {props.askTrust}</span>
             <span className="decision-badge muted">Confidence: {typeof props.askResult?.confidence === 'number' ? props.askResult.confidence : 'n/a'}</span>

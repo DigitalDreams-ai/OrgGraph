@@ -211,7 +211,7 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
       </div>
 
       <div className="ops-grid">
-        <article className="sub-card">
+        <article className="sub-card" role="status" aria-live="polite">
           <p className="panel-caption">Preflight issues</p>
           <h3>Readiness blockers and warnings</h3>
           {props.preflightIssues.length > 0 ? (
