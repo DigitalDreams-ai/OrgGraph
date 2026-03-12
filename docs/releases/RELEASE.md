@@ -1,53 +1,65 @@
-# Release Checklist
+# Release Notes
 
-## Scope
-This release note template defines repeatable Windows desktop release evidence for Orgumented.
+Use this file as the release evidence template for each packaged desktop candidate.
 
-## Versioning
-- Create release tags as `vMAJOR.MINOR.PATCH` (example: `v0.5.0`).
-- Keep release tags and commit SHAs for traceability and rollback.
+## Release Identity
 
-## Pre-Release Checks
-1. `pnpm -r typecheck`
-2. `pnpm --filter api test`
-3. `pnpm --filter api build`
-4. `pnpm --filter web build`
-5. `pnpm desktop:info`
-6. `pnpm desktop:build`
-7. Run packaged desktop smoke: `pnpm desktop:smoke:release`
-8. Review smoke artifacts under `logs/desktop-release-smoke-*.json` and `logs/desktop-release-smoke.*.log`
+- Version:
+- Tag:
+- Commit SHA:
+- Date:
+- Operator:
 
-## Current Runtime Evidence
-- Product boundary: Windows desktop app
-- Packaged runtime now includes:
-  - static embedded UI assets
-  - deployed API runtime
-  - bundled Node runtime
-- Minimum release evidence should include:
-  - `pnpm desktop:build` success
-  - packaged smoke success via `pnpm desktop:smoke:release`
-  - `/ready` returning `200`
-  - one deterministic Ask proof artifact from the packaged shell
+## Candidate Scope
 
-## Release Steps
-1. Merge approved PR into `main`.
-2. Pull latest main on the Windows workstation:
-`git checkout main && git pull --ff-only`
-3. Create and push release tag:
-`git tag vX.Y.Z && git push origin vX.Y.Z`
-4. Run the Windows desktop verification workflow.
-5. Capture release notes and verification artifacts.
+- Summary of included slices:
+- Notable risk areas:
 
-## Rollback
-1. Identify last known-good tag.
-2. Checkout that tag commit.
-3. Re-run packaged desktop verification.
+## Validation Summary
 
-## Branch Protection Recommendations (`main`)
-- Require PR before merge.
-- Require at least one approving review.
-- Require status checks to pass:
-  - CI
-  - Runtime Nightly
-- Disallow force pushes.
-- Require linear history (optional but recommended).
+- `pnpm --filter api test`:
+- `pnpm --filter web typecheck`:
+- `pnpm --filter web build`:
+- `pnpm desktop:info`:
+- `pnpm desktop:build`:
+- `pnpm desktop:smoke:release`:
+
+## Smoke Evidence
+
+- Smoke artifact JSON:
+- Smoke artifact log:
+- `readyStatus`:
+- `relaunchVerified`:
+- `metadataSearchStatus`:
+- `metadataRetrieveStatus`:
+
+## Real-Org Operator Proof
+
+- Quickstart runbook:
+  - `docs/runbooks/REAL_ORG_DESKTOP_QUICKSTART.md`
+- Operator:
+- Alias:
+- Connect proof:
+- Browser retrieve proof:
+- Refresh handoff proof:
+- Ask proof:
+- Proof ID:
+- Replay token:
+
+## Rollback Target
+
+- Last known-good tag:
+- Last known-good commit SHA:
+- Last known-good installer/binary path:
+- Last known-good smoke artifact:
+
+## Decision
+
+- Release candidate approved: yes/no
+- If no, blocker:
+- If rollback executed, reason:
+
+## Notes
+
+- Additional operator findings:
+- Follow-up defects:
