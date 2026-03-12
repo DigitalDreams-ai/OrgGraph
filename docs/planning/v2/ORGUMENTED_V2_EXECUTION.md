@@ -129,7 +129,8 @@ Materially true now:
 - runtime bootstrap retry now also recovers when semantic-drift failures are wrapped in response payload messages (for example, `Bad Request Exception` with nested drift text)
 - runtime bootstrap now performs a final guarded recovery pass after repeated recoverable drift failures by clearing full runtime semantic artifacts (DB/index/state/snapshots) and retrying once more with rebaseline before failing closed
 - runtime-unavailable signaling is now shared across Connect, Operator Rail, and Settings/Diagnostics (shell reachability + connect runtime detection), reducing false tool-missing interpretation outside Org Sessions
-- Connect, Operator Rail, and Settings/Diagnostics now show explicit tool-status source labels (`runtime blocked`, `live status`, `status not loaded`) so runtime loss cannot be misread as missing `sf`/`cci`
+- Connect, Operator Rail, and Settings/Diagnostics now show explicit tool-status source labels (`runtime unavailable`, `live status`, `status not loaded`) so runtime loss cannot be misread as `runtime blocked` or as missing `sf`/`cci`
+- web regression coverage now locks runtime-gate and tool-status surface copy for Connect, Operator Rail, and Settings/Diagnostics (`pnpm --filter web test:runtime-status`)
 - wave2 runtime-gate follow-up now distinguishes `runtime blocked` from `runtime unavailable` across Connect, Operator Rail, and Settings/Diagnostics, so fail-closed `/ready` states no longer erase live tool/session diagnostics while deterministic workflows remain visibly blocked
 - packaged desktop smoke now verifies a second clean packaged relaunch reaches `ready`, tightening wave2 startup parity proof beyond the first launch only
 - fallback error copy now distinguishes API non-response failures from normal request-validation failures

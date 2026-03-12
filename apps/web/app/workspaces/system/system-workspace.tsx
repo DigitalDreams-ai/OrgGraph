@@ -1,5 +1,6 @@
 'use client';
 
+import { describeToolStatusSource, type ToolStatusSource } from '../../shell/org-status-surface';
 import type { ReadyPayload } from '../../shell/use-shell-runtime';
 import type { OrgPreflightIssue, OrgPreflightPayload, OrgStatusPayload } from '../connect/types';
 import type { MetaAdaptPayload, MetaContextPayload } from './types';
@@ -21,7 +22,7 @@ interface SystemWorkspaceProps {
   orgPreflight: OrgPreflightPayload | null;
   runtimeUnavailable: boolean;
   runtimeBlocked: boolean;
-  toolStatusSource: 'runtime_unavailable' | 'live' | 'unknown';
+  toolStatusSource: ToolStatusSource;
   metaContext: MetaContextPayload | null;
   metaAdaptResult: MetaAdaptPayload | null;
   loading: boolean;
@@ -145,12 +146,7 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
     props.runtimeUnavailable ? 'unavailable' : props.orgStatus ? (props.orgStatus.sf?.installed ? 'installed' : 'missing') : 'unknown';
   const cciState =
     props.runtimeUnavailable ? 'unavailable' : props.orgStatus ? (props.orgStatus.cci?.installed ? 'installed' : 'missing') : 'unknown';
-  const toolSourceLabel =
-    props.toolStatusSource === 'runtime_unavailable'
-      ? 'runtime blocked'
-      : props.toolStatusSource === 'live'
-        ? 'live status'
-        : 'status not loaded';
+  const toolSourceLabel = describeToolStatusSource(props.toolStatusSource);
   const toolingMessage = props.runtimeUnavailable
     ? 'Runtime is currently unreachable. Relaunch Orgumented desktop, then run Refresh Status before checking toolchain state.'
     : props.runtimeBlocked

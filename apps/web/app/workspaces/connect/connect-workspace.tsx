@@ -1,5 +1,6 @@
 'use client';
 
+import { describeToolStatusSource, type ToolStatusSource } from '../../shell/org-status-surface';
 import type {
   OrgAliasSummary,
   OrgPreflightIssue,
@@ -26,7 +27,7 @@ interface ConnectWorkspaceProps {
   selectedAlias: OrgAliasSummary | null;
   preflightIssues: OrgPreflightIssue[];
   toolingReady: boolean;
-  toolStatusSource: 'runtime_unavailable' | 'live' | 'unknown';
+  toolStatusSource: ToolStatusSource;
   browserSeeded: boolean;
   selectedAliasReady: boolean;
   runtimeUnavailable: boolean;
@@ -67,12 +68,7 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
   const sfState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.sf?.installed ? 'installed' : props.orgStatus ? 'missing' : 'unknown';
   const cciState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.installed ? 'installed' : props.orgStatus ? 'missing' : 'unknown';
   const cciVersion = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.version || 'n/a';
-  const toolStatusSourceLabel =
-    props.toolStatusSource === 'runtime_unavailable'
-      ? 'runtime blocked'
-      : props.toolStatusSource === 'live'
-        ? 'live status'
-        : 'status not loaded';
+  const toolStatusSourceLabel = describeToolStatusSource(props.toolStatusSource);
   const sfMessage =
     props.runtimeUnavailable
       ? 'Refresh Overview could not reach the local desktop runtime. Relaunch Orgumented or restore the packaged API before checking sf access again.'
