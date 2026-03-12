@@ -287,11 +287,13 @@ Scope:
 - searchable history and open artifact flows
 - replay/export/reopen stability
 - trust-envelope continuity across restarts
+- strict separation between history-label workflow and advanced token-only debug path
 
 Exit:
 - operator can run history-first proof workflows without token bookkeeping
 - labels and replay/open/export remain stable across restarts
 - advanced proof ID / replay token lookup stays debug-only and does not drive the active history selection
+- primary proof open/replay actions do not execute from typed token fields unless the operator explicitly chooses advanced token actions
 
 ## wave10 - Design/Layout/Accessibility Hardening
 

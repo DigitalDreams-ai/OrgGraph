@@ -22,6 +22,8 @@ interface ProofsWorkspaceProps {
   onListRecent: () => void;
   onGetProof: () => void;
   onReplay: () => void;
+  onOpenByToken: () => void;
+  onReplayByToken: () => void;
   onExportMetrics: () => void;
   onExportProofArtifact: () => void;
   onExportReplayArtifact: () => void;
@@ -55,17 +57,14 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
         <button
           type="button"
           onClick={props.onGetProof}
-          disabled={props.loading || (!props.selectedRecentProof?.proofId && !props.proofId.trim())}
+          disabled={props.loading || !props.selectedRecentProof?.proofId}
         >
           Open Selected History
         </button>
         <button
           type="button"
           onClick={props.onReplay}
-          disabled={
-            props.loading ||
-            (!props.selectedRecentProof?.proofId && !props.proofId.trim() && !props.replayToken.trim())
-          }
+          disabled={props.loading || !props.selectedRecentProof?.proofId}
         >
           Replay Selected History
         </button>
@@ -242,7 +241,7 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
       <details>
         <summary>Advanced token lookup</summary>
         <p className="muted">Keep raw proof identifiers available for debugging and parity checks, but do not treat them as the primary workflow.</p>
-        <p className="muted">Typing a proof ID or replay token here does not change the selected history label above.</p>
+        <p className="muted">Typing a proof ID or replay token here does not change the selected history label above and only affects the explicit advanced actions below.</p>
         <p className="muted">
           Selected proof IDs: <span className="path-value">{props.selectedProof?.proofId || props.proofId || 'n/a'}</span> • replay token:{' '}
           <span className="path-value">{props.selectedProof?.replayToken || props.replayToken || 'n/a'}</span>
@@ -256,6 +255,19 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
             <label htmlFor="replayToken">Replay Token</label>
             <input id="replayToken" value={props.replayToken} onChange={(e) => props.setReplayToken(e.target.value)} />
           </div>
+        </div>
+        <div className="action-row">
+          <button type="button" className="ghost" onClick={props.onOpenByToken} disabled={props.loading || !props.proofId.trim()}>
+            Open by Token
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            onClick={props.onReplayByToken}
+            disabled={props.loading || (!props.proofId.trim() && !props.replayToken.trim())}
+          >
+            Replay by Token
+          </button>
         </div>
       </details>
     </>
