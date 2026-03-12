@@ -118,6 +118,7 @@ Materially true now:
 - PR Autofill now runs on `opened/reopened` only (not every push), and Actions retention now includes an automated cleanup workflow that prunes older completed runs per workflow
 - CI now runs packaged desktop smoke in the same Windows validate job (instead of cross-job runtime artifact handoff), reducing Actions artifact storage pressure without dropping trust gates
 - Actions retention cleanup now runs twice daily and keeps the most recent 14 completed runs per workflow by default; runtime-nightly is now weekly with 1-day artifact retention to protect CI storage/minute budget without weakening PR trust gates
+- wave11 CI follow-up now replaces the external `dorny/paths-filter` dependency with a repo-local change-detection script and unit test so `detect-changes` no longer flakes on third-party action download/auth failures
 - release checklist now aligns to pnpm-only commands and includes explicit real-org operator workflow evidence requirements
 - real-org desktop quickstart runbook now exists as a single explicit Git Bash workflow for connect, browser retrieve, refresh handoff, and Ask proof capture
 - operator-machine pass evidence for real-org quickstart is now captured with proof/replay IDs in `docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md`

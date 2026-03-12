@@ -320,6 +320,7 @@ Exit:
 - P0/P1 = zero and stable for one cycle
 - CI remains strict on runtime-impacting changes
 - CI minutes remain controlled with path-gating and selective heavy-job execution
+- detect-changes remains repo-local and deterministic, without third-party action download dependencies
 
 ## wave12 - Release Readiness And Operator Proof
 
