@@ -314,6 +314,7 @@ Scope:
 - keyboard/focus behavior for critical controls
 - explicit render guards for path-heavy Analyze/Diagnostics/Proofs surfaces
 - explicit render guards for long operator-machine paths in Settings & Diagnostics
+- explicit Ask dense-card render guards for long proof IDs, paths, and citation snippets
 
 Exit:
 - zero known clipping defects in Stage 1 surfaces
