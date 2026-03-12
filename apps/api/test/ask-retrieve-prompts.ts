@@ -9,6 +9,7 @@ function run(): void {
     { type: 'CustomField', members: ['Opportunity.StageName', 'Case.Status'] },
     { type: 'Layout', members: ['Opportunity-Opportunity Layout'] },
     { type: 'ApexClass', members: ['CaseTypeService'] },
+    { type: 'ApexTrigger', members: ['CaseBeforeUpdate'] },
     { type: 'EmailTemplate', members: ['Customer_Welcome'] }
   ];
 
@@ -24,6 +25,7 @@ function run(): void {
     'Based only on the latest retrieve, what touches Case.Status?',
     'Based only on the latest retrieve, what touches Opportunity.StageName?',
     'Based only on the latest retrieve, where is Apex Class CaseTypeService used?',
+    'Based only on the latest retrieve, where is Apex Trigger CaseBeforeUpdate used?',
     'Based only on the latest retrieve, where is Custom Field Case.Status used?',
     'Based only on the latest retrieve, where is Custom Field Opportunity.StageName used?',
     'Based only on the latest retrieve, where is Custom Object Case used?',

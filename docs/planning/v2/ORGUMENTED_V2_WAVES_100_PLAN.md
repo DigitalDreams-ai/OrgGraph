@@ -138,10 +138,10 @@ Mandatory:
 | wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |
 | wave6 | ask planner/compiler depth | B003, B009 | In Progress | Deepen evidence-lookup coverage beyond family-qualified metadata component prompts |
 | wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence |
-| wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage exposes direct operator actions and no core recovery path depends on raw JSON |
+| wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage and diagnostics cards expose direct operator actions and no core recovery path depends on raw JSON |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first selection stays independent from advanced token lookup and reopen/replay/export remain history-first |
 | wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline |
-| wave11 | bug burn-down and CI quality lock | B013, B018, B023 | In Progress | P0/P1 count to zero and stable trust gates |
+| wave11 | bug burn-down and CI quality lock | B013, B018, B023 | In Progress | P0/P1 count to zero, stable trust gates, and edge metadata-family regressions locked |
 | wave12 | release readiness and operator proof | B014, B019 | In Progress | Clean-machine runbook pass + rollback proof |
 | wave13 | post-100 stabilization | B024 | Open | No P0/P1 regressions during hold window |
 

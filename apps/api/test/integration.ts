@@ -2118,6 +2118,80 @@ async function run(): Promise<void> {
       'metadata-arg custom field usage ask should normalize to the same deterministic target'
     );
 
+    const askApexClassComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is Apex Class OpportunityImpactService used?'
+      })
+    });
+    assert.equal(
+      askApexClassComponentUsageRes.status,
+      201,
+      'family-qualified apex class usage ask should return 201'
+    );
+    const askApexClassComponentUsage = (await askApexClassComponentUsageRes.json()) as {
+      plan?: {
+        semanticFrame?: {
+          intent?: string;
+          target?: { kind?: string; selected?: string };
+        };
+      };
+      deterministicAnswer: string;
+      trustLevel: string;
+    };
+    assert.equal(askApexClassComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(
+      askApexClassComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Apex Class OpportunityImpactService'
+    );
+    assert.match(
+      askApexClassComponentUsage.deterministicAnswer,
+      /component usage lookup for Apex Class OpportunityImpactService/i
+    );
+    assert.notEqual(
+      askApexClassComponentUsage.trustLevel,
+      'refused',
+      'family-qualified apex class usage ask should stay on deterministic evidence lookup'
+    );
+
+    const askApexTriggerComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is Apex Trigger C:/tmp/force-app/main/default/triggers/CaseBeforeUpdate.trigger used?'
+      })
+    });
+    assert.equal(
+      askApexTriggerComponentUsageRes.status,
+      201,
+      'path-qualified apex trigger usage ask should return 201'
+    );
+    const askApexTriggerComponentUsage = (await askApexTriggerComponentUsageRes.json()) as {
+      plan?: {
+        semanticFrame?: {
+          intent?: string;
+          target?: { kind?: string; selected?: string };
+        };
+      };
+      deterministicAnswer: string;
+      trustLevel: string;
+    };
+    assert.equal(askApexTriggerComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(
+      askApexTriggerComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Apex Trigger CaseBeforeUpdate'
+    );
+    assert.match(
+      askApexTriggerComponentUsage.deterministicAnswer,
+      /component usage lookup for Apex Trigger CaseBeforeUpdate/i
+    );
+    assert.notEqual(
+      askApexTriggerComponentUsage.trustLevel,
+      'refused',
+      'path-qualified apex trigger usage ask should normalize to deterministic evidence lookup'
+    );
+
     const askComponentUsageRecordIdRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
