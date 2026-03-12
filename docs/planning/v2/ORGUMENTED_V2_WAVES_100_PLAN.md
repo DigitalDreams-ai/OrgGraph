@@ -324,6 +324,7 @@ Scope:
 - P0/P1 burn-down
 - flake reduction and regression coverage
 - trust-preserving CI minute optimization
+- render-level regression locks for critical runtime status surfaces
 
 Exit:
 - P0/P1 = zero and stable for one cycle

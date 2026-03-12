@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { OperatorRail } from '../app/shell/operator-rail';
 import { describeToolStatusSource } from '../app/shell/org-status-surface';
 import { deriveRuntimeGateState } from '../app/shell/runtime-gate';
 import { ConnectWorkspace } from '../app/workspaces/connect/connect-workspace';
@@ -151,6 +152,48 @@ function run(): void {
   assert.match(connectMarkup, /Instance URL:<\/strong> <span class="path-value">https:\/\/shulman-hill--uat\.sandbox\.my\.salesforce\.com<\/span>/);
   assert.match(connectMarkup, /<pre class="diagnostic-code-block"># 1\) Authenticate in sf keychain/);
 
+  const connectUnavailableMarkup = renderToStaticMarkup(
+    React.createElement(ConnectWorkspace, {
+      orgAlias: 'shulman-uat',
+      setOrgAlias: () => undefined,
+      activeAlias: 'shulman-uat',
+      sessionStatus: 'connected',
+      orgStatus: null,
+      orgPreflight: null,
+      orgAliases: null,
+      orgSessionHistory: null,
+      orgSession: null,
+      aliasInventory: [],
+      recentSessionEvents: [],
+      selectedAlias: null,
+      preflightIssues: [],
+      toolingReady: false,
+      toolStatusSource: 'runtime_unavailable',
+      browserSeeded: false,
+      selectedAliasReady: false,
+      runtimeUnavailable: true,
+      runtimeBlocked: true,
+      restoreAlias: '',
+      loading: false,
+      onRefreshOverview: () => undefined,
+      onLoadAliases: () => undefined,
+      onCheckSession: () => undefined,
+      onLoadSessionHistory: () => undefined,
+      onCheckToolStatus: () => undefined,
+      onPreflight: () => undefined,
+      onBridgeAlias: () => undefined,
+      onSwitchAlias: () => undefined,
+      onConnectExistingAlias: () => undefined,
+      onDisconnect: () => undefined,
+      onRestoreLastSession: () => undefined,
+      onSelectAlias: () => undefined,
+      onInspectAlias: () => undefined
+    } as any)
+  );
+  assert.match(connectUnavailableMarkup, /Session: runtime unavailable/);
+  assert.match(connectUnavailableMarkup, /Tooling status: unavailable/);
+  assert.match(connectUnavailableMarkup, /Runtime is unavailable, so tool checks are blocked\./);
+
   const refreshMarkup = renderToStaticMarkup(
     React.createElement(RefreshWorkspace, {
       activeAlias: 'shulman-uat',
@@ -208,6 +251,62 @@ function run(): void {
   assert.match(refreshMarkup, /Parse path:<\/strong> <span class="path-value">C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\sf-project\\force-app\\main\\default<\/span>/);
   assert.match(refreshMarkup, /Metadata args:<\/strong> <span class="path-value">Flow:Civil_Rights_Intake_Questionnaire<\/span>/);
   assert.match(refreshMarkup, /Project path:<\/strong> <span class="path-value">C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\sf-project<\/span>/);
+
+  const operatorRailUnavailableMarkup = renderToStaticMarkup(
+    React.createElement(OperatorRail, {
+      copied: false,
+      responseText: '',
+      errorText: '',
+      readyDetails: '',
+      readyPayload: null,
+      askSummary: 'Run Ask to generate a decision packet.',
+      askTrust: 'waiting',
+      askResult: null,
+      askProofId: '',
+      askReplayToken: '',
+      sessionStatus: 'connected',
+      activeAlias: 'shulman-uat',
+      orgSession: null,
+      orgStatus: null,
+      orgPreflight: null,
+      runtimeUnavailable: true,
+      runtimeBlocked: true,
+      toolStatusSource: 'runtime_unavailable',
+      onCopy: () => undefined
+    })
+  );
+  assert.match(operatorRailUnavailableMarkup, /Session:<\/strong> runtime unavailable/);
+  assert.match(operatorRailUnavailableMarkup, /sf Installed:<\/strong> unavailable/);
+  assert.match(operatorRailUnavailableMarkup, /CCI Installed:<\/strong> unavailable/);
+  assert.match(operatorRailUnavailableMarkup, /Runtime Gate:<\/strong> unreachable/);
+
+  const operatorRailBlockedMarkup = renderToStaticMarkup(
+    React.createElement(OperatorRail, {
+      copied: false,
+      responseText: '',
+      errorText: '',
+      readyDetails: '',
+      readyPayload: { status: 'blocked', checks: { db: { ok: true, backend: 'sqlite', nodeCount: 1, edgeCount: 2 } } } as any,
+      askSummary: 'Run Ask to generate a decision packet.',
+      askTrust: 'waiting',
+      askResult: null,
+      askProofId: '',
+      askReplayToken: '',
+      sessionStatus: 'connected',
+      activeAlias: 'shulman-uat',
+      orgSession: { status: 'connected', alias: 'shulman-uat' } as any,
+      orgStatus: { integrationEnabled: true, authMode: 'sf_cli_keychain', sf: { installed: true }, cci: { installed: true }, session: { status: 'connected' } } as any,
+      orgPreflight: null,
+      runtimeUnavailable: false,
+      runtimeBlocked: true,
+      toolStatusSource: 'live',
+      onCopy: () => undefined
+    })
+  );
+  assert.match(operatorRailBlockedMarkup, /Session:<\/strong> connected/);
+  assert.match(operatorRailBlockedMarkup, /sf Installed:<\/strong> yes/);
+  assert.match(operatorRailBlockedMarkup, /CCI Installed:<\/strong> yes/);
+  assert.match(operatorRailBlockedMarkup, /Runtime Gate:<\/strong> blocked/);
 
   const systemMarkup = renderToStaticMarkup(
     React.createElement(SystemWorkspace, {
