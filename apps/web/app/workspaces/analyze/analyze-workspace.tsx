@@ -584,7 +584,9 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
                 props.permissionsResult.paths.map((item, index) => (
                   <li key={`${item.principal}-${index}`}>
                     <strong>{item.principal}</strong>
-                    <p>{formatPath(item.path)}</p>
+                    <p>
+                      <span className="path-value">{formatPath(item.path)}</span>
+                    </p>
                   </li>
                 ))
               ) : (
@@ -787,7 +789,7 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
                 props.impactResult.paths.map((item, index) => (
                   <li key={`${item.from}-${item.to}-${index}`}>
                     <strong>
-                      {item.from} {'->'} {item.to}
+                      <span className="path-value">{item.from}</span> {'->'} <span className="path-value">{item.to}</span>
                     </strong>
                     <p>
                       {item.rel} | confidence {item.confidence} | score {item.score.toFixed(2)}
@@ -862,9 +864,11 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
                 props.systemPermissionResult.paths.map((item, index) => (
                   <li key={`${item.principal}-${item.permission}-${index}`}>
                     <strong>
-                      {item.principal} {'->'} {item.permission}
+                      <span className="path-value">{item.principal}</span> {'->'} <span className="path-value">{item.permission}</span>
                     </strong>
-                    <p>{formatPath(item.path)}</p>
+                    <p>
+                      <span className="path-value">{formatPath(item.path)}</span>
+                    </p>
                   </li>
                 ))
               ) : (
