@@ -396,7 +396,7 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
       </div>
 
       <div className="analysis-grid">
-        <article className="sub-card">
+        <article className="sub-card" role="status" aria-live="polite">
           <p className="panel-caption">Structured diagnostics</p>
           <h3>Operator triage snapshot</h3>
           <ul className="analysis-list">
