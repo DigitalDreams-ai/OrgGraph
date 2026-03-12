@@ -118,11 +118,13 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
             onChange={(event) => setHistorySearch(event.target.value)}
           />
           {filteredRecentProofs.length > 0 ? (
-            <ul className="proof-list">
+            <ul className="proof-list" role="listbox" aria-label="Recent proof history labels">
               {filteredRecentProofs.slice(0, 20).map((proof) => (
                 <li
                   key={proof.proofId}
-                  className={`proof-list-item ${props.proofId === proof.proofId ? 'active' : ''}`.trim()}
+                  role="option"
+                  aria-selected={props.selectedRecentProof?.proofId === proof.proofId}
+                  className={`proof-list-item ${props.selectedRecentProof?.proofId === proof.proofId ? 'active' : ''}`.trim()}
                 >
                   <div>
                     <strong>{proof.label}</strong>
@@ -130,8 +132,13 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
                     <p><strong>Trust:</strong> {proof.trustLevel} <strong>Snapshot:</strong> {proof.snapshotId}</p>
                   </div>
                   <div className="proof-list-actions">
-                    <button type="button" className="ghost" onClick={() => props.onSelectRecentProof(proof)}>
-                      Select Label
+                    <button
+                      type="button"
+                      className="ghost"
+                      aria-pressed={props.selectedRecentProof?.proofId === proof.proofId}
+                      onClick={() => props.onSelectRecentProof(proof)}
+                    >
+                      {props.selectedRecentProof?.proofId === proof.proofId ? 'Selected Label' : 'Select Label'}
                     </button>
                     <button type="button" className="ghost" onClick={() => props.onOpenRecentProof(proof)}>
                       Open Label
