@@ -82,3 +82,54 @@ To close Wave12 release-readiness evidence fully:
 1. run the same quickstart on a clean machine
 2. capture equivalent artifacts (connect, browser/retrieve/handoff, Ask proof/replay)
 3. append results to this file
+
+## Clean Machine Proof Template
+
+Use:
+- `docs/runbooks/CLEAN_MACHINE_OPERATOR_PROOF.md`
+
+Append the completed result below this heading after the non-author operator run is finished.
+
+```md
+## Clean Machine Proof
+
+- Operator:
+- Machine:
+- Date:
+- Candidate commit SHA:
+- Alias:
+- Prior Orgumented runtime on this machine: yes/no
+
+### Tooling Check
+
+- `sf` available: yes/no
+- `cci 4.5.0` available: yes/no
+- Build completed: pass/fail
+
+### Workflow Check
+
+1. Org Sessions connect:
+- Result:
+- Evidence:
+
+2. Org Browser retrieve:
+- Result:
+- Evidence:
+
+3. Refresh handoff:
+- Result:
+- Evidence:
+
+4. Ask proof:
+- Result:
+- Query:
+- Proof ID:
+- Replay Token:
+- Evidence:
+
+### Overall Result
+
+- Pass/fail:
+- Blockers:
+- Notes:
+```
