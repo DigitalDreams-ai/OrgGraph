@@ -258,6 +258,7 @@ Scope:
 - risk-driver quality
 - reads/writes/change-impact synthesis
 - flow-target packets render flow-specific operator stats instead of generic approval placeholders
+- concrete grounding spotlights are visible directly in the packet (top automation names, impacted sources, citation-source files)
 - next-action relevance
 
 Exit:

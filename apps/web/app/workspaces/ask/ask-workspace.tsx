@@ -51,6 +51,9 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
   const decisionPacket = props.askResult?.decisionPacket;
   const isFlowPacket = decisionPacket?.targetType === 'flow';
   const flowImpact = decisionPacket?.flowImpact;
+  const topAutomationNames = decisionPacket?.automationImpact?.topAutomationNames ?? [];
+  const topImpactedSources = decisionPacket?.changeImpact?.topImpactedSources ?? [];
+  const topCitationSources = flowImpact?.topCitationSources ?? [];
   const flowSignalsLabel =
     typeof flowImpact?.readFieldCount === 'number' && typeof flowImpact?.writeFieldCount === 'number'
       ? `${flowImpact.readFieldCount} read / ${flowImpact.writeFieldCount} write`
@@ -316,6 +319,43 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                       <li key={gap}>{gap}</li>
                     ))}
                   </ul>
+                </div>
+              ) : null}
+
+              {isFlowPacket && topCitationSources.length > 0 ? (
+                <div>
+                  <h4>Source spotlight</h4>
+                  <ul className="proof-inline-list">
+                    {topCitationSources.map((source) => (
+                      <li key={source} className="path-value">{source}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {!isFlowPacket && (topAutomationNames.length > 0 || topImpactedSources.length > 0) ? (
+                <div>
+                  <h4>Grounding spotlight</h4>
+                  {topAutomationNames.length > 0 ? (
+                    <>
+                      <p className="muted">Top automation names</p>
+                      <ul className="proof-inline-list">
+                        {topAutomationNames.map((name) => (
+                          <li key={name}>{name}</li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : null}
+                  {topImpactedSources.length > 0 ? (
+                    <>
+                      <p className="muted">Top impacted sources</p>
+                      <ul className="proof-inline-list">
+                        {topImpactedSources.map((source) => (
+                          <li key={source} className="path-value">{source}</li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : null}
                 </div>
               ) : null}
             </div>
