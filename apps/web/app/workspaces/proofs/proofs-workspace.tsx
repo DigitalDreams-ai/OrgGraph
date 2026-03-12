@@ -25,8 +25,8 @@ interface ProofsWorkspaceProps {
   onOpenByToken: () => void;
   onReplayByToken: () => void;
   onExportMetrics: () => void;
-  onExportProofArtifact: () => void;
-  onExportReplayArtifact: () => void;
+  onExportProofArtifact: () => void | Promise<void>;
+  onExportReplayArtifact: () => void | Promise<void>;
   onSelectRecentProof: (proof: RecentProofItem) => void;
   onOpenRecentProof: (proof: RecentProofItem) => void;
   onReplayRecentProof: (proof: RecentProofItem) => void;
@@ -71,23 +71,23 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
         <button
           type="button"
           className="ghost"
-          onClick={props.onExportProofArtifact}
-          disabled={props.loading || !props.selectedProof}
+          onClick={() => void props.onExportProofArtifact()}
+          disabled={props.loading || !props.selectedRecentProof?.proofId}
         >
-          Export Selected Proof
+          Export Selected History Proof
         </button>
         <button
           type="button"
           className="ghost"
-          onClick={props.onExportReplayArtifact}
-          disabled={props.loading || !props.replayResult}
+          onClick={() => void props.onExportReplayArtifact()}
+          disabled={props.loading || !props.selectedRecentProof?.replayToken}
         >
-          Export Selected Replay
+          Export Selected History Replay
         </button>
         <button type="button" onClick={props.onExportMetrics} disabled={props.loading}>Export Trust History</button>
       </div>
 
-      <article className="sub-card">
+      <article className="sub-card" role="status" aria-live="polite">
         <p className="panel-caption">Current selection</p>
         <h3>Operator-facing history label</h3>
         {props.selectedRecentProof || props.selectedProof ? (

@@ -84,6 +84,7 @@ Materially true now:
 - wave10 follow-up now hardens Ask proof/context and citation rendering with explicit path-value wrapping, snippet scroll bounds, and denser auto-fit minima to reduce clipping in mid-width desktop layouts
 - wave10 accessibility follow-up now adds live-region semantics to dynamic Ask, Sessions, Browser, and Refresh surfaces and locks label/tab/expansion semantics with a dedicated render-level accessibility smoke test
 - wave10 follow-up now wraps long proof-history labels, snapshot IDs, policy IDs, and generated timestamps with explicit `path-value` guards so Proofs surfaces stay bounded under long real-org identifiers
+- wave10 accessibility follow-up now extends live-region smoke coverage to Analyze structured triage, Proofs current selection, and Settings & Diagnostics structured snapshot so the remaining dynamic desktop workspaces share the same screen-reader update contract
 - refresh handoff is staged and fail-closed from browser selections
 - `Run Refresh` now also fails closed until Browser handoff is ready and staged selections are present, preventing rebuild from running on ambiguous retrieve context
 - refresh handoff now also fails closed on alias mismatch and persists latest retrieve/selections across relaunch
@@ -119,6 +120,7 @@ Materially true now:
 - Proofs & History now supports label-first artifact export (`Export Selected Proof` / `Export Selected Replay`) so normal audit flows can export JSON artifacts without token-first lookup
 - Proofs & History now keeps the selected history label independent from advanced proof/replay token fields, so primary open/replay actions stay label-first even when debug IDs are typed manually
 - Proofs & History primary open/replay actions now require a selected history label, while advanced proof ID / replay token lookup is isolated behind explicit `Open by Token` / `Replay by Token` actions so token entry cannot masquerade as the normal history-first workflow
+- Proofs & History primary export actions now also run from the selected history label even when proof/replay artifacts are not already open, keeping export aligned to the history-first workflow instead of requiring an open-first detour
 - CI heavy Windows jobs are path-gated for minute efficiency
 - PR Autofill now runs on `opened/reopened` only (not every push), and Actions retention now includes an automated cleanup workflow that prunes older completed runs per workflow
 - CI now runs packaged desktop smoke in the same Windows validate job (instead of cross-job runtime artifact handoff), reducing Actions artifact storage pressure without dropping trust gates
@@ -156,6 +158,7 @@ Materially true now:
 - wave8 diagnostics follow-up now exposes direct quick-action buttons inside the Runtime Health and Tooling Status cards, so first-line recovery does not require scrolling to the lower structured snapshot before rerunning status, preflight, or opening Org Sessions / Refresh & Build
 - Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs
 - Analyze now includes one-click Ask handoff actions for automation and impact results so deterministic analysis context can be promoted directly into trust/proof decision packets
+- Analyze structured snapshot rows now expose direct `Open Org Browser` / `Open Refresh & Build` recovery actions when principal-map triage says retrieve or refresh is required, reducing manual tab hunting during permission recovery
 - Analyze now includes a mode-aware structured triage snapshot (status + next action) plus Ask handoff actions for permission and system-permission results, reducing first-line dependence on raw JSON inspection
 - Analyze structured triage snapshot now includes direct action buttons (rerun analysis, diagnose mapping, and Open Ask handoff) so operators can execute recommended recovery/decision steps without leaving the snapshot card
 - Analyze permission, impact, and system-permission evidence cards now wrap long path-bearing values with explicit `path-value` guards, and a dedicated render regression locks that markup so long graph paths and map locations stay bounded in desktop layouts

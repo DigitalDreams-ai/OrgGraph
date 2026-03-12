@@ -442,6 +442,95 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     }
   }
 
+  async function exportSelectedProofArtifact(): Promise<void> {
+    if (!selectedRecentProof?.proofId) {
+      reportSelectionRequired('Select a history label first before exporting proof from the primary workflow.');
+      return;
+    }
+
+    options.setLoading(true);
+    options.setCopied(false);
+    options.setErrorText('');
+
+    try {
+      let artifact = selectedProof;
+      if (!artifact || artifact.proofId !== selectedRecentProof.proofId) {
+        const result = await getAskProof(selectedRecentProof.proofId);
+        options.presentResponse(result);
+        if (result.ok === false) {
+          options.setErrorText(options.resolveErrorMessage(result));
+          return;
+        }
+        artifact = parseProofArtifact(result);
+        setSelectedProof(artifact);
+      }
+
+      if (!artifact) {
+        options.setErrorText('Proof export failed. The selected history label did not resolve to a proof artifact.');
+        return;
+      }
+
+      setProofId(artifact.proofId);
+      setReplayToken(artifact.replayToken);
+      const name = sanitizeArtifactName(artifact.query || artifact.proofId);
+      downloadJsonArtifact(`orgumented-proof-${name}.json`, artifact as unknown as Record<string, unknown>);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected proof export failure';
+      const fallback: QueryResponse = { ok: false, error: { message } };
+      options.presentResponse(fallback);
+      options.setErrorText('Proof export failed. Check API readiness and local runtime health.');
+    } finally {
+      options.setLoading(false);
+    }
+  }
+
+  async function exportSelectedReplayArtifact(): Promise<void> {
+    if (!selectedRecentProof?.proofId || !selectedRecentProof.replayToken) {
+      reportSelectionRequired('Select a history label first before exporting replay from the primary workflow.');
+      return;
+    }
+
+    options.setLoading(true);
+    options.setCopied(false);
+    options.setErrorText('');
+
+    try {
+      let artifact = replayResult;
+      if (
+        !artifact ||
+        artifact.proofId !== selectedRecentProof.proofId ||
+        artifact.replayToken !== selectedRecentProof.replayToken
+      ) {
+        const result = await replayAskProof({
+          replayToken: selectedRecentProof.replayToken,
+          proofId: selectedRecentProof.proofId
+        });
+        options.presentResponse(result);
+        if (result.ok === false) {
+          options.setErrorText(options.resolveErrorMessage(result));
+          return;
+        }
+        artifact = parseReplayResult(result);
+        setReplayResult(artifact);
+      }
+
+      if (!artifact) {
+        options.setErrorText('Replay export failed. The selected history label did not resolve to replay parity output.');
+        return;
+      }
+
+      const name = sanitizeArtifactName(artifact.proofId || artifact.replayToken);
+      downloadJsonArtifact(`orgumented-replay-${name}.json`, artifact as unknown as Record<string, unknown>);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unexpected replay export failure';
+      const fallback: QueryResponse = { ok: false, error: { message } };
+      options.presentResponse(fallback);
+      options.setErrorText('Replay export failed. Check API readiness and local runtime health.');
+    } finally {
+      options.setLoading(false);
+    }
+  }
+
   async function runMetricsExport(): Promise<void> {
     options.setLoading(true);
     options.setCopied(false);
@@ -465,26 +554,6 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     } finally {
       options.setLoading(false);
     }
-  }
-
-  function exportSelectedProofArtifact(): void {
-    if (!selectedProof) {
-      reportSelectionRequired('Select a history label first, then open proof before exporting.');
-      return;
-    }
-    options.setErrorText('');
-    const name = sanitizeArtifactName(selectedProof.query || selectedProof.proofId);
-    downloadJsonArtifact(`orgumented-proof-${name}.json`, selectedProof as unknown as Record<string, unknown>);
-  }
-
-  function exportSelectedReplayArtifact(): void {
-    if (!replayResult) {
-      reportSelectionRequired('Run replay for the selected history label before exporting replay parity.');
-      return;
-    }
-    options.setErrorText('');
-    const name = sanitizeArtifactName(replayResult.proofId || replayResult.replayToken);
-    downloadJsonArtifact(`orgumented-replay-${name}.json`, replayResult as unknown as Record<string, unknown>);
   }
 
   const selectedRecentProof = resolveSelectedHistoryProof(recentProofs, selectedHistoryProofId, proofId);

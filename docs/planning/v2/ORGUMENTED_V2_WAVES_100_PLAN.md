@@ -138,9 +138,10 @@ Mandatory:
 | wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |
 | wave6 | ask planner/compiler depth | B003, B009 | In Progress | Deepen evidence-lookup coverage beyond family-qualified metadata component prompts |
 | wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence |
-| wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage and diagnostics cards expose direct operator actions and no core recovery path depends on raw JSON |
+| wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage and diagnostics cards expose direct operator actions and no core recovery path depends on raw JSON or manual tab hunting |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first selection stays independent from advanced token lookup and reopen/replay/export remain history-first |
-| wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline, including proof-history identifier guardrails |
+<<<<<<< HEAD
+| wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline with live-region coverage across all dynamic workspaces and proof-history identifier guardrails |
 | wave11 | bug burn-down and CI quality lock | B013, B018, B023 | In Progress | P0/P1 count to zero, stable trust gates, edge metadata-family regressions locked, and Actions retention policy regression-gated |
 | wave12 | release readiness and operator proof | B014, B019 | In Progress | Clean-machine runbook pass + rollback proof |
 | wave13 | post-100 stabilization | B024 | Open | No P0/P1 regressions during hold window |
@@ -296,6 +297,7 @@ Exit:
 - labels and replay/open/export remain stable across restarts
 - advanced proof ID / replay token lookup stays debug-only and does not drive the active history selection
 - primary proof open/replay actions do not execute from typed token fields unless the operator explicitly chooses advanced token actions
+- primary proof/replay export actions resolve directly from the selected history label instead of requiring an open-first detour
 
 ## wave10 - Design/Layout/Accessibility Hardening
 

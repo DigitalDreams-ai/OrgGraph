@@ -84,11 +84,14 @@ function run(): void {
   );
   assert.match(noSelectionMarkup, /Open Selected History<\/button>/);
   assert.match(noSelectionMarkup, /Replay Selected History<\/button>/);
+  assert.match(noSelectionMarkup, /Export Selected History Proof<\/button>/);
+  assert.match(noSelectionMarkup, /Export Selected History Replay<\/button>/);
   assert.match(noSelectionMarkup, /Open by Token<\/button>/);
   assert.match(noSelectionMarkup, /Replay by Token<\/button>/);
-  assert.match(noSelectionMarkup, /Open Selected History<\/button>/);
   assert.match(noSelectionMarkup, /disabled="">Open Selected History/);
   assert.match(noSelectionMarkup, /disabled="">Replay Selected History/);
+  assert.match(noSelectionMarkup, /disabled="">Export Selected History Proof/);
+  assert.match(noSelectionMarkup, /disabled="">Export Selected History Replay/);
   assert.doesNotMatch(noSelectionMarkup, /disabled="">Open by Token/);
   assert.doesNotMatch(noSelectionMarkup, /disabled="">Replay by Token/);
 
@@ -119,6 +122,8 @@ function run(): void {
   );
   assert.doesNotMatch(selectedMarkup, /disabled="">Open Selected History/);
   assert.doesNotMatch(selectedMarkup, /disabled="">Replay Selected History/);
+  assert.doesNotMatch(selectedMarkup, /disabled="">Export Selected History Proof/);
+  assert.doesNotMatch(selectedMarkup, /disabled="">Export Selected History Replay/);
   assert.match(selectedMarkup, /<strong><span class="path-value">What touches Opportunity\.StageName\?<\/span><\/strong>/);
   assert.match(selectedMarkup, /<strong>Snapshot:<\/strong> <span class="path-value">snap_alpha<\/span>/);
 
