@@ -296,6 +296,7 @@ Exit:
 - labels and replay/open/export remain stable across restarts
 - advanced proof ID / replay token lookup stays debug-only and does not drive the active history selection
 - primary proof open/replay actions do not execute from typed token fields unless the operator explicitly chooses advanced token actions
+- primary proof/replay export actions resolve directly from the selected history label instead of requiring an open-first detour
 
 ## wave10 - Design/Layout/Accessibility Hardening
 
