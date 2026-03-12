@@ -125,6 +125,32 @@ function renderRelationMultipliers(payload: MetaContextPayload | null): JSX.Elem
   );
 }
 
+function renderQuickActions(
+  title: string,
+  actions: Array<{
+    id: StructuredRuntimeActionId;
+    label: string;
+  }>,
+  loading: boolean,
+  onRun: (actionId: StructuredRuntimeActionId) => void
+): JSX.Element {
+  return (
+    <div className="action-row" aria-label={title}>
+      {actions.map((action) => (
+        <button
+          key={`${title}-${action.id}`}
+          type="button"
+          className="ghost"
+          onClick={() => onRun(action.id)}
+          disabled={loading}
+        >
+          {action.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
   const runtimeIssues = deriveRuntimeIssues(props.healthStatus, props.readyStatus, props.readyPayload);
   const readyChecks = props.readyPayload?.checks;
@@ -228,6 +254,15 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
             </ul>
           ) : (
             <p className="muted">All runtime readiness checks passed. Structured diagnostics are healthy.</p>
+          )}
+          {renderQuickActions(
+            'Runtime health quick actions',
+            [
+              { id: 'refresh-status', label: 'Refresh Status' },
+              { id: 'open-refresh', label: 'Open Refresh & Build' }
+            ],
+            props.loading,
+            handleStructuredAction
           )}
           {props.readyDetails ? (
             <details>
@@ -342,6 +377,16 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
                 </ul>
               ) : (
                 <p className="muted">No preflight issues reported for the selected alias.</p>
+              )}
+              {renderQuickActions(
+                'Toolchain quick actions',
+                [
+                  { id: 'load-org-status', label: 'Load Org Status' },
+                  { id: 'run-preflight', label: 'Run Preflight' },
+                  { id: 'open-connect', label: 'Open Org Sessions' }
+                ],
+                props.loading,
+                handleStructuredAction
               )}
             </>
           ) : (

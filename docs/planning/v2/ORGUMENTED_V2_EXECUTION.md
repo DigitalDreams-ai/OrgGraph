@@ -147,6 +147,7 @@ Materially true now:
 - Settings & Diagnostics now renders structured runtime triage cards (bootstrap/db/fixtures/evidence health + recovery checklist) and demotes raw readiness JSON to an optional details panel
 - Settings & Diagnostics now surfaces alias preflight checks/issues and remediation checklist actions alongside tooling status (auth/CCI alias/parse-path parity), reducing bounce-back to Org Sessions for diagnostics triage
 - Settings & Diagnostics now includes a deterministic triage snapshot (runtime/toolchain/session status + explicit next action per domain), reducing dependence on raw JSON for first-line operator diagnosis
+- wave8 diagnostics follow-up now exposes direct quick-action buttons inside the Runtime Health and Tooling Status cards, so first-line recovery does not require scrolling to the lower structured snapshot before rerunning status, preflight, or opening Org Sessions / Refresh & Build
 - Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs
 - Analyze now includes one-click Ask handoff actions for automation and impact results so deterministic analysis context can be promoted directly into trust/proof decision packets
 - Analyze now includes a mode-aware structured triage snapshot (status + next action) plus Ask handoff actions for permission and system-permission results, reducing first-line dependence on raw JSON inspection
