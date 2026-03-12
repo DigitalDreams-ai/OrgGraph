@@ -124,6 +124,7 @@ Materially true now:
 - Proofs & History now keeps the selected history label independent from advanced proof/replay token fields, so primary open/replay actions stay label-first even when debug IDs are typed manually
 - Proofs & History primary open/replay actions now require a selected history label, while advanced proof ID / replay token lookup is isolated behind explicit `Open by Token` / `Replay by Token` actions so token entry cannot masquerade as the normal history-first workflow
 - Proofs & History primary export actions now also run from the selected history label even when proof/replay artifacts are not already open, keeping export aligned to the history-first workflow instead of requiring an open-first detour
+- Proofs & History current-selection status now explicitly states whether the workspace is being driven by a selected history label or by advanced token lookup, reducing remaining operator ambiguity in mixed debug/history states
 - CI heavy Windows jobs are path-gated for minute efficiency
 - PR Autofill now runs on `opened/reopened` only (not every push), and Actions retention now includes an automated cleanup workflow that prunes older completed runs per workflow
 - CI now runs packaged desktop smoke in the same Windows validate job (instead of cross-job runtime artifact handoff), reducing Actions artifact storage pressure without dropping trust gates
@@ -163,6 +164,7 @@ Materially true now:
 - Settings & Diagnostics now surfaces alias preflight checks/issues and remediation checklist actions alongside tooling status (auth/CCI alias/parse-path parity), reducing bounce-back to Org Sessions for diagnostics triage
 - Settings & Diagnostics now includes a deterministic triage snapshot (runtime/toolchain/session status + explicit next action per domain), reducing dependence on raw JSON for first-line operator diagnosis
 - wave8 diagnostics follow-up now exposes direct quick-action buttons inside the Runtime Health and Tooling Status cards, so first-line recovery does not require scrolling to the lower structured snapshot before rerunning status, preflight, or opening Org Sessions / Refresh & Build
+- wave8 telemetry follow-up now exposes `/ask/trust/dashboard` inside Settings & Diagnostics as a structured Ask trust card (replay pass rate, proof coverage, snapshot trend, failure classes), reducing non-sensitive reliability triage dependence on raw API inspection
 - Analyze now includes structured operator action checklists for permission, mapping, automation, impact, and system-permission runs
 - Analyze now includes one-click Ask handoff actions for automation and impact results so deterministic analysis context can be promoted directly into trust/proof decision packets
 - Analyze structured snapshot rows now expose direct `Open Org Browser` / `Open Refresh & Build` recovery actions when principal-map triage says retrieve or refresh is required, reducing manual tab hunting during permission recovery

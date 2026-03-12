@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import type { QueryResponse } from '../../lib/ask-client';
-import type { MetaAdaptPayload, MetaContextPayload } from './types';
+import type { AskTrustDashboardPayload, MetaAdaptPayload, MetaContextPayload } from './types';
 
 interface UseSystemWorkspaceOptions {
-  runQuery: (kind: 'metaContext' | 'metaAdapt', payload?: Record<string, unknown>) => Promise<QueryResponse | null>;
+  runQuery: (kind: 'metaContext' | 'metaAdapt' | 'askTrustDashboard', payload?: Record<string, unknown>) => Promise<QueryResponse | null>;
   loadOrgStatus: () => Promise<QueryResponse | null>;
 }
 
@@ -13,6 +13,7 @@ export function useSystemWorkspace(options: UseSystemWorkspaceOptions) {
   const [metaDryRun, setMetaDryRun] = useState(true);
   const [metaContext, setMetaContext] = useState<MetaContextPayload | null>(null);
   const [metaAdaptResult, setMetaAdaptResult] = useState<MetaAdaptPayload | null>(null);
+  const [askTrustDashboard, setAskTrustDashboard] = useState<AskTrustDashboardPayload | null>(null);
 
   async function loadMetaContext(): Promise<QueryResponse | null> {
     const response = await options.runQuery('metaContext');
@@ -39,13 +40,23 @@ export function useSystemWorkspace(options: UseSystemWorkspaceOptions) {
     return options.loadOrgStatus();
   }
 
+  async function loadAskTrustDashboard(): Promise<QueryResponse | null> {
+    const response = await options.runQuery('askTrustDashboard');
+    if (response?.ok !== false && response?.payload) {
+      setAskTrustDashboard(response.payload as unknown as AskTrustDashboardPayload);
+    }
+    return response;
+  }
+
   return {
     metaDryRun,
     setMetaDryRun,
     metaContext,
     metaAdaptResult,
+    askTrustDashboard,
     loadMetaContext,
     runMetaAdapt,
-    loadOrgStatus
+    loadOrgStatus,
+    loadAskTrustDashboard
   };
 }
