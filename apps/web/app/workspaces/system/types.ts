@@ -24,3 +24,26 @@ export interface MetaAdaptPayload {
   before: MetaContextPayload['context'];
   after: MetaContextPayload['context'];
 }
+
+export interface AskTrustDashboardPayload {
+  status: 'implemented';
+  generatedAt: string;
+  totals: {
+    askRecords: number;
+    proofArtifacts: number;
+    trusted: number;
+    conditional: number;
+    refused: number;
+  };
+  replayPassRate: number;
+  proofCoverageRate: number;
+  driftTrend: {
+    snapshotCount: number;
+    latestSnapshotId?: string;
+    previousSnapshotId?: string;
+  };
+  failureClasses: Array<{
+    class: 'llm_fallback' | 'policy_refusal' | 'constraint_risk' | 'none';
+    count: number;
+  }>;
+}

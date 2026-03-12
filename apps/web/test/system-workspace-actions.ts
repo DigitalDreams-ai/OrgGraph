@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { SystemWorkspace } from '../app/workspaces/system/system-workspace';
 import type { ReadyPayload } from '../app/shell/use-shell-runtime';
 import type { OrgPreflightPayload, OrgStatusPayload } from '../app/workspaces/connect/types';
+import type { AskTrustDashboardPayload } from '../app/workspaces/system/types';
 
 function buildReadyPayload(): ReadyPayload {
   return {
@@ -47,6 +48,33 @@ function buildOrgPreflight(): OrgPreflightPayload {
   } as OrgPreflightPayload;
 }
 
+function buildAskTrustDashboard(): AskTrustDashboardPayload {
+  return {
+    status: 'implemented',
+    generatedAt: '2026-03-12T20:00:00Z',
+    totals: {
+      askRecords: 10,
+      proofArtifacts: 9,
+      trusted: 7,
+      conditional: 2,
+      refused: 1
+    },
+    replayPassRate: 0.9,
+    proofCoverageRate: 0.9,
+    driftTrend: {
+      snapshotCount: 2,
+      latestSnapshotId: 'snap_latest',
+      previousSnapshotId: 'snap_previous'
+    },
+    failureClasses: [
+      { class: 'llm_fallback', count: 1 },
+      { class: 'policy_refusal', count: 1 },
+      { class: 'constraint_risk', count: 2 },
+      { class: 'none', count: 6 }
+    ]
+  };
+}
+
 function run(): void {
   const markup = renderToStaticMarkup(
     React.createElement(SystemWorkspace, {
@@ -63,10 +91,12 @@ function run(): void {
       toolStatusSource: 'live',
       metaContext: null,
       metaAdaptResult: null,
+      askTrustDashboard: buildAskTrustDashboard(),
       loading: false,
       onLoadMetaContext: () => undefined,
       onRunMetaAdapt: () => undefined,
       onLoadOrgStatus: () => undefined,
+      onLoadAskTrustDashboard: () => undefined,
       onRunPreflight: () => undefined,
       onRefreshStatus: () => undefined,
       onOpenConnect: () => undefined,
@@ -78,10 +108,15 @@ function run(): void {
   assert.match(markup, /Toolchain quick actions/);
   assert.match(markup, /Refresh Status/);
   assert.match(markup, /Open Refresh &amp; Build/);
+  assert.match(markup, /Ask Trust/);
   assert.match(markup, /Load Org Status/);
   assert.match(markup, /Run Preflight/);
   assert.match(markup, /Open Org Sessions/);
   assert.match(markup, /Operator triage snapshot/);
+  assert.match(markup, /Ask trust telemetry/);
+  assert.match(markup, /Replay pass: 90%/);
+  assert.match(markup, /Proof coverage: 90%/);
+  assert.match(markup, /llm_fallback: 1/);
 }
 
 run();

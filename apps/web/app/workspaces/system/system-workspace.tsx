@@ -3,7 +3,7 @@
 import { describeToolStatusSource, type ToolStatusSource } from '../../shell/org-status-surface';
 import type { ReadyPayload } from '../../shell/use-shell-runtime';
 import type { OrgPreflightIssue, OrgPreflightPayload, OrgStatusPayload } from '../connect/types';
-import type { MetaAdaptPayload, MetaContextPayload } from './types';
+import type { AskTrustDashboardPayload, MetaAdaptPayload, MetaContextPayload } from './types';
 import {
   buildStructuredSnapshot,
   deriveRuntimeIssues
@@ -26,10 +26,12 @@ interface SystemWorkspaceProps {
   toolStatusSource: ToolStatusSource;
   metaContext: MetaContextPayload | null;
   metaAdaptResult: MetaAdaptPayload | null;
+  askTrustDashboard: AskTrustDashboardPayload | null;
   loading: boolean;
   onLoadMetaContext: () => void;
   onRunMetaAdapt: () => void;
   onLoadOrgStatus: () => void;
+  onLoadAskTrustDashboard: () => void;
   onRunPreflight: () => void;
   onRefreshStatus: () => void;
   onOpenConnect: () => void;
@@ -121,6 +123,59 @@ function renderRelationMultipliers(payload: MetaContextPayload | null): JSX.Elem
           <li>Load Meta Context to inspect relation multipliers.</li>
         )}
       </ul>
+    </article>
+  );
+}
+
+function renderAskTrustTelemetry(payload: AskTrustDashboardPayload | null): JSX.Element {
+  return (
+    <article className="sub-card">
+      <p className="panel-caption">Ask trust telemetry</p>
+      <h3>Proof and replay health</h3>
+      {payload ? (
+        <>
+          <div className="decision-meta">
+            <span className="decision-badge good">Replay pass: {(payload.replayPassRate * 100).toFixed(0)}%</span>
+            <span className="decision-badge good">Proof coverage: {(payload.proofCoverageRate * 100).toFixed(0)}%</span>
+            <span className="decision-badge muted">Generated: {formatTimestamp(payload.generatedAt)}</span>
+          </div>
+          <div className="analysis-stat-grid">
+            <div className="packet-stat">
+              <span>Ask records</span>
+              <strong>{payload.totals.askRecords}</strong>
+            </div>
+            <div className="packet-stat">
+              <span>Proof artifacts</span>
+              <strong>{payload.totals.proofArtifacts}</strong>
+            </div>
+            <div className="packet-stat">
+              <span>Trusted</span>
+              <strong>{payload.totals.trusted}</strong>
+            </div>
+            <div className="packet-stat">
+              <span>Conditional/refused</span>
+              <strong>{payload.totals.conditional + payload.totals.refused}</strong>
+            </div>
+          </div>
+          <p>
+            <strong>Snapshot trend:</strong>{' '}
+            <span className="path-value">
+              {payload.driftTrend.snapshotCount} snapshots
+              {payload.driftTrend.latestSnapshotId ? `, latest ${payload.driftTrend.latestSnapshotId}` : ''}
+              {payload.driftTrend.previousSnapshotId ? `, previous ${payload.driftTrend.previousSnapshotId}` : ''}
+            </span>
+          </p>
+          <ul className="analysis-chip-list">
+            {payload.failureClasses.map((item) => (
+              <li key={item.class}>
+                {item.class}: {item.count}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <p className="muted">Load Ask Trust to inspect replay rate, proof coverage, and recent failure classes.</p>
+      )}
     </article>
   );
 }
@@ -449,6 +504,9 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
         <button type="button" onClick={props.onRunMetaAdapt} disabled={props.loading}>
           Meta Adapt (Dry Run)
         </button>
+        <button type="button" onClick={props.onLoadAskTrustDashboard} disabled={props.loading}>
+          Ask Trust
+        </button>
         <button type="button" onClick={props.onLoadOrgStatus} disabled={props.loading}>
           Org Status
         </button>
@@ -495,6 +553,8 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
         {props.metaContext ? renderIntentBreakdown('Trusted by intent', props.metaContext.context.provenance.trustedByIntent) : null}
 
         {props.metaContext ? renderIntentBreakdown('Refused by intent', props.metaContext.context.provenance.refusedByIntent) : null}
+
+        {renderAskTrustTelemetry(props.askTrustDashboard)}
       </div>
 
       {props.metaAdaptResult ? (
