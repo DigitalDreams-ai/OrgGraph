@@ -174,6 +174,94 @@ function run(): void {
   assert.match(advancedLoadedMarkup, /History label: selected/);
   assert.match(advancedLoadedMarkup, /Loaded proof: advanced token lookup/);
   assert.match(advancedLoadedMarkup, /Advanced tokens: present/);
+
+  const detailMarkup = renderToStaticMarkup(
+    React.createElement(ProofsWorkspace, {
+      proofId: 'proof_alpha',
+      setProofId: () => undefined,
+      replayToken: 'trace_alpha',
+      setReplayToken: () => undefined,
+      recentProofs,
+      selectedRecentProof: recentProofs[0],
+      selectedProof: {
+        proofId: 'proof_alpha',
+        replayToken: 'trace_alpha',
+        generatedAt: '2026-03-01T10:00:00Z',
+        snapshotId: 'snap_alpha',
+        policyId: 'policy_alpha',
+        traceLevel: 'strict',
+        query: 'What touches Opportunity.StageName?',
+        deterministicAnswer: 'Impact found.',
+        confidence: 0.91,
+        trustLevel: 'trusted',
+        operatorsExecuted: ['impact'],
+        rejectedBranches: [],
+        citationCount: 4,
+        derivationEdgeCount: 9
+      },
+      replayResult: {
+        proofId: 'proof_alpha',
+        replayToken: 'trace_alpha',
+        snapshotId: 'snap_alpha',
+        policyId: 'policy_alpha',
+        matched: true,
+        corePayloadMatched: true,
+        metricsMatched: true,
+        original: {
+          trustLevel: 'trusted',
+          deterministicAnswer: 'Impact found.',
+          confidence: 0.91
+        },
+        replayed: {
+          trustLevel: 'trusted',
+          deterministicAnswer: 'Impact found.',
+          confidence: 0.91
+        }
+      },
+      metricsExport: {
+        totalRecords: 1,
+        bySnapshot: [
+          {
+            snapshotId: 'snap_alpha',
+            count: 1,
+            trusted: 1,
+            conditional: 0,
+            refused: 0,
+            latestRecordedAt: '2026-03-01T10:00:00Z'
+          }
+        ],
+        byProvider: [
+          {
+            provider: 'openai',
+            model: 'gpt-5.4',
+            count: 1,
+            successCount: 1,
+            errorCount: 0,
+            errorRate: 0
+          }
+        ]
+      },
+      loading: false,
+      onListRecent: () => undefined,
+      onGetProof: () => undefined,
+      onReplay: () => undefined,
+      onOpenByToken: () => undefined,
+      onReplayByToken: () => undefined,
+      onExportMetrics: () => undefined,
+      onExportProofArtifact: () => undefined,
+      onExportReplayArtifact: () => undefined,
+      onSelectRecentProof: () => undefined,
+      onOpenRecentProof: () => undefined,
+      onReplayRecentProof: () => undefined
+    })
+  );
+  assert.match(detailMarkup, /History label: selected/);
+  assert.match(detailMarkup, /Loaded proof: selected history/);
+  assert.match(detailMarkup, /Advanced tokens: present/);
+  assert.match(detailMarkup, /<strong><span class="path-value">What touches Opportunity\.StageName\?<\/span><\/strong>/);
+  assert.match(detailMarkup, /<strong>Snapshot:<\/strong> <span class="path-value">snap_alpha<\/span>/);
+  assert.match(detailMarkup, /<strong>Generated:<\/strong> <span class="path-value">2026-03-01T10:00:00Z<\/span>/);
+  assert.match(detailMarkup, /<strong>Policy:<\/strong> <span class="path-value">policy_alpha<\/span>/);
 }
 
 run();

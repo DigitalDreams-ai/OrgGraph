@@ -83,6 +83,7 @@ Materially true now:
 - wave10 follow-up now enforces larger card-grid minimum widths and path-specific wrapping classes, reducing truncation in decision packets, citations, mapping diagnostics, and diagnostics artifacts
 - wave10 follow-up now hardens Ask proof/context and citation rendering with explicit path-value wrapping, snippet scroll bounds, and denser auto-fit minima to reduce clipping in mid-width desktop layouts
 - wave10 accessibility follow-up now adds live-region semantics to dynamic Ask, Sessions, Browser, and Refresh surfaces and locks label/tab/expansion semantics with a dedicated render-level accessibility smoke test
+- wave10 follow-up now wraps long proof-history labels, snapshot IDs, policy IDs, and generated timestamps with explicit `path-value` guards so Proofs surfaces stay bounded under long real-org identifiers
 - wave10 accessibility follow-up now extends live-region smoke coverage to Analyze structured triage, Proofs current selection, and Settings & Diagnostics structured snapshot so the remaining dynamic desktop workspaces share the same screen-reader update contract
 - refresh handoff is staged and fail-closed from browser selections
 - `Run Refresh` now also fails closed until Browser handoff is ready and staged selections are present, preventing rebuild from running on ambiguous retrieve context
@@ -128,9 +129,12 @@ Materially true now:
 - wave11 retention follow-up now locks that 14-run cleanup policy and the 1-day runtime artifact retention defaults with a repo-local regression test, preventing silent workflow drift
 - wave11 CI follow-up now replaces the external `dorny/paths-filter` dependency with a repo-local change-detection script and unit test so `detect-changes` no longer flakes on third-party action download/auth failures
 - wave11 regression corpus now locks edge component-usage families for Apex Class and Apex Trigger prompts, including metadata-arg and path-qualified normalization so those asks cannot drift back into weak generic answers
+- wave11 runtime regression coverage now also render-checks Connect and Operator Rail status surfaces so `runtime unavailable` cannot silently drift back into generic blocked or missing-tool wording
 - release checklist now aligns to pnpm-only commands and includes explicit real-org operator workflow evidence requirements
 - wave12 release surfaces now include a dedicated rollback playbook plus release-notes evidence template, keeping release/rollback discipline aligned to the packaged desktop workflow instead of older mixed promotion language
 - wave12 now also includes a clean-machine operator-proof worksheet so non-author validation has a single explicit capture template instead of ad-hoc notes
+- wave12 release docs now share a canonical artifact-path map so executable, installer, smoke, operator-proof, and rollback evidence locations are recorded in one consistent format
+- wave12 rollback readiness now also includes a canonical rollback-result template so executed rollback validation can be captured in a consistent release-evidence format
 - real-org desktop quickstart runbook now exists as a single explicit Git Bash workflow for connect, browser retrieve, refresh handoff, and Ask proof capture
 - operator-machine pass evidence for real-org quickstart is now captured with proof/replay IDs in `docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md`
 - operator evidence now includes successful grounded Ask output for both direct flow-name and `Flow called <name>` phrasing with trusted envelopes
@@ -161,6 +165,7 @@ Materially true now:
 - Analyze structured snapshot rows now expose direct `Open Org Browser` / `Open Refresh & Build` recovery actions when principal-map triage says retrieve or refresh is required, reducing manual tab hunting during permission recovery
 - Analyze now includes a mode-aware structured triage snapshot (status + next action) plus Ask handoff actions for permission and system-permission results, reducing first-line dependence on raw JSON inspection
 - Analyze structured triage snapshot now includes direct action buttons (rerun analysis, diagnose mapping, and Open Ask handoff) so operators can execute recommended recovery/decision steps without leaving the snapshot card
+- Analyze automation and impact triage now also switch from empty Ask handoff buttons to explicit Browser/Refresh recovery actions when no deterministic matches are present, reducing another no-result edge path that previously pushed operators into generic reruns or raw inspection
 - Analyze permission, impact, and system-permission evidence cards now wrap long path-bearing values with explicit `path-value` guards, and a dedicated render regression locks that markup so long graph paths and map locations stay bounded in desktop layouts
 - Operator Rail now includes a runtime-triage summary so common readiness failures can be diagnosed without opening raw JSON
 - Proofs & History now auto-selects a current label on history refresh so open/replay operations are label-first by default

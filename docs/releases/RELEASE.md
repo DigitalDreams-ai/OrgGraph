@@ -2,6 +2,9 @@
 
 Use this file as the release evidence template for each packaged desktop candidate.
 
+Canonical path reference:
+- [Release Artifact Paths](./ARTIFACT_PATHS.md)
+
 ## Release Identity
 
 - Version:
@@ -28,6 +31,8 @@ Use this file as the release evidence template for each packaged desktop candida
 
 - Smoke artifact JSON:
 - Smoke artifact log:
+- Desktop executable path:
+- Installer path used for validation:
 - `readyStatus`:
 - `relaunchVerified`:
 - `metadataSearchStatus`:

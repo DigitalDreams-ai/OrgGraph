@@ -140,8 +140,8 @@ Mandatory:
 | wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage and diagnostics cards expose direct operator actions and no core recovery path depends on raw JSON or manual tab hunting |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first selection stays independent from advanced token lookup and reopen/replay/export remain history-first |
-| wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline with live-region coverage across all dynamic workspaces |
-| wave11 | bug burn-down and CI quality lock | B013, B018, B023 | In Progress | P0/P1 count to zero, stable trust gates, edge metadata-family regressions locked, and Actions retention policy regression-gated |
+| wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline with live-region coverage across all dynamic workspaces and proof-history identifier guardrails |
+| wave11 | bug burn-down and CI quality lock | B013, B018, B023 | In Progress | P0/P1 count to zero, stable trust gates, edge metadata-family regressions locked, embedded web regressions enforced in `validate`, and Actions retention policy regression-gated |
 | wave12 | release readiness and operator proof | B014, B019 | In Progress | Clean-machine runbook pass + rollback proof |
 | wave13 | post-100 stabilization | B024 | Open | No P0/P1 regressions during hold window |
 
@@ -274,6 +274,7 @@ Scope:
 - structured permission/automation/impact/map cards
 - deterministic summaries with clear next actions
 - raw JSON as secondary surface only
+- explicit Browser/Refresh recovery actions when automation or impact analysis returns no deterministic matches
 
 Exit:
 - core analysis tasks complete through card actions
@@ -325,6 +326,7 @@ Scope:
 - P0/P1 burn-down
 - flake reduction and regression coverage
 - trust-preserving CI minute optimization
+- render-level regression locks for critical runtime status surfaces
 
 Exit:
 - P0/P1 = zero and stable for one cycle
@@ -343,6 +345,8 @@ Scope:
 - final real-org end-to-end sweep
 - release-notes evidence template tied to packaged desktop smoke, operator proof, and rollback target capture
 - clean-machine proof worksheet tied to the canonical operator-proof results log
+- canonical release artifact-path map shared across release, rollback, and clean-machine proof docs
+- canonical rollback-result template for executed rollback validation
 
 Exit:
 - release candidate checklist fully green
