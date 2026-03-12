@@ -94,6 +94,9 @@ function run(): void {
   assert.match(noSelectionMarkup, /disabled="">Export Selected History Replay/);
   assert.doesNotMatch(noSelectionMarkup, /disabled="">Open by Token/);
   assert.doesNotMatch(noSelectionMarkup, /disabled="">Replay by Token/);
+  assert.match(noSelectionMarkup, /History label: none/);
+  assert.match(noSelectionMarkup, /Loaded proof: not opened/);
+  assert.match(noSelectionMarkup, /Advanced tokens: present/);
 
   const selectedMarkup = renderToStaticMarkup(
     React.createElement(ProofsWorkspace, {
@@ -124,8 +127,53 @@ function run(): void {
   assert.doesNotMatch(selectedMarkup, /disabled="">Replay Selected History/);
   assert.doesNotMatch(selectedMarkup, /disabled="">Export Selected History Proof/);
   assert.doesNotMatch(selectedMarkup, /disabled="">Export Selected History Replay/);
-  assert.match(selectedMarkup, /<strong><span class="path-value">What touches Opportunity\.StageName\?<\/span><\/strong>/);
-  assert.match(selectedMarkup, /<strong>Snapshot:<\/strong> <span class="path-value">snap_alpha<\/span>/);
+  assert.match(selectedMarkup, /History label: selected/);
+  assert.match(selectedMarkup, /Loaded proof: not opened/);
+  assert.match(selectedMarkup, /Advanced tokens: present/);
+
+  const advancedLoadedMarkup = renderToStaticMarkup(
+    React.createElement(ProofsWorkspace, {
+      proofId: 'proof_beta',
+      setProofId: () => undefined,
+      replayToken: 'trace_beta',
+      setReplayToken: () => undefined,
+      recentProofs,
+      selectedRecentProof: recentProofs[0],
+      selectedProof: {
+        proofId: 'proof_beta',
+        replayToken: 'trace_beta',
+        generatedAt: '2026-03-01T11:00:00Z',
+        snapshotId: 'snap_beta',
+        policyId: 'policy_beta',
+        traceLevel: 'trusted',
+        query: 'Who can edit Opportunity.StageName?',
+        trustLevel: 'conditional',
+        deterministicAnswer: 'Conditional answer',
+        confidence: 0.71,
+        operatorsExecuted: ['planner'],
+        rejectedBranches: [],
+        citationCount: 2,
+        derivationEdgeCount: 4
+      },
+      replayResult: null,
+      metricsExport: null,
+      loading: false,
+      onListRecent: () => undefined,
+      onGetProof: () => undefined,
+      onReplay: () => undefined,
+      onOpenByToken: () => undefined,
+      onReplayByToken: () => undefined,
+      onExportMetrics: () => undefined,
+      onExportProofArtifact: () => undefined,
+      onExportReplayArtifact: () => undefined,
+      onSelectRecentProof: () => undefined,
+      onOpenRecentProof: () => undefined,
+      onReplayRecentProof: () => undefined
+    })
+  );
+  assert.match(advancedLoadedMarkup, /History label: selected/);
+  assert.match(advancedLoadedMarkup, /Loaded proof: advanced token lookup/);
+  assert.match(advancedLoadedMarkup, /Advanced tokens: present/);
 
   const detailMarkup = renderToStaticMarkup(
     React.createElement(ProofsWorkspace, {
@@ -159,13 +207,39 @@ function run(): void {
         matched: true,
         corePayloadMatched: true,
         metricsMatched: true,
-        original: { trustLevel: 'trusted', deterministicAnswer: 'Impact found.', confidence: 0.91 },
-        replayed: { trustLevel: 'trusted', deterministicAnswer: 'Impact found.', confidence: 0.91 }
+        original: {
+          trustLevel: 'trusted',
+          deterministicAnswer: 'Impact found.',
+          confidence: 0.91
+        },
+        replayed: {
+          trustLevel: 'trusted',
+          deterministicAnswer: 'Impact found.',
+          confidence: 0.91
+        }
       },
       metricsExport: {
         totalRecords: 1,
-        bySnapshot: [{ snapshotId: 'snap_alpha', count: 1, trusted: 1, conditional: 0, refused: 0, latestRecordedAt: '2026-03-01T10:00:00Z' }],
-        byProvider: [{ provider: 'openai', model: 'gpt-5.4', count: 1, successCount: 1, errorCount: 0, errorRate: 0 }]
+        bySnapshot: [
+          {
+            snapshotId: 'snap_alpha',
+            count: 1,
+            trusted: 1,
+            conditional: 0,
+            refused: 0,
+            latestRecordedAt: '2026-03-01T10:00:00Z'
+          }
+        ],
+        byProvider: [
+          {
+            provider: 'openai',
+            model: 'gpt-5.4',
+            count: 1,
+            successCount: 1,
+            errorCount: 0,
+            errorRate: 0
+          }
+        ]
       },
       loading: false,
       onListRecent: () => undefined,
@@ -181,6 +255,10 @@ function run(): void {
       onReplayRecentProof: () => undefined
     })
   );
+  assert.match(detailMarkup, /History label: selected/);
+  assert.match(detailMarkup, /Loaded proof: selected history/);
+  assert.match(detailMarkup, /Advanced tokens: present/);
+  assert.match(detailMarkup, /<strong><span class="path-value">What touches Opportunity\.StageName\?<\/span><\/strong>/);
   assert.match(detailMarkup, /<strong>Snapshot:<\/strong> <span class="path-value">snap_alpha<\/span>/);
   assert.match(detailMarkup, /<strong>Generated:<\/strong> <span class="path-value">2026-03-01T10:00:00Z<\/span>/);
   assert.match(detailMarkup, /<strong>Policy:<\/strong> <span class="path-value">policy_alpha<\/span>/);
