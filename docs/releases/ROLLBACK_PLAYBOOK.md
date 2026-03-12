@@ -7,6 +7,7 @@ This playbook restores Orgumented to the last known-good packaged desktop releas
 Use this with:
 - [Release Checklist](./RELEASE_CHECKLIST.md)
 - [Release Notes](./RELEASE.md)
+- [Rollback Result Template](./ROLLBACK_RESULT_TEMPLATE.md)
 
 ## Inputs You Must Have
 
@@ -86,6 +87,9 @@ Record in [Release Notes](./RELEASE.md):
 Capture:
 - restored smoke artifact path
 - one screenshot showing the restored runtime ready state
+
+Complete:
+- [Rollback Result Template](./ROLLBACK_RESULT_TEMPLATE.md)
 
 ## 6. Return To Mainline Work
 
