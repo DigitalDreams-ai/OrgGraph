@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:runtime-status": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/runtime-status-surfaces.ts",
     "test:proof-history": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/proof-history-selection.ts",
+    "test:workspace-a11y": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/workspace-accessibility.ts",
     "test:system-workspace": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/system-workspace-actions.ts"
   },
   "dependencies": {

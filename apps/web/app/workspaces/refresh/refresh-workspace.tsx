@@ -146,14 +146,14 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
           ))}
         </div>
         {nextStage ? (
-          <div className="refresh-next-action">
+          <div className="refresh-next-action" role="status" aria-live="polite">
             <span className={`decision-badge ${stageTone(nextStage)}`}>Next action</span>
             <p>
               <strong>{nextStage.label}</strong> {nextStage.action}
             </p>
           </div>
         ) : (
-          <div className="refresh-next-action">
+          <div className="refresh-next-action" role="status" aria-live="polite">
             <span className="decision-badge good">Workflow current</span>
             <p><strong>All four stages are current.</strong> You can review the latest summaries below without opening raw JSON.</p>
           </div>

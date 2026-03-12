@@ -540,7 +540,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       ) : null}
 
       {props.metadataSearch.trim().length > 0 ? (
-        <article className="sub-card">
+        <article className="sub-card" role="status" aria-live="polite">
           <p className="panel-caption">Explorer search</p>
           <h3>Matching metadata items</h3>
           <p className="muted">
@@ -748,7 +748,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       </div>
 
       <div className="ops-grid">
-        <article className="sub-card">
+        <article className="sub-card" role="status" aria-live="polite">
           <p className="panel-caption">Selection cart</p>
           <h3>Selected metadata</h3>
           <p className="muted">Checked rows from search and browse appear here automatically.</p>
