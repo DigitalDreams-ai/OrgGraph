@@ -120,6 +120,7 @@ Materially true now:
 - CI now runs packaged desktop smoke in the same Windows validate job (instead of cross-job runtime artifact handoff), reducing Actions artifact storage pressure without dropping trust gates
 - Actions retention cleanup now runs twice daily and keeps the most recent 14 completed runs per workflow by default; runtime-nightly is now weekly with 1-day artifact retention to protect CI storage/minute budget without weakening PR trust gates
 - wave11 CI follow-up now replaces the external `dorny/paths-filter` dependency with a repo-local change-detection script and unit test so `detect-changes` no longer flakes on third-party action download/auth failures
+- wave11 regression corpus now locks edge component-usage families for Apex Class and Apex Trigger prompts, including metadata-arg and path-qualified normalization so those asks cannot drift back into weak generic answers
 - release checklist now aligns to pnpm-only commands and includes explicit real-org operator workflow evidence requirements
 - wave12 release surfaces now include a dedicated rollback playbook plus release-notes evidence template, keeping release/rollback discipline aligned to the packaged desktop workflow instead of older mixed promotion language
 - wave12 now also includes a clean-machine operator-proof worksheet so non-author validation has a single explicit capture template instead of ad-hoc notes
