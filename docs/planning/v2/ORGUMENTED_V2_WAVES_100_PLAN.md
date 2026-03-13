@@ -323,6 +323,7 @@ Scope:
 - explicit Ask dense-card render guards for long proof IDs, paths, and citation snippets
 - explicit telemetry render guards for Ask trust failure-class labels in Settings & Diagnostics
 - explicit Org Browser render guards for long retrieve parse paths, metadata args, and selected member chips
+- explicit Org Sessions render guards for long alias, username, org ID, and instance URL values
 
 Exit:
 - zero known clipping defects in Stage 1 surfaces
