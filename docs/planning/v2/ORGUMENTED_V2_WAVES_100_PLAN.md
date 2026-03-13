@@ -175,6 +175,7 @@ Scope:
 - bootstrap grounding and drift-budget recovery
 - runtime-unavailable vs tooling-unavailable disambiguation
 - fail-closed readiness signaling
+- normalized operator-facing readiness labels across shell and diagnostics surfaces
 
 Exit:
 - `pnpm --filter api test`
@@ -183,6 +184,7 @@ Exit:
 - `pnpm desktop:smoke:release`
 - manual packaged startup proof without ambiguous tool-missing false states
 - desktop startup does not fail from avoidable bootstrap drift conditions
+- shell status surfaces do not leak raw readiness HTTP codes to operators
 
 ## wave3 - Session And Toolchain Reliability
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { describeToolStatusSource, type ToolStatusSource } from '../../shell/org-status-surface';
+import { describeReadySurfaceStatus } from '../../shell/runtime-gate';
 import type { ReadyPayload } from '../../shell/use-shell-runtime';
 import type { OrgPreflightIssue, OrgPreflightPayload, OrgStatusPayload } from '../connect/types';
 import type { AskTrustDashboardPayload, MetaAdaptPayload, MetaContextPayload, RuntimeMetricsPayload } from './types';
@@ -441,6 +442,7 @@ function buildRuntimeTelemetrySummary(payload: RuntimeMetricsPayload | null): St
 }
 
 export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
+  const readySurfaceStatus = describeReadySurfaceStatus(props.readyStatus);
   const runtimeIssues = deriveRuntimeIssues(props.healthStatus, props.readyStatus, props.readyPayload);
   const readyChecks = props.readyPayload?.checks;
   const preflightIssues = props.orgPreflight?.issues ?? [];
@@ -527,8 +529,8 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
             <span className={props.healthStatus === 'ok' ? 'decision-badge good' : 'decision-badge bad'}>
               Health: {props.healthStatus}
             </span>
-            <span className={props.readyStatus === 'ready' ? 'decision-badge good' : 'decision-badge bad'}>
-              Ready: {props.readyStatus}
+            <span className={readySurfaceStatus === 'ready' ? 'decision-badge good' : readySurfaceStatus === 'unknown' ? 'decision-badge muted' : 'decision-badge bad'}>
+              Ready: {readySurfaceStatus}
             </span>
           </div>
           <div className="analysis-stat-grid">

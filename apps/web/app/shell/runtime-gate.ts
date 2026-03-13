@@ -31,3 +31,15 @@ export function deriveRuntimeGateState(
 export function isRuntimeBlocked(state: RuntimeGateState): boolean {
   return state === 'blocked' || state === 'unreachable';
 }
+
+export function describeReadySurfaceStatus(readyStatus: string): string {
+  if (readyStatus === 'ready' || readyStatus === 'unknown' || readyStatus === 'unreachable') {
+    return readyStatus;
+  }
+
+  if (readyStatus.startsWith('http_')) {
+    return 'blocked';
+  }
+
+  return readyStatus;
+}

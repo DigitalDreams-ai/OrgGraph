@@ -1,5 +1,7 @@
 'use client';
 
+import { describeReadySurfaceStatus } from './runtime-gate';
+
 interface StatusStripProps {
   healthStatus: string;
   readyStatus: string;
@@ -20,15 +22,17 @@ function trustTone(trustLevel: string): string {
 }
 
 export function StatusStrip(props: StatusStripProps): JSX.Element {
+  const readyLabel = describeReadySurfaceStatus(props.readyStatus);
+
   return (
     <section className="status-strip">
       <article className={`status-pill ${statusTone(props.healthStatus)}`}>
         <span>API Health</span>
         <strong>{props.healthStatus}</strong>
       </article>
-      <article className={`status-pill ${statusTone(props.readyStatus)}`}>
+      <article className={`status-pill ${statusTone(readyLabel)}`}>
         <span>API Ready</span>
-        <strong>{props.readyStatus}</strong>
+        <strong>{readyLabel}</strong>
       </article>
       <article className={`status-pill ${statusTone(props.sessionStatus)}`}>
         <span>Org Session</span>
