@@ -336,6 +336,57 @@ function run(): void {
   );
   assert.match(systemMarkup, /<span class="path-value">Profile:System_Administrator<\/span> -&gt; <span class="path-value">ManageUsers<\/span>/);
   assert.match(systemMarkup, /<span class="path-value">Profile:System_Administrator -grants-&gt; SystemPermission:ManageUsers<\/span>/);
+
+  const systemRecoveryMarkup = renderToStaticMarkup(
+    React.createElement(AnalyzeWorkspace, {
+      analyzeMode: 'system',
+      setAnalyzeMode: () => undefined,
+      user: 'sbingham@example.com',
+      setUser: () => undefined,
+      objectName: 'Opportunity',
+      setObjectName: () => undefined,
+      fieldName: 'Opportunity.StageName',
+      setFieldName: () => undefined,
+      systemPermission: 'ManageUsers',
+      setSystemPermission: () => undefined,
+      limitRaw: '25',
+      setLimitRaw: () => undefined,
+      strictMode: true,
+      setStrictMode: () => undefined,
+      explainMode: false,
+      setExplainMode: () => undefined,
+      debugMode: false,
+      setDebugMode: () => undefined,
+      permissionsResult: null,
+      permissionDiagnosis: null,
+      automationResult: null,
+      impactResult: null,
+      systemPermissionResult: {
+        user: 'sbingham@example.com',
+        permission: 'ManageUsers',
+        granted: false,
+        mappingStatus: 'unmapped_user',
+        principalsChecked: [],
+        paths: [],
+        totalPaths: 0,
+        truncated: false,
+        explanation: 'User mapping is unresolved.',
+        warnings: ['Principal map missing.']
+      },
+      loading: false,
+      onRunPermissions: () => undefined,
+      onDiagnoseUserMapping: () => undefined,
+      onRunAutomation: () => undefined,
+      onRunImpact: () => undefined,
+      onRunSystemPermission: () => undefined,
+      onOpenAsk: () => undefined,
+      onOpenBrowser: () => undefined,
+      onOpenRefresh: () => undefined
+    } as any)
+  );
+  assert.match(systemRecoveryMarkup, /Run Diagnose User Mapping before relying on the grant verdict\./);
+  assert.match(systemRecoveryMarkup, />Diagnose User Mapping</);
+  assert.doesNotMatch(systemRecoveryMarkup, />Open Ask for System Permission</);
 }
 
 run();

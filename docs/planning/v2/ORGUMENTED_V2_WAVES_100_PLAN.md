@@ -281,6 +281,7 @@ Scope:
 - structured Ask trust telemetry (replay/proof coverage/failure classes) visible from Settings & Diagnostics without raw API inspection
 - structured runtime telemetry (request volume, route timings, recent non-200 signatures) visible from Settings & Diagnostics without raw `/metrics` inspection
 - structured Meta Adapt delta summary visible from Settings & Diagnostics without raw before/after payload inspection
+- system-permission edge states expose `Diagnose User Mapping` as the primary structured recovery action until deterministic grant context exists
 
 Exit:
 - core analysis tasks complete through card actions
