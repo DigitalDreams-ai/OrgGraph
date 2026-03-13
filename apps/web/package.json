@@ -7,7 +7,7 @@
     "prebuild": "node ../../scripts/clean-eadir.mjs",
     "build": "pnpm exec next build",
     "start": "pnpm exec next start",
-    "test:ci": "pnpm test:ask-render && pnpm test:ask-guards && pnpm test:analyze-render && pnpm test:runtime-status && pnpm test:proof-history && pnpm test:workspace-a11y && pnpm test:system-workspace",
+    "test:ci": "pnpm test:ask-render && pnpm test:ask-guards && pnpm test:analyze-render && pnpm test:runtime-status && pnpm test:proof-history && pnpm test:workspace-a11y && pnpm test:system-workspace && pnpm test:browser-render",
     "test:ask-render": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/ask-flow-packet-render.ts",
     "test:ask-guards": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/ask-render-guards.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -15,7 +15,8 @@
     "test:runtime-status": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/runtime-status-surfaces.ts",
     "test:proof-history": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/proof-history-selection.ts",
     "test:workspace-a11y": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/workspace-accessibility.ts",
-    "test:system-workspace": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/system-workspace-actions.ts"
+    "test:system-workspace": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/system-workspace-actions.ts",
+    "test:browser-render": "pnpm exec ts-node --project tsconfig.test.json --transpile-only test/browser-render-guards.ts"
   },
   "dependencies": {
     "next": "14.2.15",

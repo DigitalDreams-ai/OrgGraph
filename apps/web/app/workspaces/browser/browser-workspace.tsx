@@ -780,7 +780,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                           className="ghost chip-btn"
                           onClick={() => props.onRemoveMember(selection.type, member)}
                         >
-                          {member} ×
+                          <span className="path-value">{member}</span> <span aria-hidden>×</span>
                         </button>
                       ))}
                     </div>
@@ -814,8 +814,14 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
               </div>
               <p><strong>Alias:</strong> {props.lastMetadataRetrieve.alias}</p>
               <p><strong>Completed:</strong> {formatTimestamp(props.lastMetadataRetrieve.completedAt)}</p>
-              <p><strong>Parse path:</strong> {props.lastMetadataRetrieve.parsePath}</p>
-              <p><strong>Metadata args:</strong> {props.lastMetadataRetrieve.metadataArgs.join(' ') || 'n/a'}</p>
+              <p>
+                <strong>Parse path:</strong>{' '}
+                <span className="path-value">{props.lastMetadataRetrieve.parsePath}</span>
+              </p>
+              <p>
+                <strong>Metadata args:</strong>{' '}
+                <span className="path-value">{props.lastMetadataRetrieve.metadataArgs.join(' ') || 'n/a'}</span>
+              </p>
               {retrieveHandoff.state === 'blocked' ? (
                 <ul className="issue-list">
                   {retrieveHandoff.reasons.map((reason) => (
