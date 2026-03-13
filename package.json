@@ -10,6 +10,8 @@
     "desktop:build": "pnpm --filter desktop build",
     "desktop:info": "pnpm --filter desktop info",
     "desktop:smoke:release": "pwsh -NoProfile -File ./scripts/desktop-release-smoke.ps1",
+    "release:evidence:check": "node ./scripts/release-evidence-check.mjs",
+    "release:evidence:check:test": "node --test ./scripts/release-evidence-check.test.mjs",
     "ci:detect-changes:test": "node --test ./scripts/ci-detect-heavy-changes.test.mjs",
     "ci:retention-policy:test": "node --test ./scripts/actions-retention-policy.test.mjs",
     "lint": "pnpm -r lint",

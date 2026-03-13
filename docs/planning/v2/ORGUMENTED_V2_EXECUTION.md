@@ -142,6 +142,7 @@ Materially true now:
 - wave12 release docs now share a canonical artifact-path map so executable, installer, smoke, operator-proof, and rollback evidence locations are recorded in one consistent format
 - wave12 rollback readiness now also includes a canonical rollback-result template so executed rollback validation can be captured in a consistent release-evidence format
 - wave12 release docs now treat `docs/releases/RELEASE.md` as the canonical candidate evidence record, so smoke evidence, clean-machine proof summary, and rollback target/validation no longer stay scattered across checklist-only bullets
+- wave12 release follow-up now includes a deterministic `pnpm release:evidence:check` command that fails when `docs/releases/RELEASE.md` still contains blank or placeholder gate fields, making the canonical release record machine-checkable before promotion
 - real-org desktop quickstart runbook now exists as a single explicit Git Bash workflow for connect, browser retrieve, refresh handoff, and Ask proof capture
 - operator-machine pass evidence for real-org quickstart is now captured with proof/replay IDs in `docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md`
 - operator evidence now includes successful grounded Ask output for both direct flow-name and `Flow called <name>` phrasing with trusted envelopes

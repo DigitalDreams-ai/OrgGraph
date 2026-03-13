@@ -354,6 +354,7 @@ Scope:
 - canonical release artifact-path map shared across release, rollback, and clean-machine proof docs
 - canonical rollback-result template for executed rollback validation
 - canonical release evidence record in `docs/releases/RELEASE.md` that summarizes smoke, operator proof, clean-machine proof, and rollback readiness in one place
+- deterministic `pnpm release:evidence:check` gate that fails when the canonical release record still contains blank or placeholder fields
 - proofs/history label-first workflow now keeps manual token entry isolated from selected history labels, reducing remaining token-driven ambiguity in the normal audit path
 
 Exit:
