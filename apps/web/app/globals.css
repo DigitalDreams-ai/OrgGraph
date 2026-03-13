@@ -613,6 +613,12 @@ button.ghost {
   padding: 0;
 }
 
+.citation-list li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .citation-item {
   border: 1px solid #dbe5f3;
   border-radius: 10px;
@@ -671,6 +677,9 @@ button.ghost {
   display: grid;
   gap: 0.35rem;
   color: var(--ink-soft);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .refresh-stage-grid {
