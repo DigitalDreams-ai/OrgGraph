@@ -664,6 +664,17 @@ button.ghost {
   border-radius: 10px;
   background: #fff;
   padding: 0.6rem 0.65rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.packet-action-label,
+.packet-action-rationale {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .packet-action-list p {

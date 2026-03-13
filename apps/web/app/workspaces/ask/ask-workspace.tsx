@@ -502,8 +502,8 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
             <ul className="packet-action-list">
               {props.askResult.decisionPacket.nextActions.map((action, index) => (
                 <li key={`${action.label || 'action'}-${index}`}>
-                  <strong>{action.label || 'Suggested action'}</strong>
-                  <p>{action.rationale || 'No rationale returned.'}</p>
+                  <strong className="packet-action-label">{action.label || 'Suggested action'}</strong>
+                  <p className="packet-action-rationale">{action.rationale || 'No rationale returned.'}</p>
                 </li>
               ))}
             </ul>
