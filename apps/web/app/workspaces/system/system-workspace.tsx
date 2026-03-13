@@ -161,7 +161,12 @@ function buildMetaAdaptSummary(payload: MetaAdaptPayload): {
   };
 }
 
-function renderAskTrustTelemetry(payload: AskTrustDashboardPayload | null): JSX.Element {
+function renderAskTrustTelemetry(
+  payload: AskTrustDashboardPayload | null,
+  loading: boolean,
+  onLoadAskTrustDashboard: () => void,
+  onLoadRuntimeMetrics: () => void
+): JSX.Element {
   return (
     <article className="sub-card">
       <p className="panel-caption">Ask trust telemetry</p>
@@ -206,21 +211,52 @@ function renderAskTrustTelemetry(payload: AskTrustDashboardPayload | null): JSX.
               </li>
             ))}
           </ul>
+          <div className="action-row" aria-label="Ask trust quick actions">
+            <button type="button" className="ghost" onClick={onLoadAskTrustDashboard} disabled={loading}>
+              Refresh Ask Trust
+            </button>
+            <button type="button" className="ghost" onClick={onLoadRuntimeMetrics} disabled={loading}>
+              Open Runtime Telemetry
+            </button>
+          </div>
         </>
       ) : (
-        <p className="muted">Load Ask Trust to inspect replay rate, proof coverage, and recent failure classes.</p>
+        <>
+          <p className="muted">Load Ask Trust to inspect replay rate, proof coverage, and recent failure classes.</p>
+          <div className="action-row" aria-label="Ask trust quick actions">
+            <button type="button" className="ghost" onClick={onLoadAskTrustDashboard} disabled={loading}>
+              Load Ask Trust
+            </button>
+            <button type="button" className="ghost" onClick={onLoadRuntimeMetrics} disabled={loading}>
+              Open Runtime Telemetry
+            </button>
+          </div>
+        </>
       )}
     </article>
   );
 }
 
-function renderRuntimeTelemetry(payload: RuntimeMetricsPayload | null): JSX.Element {
+function renderRuntimeTelemetry(
+  payload: RuntimeMetricsPayload | null,
+  loading: boolean,
+  onLoadRuntimeMetrics: () => void,
+  onRefreshStatus: () => void
+): JSX.Element {
   if (!payload) {
     return (
       <article className="sub-card">
         <p className="panel-caption">Runtime telemetry</p>
         <h3>Route timings and failure signatures</h3>
         <p className="muted">Load Runtime Telemetry to inspect request volume, busiest routes, and recent non-200 signatures.</p>
+        <div className="action-row" aria-label="Runtime telemetry quick actions">
+          <button type="button" className="ghost" onClick={onLoadRuntimeMetrics} disabled={loading}>
+            Load Runtime Telemetry
+          </button>
+          <button type="button" className="ghost" onClick={onRefreshStatus} disabled={loading}>
+            Refresh Status
+          </button>
+        </div>
       </article>
     );
   }
@@ -288,6 +324,14 @@ function renderRuntimeTelemetry(payload: RuntimeMetricsPayload | null): JSX.Elem
           <li>No non-200 route signatures recorded in the current runtime window.</li>
         )}
       </ul>
+      <div className="action-row" aria-label="Runtime telemetry quick actions">
+        <button type="button" className="ghost" onClick={onLoadRuntimeMetrics} disabled={loading}>
+          Refresh Runtime Telemetry
+        </button>
+        <button type="button" className="ghost" onClick={onRefreshStatus} disabled={loading}>
+          Refresh Status
+        </button>
+      </div>
     </article>
   );
 }
@@ -689,9 +733,9 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
 
         {props.metaContext ? renderIntentBreakdown('Refused by intent', props.metaContext.context.provenance.refusedByIntent) : null}
 
-        {renderAskTrustTelemetry(props.askTrustDashboard)}
+        {renderAskTrustTelemetry(props.askTrustDashboard, props.loading, props.onLoadAskTrustDashboard, props.onLoadRuntimeMetrics)}
 
-        {renderRuntimeTelemetry(props.runtimeMetrics)}
+        {renderRuntimeTelemetry(props.runtimeMetrics, props.loading, props.onLoadRuntimeMetrics, props.onRefreshStatus)}
       </div>
 
       <div className="analysis-grid">

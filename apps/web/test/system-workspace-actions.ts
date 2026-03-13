@@ -213,6 +213,9 @@ function run(): void {
   assert.match(markup, /Proof coverage: 90%/);
   assert.match(markup, /<span class="path-value">llm_fallback<\/span>: 1/);
   assert.match(markup, /<span class="path-value">constraint_risk<\/span>: 2/);
+  assert.match(markup, /Ask trust quick actions/);
+  assert.match(markup, /Refresh Ask Trust/);
+  assert.match(markup, /Open Runtime Telemetry/);
   assert.match(markup, /<strong>Context path:<\/strong>\s*<span class="path-value">C:\/Users\/sean\/AppData\/Roaming\/Orgumented\/meta\/context-with-a-very-long-path\.json<\/span>/);
   assert.match(markup, /<strong>Audit artifact:<\/strong>\s*<span class="path-value">C:\/Users\/sean\/AppData\/Roaming\/Orgumented\/meta\/audit\/very-long-adapt-audit-artifact\.json<\/span>/);
   assert.match(markup, /Structured change summary/);
@@ -242,6 +245,8 @@ function run(): void {
   assert.match(markup, /Failure signature:/);
   assert.match(markup, /POST \/refresh/);
   assert.match(markup, /last status 500/);
+  assert.match(markup, /Runtime telemetry quick actions/);
+  assert.match(markup, /Refresh Runtime Telemetry/);
 
   const emptyMarkup = renderToStaticMarkup(
     React.createElement(SystemWorkspace, {
