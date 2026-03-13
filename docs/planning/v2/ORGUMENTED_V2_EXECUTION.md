@@ -137,6 +137,7 @@ Materially true now:
 - wave11 CI follow-up now replaces the external `dorny/paths-filter` dependency with a repo-local change-detection script and unit test so `detect-changes` no longer flakes on third-party action download/auth failures
 - wave11 CI follow-up now also executes the targeted web regression corpus in the Windows `validate` job, so wave8/wave9/wave10 UI safety gates fail in PRs instead of only on local runs
 - wave11 regression corpus now locks edge component-usage families for Apex Class and Apex Trigger prompts, including metadata-arg and path-qualified normalization so those asks cannot drift back into weak generic answers
+- wave11 regression corpus now also locks Email Template and Custom Tab component-usage prompts, ensuring those supported families stay on deterministic evidence-lookup routing instead of drifting back into generic refusal or weak fallback behavior
 - wave11 runtime regression coverage now also render-checks Connect and Operator Rail status surfaces so `runtime unavailable` cannot silently drift back into generic blocked or missing-tool wording
 - release checklist now aligns to pnpm-only commands and includes explicit real-org operator workflow evidence requirements
 - wave12 release surfaces now include a dedicated rollback playbook plus release-notes evidence template, keeping release/rollback discipline aligned to the packaged desktop workflow instead of older mixed promotion language
