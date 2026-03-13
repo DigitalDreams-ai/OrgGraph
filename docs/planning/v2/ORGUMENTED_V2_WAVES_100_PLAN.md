@@ -321,6 +321,7 @@ Scope:
 - explicit render guards for path-heavy Analyze/Diagnostics/Proofs surfaces
 - explicit render guards for long operator-machine paths in Settings & Diagnostics
 - explicit Ask dense-card render guards for long proof IDs, paths, and citation snippets
+- explicit Ask metadata-component packet render guards for long component labels, metadata-arg targets, and definition anchors
 - explicit telemetry render guards for Ask trust failure-class labels in Settings & Diagnostics
 - explicit Org Browser render guards for long retrieve parse paths, metadata args, and selected member chips
 
@@ -329,6 +330,7 @@ Exit:
 - accessibility baseline pass for Ask/Sessions/Browser/Refresh
 - long paths, identifiers, and JSON blocks wrap/scroll without card breakage
 - render regression gates cover path-heavy cards so long graph paths stay bounded
+- metadata-component usage packets keep long component labels and definition anchors bounded in Ask
 - Org Browser carts and retrieve handoff details stay bounded under long real-org metadata names and paths
 
 ## wave11 - Bug Burn-Down And CI Quality Lock

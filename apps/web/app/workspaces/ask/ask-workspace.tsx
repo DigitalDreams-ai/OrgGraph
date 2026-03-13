@@ -242,7 +242,9 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                 </div>
                 <div className="packet-stat">
                   <span>Target</span>
-                  <strong className="packet-value">{decisionPacket.targetLabel || 'n/a'}</strong>
+                  <strong className={`packet-value${isFlowPacket || isComponentPacket ? ' path-value' : ''}`}>
+                    {decisionPacket.targetLabel || 'n/a'}
+                  </strong>
                 </div>
                 <div className="packet-stat">
                   <span>{isFlowPacket ? 'Flow signals' : isComponentPacket ? 'Usage signals' : 'Permission model'}</span>
@@ -315,8 +317,8 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                     </div>
                     <div className="packet-stat">
                       <span>Component family</span>
-                      <strong className="packet-value">{componentUsage?.summaries?.family || 'n/a'}</strong>
-                      <p>{componentUsage?.summaries?.definition || 'No definition summary returned.'}</p>
+                      <strong className="packet-value path-value">{componentUsage?.summaries?.family || 'n/a'}</strong>
+                      <p className="path-value">{componentUsage?.summaries?.definition || 'No definition summary returned.'}</p>
                     </div>
                   </>
                 ) : (
