@@ -61,6 +61,28 @@ export type AskPayload = {
         triggerTypes?: string;
       };
     };
+    componentUsage?: {
+      familyHint?:
+        | 'flow'
+        | 'layout'
+        | 'apex_class'
+        | 'apex_trigger'
+        | 'custom_object'
+        | 'custom_field'
+        | 'email_template'
+        | 'tab';
+      matchedCount?: number;
+      referenceHitCount?: number;
+      sourceFileCount?: number;
+      definitionOnly?: boolean;
+      topReferenceSources?: string[];
+      summaries?: {
+        references?: string;
+        coverage?: string;
+        family?: string;
+        definition?: string;
+      };
+    };
     evidenceGaps?: string[];
     nextActions?: Array<{ label?: string; rationale?: string }>;
   };

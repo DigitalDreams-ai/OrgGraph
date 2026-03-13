@@ -112,10 +112,10 @@ export interface AskProofArtifact {
 }
 
 export interface AskDecisionPacket {
-  kind: 'high_risk_change_review';
-  focus: AskReviewFocus;
+  kind: 'high_risk_change_review' | 'metadata_component_usage';
+  focus: AskReviewFocus | 'usage_lookup';
   targetLabel: string;
-  targetType: 'field' | 'object' | 'flow';
+  targetType: 'field' | 'object' | 'flow' | 'metadata_component';
   summary: string;
   recommendation: {
     verdict:
@@ -167,6 +167,28 @@ export interface AskDecisionPacket {
       writeObjects: string;
       referencedObjects: string;
       triggerTypes: string;
+    };
+  };
+  componentUsage?: {
+    familyHint?:
+      | 'flow'
+      | 'layout'
+      | 'apex_class'
+      | 'apex_trigger'
+      | 'custom_object'
+      | 'custom_field'
+      | 'email_template'
+      | 'tab';
+    matchedCount: number;
+    referenceHitCount: number;
+    sourceFileCount: number;
+    definitionOnly: boolean;
+    topReferenceSources: string[];
+    summaries: {
+      references: string;
+      coverage: string;
+      family: string;
+      definition: string;
     };
   };
   evidenceGaps: string[];
