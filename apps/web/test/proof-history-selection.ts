@@ -3,7 +3,9 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
   resolveProofLookupId,
+  resolveProofExportName,
   resolveReplayLookup,
+  resolveReplayExportName,
   resolveSelectedHistoryProof,
   resolveSelectedHistoryProofId,
   shouldClearAdvancedReplayResult,
@@ -57,6 +59,48 @@ function run(): void {
     proofId: 'proof_alpha',
     replayToken: 'trace_alpha'
   });
+  assert.equal(
+    resolveProofExportName(recentProofs[0], {
+      proofId: 'proof_alpha',
+      replayToken: 'trace_alpha',
+      generatedAt: '2026-03-01T10:00:00Z',
+      snapshotId: 'snap_alpha',
+      policyId: 'policy_alpha',
+      traceLevel: 'strict',
+      query: 'What touches Opportunity.StageName?',
+      trustLevel: 'trusted',
+      deterministicAnswer: 'Impact found.',
+      confidence: 0.91,
+      operatorsExecuted: ['impact'],
+      rejectedBranches: [],
+      citationCount: 4,
+      derivationEdgeCount: 9
+    }),
+    'what-touches-opportunity.stagename'
+  );
+  assert.equal(
+    resolveReplayExportName(recentProofs[0], {
+      proofId: 'proof_alpha',
+      replayToken: 'trace_alpha',
+      snapshotId: 'snap_alpha',
+      policyId: 'policy_alpha',
+      matched: true,
+      corePayloadMatched: true,
+      metricsMatched: true,
+      original: {
+        trustLevel: 'trusted',
+        deterministicAnswer: 'Impact found.',
+        confidence: 0.91
+      },
+      replayed: {
+        trustLevel: 'trusted',
+        deterministicAnswer: 'Impact found.',
+        confidence: 0.91
+      }
+    }),
+    'what-touches-opportunity.stagename'
+  );
+  assert.equal(resolveProofExportName(null, null), 'artifact');
   assert.equal(shouldClearAdvancedSelectedProof(recentProofs[0], null), false);
   assert.equal(
     shouldClearAdvancedSelectedProof(recentProofs[0], {
