@@ -126,7 +126,7 @@ Required metadata:
 - [ ] Candidate commit SHA recorded
 - [ ] Candidate tag/version recorded
 - [ ] [Release Notes](./RELEASE.md) drafted as the canonical candidate evidence record
-- [ ] `pnpm release:evidence:check` passes after [Release Notes](./RELEASE.md) is filled in
+- [ ] `pnpm release:evidence:check` passes after [Release Notes](./RELEASE.md) is filled in and both proof-results anchors resolve in `docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md`
 - [ ] Real-org operator proof summary recorded in [Release Notes](./RELEASE.md)
 - [ ] Clean-machine operator proof summary recorded in [Release Notes](./RELEASE.md)
 

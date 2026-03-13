@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { findReleaseEvidenceIssues, parseReleaseEvidence } from './release-evidence-check.mjs';
+import { findReleaseEvidenceIssues, parseHeadingAnchors, parseReleaseEvidence, slugifyHeading } from './release-evidence-check.mjs';
 
 const passingDocument = `
 # Release Notes And Evidence Record
@@ -113,6 +113,18 @@ const passingDocument = `
 - If rollback executed, reason:
 `;
 
+const proofResultsDocument = `
+# Real Org Operator Proof Results
+
+## Candidate 001
+
+- Operator: operator-a
+
+## Clean Machine 001
+
+- Operator: operator-b
+`;
+
 test('parseReleaseEvidence indexes fields by section and label', () => {
   const sections = parseReleaseEvidence(passingDocument);
   assert.equal(sections.get('Release Identity')?.get('Version'), '0.1.0');
@@ -120,7 +132,7 @@ test('parseReleaseEvidence indexes fields by section and label', () => {
 });
 
 test('findReleaseEvidenceIssues passes for a fully populated evidence record', () => {
-  assert.deepEqual(findReleaseEvidenceIssues(passingDocument), []);
+  assert.deepEqual(findReleaseEvidenceIssues(passingDocument, { proofResultsMarkdown: proofResultsDocument }), []);
 });
 
 test('findReleaseEvidenceIssues reports blank and placeholder values', () => {
@@ -131,4 +143,28 @@ test('findReleaseEvidenceIssues reports blank and placeholder values', () => {
   const issues = findReleaseEvidenceIssues(failingDocument);
   assert.match(issues.join('\n'), /Release Identity -> Version: missing field/);
   assert.match(issues.join('\n'), /Decision -> Release candidate approved: unresolved placeholder \(yes\/no\)/);
+});
+
+test('slugifyHeading and parseHeadingAnchors follow release-proof anchor expectations', () => {
+  assert.equal(slugifyHeading('Candidate 001'), 'candidate-001');
+  assert.equal(slugifyHeading('Clean Machine 001'), 'clean-machine-001');
+  assert.ok(parseHeadingAnchors(proofResultsDocument).has('candidate-001'));
+  assert.ok(parseHeadingAnchors(proofResultsDocument).has('clean-machine-001'));
+});
+
+test('findReleaseEvidenceIssues reports invalid proof-results link targets', () => {
+  const wrongFileDocument = passingDocument.replace(
+    'docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md#candidate-001',
+    'docs/runbooks/CLEAN_MACHINE_OPERATOR_PROOF.md#candidate-001'
+  );
+  const missingAnchorDocument = passingDocument.replace(
+    'docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md#clean-machine-001',
+    'docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md#missing-clean-machine'
+  );
+
+  const wrongFileIssues = findReleaseEvidenceIssues(wrongFileDocument, { proofResultsMarkdown: proofResultsDocument });
+  const missingAnchorIssues = findReleaseEvidenceIssues(missingAnchorDocument, { proofResultsMarkdown: proofResultsDocument });
+
+  assert.match(wrongFileIssues.join('\n'), /must reference docs\/planning\/v2\/REAL_ORG_OPERATOR_PROOF_RESULTS\.md#<anchor>/);
+  assert.match(missingAnchorIssues.join('\n'), /unknown proof-results anchor \(missing-clean-machine\)/);
 });
