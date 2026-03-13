@@ -177,7 +177,7 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
                   : 'Permission coverage is deterministic and ready.',
         actions: [
           { id: 'run-permissions', label: 'Run Permissions Analysis' },
-          { id: 'open-ask-permissions', label: 'Open Ask for Permission Scope' },
+          ...(mappingResolved ? [{ id: 'open-ask-permissions', label: 'Open Ask for Permission Scope' } as StructuredAnalyzeAction] : []),
           ...(!mappingResolved ? [{ id: 'diagnose-mapping', label: 'Diagnose User Mapping' } as StructuredAnalyzeAction] : [])
         ]
       });
@@ -639,17 +639,33 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
 
           <div className="sub-card">
             <p className="panel-caption">Ask handoff</p>
-            <h3>Open permission decision packet</h3>
-            <p className="muted">Carry this deterministic permission context into Ask for trust envelope, proof ID, and replay token output.</p>
-            <div className="action-row">
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => props.onOpenAsk(buildPermissionScopeAskQuery(props.permissionsResult, props.user, props.fieldName, props.objectName))}
-              >
-                Open Ask for Permission Scope
-              </button>
-            </div>
+            {props.permissionsResult.mappingStatus === 'resolved' ? (
+              <>
+                <h3>Open permission decision packet</h3>
+                <p className="muted">Carry this deterministic permission context into Ask for trust envelope, proof ID, and replay token output.</p>
+                <div className="action-row">
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => props.onOpenAsk(buildPermissionScopeAskQuery(props.permissionsResult, props.user, props.fieldName, props.objectName))}
+                  >
+                    Open Ask for Permission Scope
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3>Resolve mapping before Ask handoff</h3>
+                <p className="muted">
+                  Permission Ask handoff stays blocked until principal mapping is resolved, so Ask cannot inherit stale or ambiguous grant context.
+                </p>
+                <div className="action-row">
+                  <button type="button" className="ghost" onClick={props.onDiagnoseUserMapping}>
+                    Diagnose User Mapping
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       ) : null}
