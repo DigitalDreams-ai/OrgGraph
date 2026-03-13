@@ -126,6 +126,7 @@ Required metadata:
 - [ ] Candidate commit SHA recorded
 - [ ] Candidate tag/version recorded
 - [ ] [Release Notes](./RELEASE.md) drafted as the canonical candidate evidence record
+- [ ] `pnpm release:evidence:check` passes after [Release Notes](./RELEASE.md) is filled in
 - [ ] Real-org operator proof summary recorded in [Release Notes](./RELEASE.md)
 - [ ] Clean-machine operator proof summary recorded in [Release Notes](./RELEASE.md)
 
@@ -138,6 +139,13 @@ Record:
 - quickstart evidence location
 - installer path used for operator proof
 - clean-machine proof results location
+
+Run:
+
+```bash
+cd /c/Users/sean/Projects/GitHub/OrgGraph
+pnpm release:evidence:check
+```
 
 ## 7. Rollback Readiness Gate
 

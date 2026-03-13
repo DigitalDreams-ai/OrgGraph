@@ -44,8 +44,9 @@ Promotion is allowed only after:
 1. [Release Checklist](../releases/RELEASE_CHECKLIST.md) is fully complete
 2. [Rollback Playbook](../releases/ROLLBACK_PLAYBOOK.md) inputs are recorded
 3. [Release Notes](../releases/RELEASE.md) are filled in as the canonical candidate evidence record
-4. [Real Org Desktop Quickstart](./REAL_ORG_DESKTOP_QUICKSTART.md) evidence is complete
-5. [Clean Machine Operator Proof](./CLEAN_MACHINE_OPERATOR_PROOF.md) evidence is complete
+4. `pnpm release:evidence:check` passes against [Release Notes](../releases/RELEASE.md)
+5. [Real Org Desktop Quickstart](./REAL_ORG_DESKTOP_QUICKSTART.md) evidence is complete
+6. [Clean Machine Operator Proof](./CLEAN_MACHINE_OPERATOR_PROOF.md) evidence is complete
 
 ## Tagging
 
