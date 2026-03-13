@@ -117,9 +117,9 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
             </span>
             <span className="decision-badge muted">Active: {props.activeAlias || 'n/a'}</span>
           </div>
-          <p><strong>Connected:</strong> {formatTimestamp(props.orgSession?.connectedAt || props.orgStatus?.session?.connectedAt)}</p>
-          <p><strong>Last switch:</strong> {formatTimestamp(props.orgSession?.switchedAt)}</p>
-          <p><strong>Disconnected:</strong> {formatTimestamp(props.orgSession?.disconnectedAt || props.orgStatus?.session?.disconnectedAt)}</p>
+          <p><strong>Connected:</strong> <span className="path-value">{formatTimestamp(props.orgSession?.connectedAt || props.orgStatus?.session?.connectedAt)}</span></p>
+          <p><strong>Last switch:</strong> <span className="path-value">{formatTimestamp(props.orgSession?.switchedAt)}</span></p>
+          <p><strong>Disconnected:</strong> <span className="path-value">{formatTimestamp(props.orgSession?.disconnectedAt || props.orgStatus?.session?.disconnectedAt)}</span></p>
           <p><strong>Auth mode:</strong> {props.orgSession?.authMode || props.orgStatus?.authMode || 'n/a'}</p>
           <p><strong>Attach method:</strong> {props.orgSession?.method || 'sf_cli_keychain'}</p>
         </article>
@@ -164,8 +164,8 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
               Session connected: {sessionConnectedLabel}
             </span>
           </div>
-          <p><strong>Alias:</strong> {props.selectedAlias?.alias || props.orgPreflight?.alias || props.orgAlias}</p>
-          <p><strong>Username:</strong> {props.selectedAlias?.username || 'n/a'}</p>
+          <p><strong>Alias:</strong> <span className="path-value">{props.selectedAlias?.alias || props.orgPreflight?.alias || props.orgAlias}</span></p>
+          <p><strong>Username:</strong> <span className="path-value">{props.selectedAlias?.username || 'n/a'}</span></p>
           <p><strong>Org ID:</strong> <span className="path-value">{props.selectedAlias?.orgId || 'n/a'}</span></p>
           <p><strong>Instance URL:</strong> <span className="path-value">{props.selectedAlias?.instanceUrl || 'n/a'}</span></p>
           <p><strong>Authenticated in sf:</strong> {authenticatedLabel}</p>
@@ -181,8 +181,8 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
             <span className="decision-badge muted">Loaded: {props.aliasInventory.length}</span>
             <span className="decision-badge muted">Default: {props.aliasInventory.find((entry) => entry.isDefault)?.alias || 'n/a'}</span>
           </div>
-          <p><strong>Active alias:</strong> {props.orgAliases?.activeAlias || props.activeAlias || 'n/a'}</p>
-          <p><strong>Selected alias:</strong> {props.orgAlias}</p>
+          <p><strong>Active alias:</strong> <span className="path-value">{props.orgAliases?.activeAlias || props.activeAlias || 'n/a'}</span></p>
+          <p><strong>Selected alias:</strong> <span className="path-value">{props.orgAlias}</span></p>
           <p><strong>Inventory source:</strong> sf CLI keychain</p>
           <p className="muted">Use Refresh Overview to re-sync status, aliases, and preflight in one pass.</p>
         </article>
@@ -293,10 +293,10 @@ cci org info ${props.orgAlias}`}</pre>
                       {entry.isDefault ? <span className="decision-badge muted">default</span> : null}
                       {isSelected ? <span className="decision-badge muted">selected</span> : null}
                     </div>
-                    <p><strong>{entry.alias}</strong></p>
-                    <p><strong>Username:</strong> {entry.username || 'n/a'}</p>
-                    <p><strong>Org ID:</strong> {entry.orgId || 'n/a'}</p>
-                    <p><strong>Instance URL:</strong> {entry.instanceUrl || 'n/a'}</p>
+                    <p><strong><span className="path-value">{entry.alias}</span></strong></p>
+                    <p><strong>Username:</strong> <span className="path-value">{entry.username || 'n/a'}</span></p>
+                    <p><strong>Org ID:</strong> <span className="path-value">{entry.orgId || 'n/a'}</span></p>
+                    <p><strong>Instance URL:</strong> <span className="path-value">{entry.instanceUrl || 'n/a'}</span></p>
                   </div>
                   <div className="ops-list-actions">
                     <button type="button" className="ghost" onClick={() => props.onSelectAlias(entry.alias)}>
