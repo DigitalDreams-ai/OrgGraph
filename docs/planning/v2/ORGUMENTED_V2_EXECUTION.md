@@ -195,6 +195,7 @@ Materially true now:
 - Analyze structured triage snapshot now includes direct action buttons (rerun analysis, diagnose mapping, and Open Ask handoff) so operators can execute recommended recovery/decision steps without leaving the snapshot card
 - Analyze permission results now withhold `Open Ask for Permission Scope` until principal mapping is resolved, exposing deterministic mapping recovery instead of letting Ask inherit stale or ambiguous grant context
 - Analyze automation and impact triage now also switch from empty Ask handoff buttons to explicit Browser/Refresh recovery actions when no deterministic matches are present, reducing another no-result edge path that previously pushed operators into generic reruns or raw inspection
+- Analyze detailed mapping, automation, impact, and unresolved system-permission cards now expose the same direct recovery buttons as the structured snapshot, so operators can rerun analysis or jump to Browser/Refresh from the primary evidence cards without bouncing back to the top triage panel
 - Analyze permission, impact, and system-permission evidence cards now wrap long path-bearing values with explicit `path-value` guards, and a dedicated render regression locks that markup so long graph paths and map locations stay bounded in desktop layouts
 - Operator Rail now includes a runtime-triage summary so common readiness failures can be diagnosed without opening raw JSON
 - Proofs & History now auto-selects a current label on history refresh so open/replay operations are label-first by default
