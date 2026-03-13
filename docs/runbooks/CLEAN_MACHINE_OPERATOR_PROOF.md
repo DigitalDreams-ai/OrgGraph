@@ -79,12 +79,15 @@ Text fields to record:
 
 ## Result Template
 
-Copy this block into [Real Org Operator Proof Results](../planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md) after the existing operator-machine section:
+Copy this block into [Real Org Operator Proof Results](../planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md) by filling the existing `## Clean Machine 001` section or by adding the next numbered clean-machine entry (`## Clean Machine 002`, and so on):
 
 ```md
-## Clean Machine Proof
+## Clean Machine 001
 
 - Operator:
+- Result:
+- Proof ID:
+- Replay Token:
 - Machine:
 - Date:
 - Candidate commit SHA:
