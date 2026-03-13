@@ -10,6 +10,7 @@ import {
 } from './runtime-status';
 import type { RuntimeIssue } from './runtime-status';
 import type { StructuredRuntimeActionId } from './runtime-status';
+import type { StructuredSummary } from './runtime-status';
 import type { RuntimeGateState } from '../../shell/runtime-gate';
 
 interface SystemWorkspaceProps {
@@ -362,6 +363,83 @@ function renderQuickActions(
   );
 }
 
+function buildAskTrustSummary(payload: AskTrustDashboardPayload | null): StructuredSummary {
+  if (!payload) {
+    return {
+      id: 'ask-trust',
+      title: 'Ask trust snapshot',
+      status: 'warning',
+      detail: 'Ask trust telemetry is not loaded yet, so replay rate and proof coverage are not visible in the primary diagnostics snapshot.',
+      nextAction: 'Load Ask Trust to inspect replay pass rate, proof coverage, and recent failure classes.',
+      actions: [
+        { id: 'load-ask-trust', label: 'Load Ask Trust' },
+        { id: 'load-runtime-metrics', label: 'Open Runtime Telemetry' }
+      ]
+    };
+  }
+
+  const hasFailures = payload.failureClasses.some((item) => item.class !== 'none' && item.count > 0);
+  const status: StructuredSummary['status'] =
+    payload.replayPassRate < 0.8 || payload.proofCoverageRate < 0.8
+      ? 'bad'
+      : hasFailures
+        ? 'warning'
+        : 'good';
+
+  return {
+    id: 'ask-trust',
+    title: 'Ask trust snapshot',
+    status,
+    detail: `Replay ${(payload.replayPassRate * 100).toFixed(0)}%, proof coverage ${(payload.proofCoverageRate * 100).toFixed(0)}%, failure classes ${payload.failureClasses.filter((item) => item.count > 0 && item.class !== 'none').length}.`,
+    nextAction:
+      status === 'bad'
+        ? 'Refresh Ask Trust and inspect failure classes before relying on recent Ask packets.'
+        : hasFailures
+          ? 'Review Ask trust failure classes and correlate with runtime telemetry if quality drift persists.'
+          : 'Ask trust telemetry is healthy.',
+    actions: [
+      { id: 'load-ask-trust', label: 'Refresh Ask Trust' },
+      { id: 'load-runtime-metrics', label: 'Open Runtime Telemetry' }
+    ]
+  };
+}
+
+function buildRuntimeTelemetrySummary(payload: RuntimeMetricsPayload | null): StructuredSummary {
+  if (!payload) {
+    return {
+      id: 'runtime-telemetry',
+      title: 'Runtime telemetry snapshot',
+      status: 'warning',
+      detail: 'Runtime telemetry is not loaded yet, so route timings and failure signatures are not visible in the primary diagnostics snapshot.',
+      nextAction: 'Load Runtime Telemetry to inspect route volume, latency, and recent non-200 signatures.',
+      actions: [
+        { id: 'load-runtime-metrics', label: 'Load Runtime Telemetry' },
+        { id: 'refresh-status', label: 'Refresh Status' }
+      ]
+    };
+  }
+
+  const failureRoutes = payload.byRoute.filter((route) => route.lastStatusCode >= 400);
+  const slowRoute = [...payload.byRoute].sort((left, right) => right.avgElapsedMs - left.avgElapsedMs)[0];
+  const status: StructuredSummary['status'] =
+    failureRoutes.length > 0 ? 'warning' : 'good';
+
+  return {
+    id: 'runtime-telemetry',
+    title: 'Runtime telemetry snapshot',
+    status,
+    detail: `${payload.totalRequests} requests across ${payload.byRoute.length} routes${slowRoute ? `; slowest ${slowRoute.method} ${slowRoute.path} at ${slowRoute.avgElapsedMs} ms` : ''}.`,
+    nextAction:
+      failureRoutes.length > 0
+        ? 'Refresh Runtime Telemetry and inspect recent failure signatures before treating diagnostics as stable.'
+        : 'Runtime telemetry is stable; refresh if operator conditions change.',
+    actions: [
+      { id: 'load-runtime-metrics', label: 'Refresh Runtime Telemetry' },
+      { id: 'refresh-status', label: 'Refresh Status' }
+    ]
+  };
+}
+
 export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
   const runtimeIssues = deriveRuntimeIssues(props.healthStatus, props.readyStatus, props.readyPayload);
   const readyChecks = props.readyPayload?.checks;
@@ -383,6 +461,11 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
     preflightIssues: preflightIssues as OrgPreflightIssue[],
     preflightChecks
   });
+  const structuredDiagnostics = [
+    ...structuredSnapshot,
+    buildAskTrustSummary(props.askTrustDashboard),
+    buildRuntimeTelemetrySummary(props.runtimeMetrics)
+  ];
   const sfState =
     props.runtimeUnavailable ? 'unavailable' : props.orgStatus ? (props.orgStatus.sf?.installed ? 'installed' : 'missing') : 'unknown';
   const cciState =
@@ -406,6 +489,14 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
     }
     if (actionId === 'run-meta-adapt') {
       props.onRunMetaAdapt();
+      return;
+    }
+    if (actionId === 'load-ask-trust') {
+      props.onLoadAskTrustDashboard();
+      return;
+    }
+    if (actionId === 'load-runtime-metrics') {
+      props.onLoadRuntimeMetrics();
       return;
     }
     if (actionId === 'load-org-status') {
@@ -620,7 +711,7 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
           <p className="panel-caption">Structured diagnostics</p>
           <h3>Operator triage snapshot</h3>
           <ul className="analysis-list">
-            {structuredSnapshot.map((item) => (
+            {structuredDiagnostics.map((item) => (
               <li key={item.id}>
                 <div className="decision-meta">
                   <span

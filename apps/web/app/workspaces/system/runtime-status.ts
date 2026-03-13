@@ -29,7 +29,9 @@ export type StructuredRuntimeActionId =
   | 'open-connect'
   | 'open-refresh'
   | 'load-meta-context'
-  | 'run-meta-adapt';
+  | 'run-meta-adapt'
+  | 'load-ask-trust'
+  | 'load-runtime-metrics';
 
 export type StructuredRuntimeAction = {
   id: StructuredRuntimeActionId;

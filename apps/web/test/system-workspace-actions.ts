@@ -208,14 +208,19 @@ function run(): void {
   assert.match(markup, /Run Preflight/);
   assert.match(markup, /Open Org Sessions/);
   assert.match(markup, /Operator triage snapshot/);
+  assert.match(markup, /Ask trust snapshot/);
+  assert.match(markup, /Runtime telemetry snapshot/);
   assert.match(markup, /Ask trust telemetry/);
   assert.match(markup, /Replay pass: 90%/);
   assert.match(markup, /Proof coverage: 90%/);
+  assert.match(markup, /failure classes 3\./);
+  assert.match(markup, /Refresh Ask Trust/);
   assert.match(markup, /<span class="path-value">llm_fallback<\/span>: 1/);
   assert.match(markup, /<span class="path-value">constraint_risk<\/span>: 2/);
   assert.match(markup, /Ask trust quick actions/);
-  assert.match(markup, /Refresh Ask Trust/);
   assert.match(markup, /Open Runtime Telemetry/);
+  assert.match(markup, /42 requests across 3 routes; slowest POST \/refresh at 185\.5 ms\./);
+  assert.match(markup, /Refresh Runtime Telemetry/);
   assert.match(markup, /<strong>Context path:<\/strong>\s*<span class="path-value">C:\/Users\/sean\/AppData\/Roaming\/Orgumented\/meta\/context-with-a-very-long-path\.json<\/span>/);
   assert.match(markup, /<strong>Audit artifact:<\/strong>\s*<span class="path-value">C:\/Users\/sean\/AppData\/Roaming\/Orgumented\/meta\/audit\/very-long-adapt-audit-artifact\.json<\/span>/);
   assert.match(markup, /Structured change summary/);
@@ -282,6 +287,12 @@ function run(): void {
   assert.match(emptyMarkup, /Load Meta Context/);
   assert.match(emptyMarkup, /Run Meta Adapt to inspect deterministic before\/after deltas\./);
   assert.match(emptyMarkup, /Run Meta Adapt/);
+  assert.match(emptyMarkup, /Ask trust snapshot/);
+  assert.match(emptyMarkup, /Load Ask Trust to inspect replay pass rate, proof coverage, and recent failure classes\./);
+  assert.match(emptyMarkup, /Load Ask Trust/);
+  assert.match(emptyMarkup, /Runtime telemetry snapshot/);
+  assert.match(emptyMarkup, /Load Runtime Telemetry to inspect route volume, latency, and recent non-200 signatures\./);
+  assert.match(emptyMarkup, /Load Runtime Telemetry/);
 }
 
 run();
