@@ -344,6 +344,8 @@ function run(): void {
   assert.match(systemMarkup, /<details class="debug-details">/);
   assert.match(systemMarkup, /<pre class="diagnostic-code-block">\{&quot;status&quot;:&quot;ready&quot;/);
   assert.match(systemMarkup, /Context path:<\/strong> <span class="path-value">C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\meta-context\.json<\/span>/);
+  assert.match(systemMarkup, /Structured change summary/);
+  assert.match(systemMarkup, /Relation changes<\/span><strong>0<\/strong>/);
 }
 
 run();

@@ -127,6 +127,38 @@ function renderRelationMultipliers(payload: MetaContextPayload | null): JSX.Elem
   );
 }
 
+function buildMetaAdaptSummary(payload: MetaAdaptPayload): {
+  relationChanges: number;
+  addedRelations: string[];
+  removedRelations: string[];
+  changedRelations: string[];
+  sampleDelta: number;
+  formulaChanged: boolean;
+} {
+  const before = payload.before.relationMultipliers;
+  const after = payload.after.relationMultipliers;
+  const beforeSampleSize = payload.before.provenance?.metricsSampleSize ?? 0;
+  const afterSampleSize = payload.after.provenance?.metricsSampleSize ?? 0;
+  const beforeFormulaVersion = payload.before.provenance?.formulaVersion ?? '';
+  const afterFormulaVersion = payload.after.provenance?.formulaVersion ?? '';
+  const beforeKeys = new Set(Object.keys(before));
+  const afterKeys = new Set(Object.keys(after));
+  const allKeys = Array.from(new Set([...beforeKeys, ...afterKeys])).sort();
+
+  const addedRelations = allKeys.filter((key) => !beforeKeys.has(key));
+  const removedRelations = allKeys.filter((key) => !afterKeys.has(key));
+  const changedRelations = allKeys.filter((key) => before[key] !== undefined && after[key] !== undefined && before[key] !== after[key]);
+
+  return {
+    relationChanges: addedRelations.length + removedRelations.length + changedRelations.length,
+    addedRelations,
+    removedRelations,
+    changedRelations,
+    sampleDelta: afterSampleSize - beforeSampleSize,
+    formulaChanged: beforeFormulaVersion !== afterFormulaVersion
+  };
+}
+
 function renderAskTrustTelemetry(payload: AskTrustDashboardPayload | null): JSX.Element {
   return (
     <article className="sub-card">
@@ -237,6 +269,7 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
     : props.runtimeBlocked
       ? 'Runtime readiness is fail-closed. Tool and session values below are still live diagnostics, but deterministic workflows remain blocked until readiness returns to ready.'
       : props.orgStatus?.sf?.message || props.orgStatus?.cci?.message || 'Tooling messages look healthy.';
+  const metaAdaptSummary = props.metaAdaptResult ? buildMetaAdaptSummary(props.metaAdaptResult) : null;
 
   function handleStructuredAction(actionId: StructuredRuntimeActionId): void {
     if (actionId === 'refresh-status') {
@@ -579,6 +612,45 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
               <strong>Audit artifact:</strong>{' '}
               <span className="path-value">{props.metaAdaptResult.auditArtifactPath}</span>
             </p>
+          </article>
+
+          <article className="sub-card">
+            <p className="panel-caption">Adaptation delta</p>
+            <h3>Structured change summary</h3>
+            {metaAdaptSummary ? (
+              <>
+                <div className="analysis-stat-grid">
+                  <div className="packet-stat">
+                    <span>Relation changes</span>
+                    <strong>{metaAdaptSummary.relationChanges}</strong>
+                  </div>
+                  <div className="packet-stat">
+                    <span>Sample delta</span>
+                    <strong>{metaAdaptSummary.sampleDelta >= 0 ? `+${metaAdaptSummary.sampleDelta}` : metaAdaptSummary.sampleDelta}</strong>
+                  </div>
+                  <div className="packet-stat">
+                    <span>Formula version</span>
+                    <strong>{metaAdaptSummary.formulaChanged ? 'changed' : 'unchanged'}</strong>
+                  </div>
+                </div>
+                <ul className="analysis-list">
+                  <li>
+                    <strong>Added relations</strong>
+                    <p>{metaAdaptSummary.addedRelations.length > 0 ? metaAdaptSummary.addedRelations.join(', ') : 'none'}</p>
+                  </li>
+                  <li>
+                    <strong>Removed relations</strong>
+                    <p>{metaAdaptSummary.removedRelations.length > 0 ? metaAdaptSummary.removedRelations.join(', ') : 'none'}</p>
+                  </li>
+                  <li>
+                    <strong>Updated multipliers</strong>
+                    <p>{metaAdaptSummary.changedRelations.length > 0 ? metaAdaptSummary.changedRelations.join(', ') : 'none'}</p>
+                  </li>
+                </ul>
+              </>
+            ) : (
+              <p className="muted">Run Meta Adapt to inspect deterministic before/after deltas.</p>
+            )}
           </article>
 
           <article className="sub-card">

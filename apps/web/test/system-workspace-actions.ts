@@ -84,7 +84,24 @@ function buildMetaAdaptResult(): MetaAdaptPayload {
     contextPath: 'C:/Users/sean/AppData/Roaming/Orgumented/meta/context-with-a-very-long-path.json',
     auditArtifactPath: 'C:/Users/sean/AppData/Roaming/Orgumented/meta/audit/very-long-adapt-audit-artifact.json',
     before: buildMetaContext().context,
-    after: buildMetaContext().context
+    after: {
+      version: 'ctx_v2',
+      updatedAt: '2026-03-12T21:00:00Z',
+      relationMultipliers: {
+        impacts: 1.4,
+        writes: 1.1
+      },
+      provenance: {
+        formulaVersion: 'formula_v2',
+        metricsSampleSize: 16,
+        trustedByIntent: {
+          impact: 8
+        },
+        refusedByIntent: {
+          review: 1
+        }
+      }
+    }
   };
 }
 
@@ -159,6 +176,19 @@ function run(): void {
   assert.match(markup, /llm_fallback: 1/);
   assert.match(markup, /<strong>Context path:<\/strong>\s*<span class="path-value">C:\/Users\/sean\/AppData\/Roaming\/Orgumented\/meta\/context-with-a-very-long-path\.json<\/span>/);
   assert.match(markup, /<strong>Audit artifact:<\/strong>\s*<span class="path-value">C:\/Users\/sean\/AppData\/Roaming\/Orgumented\/meta\/audit\/very-long-adapt-audit-artifact\.json<\/span>/);
+  assert.match(markup, /Structured change summary/);
+  assert.match(markup, /Relation changes/);
+  assert.match(markup, />3<\/strong>/);
+  assert.match(markup, /Sample delta/);
+  assert.match(markup, />\+4<\/strong>/);
+  assert.match(markup, /Formula version/);
+  assert.match(markup, />changed<\/strong>/);
+  assert.match(markup, /Added relations/);
+  assert.match(markup, /writes/);
+  assert.match(markup, /Removed relations/);
+  assert.match(markup, /reads/);
+  assert.match(markup, /Updated multipliers/);
+  assert.match(markup, /impacts/);
 }
 
 run();
