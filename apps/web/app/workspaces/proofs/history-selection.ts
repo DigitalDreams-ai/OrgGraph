@@ -6,6 +6,15 @@ function normalize(value: string | undefined): string {
   return value?.trim() || '';
 }
 
+function sanitizeArtifactName(value: string | undefined): string {
+  const next = normalize(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return next || 'artifact';
+}
+
 export function resolveSelectedHistoryProofId(
   recentProofs: RecentProofItem[],
   selectedHistoryProofId: string
@@ -67,4 +76,18 @@ export function shouldClearAdvancedReplayResult(
         replayResult.replayToken !== normalize(selectedRecentProof?.replayToken)
       )
   );
+}
+
+export function resolveProofExportName(
+  selectedRecentProof: RecentProofItem | null,
+  selectedProof: ProofArtifactView | null
+): string {
+  return sanitizeArtifactName(selectedRecentProof?.label || selectedProof?.query || selectedProof?.proofId);
+}
+
+export function resolveReplayExportName(
+  selectedRecentProof: RecentProofItem | null,
+  replayResult: ReplayResultView | null
+): string {
+  return sanitizeArtifactName(selectedRecentProof?.label || replayResult?.proofId || replayResult?.replayToken);
 }

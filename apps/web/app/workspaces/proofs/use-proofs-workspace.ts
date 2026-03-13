@@ -10,7 +10,9 @@ import {
 } from '../../lib/ask-client';
 import {
   resolveProofLookupId,
+  resolveProofExportName,
   resolveReplayLookup,
+  resolveReplayExportName,
   resolveSelectedHistoryProof,
   resolveSelectedHistoryProofId,
   shouldClearAdvancedReplayResult,
@@ -189,16 +191,6 @@ function parseMetricsExport(response: QueryResponse): MetricsExportView | null {
         })
       : []
   };
-}
-
-function sanitizeArtifactName(value: string): string {
-  const next = value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-  return next || 'artifact';
 }
 
 function downloadJsonArtifact(fileName: string, payload: Record<string, unknown>): void {
@@ -471,7 +463,7 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
         return;
       }
 
-      const name = sanitizeArtifactName(artifact.query || artifact.proofId);
+      const name = resolveProofExportName(selectedRecentProof, artifact);
       downloadJsonArtifact(`orgumented-proof-${name}.json`, artifact as unknown as Record<string, unknown>);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected proof export failure';
@@ -518,7 +510,7 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
         return;
       }
 
-      const name = sanitizeArtifactName(artifact.proofId || artifact.replayToken);
+      const name = resolveReplayExportName(selectedRecentProof, artifact);
       downloadJsonArtifact(`orgumented-replay-${name}.json`, artifact as unknown as Record<string, unknown>);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected replay export failure';
