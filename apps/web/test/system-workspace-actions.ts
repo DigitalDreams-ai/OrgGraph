@@ -211,7 +211,8 @@ function run(): void {
   assert.match(markup, /Ask trust telemetry/);
   assert.match(markup, /Replay pass: 90%/);
   assert.match(markup, /Proof coverage: 90%/);
-  assert.match(markup, /llm_fallback: 1/);
+  assert.match(markup, /<span class="path-value">llm_fallback<\/span>: 1/);
+  assert.match(markup, /<span class="path-value">constraint_risk<\/span>: 2/);
   assert.match(markup, /<strong>Context path:<\/strong>\s*<span class="path-value">C:\/Users\/sean\/AppData\/Roaming\/Orgumented\/meta\/context-with-a-very-long-path\.json<\/span>/);
   assert.match(markup, /<strong>Audit artifact:<\/strong>\s*<span class="path-value">C:\/Users\/sean\/AppData\/Roaming\/Orgumented\/meta\/audit\/very-long-adapt-audit-artifact\.json<\/span>/);
   assert.match(markup, /Structured change summary/);
