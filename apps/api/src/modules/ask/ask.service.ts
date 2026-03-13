@@ -1051,6 +1051,7 @@ export class AskService {
             impactPathCount: impact.totalPaths,
             topImpactedSources
           },
+          topCitationSources,
           evidenceGaps,
           nextActions
         };
