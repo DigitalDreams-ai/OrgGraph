@@ -280,6 +280,7 @@ Scope:
 - explicit Browser/Refresh recovery actions when automation or impact analysis returns no deterministic matches
 - structured Ask trust telemetry (replay/proof coverage/failure classes) visible from Settings & Diagnostics without raw API inspection
 - card-local Ask trust and runtime telemetry quick actions available directly inside Settings & Diagnostics telemetry cards
+- permission-analysis Ask handoff stays blocked until mapping is resolved, aligning Analyze recovery paths with deterministic grant-context requirements
 - structured runtime telemetry (request volume, route timings, recent non-200 signatures) visible from Settings & Diagnostics without raw `/metrics` inspection
 - structured Meta Adapt delta summary visible from Settings & Diagnostics without raw before/after payload inspection
 

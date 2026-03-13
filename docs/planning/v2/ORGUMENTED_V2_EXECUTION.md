@@ -185,6 +185,7 @@ Materially true now:
 - Analyze structured snapshot rows now expose direct `Open Org Browser` / `Open Refresh & Build` recovery actions when principal-map triage says retrieve or refresh is required, reducing manual tab hunting during permission recovery
 - Analyze now includes a mode-aware structured triage snapshot (status + next action) plus Ask handoff actions for permission and system-permission results, reducing first-line dependence on raw JSON inspection
 - Analyze structured triage snapshot now includes direct action buttons (rerun analysis, diagnose mapping, and Open Ask handoff) so operators can execute recommended recovery/decision steps without leaving the snapshot card
+- Analyze permission results now withhold `Open Ask for Permission Scope` until principal mapping is resolved, exposing deterministic mapping recovery instead of letting Ask inherit stale or ambiguous grant context
 - Analyze automation and impact triage now also switch from empty Ask handoff buttons to explicit Browser/Refresh recovery actions when no deterministic matches are present, reducing another no-result edge path that previously pushed operators into generic reruns or raw inspection
 - Analyze permission, impact, and system-permission evidence cards now wrap long path-bearing values with explicit `path-value` guards, and a dedicated render regression locks that markup so long graph paths and map locations stay bounded in desktop layouts
 - Operator Rail now includes a runtime-triage summary so common readiness failures can be diagnosed without opening raw JSON
