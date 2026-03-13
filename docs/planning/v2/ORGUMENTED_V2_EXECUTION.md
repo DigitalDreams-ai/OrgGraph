@@ -129,6 +129,7 @@ Materially true now:
 - Proofs & History current-selection status now explicitly states whether the workspace is being driven by a selected history label or by advanced token lookup, reducing remaining operator ambiguity in mixed debug/history states
 - Proofs & History now keeps manual advanced proof/replay token input isolated from label-first history selection, so selecting or opening a history label no longer marks the normal workflow as token-driven
 - Proofs & History advanced token lookup now includes an explicit `Clear Advanced Tokens` exit action that clears typed debug tokens and drops token-only loaded proof/replay state, letting operators return to the label-first workflow without manual field cleanup
+- Proofs & History advanced summary text now reflects only explicitly typed proof/replay tokens, so selecting a history label no longer makes the debug-only token surface appear populated
 - CI heavy Windows jobs are path-gated for minute efficiency
 - PR Autofill now runs on `opened/reopened` only (not every push), and Actions retention now includes an automated cleanup workflow that prunes older completed runs per workflow
 - CI now runs packaged desktop smoke in the same Windows validate job (instead of cross-job runtime artifact handoff), reducing Actions artifact storage pressure without dropping trust gates
