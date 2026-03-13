@@ -78,6 +78,31 @@ function renderActionChecklist(title: string, actions: string[]): JSX.Element {
   );
 }
 
+function renderActionButtonsCard(
+  title: string,
+  description: string,
+  actions: { label: string; onClick: () => void }[]
+): JSX.Element | null {
+  if (actions.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="sub-card">
+      <p className="panel-caption">Direct actions</p>
+      <h3>{title}</h3>
+      <p className="muted">{description}</p>
+      <div className="action-row">
+        {actions.map((action) => (
+          <button key={action.label} type="button" className="ghost" onClick={action.onClick}>
+            {action.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 type StructuredAnalyzeActionId =
   | 'run-permissions'
   | 'diagnose-mapping'
@@ -725,6 +750,18 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               : [])
           ])}
 
+          {renderActionButtonsCard(
+            'Run mapping recovery',
+            'Execute the recommended recovery steps directly from the mapping diagnosis card.',
+            [
+              { label: 'Diagnose User Mapping', onClick: props.onDiagnoseUserMapping },
+              ...(!props.permissionDiagnosis.mapExists ? [{ label: 'Open Org Browser', onClick: props.onOpenBrowser }] : []),
+              ...(props.permissionDiagnosis.stale || !props.permissionDiagnosis.mapExists
+                ? [{ label: 'Open Refresh & Build', onClick: props.onOpenRefresh }]
+                : [])
+            ]
+          )}
+
           {renderWarnings(props.permissionDiagnosis.warnings)}
         </div>
       ) : null}
@@ -790,6 +827,18 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               ? ['Increase `Limit` to review full automation coverage.']
               : [])
           ])}
+
+          {props.automationResult.automations.length === 0
+            ? renderActionButtonsCard(
+                'Recover automation coverage',
+                'Use the same recovery steps from the structured snapshot without leaving the detailed automation card.',
+                [
+                  { label: 'Run Automation Analysis', onClick: props.onRunAutomation },
+                  { label: 'Open Org Browser', onClick: props.onOpenBrowser },
+                  { label: 'Open Refresh & Build', onClick: props.onOpenRefresh }
+                ]
+              )
+            : null}
 
           {props.automationResult.automations.length > 0 ? (
             <div className="sub-card">
@@ -871,6 +920,18 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               ? ['Increase `Limit` to inspect full impact coverage.']
               : [])
           ])}
+
+          {props.impactResult.paths.length === 0
+            ? renderActionButtonsCard(
+                'Recover impact coverage',
+                'Use the same recovery steps from the structured snapshot without leaving the detailed impact card.',
+                [
+                  { label: 'Run Impact Analysis', onClick: props.onRunImpact },
+                  { label: 'Open Org Browser', onClick: props.onOpenBrowser },
+                  { label: 'Open Refresh & Build', onClick: props.onOpenRefresh }
+                ]
+              )
+            : null}
 
           {props.impactResult.paths.length > 0 ? (
             <div className="sub-card">
@@ -954,6 +1015,17 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               ? ['Resolve warning items before treating this system-permission check as final.']
               : [])
           ])}
+
+          {props.systemPermissionResult.mappingStatus !== 'resolved'
+            ? renderActionButtonsCard(
+                'Recover grant context',
+                'Resolve user mapping before treating this system-permission result as actionable.',
+                [
+                  { label: 'Run System Permission Check', onClick: props.onRunSystemPermission },
+                  { label: 'Diagnose User Mapping', onClick: props.onDiagnoseUserMapping }
+                ]
+              )
+            : null}
 
           {renderWarnings(props.systemPermissionResult.warnings)}
 

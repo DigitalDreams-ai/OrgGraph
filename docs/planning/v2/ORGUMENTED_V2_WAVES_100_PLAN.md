@@ -281,6 +281,7 @@ Scope:
 - structured permission/automation/impact/map cards
 - deterministic summaries with clear next actions
 - raw JSON as secondary surface only
+- detailed Analyze cards expose the same direct recovery actions as the structured snapshot, so operators can rerun analysis or jump into Browser/Refresh without returning to a separate triage panel
 - explicit Browser/Refresh recovery actions when automation or impact analysis returns no deterministic matches
 - structured Ask trust telemetry (replay/proof coverage/failure classes) visible from Settings & Diagnostics without raw API inspection
 - card-local Ask trust and runtime telemetry quick actions available directly inside Settings & Diagnostics telemetry cards

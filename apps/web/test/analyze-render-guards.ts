@@ -178,6 +178,7 @@ function run(): void {
   );
   assert.match(mappingRecoveryMarkup, />Open Org Browser</);
   assert.match(mappingRecoveryMarkup, />Open Refresh &amp; Build</);
+  assert.match(mappingRecoveryMarkup, />Diagnose User Mapping</);
 
   const automationRecoveryMarkup = renderToStaticMarkup(
     React.createElement(AnalyzeWorkspace, {
@@ -226,6 +227,7 @@ function run(): void {
   );
   assert.match(automationRecoveryMarkup, />Open Org Browser</);
   assert.match(automationRecoveryMarkup, />Open Refresh &amp; Build</);
+  assert.match(automationRecoveryMarkup, />Run Automation Analysis</);
   assert.doesNotMatch(automationRecoveryMarkup, />Open Ask for Automation Scope</);
 
   const impactMarkup = renderToStaticMarkup(
@@ -332,6 +334,7 @@ function run(): void {
   );
   assert.match(impactRecoveryMarkup, />Open Org Browser</);
   assert.match(impactRecoveryMarkup, />Open Refresh &amp; Build</);
+  assert.match(impactRecoveryMarkup, />Run Impact Analysis</);
   assert.doesNotMatch(impactRecoveryMarkup, />Open Ask for Impact Scope</);
 
   const systemMarkup = renderToStaticMarkup(
@@ -440,6 +443,7 @@ function run(): void {
     } as any)
   );
   assert.match(systemRecoveryMarkup, /Run Diagnose User Mapping before relying on the grant verdict\./);
+  assert.match(systemRecoveryMarkup, />Run System Permission Check</);
   assert.match(systemRecoveryMarkup, />Diagnose User Mapping</);
   assert.doesNotMatch(systemRecoveryMarkup, />Open Ask for System Permission</);
 }
