@@ -137,6 +137,10 @@ function buildMetaAdaptSummary(payload: MetaAdaptPayload): {
 } {
   const before = payload.before.relationMultipliers;
   const after = payload.after.relationMultipliers;
+  const beforeSampleSize = payload.before.provenance?.metricsSampleSize ?? 0;
+  const afterSampleSize = payload.after.provenance?.metricsSampleSize ?? 0;
+  const beforeFormulaVersion = payload.before.provenance?.formulaVersion ?? '';
+  const afterFormulaVersion = payload.after.provenance?.formulaVersion ?? '';
   const beforeKeys = new Set(Object.keys(before));
   const afterKeys = new Set(Object.keys(after));
   const allKeys = Array.from(new Set([...beforeKeys, ...afterKeys])).sort();
@@ -150,8 +154,8 @@ function buildMetaAdaptSummary(payload: MetaAdaptPayload): {
     addedRelations,
     removedRelations,
     changedRelations,
-    sampleDelta: payload.after.provenance.metricsSampleSize - payload.before.provenance.metricsSampleSize,
-    formulaChanged: payload.before.provenance.formulaVersion !== payload.after.provenance.formulaVersion
+    sampleDelta: afterSampleSize - beforeSampleSize,
+    formulaChanged: beforeFormulaVersion !== afterFormulaVersion
   };
 }
 
