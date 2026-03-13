@@ -133,6 +133,116 @@ function run(): void {
   assert.match(markup, /<strong class="citation-source">C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\proofs\\very-long-proof-folder/);
   assert.match(markup, /<p class="citation-snippet">&lt;FlowDefinition&gt;This is a deliberately long snippet/);
 
+  const componentMarkup = renderToStaticMarkup(
+    createElement(AskWorkspace, {
+      activeAlias: 'shulman-uat',
+      sessionStatus: 'connected',
+      buildVersion: 'dev-local',
+      latestRetrieve: null,
+      latestRetrieveSelections: [],
+      askQuery: 'Where is Flow Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt used?',
+      setAskQuery: () => undefined,
+      maxCitationsRaw: '15',
+      setMaxCitationsRaw: () => undefined,
+      consistencyCheck: true,
+      setConsistencyCheck: () => undefined,
+      includeLowConfidence: false,
+      setIncludeLowConfidence: () => undefined,
+      askElaboration: '',
+      askResult: {
+        confidence: 0.88,
+        trustLevel: 'trusted',
+        decisionPacket: {
+          kind: 'metadata_component_usage',
+          focus: 'usage_lookup',
+          targetLabel: 'Flow:Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt',
+          targetType: 'metadata_component',
+          recommendation: {
+            verdict: 'review_before_approval',
+            summary: 'Inspect the longest deterministic reference sources first.'
+          },
+          riskScore: 0.42,
+          riskLevel: 'medium',
+          evidenceCoverage: {
+            citationCount: 4,
+            hasPermissionPaths: false,
+            hasAutomationCoverage: true,
+            hasImpactPaths: true
+          },
+          topRiskDrivers: ['Long metadata component identifiers should remain bounded in packet stats.'],
+          permissionImpact: {
+            user: 'n/a',
+            summary: 'Permission reasoning is not part of metadata component usage lookup.',
+            granted: false,
+            pathCount: 0,
+            principalCount: 0,
+            warnings: []
+          },
+          automationImpact: {
+            summary: 'grounded by deterministic evidence lookup',
+            automationCount: 2,
+            topAutomationNames: []
+          },
+          changeImpact: {
+            summary: '2 referencing evidence hit(s) across 2 source file(s)',
+            impactPathCount: 2,
+            topImpactedSources: [longPath]
+          },
+          componentUsage: {
+            familyHint: 'flow',
+            matchedCount: 4,
+            referenceHitCount: 2,
+            sourceFileCount: 2,
+            definitionOnly: false,
+            topReferenceSources: [
+              'C:\\Users\\sean\\Projects\\GitHub\\OrgGraph\\force-app\\main\\default\\flows\\Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt.flow-meta.xml'
+            ],
+            summaries: {
+              references: '2 referencing evidence hit(s) across 2 source file(s)',
+              coverage: '2 total grounded source file(s) in current semantic state',
+              family: 'Flow_With_A_Very_Long_Component_Family_Label',
+              definition:
+                'Definition anchor: C:\\Users\\sean\\Projects\\GitHub\\OrgGraph\\force-app\\main\\default\\flows\\Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt.flow-meta.xml'
+            }
+          },
+          evidenceGaps: [],
+          nextActions: [{ label: 'Inspect citation sources', rationale: 'Start with the top reference sources.' }]
+        },
+        policy: {
+          policyId: 'policy_component_usage_render_guard'
+        },
+        proof: {
+          proofId: 'proof_component_usage_render_guard',
+          replayToken: 'trace_component_usage_render_guard',
+          snapshotId: 'snap_component_usage_render_guard'
+        },
+        citations: []
+      },
+      askSummary: 'Component usage lookup grounded by 4 citation(s).',
+      askTrust: 'trusted',
+      askProofId: 'proof_component_usage_render_guard',
+      askReplayToken: 'trace_component_usage_render_guard',
+      askCitations: [],
+      loading: false,
+      trustTone: () => 'good',
+      onRunAsk: () => undefined,
+      onRunAskElaboration: () => undefined,
+      onOpenConnect: () => undefined,
+      onRefreshAliases: () => undefined,
+      onOpenBrowser: () => undefined,
+      onOpenRefresh: () => undefined,
+      onInspectAutomation: () => undefined,
+      onInspectPermissions: () => undefined,
+      onOpenProof: () => undefined,
+      onSaveToHistory: () => undefined
+    })
+  );
+
+  assert.match(componentMarkup, /<strong class="packet-value path-value">Flow:Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt<\/strong>/);
+  assert.match(componentMarkup, /<strong class="packet-value path-value">Flow_With_A_Very_Long_Component_Family_Label<\/strong>/);
+  assert.match(componentMarkup, /<p class="path-value">Definition anchor: C:\\Users\\sean\\Projects\\GitHub\\OrgGraph\\force-app\\main\\default\\flows\\Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt\.flow-meta\.xml<\/p>/);
+  assert.match(componentMarkup, /<li class="path-value">C:\\Users\\sean\\Projects\\GitHub\\OrgGraph\\force-app\\main\\default\\flows\\Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt\.flow-meta\.xml<\/li>/);
+
   const css = readFileSync('app/globals.css', 'utf8');
   assert.match(css, /\.decision-card\s*\{[\s\S]*min-height:\s*100%;[\s\S]*min-width:\s*0;/);
   assert.match(css, /\.follow-up-grid > \*\s*\{[\s\S]*min-width:\s*0;/);
