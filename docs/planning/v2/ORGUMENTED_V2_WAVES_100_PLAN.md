@@ -355,6 +355,7 @@ Scope:
 - canonical rollback-result template for executed rollback validation
 - canonical release evidence record in `docs/releases/RELEASE.md` that summarizes smoke, operator proof, clean-machine proof, and rollback readiness in one place
 - proofs/history label-first workflow now keeps manual token entry isolated from selected history labels, reducing remaining token-driven ambiguity in the normal audit path
+- proofs/history advanced token path now has an explicit clear/exit action that removes typed debug tokens and token-only loaded state, making it easier to return to the normal history-first workflow after parity/debug inspection
 
 Exit:
 - release candidate checklist fully green

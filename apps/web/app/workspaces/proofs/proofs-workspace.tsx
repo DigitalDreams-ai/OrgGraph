@@ -24,6 +24,7 @@ interface ProofsWorkspaceProps {
   onReplay: () => void;
   onOpenByToken: () => void;
   onReplayByToken: () => void;
+  onClearAdvancedTokens: () => void;
   onExportMetrics: () => void;
   onExportProofArtifact: () => void | Promise<void>;
   onExportReplayArtifact: () => void | Promise<void>;
@@ -288,6 +289,14 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
             disabled={props.loading || (!props.proofId.trim() && !props.replayToken.trim())}
           >
             Replay by Token
+          </button>
+          <button
+            type="button"
+            className="ghost"
+            onClick={props.onClearAdvancedTokens}
+            disabled={props.loading || (!props.proofId.trim() && !props.replayToken.trim())}
+          >
+            Clear Advanced Tokens
           </button>
         </div>
       </details>

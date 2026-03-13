@@ -5,7 +5,9 @@ import {
   resolveProofLookupId,
   resolveReplayLookup,
   resolveSelectedHistoryProof,
-  resolveSelectedHistoryProofId
+  resolveSelectedHistoryProofId,
+  shouldClearAdvancedReplayResult,
+  shouldClearAdvancedSelectedProof
 } from '../app/workspaces/proofs/history-selection';
 import { ProofsWorkspace } from '../app/workspaces/proofs/proofs-workspace';
 import type { RecentProofItem } from '../app/workspaces/proofs/types';
@@ -55,6 +57,89 @@ function run(): void {
     proofId: 'proof_alpha',
     replayToken: 'trace_alpha'
   });
+  assert.equal(shouldClearAdvancedSelectedProof(recentProofs[0], null), false);
+  assert.equal(
+    shouldClearAdvancedSelectedProof(recentProofs[0], {
+      proofId: 'proof_alpha',
+      replayToken: 'trace_alpha',
+      generatedAt: '2026-03-01T10:00:00Z',
+      snapshotId: 'snap_alpha',
+      policyId: 'policy_alpha',
+      traceLevel: 'strict',
+      query: 'What touches Opportunity.StageName?',
+      trustLevel: 'trusted',
+      deterministicAnswer: 'Impact found.',
+      confidence: 0.91,
+      operatorsExecuted: ['impact'],
+      rejectedBranches: [],
+      citationCount: 4,
+      derivationEdgeCount: 9
+    }),
+    false
+  );
+  assert.equal(
+    shouldClearAdvancedSelectedProof(recentProofs[0], {
+      proofId: 'proof_beta',
+      replayToken: 'trace_beta',
+      generatedAt: '2026-03-01T11:00:00Z',
+      snapshotId: 'snap_beta',
+      policyId: 'policy_beta',
+      traceLevel: 'strict',
+      query: 'Who can edit Opportunity.StageName?',
+      trustLevel: 'conditional',
+      deterministicAnswer: 'Conditional answer',
+      confidence: 0.71,
+      operatorsExecuted: ['planner'],
+      rejectedBranches: [],
+      citationCount: 2,
+      derivationEdgeCount: 4
+    }),
+    true
+  );
+  assert.equal(
+    shouldClearAdvancedReplayResult(recentProofs[0], {
+      proofId: 'proof_alpha',
+      replayToken: 'trace_alpha',
+      snapshotId: 'snap_alpha',
+      policyId: 'policy_alpha',
+      matched: true,
+      corePayloadMatched: true,
+      metricsMatched: true,
+      original: {
+        trustLevel: 'trusted',
+        deterministicAnswer: 'Impact found.',
+        confidence: 0.91
+      },
+      replayed: {
+        trustLevel: 'trusted',
+        deterministicAnswer: 'Impact found.',
+        confidence: 0.91
+      }
+    }),
+    false
+  );
+  assert.equal(
+    shouldClearAdvancedReplayResult(recentProofs[0], {
+      proofId: 'proof_beta',
+      replayToken: 'trace_beta',
+      snapshotId: 'snap_beta',
+      policyId: 'policy_beta',
+      matched: true,
+      corePayloadMatched: true,
+      metricsMatched: true,
+      original: {
+        trustLevel: 'conditional',
+        deterministicAnswer: 'Conditional answer',
+        confidence: 0.71
+      },
+      replayed: {
+        trustLevel: 'conditional',
+        deterministicAnswer: 'Conditional answer',
+        confidence: 0.71
+      }
+    }),
+    true
+  );
 
   const noSelectionMarkup = renderToStaticMarkup(
     React.createElement(ProofsWorkspace, {
@@ -73,6 +158,7 @@ function run(): void {
       onReplay: () => undefined,
       onOpenByToken: () => undefined,
       onReplayByToken: () => undefined,
+      onClearAdvancedTokens: () => undefined,
       onExportMetrics: () => undefined,
       onExportProofArtifact: () => undefined,
       onExportReplayArtifact: () => undefined,
@@ -93,6 +179,7 @@ function run(): void {
   assert.match(noSelectionMarkup, /disabled="">Export Selected History Replay/);
   assert.match(noSelectionMarkup, /disabled="">Open by Token/);
   assert.match(noSelectionMarkup, /disabled="">Replay by Token/);
+  assert.match(noSelectionMarkup, /disabled="">Clear Advanced Tokens/);
   assert.match(noSelectionMarkup, /History label: none/);
   assert.match(noSelectionMarkup, /Loaded proof: not opened/);
   assert.match(noSelectionMarkup, /Advanced tokens: empty/);
@@ -114,6 +201,7 @@ function run(): void {
       onReplay: () => undefined,
       onOpenByToken: () => undefined,
       onReplayByToken: () => undefined,
+      onClearAdvancedTokens: () => undefined,
       onExportMetrics: () => undefined,
       onExportProofArtifact: () => undefined,
       onExportReplayArtifact: () => undefined,
@@ -124,6 +212,7 @@ function run(): void {
   );
   assert.doesNotMatch(advancedOnlyMarkup, /disabled="">Open by Token/);
   assert.doesNotMatch(advancedOnlyMarkup, /disabled="">Replay by Token/);
+  assert.doesNotMatch(advancedOnlyMarkup, /disabled="">Clear Advanced Tokens/);
   assert.match(advancedOnlyMarkup, /Advanced tokens: present/);
 
   const selectedMarkup = renderToStaticMarkup(
@@ -143,6 +232,7 @@ function run(): void {
       onReplay: () => undefined,
       onOpenByToken: () => undefined,
       onReplayByToken: () => undefined,
+      onClearAdvancedTokens: () => undefined,
       onExportMetrics: () => undefined,
       onExportProofArtifact: () => undefined,
       onExportReplayArtifact: () => undefined,
@@ -191,6 +281,7 @@ function run(): void {
       onReplay: () => undefined,
       onOpenByToken: () => undefined,
       onReplayByToken: () => undefined,
+      onClearAdvancedTokens: () => undefined,
       onExportMetrics: () => undefined,
       onExportProofArtifact: () => undefined,
       onExportReplayArtifact: () => undefined,
@@ -275,6 +366,7 @@ function run(): void {
       onReplay: () => undefined,
       onOpenByToken: () => undefined,
       onReplayByToken: () => undefined,
+      onClearAdvancedTokens: () => undefined,
       onExportMetrics: () => undefined,
       onExportProofArtifact: () => undefined,
       onExportReplayArtifact: () => undefined,
