@@ -3,7 +3,8 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { OperatorRail } from '../app/shell/operator-rail';
 import { describeToolStatusSource } from '../app/shell/org-status-surface';
-import { deriveRuntimeGateState } from '../app/shell/runtime-gate';
+import { deriveRuntimeGateState, describeReadySurfaceStatus } from '../app/shell/runtime-gate';
+import { StatusStrip } from '../app/shell/status-strip';
 import { ConnectWorkspace } from '../app/workspaces/connect/connect-workspace';
 import { RefreshWorkspace } from '../app/workspaces/refresh/refresh-workspace';
 import { buildStructuredSnapshot } from '../app/workspaces/system/runtime-status';
@@ -13,6 +14,10 @@ function run(): void {
   assert.equal(describeToolStatusSource('runtime_unavailable'), 'runtime unavailable');
   assert.equal(describeToolStatusSource('live'), 'live status');
   assert.equal(describeToolStatusSource('unknown'), 'status not loaded');
+  assert.equal(describeReadySurfaceStatus('ready'), 'ready');
+  assert.equal(describeReadySurfaceStatus('http_400'), 'blocked');
+  assert.equal(describeReadySurfaceStatus('unreachable'), 'unreachable');
+  assert.equal(describeReadySurfaceStatus('unknown'), 'unknown');
 
   assert.equal(
     deriveRuntimeGateState({
@@ -194,6 +199,29 @@ function run(): void {
   assert.match(connectUnavailableMarkup, /Tooling status: unavailable/);
   assert.match(connectUnavailableMarkup, /Runtime is unavailable, so tool checks are blocked\./);
 
+  const statusStripBlockedMarkup = renderToStaticMarkup(
+    React.createElement(StatusStrip, {
+      healthStatus: 'ok',
+      readyStatus: 'http_400',
+      sessionStatus: 'connected',
+      askTrust: 'waiting'
+    })
+  );
+  assert.match(statusStripBlockedMarkup, /API Health<\/span><strong>ok<\/strong>/);
+  assert.match(statusStripBlockedMarkup, /API Ready<\/span><strong>blocked<\/strong>/);
+  assert.match(statusStripBlockedMarkup, /Org Session<\/span><strong>connected<\/strong>/);
+
+  const statusStripUnavailableMarkup = renderToStaticMarkup(
+    React.createElement(StatusStrip, {
+      healthStatus: 'unreachable',
+      readyStatus: 'unreachable',
+      sessionStatus: 'runtime unavailable',
+      askTrust: 'waiting'
+    })
+  );
+  assert.match(statusStripUnavailableMarkup, /API Ready<\/span><strong>unreachable<\/strong>/);
+  assert.match(statusStripUnavailableMarkup, /Org Session<\/span><strong>runtime unavailable<\/strong>/);
+
   const refreshMarkup = renderToStaticMarkup(
     React.createElement(RefreshWorkspace, {
       activeAlias: 'shulman-uat',
@@ -346,6 +374,43 @@ function run(): void {
   assert.match(systemMarkup, /Context path:<\/strong> <span class="path-value">C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\meta-context\.json<\/span>/);
   assert.match(systemMarkup, /Structured change summary/);
   assert.match(systemMarkup, /Relation changes<\/span><strong>0<\/strong>/);
+
+  const systemBlockedMarkup = renderToStaticMarkup(
+    React.createElement(SystemWorkspace, {
+      metaDryRun: true,
+      setMetaDryRun: () => undefined,
+      healthStatus: 'ok',
+      readyStatus: 'http_400',
+      readyDetails: '{"status":"blocked"}',
+      readyPayload: { status: 'blocked', checks: { db: { ok: true, backend: 'sqlite', nodeCount: 1, edgeCount: 2 } } },
+      orgStatus: {
+        integrationEnabled: true,
+        sf: { installed: true },
+        cci: { installed: true },
+        session: { status: 'connected' }
+      } as any,
+      orgPreflight: null,
+      runtimeUnavailable: false,
+      runtimeBlocked: true,
+      toolStatusSource: 'live',
+      metaContext: null,
+      metaAdaptResult: null,
+      askTrustDashboard: null,
+      runtimeMetrics: null,
+      loading: false,
+      onLoadMetaContext: () => undefined,
+      onRunMetaAdapt: () => undefined,
+      onLoadAskTrustDashboard: () => undefined,
+      onLoadRuntimeMetrics: () => undefined,
+      onLoadOrgStatus: () => undefined,
+      onRunPreflight: () => undefined,
+      onRefreshStatus: () => undefined,
+      onOpenConnect: () => undefined,
+      onOpenRefresh: () => undefined
+    } as any)
+  );
+  assert.match(systemBlockedMarkup, /Health: ok/);
+  assert.match(systemBlockedMarkup, /Ready: blocked/);
 }
 
 run();
