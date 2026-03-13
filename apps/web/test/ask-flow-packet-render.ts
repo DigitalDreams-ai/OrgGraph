@@ -204,6 +204,104 @@ function run(): void {
   assert.match(reviewMarkup, /OpportunityStageSync\.flow-meta\.xml/);
   assert.match(reviewMarkup, /OpportunityImpactService\.cls/);
 
+  const impactMarkup = renderToStaticMarkup(
+    createElement(AskWorkspace, {
+      activeAlias: 'shulman-uat',
+      sessionStatus: 'connected',
+      buildVersion: 'dev-local',
+      latestRetrieve: null,
+      latestRetrieveSelections: [],
+      askQuery: 'What touches Opportunity.StageName?',
+      setAskQuery: () => undefined,
+      maxCitationsRaw: '10',
+      setMaxCitationsRaw: () => undefined,
+      consistencyCheck: true,
+      setConsistencyCheck: () => undefined,
+      includeLowConfidence: false,
+      setIncludeLowConfidence: () => undefined,
+      askElaboration: '',
+      askResult: {
+        confidence: 0.8,
+        trustLevel: 'trusted',
+        decisionPacket: {
+          kind: 'impact_assessment',
+          focus: 'impact_lookup',
+          targetLabel: 'Opportunity.StageName',
+          targetType: 'field',
+          sourceMode: 'latest_retrieve',
+          summary: 'Deterministic impact lookup for Opportunity.StageName found 4 impact path(s). latest-retrieve evidence found for Opportunity.StageName; 4 scoped citation(s); top impact sources: OpportunityStageSync.flow-meta.xml, OpportunityImpactService.cls. This summary is limited to the current retrieve scope, not full graph analysis.',
+          recommendation: {
+            verdict: 'review_before_approval',
+            summary: 'Review the top impacted sources for Opportunity.StageName before approval.'
+          },
+          riskScore: 0.61,
+          riskLevel: 'medium',
+          evidenceCoverage: {
+            citationCount: 4,
+            hasPermissionPaths: false,
+            hasAutomationCoverage: false,
+            hasImpactPaths: true
+          },
+          topRiskDrivers: [
+            '4 impact path(s) matched Opportunity.StageName',
+            'top impacted sources: OpportunityStageSync.flow-meta.xml, OpportunityImpactService.cls',
+            'scope is constrained to the current retrieve only'
+          ],
+          permissionImpact: {
+            user: 'n/a',
+            summary: 'Permission reasoning is not part of deterministic impact lookup for Opportunity.StageName.',
+            granted: false,
+            pathCount: 0,
+            principalCount: 0,
+            warnings: ['permission coverage not evaluated in impact packet']
+          },
+          automationImpact: {
+            summary: 'Automation reasoning is not expanded separately in this impact packet.',
+            automationCount: 0,
+            topAutomationNames: []
+          },
+          changeImpact: {
+            summary: 'latest-retrieve evidence found for Opportunity.StageName; 4 scoped citation(s); top impact sources: OpportunityStageSync.flow-meta.xml, OpportunityImpactService.cls. This summary is limited to the current retrieve scope, not full graph analysis.',
+            impactPathCount: 4,
+            topImpactedSources: ['OpportunityStageSync.flow-meta.xml', 'OpportunityImpactService.cls']
+          },
+          evidenceGaps: [],
+          nextActions: [{ label: 'Inspect impact paths', rationale: 'Start with OpportunityStageSync.flow-meta.xml.' }]
+        },
+        policy: { policyId: 'policy_fixture' },
+        proof: { proofId: 'proof_fixture', replayToken: 'trace_fixture', snapshotId: 'snap_fixture' },
+        citations: []
+      },
+      askSummary: 'Impact lookup for Opportunity.StageName grounded by 4 citation(s).',
+      askTrust: 'trusted',
+      askProofId: 'proof_fixture',
+      askReplayToken: 'trace_fixture',
+      askCitations: [],
+      loading: false,
+      trustTone: () => 'good',
+      onRunAsk: () => undefined,
+      onRunAskElaboration: () => undefined,
+      onOpenConnect: () => undefined,
+      onRefreshAliases: () => undefined,
+      onOpenBrowser: () => undefined,
+      onOpenRefresh: () => undefined,
+      onInspectAutomation: () => undefined,
+      onInspectPermissions: () => undefined,
+      onOpenProof: () => undefined,
+      onSaveToHistory: () => undefined
+    })
+  );
+
+  assert.match(impactMarkup, /Impact signals/);
+  assert.match(impactMarkup, /4 paths/);
+  assert.match(impactMarkup, />Impact paths</);
+  assert.match(impactMarkup, />Scope</);
+  assert.match(impactMarkup, /latest retrieve/);
+  assert.match(impactMarkup, />Top sources</);
+  assert.match(impactMarkup, /OpportunityStageSync\.flow-meta\.xml/);
+  assert.doesNotMatch(impactMarkup, /Permission model/);
+  assert.doesNotMatch(impactMarkup, />Grounding spotlight</);
+
   const componentMarkup = renderToStaticMarkup(
     createElement(AskWorkspace, {
       activeAlias: 'shulman-uat',

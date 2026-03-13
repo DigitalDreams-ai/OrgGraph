@@ -51,6 +51,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
   const decisionPacket = props.askResult?.decisionPacket;
   const isFlowPacket = decisionPacket?.targetType === 'flow';
   const isComponentPacket = decisionPacket?.targetType === 'metadata_component';
+  const isImpactPacket = decisionPacket?.kind === 'impact_assessment';
   const flowImpact = decisionPacket?.flowImpact;
   const componentUsage = decisionPacket?.componentUsage;
   const topAutomationNames = decisionPacket?.automationImpact?.topAutomationNames ?? [];
@@ -67,6 +68,16 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
     typeof componentUsage?.referenceHitCount === 'number' && typeof componentUsage?.sourceFileCount === 'number'
       ? `${componentUsage.referenceHitCount} refs / ${componentUsage.sourceFileCount} files`
       : 'n/a';
+  const impactSignalsLabel =
+    typeof decisionPacket?.changeImpact?.impactPathCount === 'number'
+      ? `${decisionPacket.changeImpact.impactPathCount} paths`
+      : 'n/a';
+  const impactScopeLabel =
+    decisionPacket?.sourceMode === 'latest_retrieve'
+      ? 'latest retrieve'
+      : decisionPacket?.sourceMode === 'graph_global'
+        ? 'semantic state'
+        : 'n/a';
   return (
     <>
       <h2>Ask</h2>
@@ -247,13 +258,23 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                   </strong>
                 </div>
                 <div className="packet-stat">
-                  <span>{isFlowPacket ? 'Flow signals' : isComponentPacket ? 'Usage signals' : 'Permission model'}</span>
+                  <span>
+                    {isFlowPacket
+                      ? 'Flow signals'
+                      : isComponentPacket
+                        ? 'Usage signals'
+                        : isImpactPacket
+                          ? 'Impact signals'
+                          : 'Permission model'}
+                  </span>
                   <strong className="packet-value path-value">
                     {isFlowPacket
                       ? flowSignalsLabel
                       : isComponentPacket
                         ? componentSignalsLabel
-                        : decisionPacket.permissionImpact?.user || 'n/a'}
+                        : isImpactPacket
+                          ? impactSignalsLabel
+                          : decisionPacket.permissionImpact?.user || 'n/a'}
                   </strong>
                 </div>
               </div>
@@ -321,6 +342,31 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                       <p className="path-value">{componentUsage?.summaries?.definition || 'No definition summary returned.'}</p>
                     </div>
                   </>
+                ) : isImpactPacket ? (
+                  <>
+                    <div className="packet-stat">
+                      <span>Impact paths</span>
+                      <strong className="packet-value">{decisionPacket.changeImpact?.impactPathCount ?? 'n/a'} paths</strong>
+                      <p>{decisionPacket.changeImpact?.summary || 'No impact summary returned.'}</p>
+                    </div>
+                    <div className="packet-stat">
+                      <span>Scope</span>
+                      <strong className="packet-value">{impactScopeLabel}</strong>
+                      <p>
+                        Evidence coverage: {decisionPacket.evidenceCoverage?.citationCount ?? 0} citation(s);
+                        impact {decisionPacket.evidenceCoverage?.hasImpactPaths ? 'present' : 'absent'}.
+                      </p>
+                    </div>
+                    <div className="packet-stat">
+                      <span>Top sources</span>
+                      <strong className="packet-value">{topImpactedSources.length || 'n/a'}</strong>
+                      <p>
+                        {topImpactedSources.length > 0
+                          ? topImpactedSources.join(', ')
+                          : 'No impacted source spotlight returned.'}
+                      </p>
+                    </div>
+                  </>
                 ) : (
                   <>
                     <div className="packet-stat">
@@ -373,7 +419,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                 </div>
               ) : null}
 
-              {!isFlowPacket && (topAutomationNames.length > 0 || topImpactedSources.length > 0) ? (
+              {!isFlowPacket && !isImpactPacket && (topAutomationNames.length > 0 || topImpactedSources.length > 0) ? (
                 <div>
                   <h4>Grounding spotlight</h4>
                   {topAutomationNames.length > 0 ? (
@@ -456,6 +502,15 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
               <>
                 <button type="button" className="ghost" onClick={props.onOpenBrowser}>
                   Open Org Browser
+                </button>
+                <button type="button" className="ghost" onClick={props.onOpenRefresh}>
+                  Open Refresh &amp; Build
+                </button>
+              </>
+            ) : isImpactPacket ? (
+              <>
+                <button type="button" className="ghost" onClick={props.onInspectAutomation}>
+                  Inspect impact paths
                 </button>
                 <button type="button" className="ghost" onClick={props.onOpenRefresh}>
                   Open Refresh &amp; Build
