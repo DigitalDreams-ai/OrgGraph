@@ -281,6 +281,7 @@ Scope:
 - structured Ask trust telemetry (replay/proof coverage/failure classes) visible from Settings & Diagnostics without raw API inspection
 - structured runtime telemetry (request volume, route timings, recent non-200 signatures) visible from Settings & Diagnostics without raw `/metrics` inspection
 - structured Meta Adapt delta summary visible from Settings & Diagnostics without raw before/after payload inspection
+- Meta Context and Meta Adapt cards expose their own local actions so semantic weighting refresh and adapt reruns do not depend on the shared top action row
 
 Exit:
 - core analysis tasks complete through card actions

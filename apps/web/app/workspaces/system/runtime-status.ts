@@ -27,7 +27,9 @@ export type StructuredRuntimeActionId =
   | 'load-org-status'
   | 'run-preflight'
   | 'open-connect'
-  | 'open-refresh';
+  | 'open-refresh'
+  | 'load-meta-context'
+  | 'run-meta-adapt';
 
 export type StructuredRuntimeAction = {
   id: StructuredRuntimeActionId;

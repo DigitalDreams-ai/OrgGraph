@@ -228,6 +228,10 @@ function run(): void {
   assert.match(markup, /reads/);
   assert.match(markup, /Updated multipliers/);
   assert.match(markup, /impacts/);
+  assert.match(markup, /Meta context quick actions/);
+  assert.match(markup, /Refresh Meta Context/);
+  assert.match(markup, /Meta adapt quick actions/);
+  assert.match(markup, /Rerun Meta Adapt/);
   assert.match(markup, /Runtime telemetry/);
   assert.match(markup, /Route timings and failure signatures/);
   assert.match(markup, /Requests: 42/);
@@ -238,6 +242,41 @@ function run(): void {
   assert.match(markup, /Failure signature:/);
   assert.match(markup, /POST \/refresh/);
   assert.match(markup, /last status 500/);
+
+  const emptyMarkup = renderToStaticMarkup(
+    React.createElement(SystemWorkspace, {
+      metaDryRun: true,
+      setMetaDryRun: () => undefined,
+      healthStatus: 'ok',
+      readyStatus: 'ready',
+      readyDetails: '',
+      readyPayload: buildReadyPayload(),
+      orgStatus: buildOrgStatus(),
+      orgPreflight: buildOrgPreflight(),
+      runtimeUnavailable: false,
+      runtimeBlocked: false,
+      toolStatusSource: 'live',
+      metaContext: null,
+      metaAdaptResult: null,
+      askTrustDashboard: null,
+      runtimeMetrics: null,
+      loading: false,
+      onLoadMetaContext: () => undefined,
+      onRunMetaAdapt: () => undefined,
+      onLoadOrgStatus: () => undefined,
+      onLoadAskTrustDashboard: () => undefined,
+      onLoadRuntimeMetrics: () => undefined,
+      onRunPreflight: () => undefined,
+      onRefreshStatus: () => undefined,
+      onOpenConnect: () => undefined,
+      onOpenRefresh: () => undefined
+    })
+  );
+
+  assert.match(emptyMarkup, /Load Meta Context to inspect semantic weighting and provenance\./);
+  assert.match(emptyMarkup, /Load Meta Context/);
+  assert.match(emptyMarkup, /Run Meta Adapt to inspect deterministic before\/after deltas\./);
+  assert.match(emptyMarkup, /Run Meta Adapt/);
 }
 
 run();
