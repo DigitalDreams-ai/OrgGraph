@@ -76,9 +76,10 @@ function run(): void {
           ],
           nextActions: [
             {
-              label: 'Inspect the longest impacted automation path before approval',
+              label:
+                'Inspect the longest impacted automation path before approval using the deterministic source trail that includes C:\\very\\long\\workflow\\segments\\Opportunity_Stage_Guard_Flow_With_A_Long_Name',
               rationale:
-                'This rationale is long enough to prove the follow-up list stays readable in the constrained Ask card layout.'
+                'This rationale is long enough to prove the follow-up list stays readable in the constrained Ask card layout while referencing C:\\very\\long\\diagnostic\\paths\\that\\would\\otherwise\\clip\\inside\\the\\action\\card.'
             }
           ]
         },
@@ -132,6 +133,8 @@ function run(): void {
   assert.match(markup, /<span class="path-value">proof_b997ac5b57552e9da1d26368_with_extra_segments_for_wrapping_checks<\/span>/);
   assert.match(markup, /<strong class="citation-source">C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\proofs\\very-long-proof-folder/);
   assert.match(markup, /<p class="citation-snippet">&lt;FlowDefinition&gt;This is a deliberately long snippet/);
+  assert.match(markup, /<strong class="packet-action-label">Inspect the longest impacted automation path before approval using the deterministic source trail/);
+  assert.match(markup, /<p class="packet-action-rationale">This rationale is long enough to prove the follow-up list stays readable/);
 
   const componentMarkup = renderToStaticMarkup(
     createElement(AskWorkspace, {
@@ -247,6 +250,8 @@ function run(): void {
   assert.match(css, /\.decision-card\s*\{[\s\S]*min-height:\s*100%;[\s\S]*min-width:\s*0;/);
   assert.match(css, /\.follow-up-grid > \*\s*\{[\s\S]*min-width:\s*0;/);
   assert.match(css, /\.proof-inline-list li\s*\{[\s\S]*overflow-wrap:\s*anywhere;[\s\S]*word-break:\s*break-word;/);
+  assert.match(css, /\.packet-action-list li\s*\{[\s\S]*min-width:\s*0;[\s\S]*overflow-wrap:\s*anywhere;[\s\S]*word-break:\s*break-word;/);
+  assert.match(css, /\.packet-action-label,[\s\S]*\.packet-action-rationale\s*\{[\s\S]*display:\s*block;[\s\S]*overflow-wrap:\s*anywhere;[\s\S]*word-break:\s*break-word;/);
 }
 
 run();
