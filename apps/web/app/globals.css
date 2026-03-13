@@ -1003,10 +1003,13 @@ pre {
 
 .metadata-family-count {
   flex: 0 0 auto;
+  min-width: 0;
   color: #315886;
   font-size: 0.8rem;
   margin-top: 0.34rem;
   text-align: right;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .metadata-family-descriptor-list {
@@ -1160,6 +1163,11 @@ pre {
   gap: 0.4rem;
   flex-wrap: wrap;
   margin-top: 0.55rem;
+}
+
+.selection-members button {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .org-browser-coverage-card {

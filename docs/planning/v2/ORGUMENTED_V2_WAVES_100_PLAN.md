@@ -317,12 +317,14 @@ Scope:
 - explicit render guards for path-heavy Analyze/Diagnostics/Proofs surfaces
 - explicit render guards for long operator-machine paths in Settings & Diagnostics
 - explicit Ask dense-card render guards for long proof IDs, paths, and citation snippets
+- explicit Org Browser render guards for long retrieve parse paths, metadata args, and selected member chips
 
 Exit:
 - zero known clipping defects in Stage 1 surfaces
 - accessibility baseline pass for Ask/Sessions/Browser/Refresh
 - long paths, identifiers, and JSON blocks wrap/scroll without card breakage
 - render regression gates cover path-heavy cards so long graph paths stay bounded
+- Org Browser carts and retrieve handoff details stay bounded under long real-org metadata names and paths
 
 ## wave11 - Bug Burn-Down And CI Quality Lock
 
