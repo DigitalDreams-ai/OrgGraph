@@ -211,7 +211,8 @@ function run(): void {
   assert.match(markup, /Ask trust telemetry/);
   assert.match(markup, /Replay pass: 90%/);
   assert.match(markup, /Proof coverage: 90%/);
-  assert.match(markup, /llm_fallback: 1/);
+  assert.match(markup, /<span class="path-value">llm_fallback<\/span>: 1/);
+  assert.match(markup, /<span class="path-value">constraint_risk<\/span>: 2/);
   assert.match(markup, /Ask trust quick actions/);
   assert.match(markup, /Refresh Ask Trust/);
   assert.match(markup, /Open Runtime Telemetry/);
