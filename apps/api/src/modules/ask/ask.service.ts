@@ -1506,10 +1506,21 @@ export class AskService {
         answer = scopedSummary.explanation;
         deterministicAnswer = scopedSummary.explanation;
         confidence = scopedSummary.matchedCount > 0 ? 0.76 : 0.5;
+        decisionPacket = this.buildImpactDecisionPacket({
+          targetLabel: field,
+          summary: scopedSummary.explanation,
+          impactPathCount: scopedSummary.matchedCount,
+          topImpactedSources: scopedSummary.sourceLabels,
+          citationCount: citations.length,
+          citationSourceLabels: citations.map((citation) => this.toCitationSourceLabel(citation.sourcePath)),
+          sourceMode: 'latest_retrieve'
+        });
         executionTrace.push(
           'impact.scope=latest-retrieve',
           `impact.scopedField=${field}`,
-          `impact.scopedMatches=${String(scopedSummary.matchedCount)}`
+          `impact.scopedMatches=${String(scopedSummary.matchedCount)}`,
+          `impact.packet.kind=${decisionPacket.kind}`,
+          `impact.packet.risk=${decisionPacket.riskLevel}`
         );
         consistency = {
           checked: consistencyCheck,
@@ -1533,6 +1544,15 @@ export class AskService {
         answer = result.explanation;
         deterministicAnswer = result.explanation;
         confidence = result.paths.length > 0 ? 0.8 : 0.55;
+        decisionPacket = this.buildImpactDecisionPacket({
+          targetLabel: field,
+          summary: result.explanation,
+          impactPathCount: result.totalPaths,
+          topImpactedSources: [...new Set(result.paths.map((path) => path.from))].slice(0, 3),
+          citationCount: citations.length,
+          citationSourceLabels: citations.map((citation) => this.toCitationSourceLabel(citation.sourcePath)),
+          sourceMode: 'graph_global'
+        });
         if (consistencyCheck) {
           const verification = await this.analysis.impact(
             field,
@@ -1559,6 +1579,13 @@ export class AskService {
             reason: 'consistency check disabled'
           };
         }
+        executionTrace.push(
+          'impact.scope=graph-global',
+          `impact.field=${field}`,
+          `impact.paths=${String(result.totalPaths)}`,
+          `impact.packet.kind=${decisionPacket.kind}`,
+          `impact.packet.risk=${decisionPacket.riskLevel}`
+        );
         if (result.paths.length === 0) {
           reject('analysis.impact', 'NO_IMPACT_PATHS', 'no impact paths found for requested field');
         }
@@ -3375,6 +3402,144 @@ export class AskService {
       },
       evidenceGaps,
       nextActions: nextActions.slice(0, 6)
+    };
+  }
+
+  private buildImpactDecisionPacket(input: {
+    targetLabel: string;
+    summary: string;
+    impactPathCount: number;
+    topImpactedSources: string[];
+    citationCount: number;
+    citationSourceLabels: string[];
+    sourceMode: AskSemanticFrameSourceMode;
+  }): AskDecisionPacket {
+    const topCitationSources = [
+      ...new Set(
+        input.citationSourceLabels
+          .map((label) => label.trim())
+          .filter((label) => label.length > 0)
+      )
+    ]
+      .sort((a, b) => a.localeCompare(b))
+      .slice(0, 3);
+    const topCitationSummary =
+      topCitationSources.length > 0
+        ? topCitationSources.join(', ')
+        : 'citation source labels unavailable';
+    const topImpactedSources = [...new Set(input.topImpactedSources.map((item) => item.trim()).filter(Boolean))].slice(0, 3);
+    const baseRisk =
+      0.26 +
+      Math.min(0.38, input.impactPathCount * 0.08) +
+      (input.citationCount < 3 ? 0.12 : 0.05) +
+      (input.sourceMode === 'latest_retrieve' ? 0.04 : 0);
+    const riskScore = Number(Math.min(1, Math.max(0.05, baseRisk)).toFixed(3));
+    const riskLevel: AskDecisionPacket['riskLevel'] =
+      riskScore >= 0.7 ? 'high' : riskScore >= 0.4 ? 'medium' : 'low';
+    const evidenceGaps = [
+      ...(input.impactPathCount === 0
+        ? [`no deterministic impact paths matched ${input.targetLabel}`]
+        : []),
+      ...(input.citationCount < 3
+        ? ['citation coverage is light for this impact packet']
+        : [])
+    ].slice(0, 3);
+    const recommendation: AskDecisionPacket['recommendation'] =
+      input.impactPathCount === 0
+        ? {
+            verdict: 'needs_more_evidence',
+            summary:
+              input.sourceMode === 'latest_retrieve'
+                ? `Retrieve adjacent metadata before relying on ${input.targetLabel}; the current retrieve scope did not surface enough deterministic impact evidence.`
+                : `Retrieve adjacent metadata and rerun Ask before relying on ${input.targetLabel}; deterministic impact evidence is still light.`
+          }
+        : riskLevel === 'high'
+          ? {
+              verdict: 'review_before_approval',
+              summary: `Review the top impacted sources for ${input.targetLabel} before approval. Start with ${topImpactedSources[0] ?? topCitationSummary}.`
+            }
+          : {
+              verdict: 'approve_with_verification',
+              summary: `Approve with verification. Confirm the top impacted sources for ${input.targetLabel} and keep proof/replay identifiers attached.`
+            };
+
+    const nextActions: AskDecisionPacket['nextActions'] = [
+      {
+        label: 'Inspect impact paths',
+        rationale:
+          topImpactedSources.length > 0
+            ? `Start with ${topImpactedSources.join(', ')}.`
+            : input.summary
+      },
+      {
+        label: 'Inspect citation sources',
+        rationale: `Validate impact grounding against: ${topCitationSummary}.`
+      }
+    ];
+    if (input.sourceMode === 'latest_retrieve') {
+      nextActions.push({
+        label: 'Open Refresh & Build',
+        rationale: 'Stay within the current retrieve scope or refresh adjacent metadata before broadening conclusions.'
+      });
+    }
+    if (input.citationCount < 3) {
+      nextActions.push({
+        label: 'Increase evidence coverage',
+        rationale: 'Retrieve adjacent metadata families and rerun Ask for a stronger impact packet.'
+      });
+    }
+
+    return {
+      kind: 'impact_assessment',
+      focus: 'impact_lookup',
+      targetLabel: input.targetLabel,
+      targetType: 'field',
+      sourceMode: input.sourceMode,
+      summary:
+        input.impactPathCount > 0
+          ? `Deterministic impact lookup for ${input.targetLabel} found ${input.impactPathCount} impact path(s). ${input.summary}.`
+          : `Deterministic impact lookup did not find any impact paths for ${input.targetLabel}.`,
+      recommendation,
+      riskScore,
+      riskLevel,
+      evidenceCoverage: {
+        citationCount: input.citationCount,
+        hasPermissionPaths: false,
+        hasAutomationCoverage: false,
+        hasImpactPaths: input.impactPathCount > 0
+      },
+      topRiskDrivers: [
+        `${input.impactPathCount} impact path(s) matched ${input.targetLabel}`,
+        topImpactedSources.length > 0
+          ? `top impacted sources: ${topImpactedSources.join(', ')}`
+          : 'top impacted sources unavailable',
+        input.sourceMode === 'latest_retrieve'
+          ? 'scope is constrained to the current retrieve only'
+          : 'scope uses the current semantic state',
+        topCitationSources.length > 0
+          ? `top citation sources: ${topCitationSummary}`
+          : 'top citation sources unavailable'
+      ],
+      permissionImpact: {
+        user: 'n/a',
+        summary: `Permission reasoning is not part of deterministic impact lookup for ${input.targetLabel}.`,
+        granted: false,
+        pathCount: 0,
+        principalCount: 0,
+        warnings: ['permission coverage not evaluated in impact packet']
+      },
+      automationImpact: {
+        summary: 'Automation reasoning is not expanded separately in this impact packet.',
+        automationCount: 0,
+        topAutomationNames: []
+      },
+      changeImpact: {
+        summary: input.summary,
+        impactPathCount: input.impactPathCount,
+        topImpactedSources
+      },
+      evidenceGaps,
+      nextActions: nextActions.slice(0, 4)
     };
   }
 

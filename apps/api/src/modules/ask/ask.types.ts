@@ -1,4 +1,4 @@
-import type { AskPlan, AskReviewFocus } from '../planner/planner.types';
+import type { AskPlan, AskReviewFocus, AskSemanticFrameSourceMode } from '../planner/planner.types';
 import type { LlmProviderName } from '../llm/llm.types';
 import type { CompositionOperator, DerivationRelation } from '@orgumented/ontology';
 
@@ -112,10 +112,11 @@ export interface AskProofArtifact {
 }
 
 export interface AskDecisionPacket {
-  kind: 'high_risk_change_review' | 'metadata_component_usage';
-  focus: AskReviewFocus | 'usage_lookup';
+  kind: 'high_risk_change_review' | 'metadata_component_usage' | 'impact_assessment';
+  focus: AskReviewFocus | 'usage_lookup' | 'impact_lookup';
   targetLabel: string;
   targetType: 'field' | 'object' | 'flow' | 'metadata_component';
+  sourceMode?: AskSemanticFrameSourceMode;
   summary: string;
   recommendation: {
     verdict:

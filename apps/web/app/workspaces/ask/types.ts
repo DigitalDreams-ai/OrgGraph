@@ -8,6 +8,7 @@ export type AskPayload = {
     focus?: string;
     targetLabel?: string;
     targetType?: string;
+    sourceMode?: string;
     summary?: string;
     recommendation?: {
       verdict?:

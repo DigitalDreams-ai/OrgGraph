@@ -1362,6 +1362,17 @@ async function run(): Promise<void> {
       };
       deterministicAnswer: string;
       consistency: { aligned: boolean; reason: string };
+      decisionPacket?: {
+        kind?: string;
+        focus?: string;
+        targetLabel?: string;
+        targetType?: string;
+        sourceMode?: string;
+        recommendation?: { verdict?: string; summary?: string };
+        changeImpact?: { impactPathCount?: number; topImpactedSources?: string[]; summary?: string };
+        evidenceCoverage?: { citationCount?: number; hasImpactPaths?: boolean };
+        nextActions?: Array<{ label?: string; rationale?: string }>;
+      };
     };
     assert.equal(askLatestRetrieveImpact.plan.intent, 'impact');
     assert.equal(askLatestRetrieveImpact.plan.semanticFrame?.intent, 'impact_analysis');
@@ -1381,6 +1392,19 @@ async function run(): Promise<void> {
       /current retrieve scope, not full graph analysis/i
     );
     assert.equal(askLatestRetrieveImpact.consistency.aligned, true);
+    assert.equal(askLatestRetrieveImpact.decisionPacket?.kind, 'impact_assessment');
+    assert.equal(askLatestRetrieveImpact.decisionPacket?.focus, 'impact_lookup');
+    assert.equal(askLatestRetrieveImpact.decisionPacket?.targetLabel, 'Opportunity.StageName');
+    assert.equal(askLatestRetrieveImpact.decisionPacket?.targetType, 'field');
+    assert.equal(askLatestRetrieveImpact.decisionPacket?.sourceMode, 'latest_retrieve');
+    assert.equal(askLatestRetrieveImpact.decisionPacket?.evidenceCoverage?.hasImpactPaths, true);
+    assert.ok((askLatestRetrieveImpact.decisionPacket?.changeImpact?.impactPathCount ?? 0) >= 1);
+    assert.ok((askLatestRetrieveImpact.decisionPacket?.changeImpact?.topImpactedSources ?? []).length >= 1);
+    assert.ok(
+      (askLatestRetrieveImpact.decisionPacket?.nextActions ?? []).some(
+        (action) => action.label === 'Open Refresh & Build'
+      )
+    );
 
     const askLatestRetrieveAutomationRes = await fetch(`${base}/ask`, {
       method: 'POST',
@@ -1546,6 +1570,15 @@ async function run(): Promise<void> {
         };
       };
       consistency: { checked: boolean; aligned: boolean; reason: string };
+      decisionPacket?: {
+        kind?: string;
+        focus?: string;
+        targetLabel?: string;
+        targetType?: string;
+        sourceMode?: string;
+        recommendation?: { verdict?: string; summary?: string };
+        changeImpact?: { impactPathCount?: number; topImpactedSources?: string[]; summary?: string };
+      };
     };
     assert.equal(askImpact.plan.intent, 'impact');
     assert.equal(askImpact.plan.semanticFrame?.intent, 'impact_analysis');
@@ -1555,6 +1588,13 @@ async function run(): Promise<void> {
     assert.equal(askImpact.plan.semanticFrame?.admissibility.status, 'accepted');
     assert.equal(askImpact.consistency.checked, true);
     assert.equal(askImpact.consistency.aligned, true);
+    assert.equal(askImpact.decisionPacket?.kind, 'impact_assessment');
+    assert.equal(askImpact.decisionPacket?.focus, 'impact_lookup');
+    assert.equal(askImpact.decisionPacket?.targetLabel, 'Opportunity.StageName');
+    assert.equal(askImpact.decisionPacket?.targetType, 'field');
+    assert.equal(askImpact.decisionPacket?.sourceMode, 'graph_global');
+    assert.ok((askImpact.decisionPacket?.changeImpact?.impactPathCount ?? 0) >= 1);
+    assert.ok((askImpact.decisionPacket?.changeImpact?.topImpactedSources ?? []).length >= 1);
 
     const askBlockedImpactRes = await fetch(`${base}/ask`, {
       method: 'POST',
