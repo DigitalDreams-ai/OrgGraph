@@ -89,6 +89,12 @@ const PLACEHOLDER_VALUES = new Set([
   '<alias>'
 ]);
 
+const PROOF_RESULTS_PATH = 'docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md';
+const PROOF_RESULTS_FIELDS = [
+  ['Real-Org Operator Proof', 'Canonical proof-results entry'],
+  ['Clean-Machine Operator Proof', 'Canonical proof-results entry']
+];
+
 export function parseReleaseEvidence(markdown) {
   const sections = new Map();
   let currentSection = '';
@@ -120,9 +126,37 @@ export function parseReleaseEvidence(markdown) {
   return sections;
 }
 
-export function findReleaseEvidenceIssues(markdown) {
+export function slugifyHeading(heading) {
+  return heading
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
+export function parseHeadingAnchors(markdown) {
+  const anchors = new Set();
+
+  for (const rawLine of markdown.split(/\r?\n/)) {
+    const headingMatch = rawLine.match(/^##+\s+(.*)$/);
+    if (!headingMatch) {
+      continue;
+    }
+    const anchor = slugifyHeading(headingMatch[1]);
+    if (anchor) {
+      anchors.add(anchor);
+    }
+  }
+
+  return anchors;
+}
+
+export function findReleaseEvidenceIssues(markdown, options = {}) {
   const sections = parseReleaseEvidence(markdown);
   const issues = [];
+  const proofResultsMarkdown = typeof options.proofResultsMarkdown === 'string' ? options.proofResultsMarkdown : null;
+  const proofResultAnchors = proofResultsMarkdown ? parseHeadingAnchors(proofResultsMarkdown) : null;
 
   for (const [section, label] of REQUIRED_FIELDS) {
     const value = sections.get(section)?.get(label);
@@ -132,6 +166,28 @@ export function findReleaseEvidenceIssues(markdown) {
     }
     if (PLACEHOLDER_VALUES.has(value)) {
       issues.push(`${section} -> ${label}: unresolved placeholder (${value || 'blank'})`);
+    }
+  }
+
+  for (const [section, label] of PROOF_RESULTS_FIELDS) {
+    const value = sections.get(section)?.get(label);
+    if (typeof value !== 'string' || PLACEHOLDER_VALUES.has(value)) {
+      continue;
+    }
+
+    if (!value.startsWith(`${PROOF_RESULTS_PATH}#`)) {
+      issues.push(`${section} -> ${label}: must reference ${PROOF_RESULTS_PATH}#<anchor>`);
+      continue;
+    }
+
+    const anchor = value.slice(value.indexOf('#') + 1).trim();
+    if (!anchor) {
+      issues.push(`${section} -> ${label}: missing proof-results anchor`);
+      continue;
+    }
+
+    if (proofResultAnchors && !proofResultAnchors.has(anchor)) {
+      issues.push(`${section} -> ${label}: unknown proof-results anchor (${anchor})`);
     }
   }
 
@@ -146,7 +202,9 @@ function resolveTargetPath() {
 function main() {
   const targetPath = resolveTargetPath();
   const markdown = fs.readFileSync(targetPath, 'utf8');
-  const issues = findReleaseEvidenceIssues(markdown);
+  const proofResultsPath = path.resolve(process.cwd(), PROOF_RESULTS_PATH);
+  const proofResultsMarkdown = fs.existsSync(proofResultsPath) ? fs.readFileSync(proofResultsPath, 'utf8') : '';
+  const issues = findReleaseEvidenceIssues(markdown, { proofResultsMarkdown });
 
   if (issues.length > 0) {
     console.error(`Release evidence check failed for ${targetPath}`);
