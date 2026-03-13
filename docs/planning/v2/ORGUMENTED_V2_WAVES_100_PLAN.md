@@ -303,6 +303,7 @@ Exit:
 - operator can run history-first proof workflows without token bookkeeping
 - labels and replay/open/export remain stable across restarts
 - advanced proof ID / replay token lookup stays debug-only and does not drive the active history selection
+- advanced summary surfaces only typed debug tokens and never inherits selected history proof identifiers
 - primary proof open/replay actions do not execute from typed token fields unless the operator explicitly chooses advanced token actions
 - primary proof/replay export actions resolve directly from the selected history label instead of requiring an open-first detour
 
@@ -319,12 +320,14 @@ Scope:
 - explicit render guards for long operator-machine paths in Settings & Diagnostics
 - explicit Ask dense-card render guards for long proof IDs, paths, and citation snippets
 - explicit telemetry render guards for Ask trust failure-class labels in Settings & Diagnostics
+- explicit Org Browser render guards for long retrieve parse paths, metadata args, and selected member chips
 
 Exit:
 - zero known clipping defects in Stage 1 surfaces
 - accessibility baseline pass for Ask/Sessions/Browser/Refresh
 - long paths, identifiers, and JSON blocks wrap/scroll without card breakage
 - render regression gates cover path-heavy cards so long graph paths stay bounded
+- Org Browser carts and retrieve handoff details stay bounded under long real-org metadata names and paths
 
 ## wave11 - Bug Burn-Down And CI Quality Lock
 
@@ -336,6 +339,7 @@ Scope:
 - flake reduction and regression coverage
 - trust-preserving CI minute optimization
 - render-level regression locks for critical runtime status surfaces
+- release-evidence checker tests enforced in `validate`
 
 Exit:
 - P0/P1 = zero and stable for one cycle
@@ -343,6 +347,7 @@ Exit:
 - CI minutes remain controlled with path-gating and selective heavy-job execution
 - detect-changes remains repo-local and deterministic, without third-party action download dependencies
 - targeted web regression suite runs in `validate` for runtime-impacting PRs, locking Ask/Analyze/Proofs/System accessibility and render guards into GitHub Actions
+- release-evidence checker tests run in `validate`, keeping wave12 release-gate logic under CI instead of local-only verification
 - edge metadata-family regression coverage includes Email Template and Custom Tab evidence-lookup prompts in addition to Flow, Layout, Apex, and CustomField families
 
 ## wave12 - Release Readiness And Operator Proof

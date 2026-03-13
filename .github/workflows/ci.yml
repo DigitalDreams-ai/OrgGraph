@@ -99,6 +99,9 @@ jobs:
       - name: Test project-memory MCP
         run: pnpm --filter @orgumented/project-memory-mcp test
 
+      - name: Test release evidence checker
+        run: pnpm release:evidence:check:test
+
       - name: Build API
         run: pnpm --filter api build
 

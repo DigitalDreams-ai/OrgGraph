@@ -88,6 +88,7 @@ Materially true now:
 - wave10 follow-up now wraps long proof-history labels, snapshot IDs, policy IDs, and generated timestamps with explicit `path-value` guards so Proofs surfaces stay bounded under long real-org identifiers
 - wave10 regression follow-up now locks Settings & Diagnostics meta-adapt path values (`contextPath`, `auditArtifactPath`) with a render-level guard so long operator-machine paths stay bounded in desktop layouts
 - wave10 follow-up now also locks Ask dense-card rendering with explicit wrapping guarantees for decision cards, proof-inline lists, and follow-up actions, and adds a dedicated `test:ask-guards` regression gate to keep long proof IDs, source paths, and snippets bounded
+- wave10 follow-up now also locks Org Browser long-string rendering for retrieve parse paths, metadata args, and selected member chips, and adds a dedicated `test:browser-render` regression gate to keep browser carts and handoff details bounded under real-org identifiers
 - wave11 CI follow-up now runs the embedded web regression suite inside `validate` (`test:ask-render`, `test:analyze-render`, `test:runtime-status`, `test:proof-history`, `test:workspace-a11y`, `test:system-workspace`) so Stage 1 UI regressions are no longer local-only guarantees
 - wave10 accessibility follow-up now extends live-region smoke coverage to Analyze structured triage, Proofs current selection, and Settings & Diagnostics structured snapshot so the remaining dynamic desktop workspaces share the same screen-reader update contract
 - refresh handoff is staged and fail-closed from browser selections
@@ -129,6 +130,7 @@ Materially true now:
 - Proofs & History current-selection status now explicitly states whether the workspace is being driven by a selected history label or by advanced token lookup, reducing remaining operator ambiguity in mixed debug/history states
 - Proofs & History now keeps manual advanced proof/replay token input isolated from label-first history selection, so selecting or opening a history label no longer marks the normal workflow as token-driven
 - Proofs & History advanced token lookup now includes an explicit `Clear Advanced Tokens` exit action that clears typed debug tokens and drops token-only loaded proof/replay state, letting operators return to the label-first workflow without manual field cleanup
+- Proofs & History advanced summary text now reflects only explicitly typed proof/replay tokens, so selecting a history label no longer makes the debug-only token surface appear populated
 - CI heavy Windows jobs are path-gated for minute efficiency
 - PR Autofill now runs on `opened/reopened` only (not every push), and Actions retention now includes an automated cleanup workflow that prunes older completed runs per workflow
 - CI now runs packaged desktop smoke in the same Windows validate job (instead of cross-job runtime artifact handoff), reducing Actions artifact storage pressure without dropping trust gates
@@ -136,6 +138,7 @@ Materially true now:
 - wave11 retention follow-up now locks that 14-run cleanup policy and the 1-day runtime artifact retention defaults with a repo-local regression test, preventing silent workflow drift
 - wave11 CI follow-up now replaces the external `dorny/paths-filter` dependency with a repo-local change-detection script and unit test so `detect-changes` no longer flakes on third-party action download/auth failures
 - wave11 CI follow-up now also executes the targeted web regression corpus in the Windows `validate` job, so wave8/wave9/wave10 UI safety gates fail in PRs instead of only on local runs
+- wave11 CI follow-up now also executes `pnpm release:evidence:check:test` in `validate`, so wave12 release-gate logic cannot silently regress while only local operator tooling remains green
 - wave11 regression corpus now locks edge component-usage families for Apex Class and Apex Trigger prompts, including metadata-arg and path-qualified normalization so those asks cannot drift back into weak generic answers
 - wave11 regression corpus now also locks Email Template and Custom Tab component-usage prompts, ensuring those supported families stay on deterministic evidence-lookup routing instead of drifting back into generic refusal or weak fallback behavior
 - wave11 runtime regression coverage now also render-checks Connect and Operator Rail status surfaces so `runtime unavailable` cannot silently drift back into generic blocked or missing-tool wording

@@ -46,6 +46,8 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
     });
   }, [historySearch, props.recentProofs]);
   const hasAdvancedTokenInput = Boolean(props.proofId.trim() || props.replayToken.trim());
+  const advancedProofId = props.proofId.trim();
+  const advancedReplayToken = props.replayToken.trim();
   const loadedProofSource = props.selectedProof
     ? props.selectedRecentProof?.proofId === props.selectedProof.proofId
       ? 'selected history'
@@ -265,8 +267,8 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
         <p className="muted">Keep raw proof identifiers available for debugging and parity checks, but do not treat them as the primary workflow.</p>
         <p className="muted">Typing a proof ID or replay token here does not change the selected history label above and only affects the explicit advanced actions below.</p>
         <p className="muted">
-          Selected proof IDs: <span className="path-value">{props.selectedProof?.proofId || props.proofId || 'n/a'}</span> • replay token:{' '}
-          <span className="path-value">{props.selectedProof?.replayToken || props.replayToken || 'n/a'}</span>
+          Advanced proof ID: <span className="path-value">{advancedProofId || 'n/a'}</span> • replay token:{' '}
+          <span className="path-value">{advancedReplayToken || 'n/a'}</span>
         </p>
         <div className="field-grid">
           <div>
