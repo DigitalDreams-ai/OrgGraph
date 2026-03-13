@@ -381,6 +381,7 @@ Scope:
 - proofs/history label-first workflow now keeps manual token entry isolated from selected history labels, reducing remaining token-driven ambiguity in the normal audit path
 - proofs/history advanced token path now has an explicit clear/exit action that removes typed debug tokens and token-only loaded state, making it easier to return to the normal history-first workflow after parity/debug inspection
 - proofs/history export filenames now prefer the selected history label so saved proof and replay JSON artifacts stay aligned to the primary history-first audit flow
+- proofs/history rows now include direct proof/replay export actions so the label-first lifecycle is available from the history list itself without detouring through the top action row
 
 Exit:
 - release candidate checklist fully green

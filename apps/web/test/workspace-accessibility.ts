@@ -294,6 +294,8 @@ function run(): void {
       onExportMetrics: () => undefined,
       onExportProofArtifact: () => undefined,
       onExportReplayArtifact: () => undefined,
+      onExportRecentProofArtifact: () => undefined,
+      onExportRecentReplayArtifact: () => undefined,
       onSelectRecentProof: () => undefined,
       onOpenRecentProof: () => undefined,
       onReplayRecentProof: () => undefined

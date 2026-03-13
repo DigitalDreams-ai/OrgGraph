@@ -136,6 +136,7 @@ Materially true now:
 - Proofs & History advanced token lookup now includes an explicit `Clear Advanced Tokens` exit action that clears typed debug tokens and drops token-only loaded proof/replay state, letting operators return to the label-first workflow without manual field cleanup
 - Proofs & History advanced summary text now reflects only explicitly typed proof/replay tokens, so selecting a history label no longer makes the debug-only token surface appear populated
 - Proofs & History export filenames now prefer the selected history label, so saved proof/replay JSON artifacts stay history-first instead of reverting to proof IDs or replay tokens in normal workflows
+- Proofs & History history rows now expose direct `Export Label Proof` / `Export Label Replay` actions, so the full label-first lifecycle is available from the history list itself without detouring back through the global action row
 - CI heavy Windows jobs are path-gated for minute efficiency
 - PR Autofill now runs on `opened/reopened` only (not every push), and Actions retention now includes an automated cleanup workflow that prunes older completed runs per workflow
 - CI now runs packaged desktop smoke in the same Windows validate job (instead of cross-job runtime artifact handoff), reducing Actions artifact storage pressure without dropping trust gates
