@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { findReleaseEvidenceIssues, parseHeadingAnchors, parseReleaseEvidence, slugifyHeading } from './release-evidence-check.mjs';
+import { findReleaseEvidenceIssues, parseBulletFields, parseHeadingAnchors, parseHeadingSections, parseReleaseEvidence, slugifyHeading } from './release-evidence-check.mjs';
 
 const passingDocument = `
 # Release Notes And Evidence Record
@@ -119,10 +119,16 @@ const proofResultsDocument = `
 ## Candidate 001
 
 - Operator: operator-a
+- Result: pass
+- Proof ID: proof_123
+- Replay Token: trace_123
 
 ## Clean Machine 001
 
 - Operator: operator-b
+- Result: pass
+- Proof ID: proof_456
+- Replay Token: trace_456
 `;
 
 test('parseReleaseEvidence indexes fields by section and label', () => {
@@ -152,6 +158,13 @@ test('slugifyHeading and parseHeadingAnchors follow release-proof anchor expecta
   assert.ok(parseHeadingAnchors(proofResultsDocument).has('clean-machine-001'));
 });
 
+test('parseHeadingSections and parseBulletFields expose proof-result summary fields', () => {
+  const sections = parseHeadingSections(proofResultsDocument);
+  const candidateFields = parseBulletFields(sections.get('candidate-001'));
+  assert.equal(candidateFields.get('Operator'), 'operator-a');
+  assert.equal(candidateFields.get('Proof ID'), 'proof_123');
+});
+
 test('findReleaseEvidenceIssues reports invalid proof-results link targets', () => {
   const wrongFileDocument = passingDocument.replace(
     'docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md#candidate-001',
@@ -167,4 +180,13 @@ test('findReleaseEvidenceIssues reports invalid proof-results link targets', () 
 
   assert.match(wrongFileIssues.join('\n'), /must reference docs\/planning\/v2\/REAL_ORG_OPERATOR_PROOF_RESULTS\.md#<anchor>/);
   assert.match(missingAnchorIssues.join('\n'), /unknown proof-results anchor \(missing-clean-machine\)/);
+});
+
+test('findReleaseEvidenceIssues reports missing proof-result summary fields', () => {
+  const sparseProofResults = proofResultsDocument.replace('- Proof ID: proof_456\n', '');
+  const issues = findReleaseEvidenceIssues(passingDocument, { proofResultsMarkdown: sparseProofResults });
+  assert.match(
+    issues.join('\n'),
+    /Clean-Machine Operator Proof -> Canonical proof-results entry: proof-results section clean-machine-001 missing field \(Proof ID\)/
+  );
 });

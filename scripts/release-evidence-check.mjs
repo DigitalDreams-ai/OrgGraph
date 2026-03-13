@@ -152,11 +152,68 @@ export function parseHeadingAnchors(markdown) {
   return anchors;
 }
 
+export function parseHeadingSections(markdown) {
+  const sections = new Map();
+  let currentAnchor = null;
+  let buffer = [];
+
+  const flush = () => {
+    if (!currentAnchor) {
+      return;
+    }
+    sections.set(currentAnchor, buffer.join('\n').trim());
+  };
+
+  for (const rawLine of markdown.split(/\r?\n/)) {
+    const headingMatch = rawLine.match(/^##+\s+(.*)$/);
+    if (headingMatch) {
+      flush();
+      currentAnchor = slugifyHeading(headingMatch[1]);
+      buffer = [];
+      continue;
+    }
+
+    if (currentAnchor) {
+      buffer.push(rawLine);
+    }
+  }
+
+  flush();
+  return sections;
+}
+
+export function parseBulletFields(markdown) {
+  const fields = new Map();
+
+  for (const rawLine of markdown.split(/\r?\n/)) {
+    if (!rawLine.startsWith('- ')) {
+      continue;
+    }
+
+    const separatorIndex = rawLine.indexOf(': ');
+    if (separatorIndex < 0) {
+      continue;
+    }
+
+    const label = rawLine.slice(2, separatorIndex).trim();
+    const value = rawLine.slice(separatorIndex + 2).trim();
+    fields.set(label, value);
+  }
+
+  return fields;
+}
+
+const PROOF_RESULT_SECTION_REQUIREMENTS = new Map([
+  ['Real-Org Operator Proof', ['Operator', 'Result', 'Proof ID', 'Replay Token']],
+  ['Clean-Machine Operator Proof', ['Operator', 'Result', 'Proof ID', 'Replay Token']]
+]);
+
 export function findReleaseEvidenceIssues(markdown, options = {}) {
   const sections = parseReleaseEvidence(markdown);
   const issues = [];
   const proofResultsMarkdown = typeof options.proofResultsMarkdown === 'string' ? options.proofResultsMarkdown : null;
   const proofResultAnchors = proofResultsMarkdown ? parseHeadingAnchors(proofResultsMarkdown) : null;
+  const proofResultSections = proofResultsMarkdown ? parseHeadingSections(proofResultsMarkdown) : null;
 
   for (const [section, label] of REQUIRED_FIELDS) {
     const value = sections.get(section)?.get(label);
@@ -188,6 +245,22 @@ export function findReleaseEvidenceIssues(markdown, options = {}) {
 
     if (proofResultAnchors && !proofResultAnchors.has(anchor)) {
       issues.push(`${section} -> ${label}: unknown proof-results anchor (${anchor})`);
+      continue;
+    }
+
+    const anchorSectionMarkdown = proofResultSections?.get(anchor);
+    const anchorFields = anchorSectionMarkdown ? parseBulletFields(anchorSectionMarkdown) : null;
+
+    for (const requiredField of PROOF_RESULT_SECTION_REQUIREMENTS.get(section) ?? []) {
+      const anchorValue = anchorFields?.get(requiredField);
+      if (typeof anchorValue !== 'string') {
+        issues.push(`${section} -> ${label}: proof-results section ${anchor} missing field (${requiredField})`);
+        continue;
+      }
+
+      if (PLACEHOLDER_VALUES.has(anchorValue)) {
+        issues.push(`${section} -> ${label}: proof-results section ${anchor} has unresolved placeholder (${requiredField}: ${anchorValue || 'blank'})`);
+      }
     }
   }
 

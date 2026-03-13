@@ -154,6 +154,7 @@ Materially true now:
 - wave12 rollback readiness now also includes a canonical rollback-result template so executed rollback validation can be captured in a consistent release-evidence format
 - wave12 release docs now treat `docs/releases/RELEASE.md` as the canonical candidate evidence record, so smoke evidence, clean-machine proof summary, and rollback target/validation no longer stay scattered across checklist-only bullets
 - wave12 release evidence lint now also validates that `RELEASE.md` proof-results links point at real headings in `REAL_ORG_OPERATOR_PROOF_RESULTS.md`, reducing the chance of a candidate carrying broken operator-proof references
+- wave12 release evidence lint now also validates that referenced proof-results sections contain filled summary fields (`Operator`, `Result`, `Proof ID`, `Replay Token`), and the canonical proof-results file now uses numbered anchorable entries (`Candidate 001`, `Clean Machine 001`) instead of a loose narrative-only structure
 - wave12 release follow-up now includes a deterministic `pnpm release:evidence:check` command that fails when `docs/releases/RELEASE.md` still contains blank or placeholder gate fields, making the canonical release record machine-checkable before promotion
 - real-org desktop quickstart runbook now exists as a single explicit Git Bash workflow for connect, browser retrieve, refresh handoff, and Ask proof capture
 - operator-machine pass evidence for real-org quickstart is now captured with proof/replay IDs in `docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md`

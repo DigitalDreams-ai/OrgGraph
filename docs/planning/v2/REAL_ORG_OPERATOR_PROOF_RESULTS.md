@@ -6,7 +6,15 @@ Status: partial pass (operator-machine pass complete; clean-machine pass still p
 Reference runbook:
 - `docs/runbooks/REAL_ORG_DESKTOP_QUICKSTART.md`
 
-## Operator Evidence Snapshot
+## Candidate 001
+
+- Operator: Sean
+- Alias: `shulman-uat`
+- Result: pass
+- Proof ID: `proof_6191da2051e9b10b25c3bd11`
+- Replay Token: `trace_607a628baaef3350d991dd0`
+
+### Operator Evidence Snapshot
 
 - Operator: Sean
 - Alias: `shulman-uat`
@@ -20,7 +28,7 @@ Reference runbook:
   - `CCI: installed`
   - `CCI pinned: true (4.5.0)`
 
-## Workflow Checks
+### Workflow Checks
 
 1. Org Sessions connect and readiness:
 - Result: pass
@@ -66,7 +74,7 @@ Reference runbook:
   - Proof ID: `proof_304775e3d852eecdde28ebe1`
   - Replay Token: `trace_d7725382d02a5fcf02b91b20`
 
-## Gate Impact
+### Gate Impact
 
 - Wave12 runbook/operator-proof gate:
   - operator-machine validation: complete
@@ -76,14 +84,21 @@ Reference runbook:
   - no generic fallback (`no automation found for the`) observed in this operator run
   - grounded flow summary returned with trusted envelope for both direct flow-name and `Flow called` phrasing
 
-## Next Required Validation
+### Next Required Validation
 
 To close Wave12 release-readiness evidence fully:
 1. run the same quickstart on a clean machine
 2. capture equivalent artifacts (connect, browser/retrieve/handoff, Ask proof/replay)
 3. append results to this file
 
-## Clean Machine Proof Template
+## Clean Machine 001
+
+- Operator:
+- Result:
+- Proof ID:
+- Replay Token:
+
+### Clean Machine Proof Template
 
 Use:
 - `docs/runbooks/CLEAN_MACHINE_OPERATOR_PROOF.md`
@@ -91,9 +106,12 @@ Use:
 Append the completed result below this heading after the non-author operator run is finished.
 
 ```md
-## Clean Machine Proof
+## Clean Machine 001
 
 - Operator:
+- Result:
+- Proof ID:
+- Replay Token:
 - Machine:
 - Date:
 - Candidate commit SHA:
