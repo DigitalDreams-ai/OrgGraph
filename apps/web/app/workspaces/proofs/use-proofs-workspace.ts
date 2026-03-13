@@ -435,20 +435,18 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     }
   }
 
-  async function exportSelectedProofArtifact(): Promise<void> {
-    if (!selectedRecentProof?.proofId) {
-      reportSelectionRequired('Select a history label first before exporting proof from the primary workflow.');
-      return;
-    }
-
+  async function exportProofArtifactFor(
+    proof: RecentProofItem,
+    selectionMode: 'selected' | 'row'
+  ): Promise<void> {
     options.setLoading(true);
     options.setCopied(false);
     options.setErrorText('');
 
     try {
       let artifact = selectedProof;
-      if (!artifact || artifact.proofId !== selectedRecentProof.proofId) {
-        const result = await getAskProof(selectedRecentProof.proofId);
+      if (!artifact || artifact.proofId !== proof.proofId) {
+        const result = await getAskProof(proof.proofId);
         options.presentResponse(result);
         if (result.ok === false) {
           options.setErrorText(options.resolveErrorMessage(result));
@@ -459,11 +457,15 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
       }
 
       if (!artifact) {
-        options.setErrorText('Proof export failed. The selected history label did not resolve to a proof artifact.');
+        options.setErrorText(
+          selectionMode === 'row'
+            ? 'Proof export failed. The selected history row did not resolve to a proof artifact.'
+            : 'Proof export failed. The selected history label did not resolve to a proof artifact.'
+        );
         return;
       }
 
-      const name = resolveProofExportName(selectedRecentProof, artifact);
+      const name = resolveProofExportName(proof, artifact);
       downloadJsonArtifact(`orgumented-proof-${name}.json`, artifact as unknown as Record<string, unknown>);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected proof export failure';
@@ -475,26 +477,33 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     }
   }
 
-  async function exportSelectedReplayArtifact(): Promise<void> {
-    if (!selectedRecentProof?.proofId || !selectedRecentProof.replayToken) {
-      reportSelectionRequired('Select a history label first before exporting replay from the primary workflow.');
+  async function exportSelectedProofArtifact(): Promise<void> {
+    if (!selectedRecentProof?.proofId) {
+      reportSelectionRequired('Select a history label first before exporting proof from the primary workflow.');
       return;
     }
+    await exportProofArtifactFor(selectedRecentProof, 'selected');
+  }
 
+  async function exportRecentProofArtifact(proof: RecentProofItem): Promise<void> {
+    useRecentProof(proof);
+    await exportProofArtifactFor(proof, 'row');
+  }
+
+  async function exportReplayArtifactFor(
+    proof: RecentProofItem,
+    selectionMode: 'selected' | 'row'
+  ): Promise<void> {
     options.setLoading(true);
     options.setCopied(false);
     options.setErrorText('');
 
     try {
       let artifact = replayResult;
-      if (
-        !artifact ||
-        artifact.proofId !== selectedRecentProof.proofId ||
-        artifact.replayToken !== selectedRecentProof.replayToken
-      ) {
+      if (!artifact || artifact.proofId !== proof.proofId || artifact.replayToken !== proof.replayToken) {
         const result = await replayAskProof({
-          replayToken: selectedRecentProof.replayToken,
-          proofId: selectedRecentProof.proofId
+          replayToken: proof.replayToken,
+          proofId: proof.proofId
         });
         options.presentResponse(result);
         if (result.ok === false) {
@@ -506,11 +515,15 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
       }
 
       if (!artifact) {
-        options.setErrorText('Replay export failed. The selected history label did not resolve to replay parity output.');
+        options.setErrorText(
+          selectionMode === 'row'
+            ? 'Replay export failed. The selected history row did not resolve to replay parity output.'
+            : 'Replay export failed. The selected history label did not resolve to replay parity output.'
+        );
         return;
       }
 
-      const name = resolveReplayExportName(selectedRecentProof, artifact);
+      const name = resolveReplayExportName(proof, artifact);
       downloadJsonArtifact(`orgumented-replay-${name}.json`, artifact as unknown as Record<string, unknown>);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected replay export failure';
@@ -520,6 +533,23 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     } finally {
       options.setLoading(false);
     }
+  }
+
+  async function exportRecentReplayArtifact(proof: RecentProofItem): Promise<void> {
+    useRecentProof(proof);
+    if (!proof.proofId || !proof.replayToken) {
+      reportSelectionRequired('The selected history row does not include replay parity output.');
+      return;
+    }
+    await exportReplayArtifactFor(proof, 'row');
+  }
+
+  async function exportSelectedReplayArtifact(): Promise<void> {
+    if (!selectedRecentProof?.proofId || !selectedRecentProof.replayToken) {
+      reportSelectionRequired('Select a history label first before exporting replay from the primary workflow.');
+      return;
+    }
+    await exportReplayArtifactFor(selectedRecentProof, 'selected');
   }
 
   async function runMetricsExport(): Promise<void> {
@@ -584,6 +614,8 @@ export function useProofsWorkspace(options: UseProofsWorkspaceOptions) {
     runMetricsExport,
     exportSelectedProofArtifact,
     exportSelectedReplayArtifact,
+    exportRecentProofArtifact,
+    exportRecentReplayArtifact,
     clearAdvancedTokens
   };
 }

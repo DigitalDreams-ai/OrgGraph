@@ -28,6 +28,8 @@ interface ProofsWorkspaceProps {
   onExportMetrics: () => void;
   onExportProofArtifact: () => void | Promise<void>;
   onExportReplayArtifact: () => void | Promise<void>;
+  onExportRecentProofArtifact: (proof: RecentProofItem) => void | Promise<void>;
+  onExportRecentReplayArtifact: (proof: RecentProofItem) => void | Promise<void>;
   onSelectRecentProof: (proof: RecentProofItem) => void;
   onOpenRecentProof: (proof: RecentProofItem) => void;
   onReplayRecentProof: (proof: RecentProofItem) => void;
@@ -168,6 +170,12 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
                     </button>
                     <button type="button" className="ghost" onClick={() => props.onReplayRecentProof(proof)}>
                       Replay Label
+                    </button>
+                    <button type="button" className="ghost" onClick={() => void props.onExportRecentProofArtifact(proof)}>
+                      Export Label Proof
+                    </button>
+                    <button type="button" className="ghost" onClick={() => void props.onExportRecentReplayArtifact(proof)}>
+                      Export Label Replay
                     </button>
                   </div>
                 </li>

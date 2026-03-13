@@ -206,6 +206,8 @@ function run(): void {
       onExportMetrics: () => undefined,
       onExportProofArtifact: () => undefined,
       onExportReplayArtifact: () => undefined,
+      onExportRecentProofArtifact: () => undefined,
+      onExportRecentReplayArtifact: () => undefined,
       onSelectRecentProof: () => undefined,
       onOpenRecentProof: () => undefined,
       onReplayRecentProof: () => undefined
@@ -249,6 +251,8 @@ function run(): void {
       onExportMetrics: () => undefined,
       onExportProofArtifact: () => undefined,
       onExportReplayArtifact: () => undefined,
+      onExportRecentProofArtifact: () => undefined,
+      onExportRecentReplayArtifact: () => undefined,
       onSelectRecentProof: () => undefined,
       onOpenRecentProof: () => undefined,
       onReplayRecentProof: () => undefined
@@ -281,6 +285,8 @@ function run(): void {
       onExportMetrics: () => undefined,
       onExportProofArtifact: () => undefined,
       onExportReplayArtifact: () => undefined,
+      onExportRecentProofArtifact: () => undefined,
+      onExportRecentReplayArtifact: () => undefined,
       onSelectRecentProof: () => undefined,
       onOpenRecentProof: () => undefined,
       onReplayRecentProof: () => undefined
@@ -293,6 +299,8 @@ function run(): void {
   assert.match(selectedMarkup, /History label: selected/);
   assert.match(selectedMarkup, /Loaded proof: not opened/);
   assert.match(selectedMarkup, /Advanced tokens: empty/);
+  assert.match(selectedMarkup, /Export Label Proof<\/button>/);
+  assert.match(selectedMarkup, /Export Label Replay<\/button>/);
 
   const advancedLoadedMarkup = renderToStaticMarkup(
     React.createElement(ProofsWorkspace, {
@@ -330,6 +338,8 @@ function run(): void {
       onExportMetrics: () => undefined,
       onExportProofArtifact: () => undefined,
       onExportReplayArtifact: () => undefined,
+      onExportRecentProofArtifact: () => undefined,
+      onExportRecentReplayArtifact: () => undefined,
       onSelectRecentProof: () => undefined,
       onOpenRecentProof: () => undefined,
       onReplayRecentProof: () => undefined
@@ -415,6 +425,8 @@ function run(): void {
       onExportMetrics: () => undefined,
       onExportProofArtifact: () => undefined,
       onExportReplayArtifact: () => undefined,
+      onExportRecentProofArtifact: () => undefined,
+      onExportRecentReplayArtifact: () => undefined,
       onSelectRecentProof: () => undefined,
       onOpenRecentProof: () => undefined,
       onReplayRecentProof: () => undefined
