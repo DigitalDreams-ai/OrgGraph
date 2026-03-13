@@ -342,6 +342,7 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
     : props.systemPermissionResult.warnings.length > 0 || props.systemPermissionResult.truncated
       ? 'warning'
       : 'good';
+  const mappingResolved = props.systemPermissionResult.mappingStatus === 'resolved';
   return [
     {
       id: 'system-summary',
@@ -350,8 +351,10 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
       detail: `${props.systemPermissionResult.permission}: ${
         props.systemPermissionResult.granted ? 'granted' : 'not granted'
       }. ${props.systemPermissionResult.paths.length}/${props.systemPermissionResult.totalPaths} visible path(s).`,
-      nextAction: !props.systemPermissionResult.granted
-        ? 'Inspect grant paths and update assignments before approval.'
+      nextAction: !mappingResolved
+        ? 'Run Diagnose User Mapping before relying on the grant verdict.'
+        : !props.systemPermissionResult.granted
+          ? 'Inspect grant paths and update assignments before approval.'
         : props.systemPermissionResult.truncated
           ? 'Increase Limit to verify full grant coverage.'
           : props.systemPermissionResult.warnings.length > 0
@@ -359,7 +362,8 @@ function buildAnalyzeSnapshot(props: AnalyzeWorkspaceProps): StructuredAnalyzeSu
             : 'System permission coverage is deterministic and ready.',
       actions: [
         { id: 'run-system', label: 'Run System Permission Check' },
-        { id: 'open-ask-system', label: 'Open Ask for System Permission' }
+        ...(!mappingResolved ? [{ id: 'diagnose-mapping', label: 'Diagnose User Mapping' } as StructuredAnalyzeAction] : []),
+        ...(mappingResolved ? [{ id: 'open-ask-system', label: 'Open Ask for System Permission' } as StructuredAnalyzeAction] : [])
       ]
     }
   ];
@@ -937,6 +941,9 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
           </div>
 
           {renderActionChecklist('System permission triage', [
+            ...(props.systemPermissionResult.mappingStatus !== 'resolved'
+              ? ['Run `Diagnose User Mapping` before relying on the grant verdict.']
+              : []),
             ...(!props.systemPermissionResult.granted
               ? ['Permission is not granted through deterministic paths. Validate profile/permset assignments before approval.']
               : ['System permission is granted through deterministic evidence paths.']),
@@ -950,20 +957,22 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
 
           {renderWarnings(props.systemPermissionResult.warnings)}
 
-          <div className="sub-card">
-            <p className="panel-caption">Ask handoff</p>
-            <h3>Open system-permission packet</h3>
-            <p className="muted">Move this deterministic system-permission context into Ask to produce a trusted approval packet.</p>
-            <div className="action-row">
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => props.onOpenAsk(buildSystemPermissionAskQuery(props.systemPermissionResult, props.user, props.systemPermission))}
-              >
-                Open Ask for System Permission
-              </button>
+          {props.systemPermissionResult.mappingStatus === 'resolved' ? (
+            <div className="sub-card">
+              <p className="panel-caption">Ask handoff</p>
+              <h3>Open system-permission packet</h3>
+              <p className="muted">Move this deterministic system-permission context into Ask to produce a trusted approval packet.</p>
+              <div className="action-row">
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => props.onOpenAsk(buildSystemPermissionAskQuery(props.systemPermissionResult, props.user, props.systemPermission))}
+                >
+                  Open Ask for System Permission
+                </button>
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       ) : null}
     </>
