@@ -2192,6 +2192,16 @@ export class AskService {
     if (metadataType === 'Flow') {
       return this.compactFlowToken(selectedMember) === this.compactFlowToken(requestedComponent);
     }
+    if (metadataType === 'EmailTemplate') {
+      const requested = requestedComponent.trim().toLowerCase();
+      const selected = selectedMember.trim().toLowerCase();
+      if (selected === requested) {
+        return true;
+      }
+      const requestedBaseName = requested.split('/').pop() ?? requested;
+      const selectedBaseName = selected.split('/').pop() ?? selected;
+      return selectedBaseName === requestedBaseName;
+    }
     return selectedMember.trim().toLowerCase() === requestedComponent.trim().toLowerCase();
   }
 
@@ -2351,6 +2361,15 @@ export class AskService {
       };
     }
 
+    if (normalizedType === 'emailtemplate') {
+      return {
+        exactPath: this.normalizeEvidenceSourcePath(
+          path.join(parsePath, 'email', `${normalizedMember}.email-meta.xml`)
+        ),
+        prefixPath: this.normalizeEvidenceSourcePath(path.join(parsePath, 'email', normalizedMember))
+      };
+    }
+
     if (normalizedType === 'permissionset') {
       return {
         exactPath: this.normalizeEvidenceSourcePath(
@@ -2420,6 +2439,7 @@ export class AskService {
     if (normalizedType === 'flexipage') return 'flexipages';
     if (normalizedType === 'apexclass') return 'classes';
     if (normalizedType === 'apextrigger') return 'triggers';
+    if (normalizedType === 'emailtemplate') return 'email';
     if (normalizedType === 'permissionset') return 'permissionsets';
     if (normalizedType === 'profile') return 'profiles';
     if (normalizedType === 'permissionsetgroup') return 'permissionsetgroups';
@@ -2643,7 +2663,15 @@ export class AskService {
       case 'email_template':
         queries.add(`${parsed.componentName}.email`);
         queries.add(`${parsed.componentName}.email-meta.xml`);
+        queries.add(`email/${parsed.componentName}`);
         queries.add(`emailtemplate ${parsed.componentName}`);
+        if (parsed.componentName.includes('/')) {
+          const baseName = parsed.componentName.split('/').pop() ?? parsed.componentName;
+          queries.add(`${baseName}.email`);
+          queries.add(`${baseName}.email-meta.xml`);
+          queries.add(`email/${baseName}`);
+          queries.add(`emailtemplate ${baseName}`);
+        }
         break;
       case 'tab':
         queries.add(`${parsed.componentName}.tab-meta.xml`);
@@ -2891,6 +2919,15 @@ export class AskService {
         return [`${fieldName}.field-meta.xml`];
       }
       case 'email_template':
+        if (parsed.componentName.includes('/')) {
+          const baseName = parsed.componentName.split('/').pop() ?? parsed.componentName;
+          return [
+            `${parsed.componentName}.email`,
+            `${parsed.componentName}.email-meta.xml`,
+            `${baseName}.email`,
+            `${baseName}.email-meta.xml`
+          ];
+        }
         return [`${parsed.componentName}.email`, `${parsed.componentName}.email-meta.xml`];
       case 'tab':
         return [`${parsed.componentName}.tab-meta.xml`];
@@ -3016,8 +3053,12 @@ export class AskService {
         break;
       }
       case 'email_template': {
-        if (normalizedPath.includes('/')) {
-          normalized = normalizedPath.split('/').pop() ?? normalized;
+        const emailPathMatch = normalizedPath.match(/(?:^|\/)email\/(.+)$/i);
+        if (emailPathMatch?.[1]) {
+          normalized = emailPathMatch[1];
+        } else if (normalizedPath.includes('/')) {
+          const segments = normalizedPath.split('/').filter((segment) => segment.length > 0);
+          normalized = segments.slice(-2).join('/') || normalized;
         }
         normalized = stripExtensions(normalized, [/\.email-meta\.xml$/i, /\.email$/i]);
         break;
