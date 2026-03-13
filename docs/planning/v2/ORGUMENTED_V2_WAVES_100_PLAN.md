@@ -30,6 +30,7 @@ The following are now true in main and should not be re-planned as open:
 3. Wave10 boundary hardening:
 - major clipping/overflow defects in core Ask/Analyze/Diagnostics surfaces were reduced with stronger grid minima and wrapping rules
 - accessibility smoke coverage is now part of the wave10 finish path for Ask, Sessions, Browser, and Refresh
+- browser limited-coverage warning copy and long discovery-warning wrapping are now regression-gated as part of the wave10 finish path, so partial live catalog states remain readable and operator-safe
 - long path/identifier surfaces in Connect, Refresh, and System now use explicit wrappers, and the runtime-status regression gate render-checks those guards so raw JSON and path-heavy summaries stay bounded
 - targeted web regression gates are now part of the wave11 CI lock path, so Ask/Analyze/Proofs/System UI regressions fail in `validate` instead of remaining local-only checks
 
