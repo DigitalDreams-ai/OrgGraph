@@ -339,6 +339,7 @@ Exit:
 - CI minutes remain controlled with path-gating and selective heavy-job execution
 - detect-changes remains repo-local and deterministic, without third-party action download dependencies
 - targeted web regression suite runs in `validate` for runtime-impacting PRs, locking Ask/Analyze/Proofs/System accessibility and render guards into GitHub Actions
+- edge metadata-family regression coverage includes Email Template and Custom Tab evidence-lookup prompts in addition to Flow, Layout, Apex, and CustomField families
 
 ## wave12 - Release Readiness And Operator Proof
 

@@ -2231,6 +2231,81 @@ async function run(): Promise<void> {
       'path-qualified apex trigger usage ask should normalize to deterministic evidence lookup'
     );
 
+    const askEmailTemplateComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is Email Template Customer_Welcome used?'
+      })
+    });
+    assert.equal(
+      askEmailTemplateComponentUsageRes.status,
+      201,
+      'email template usage ask should return 201'
+    );
+    const askEmailTemplateComponentUsage =
+      (await askEmailTemplateComponentUsageRes.json()) as {
+        plan?: {
+          semanticFrame?: {
+            intent?: string;
+            target?: { selected?: string };
+          };
+        };
+        deterministicAnswer: string;
+        trustLevel: string;
+      };
+    assert.equal(askEmailTemplateComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(
+      askEmailTemplateComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Email Template Customer_Welcome'
+    );
+    assert.match(
+      askEmailTemplateComponentUsage.deterministicAnswer,
+      /component usage lookup for Email Template Customer_Welcome/i
+    );
+    assert.notEqual(
+      askEmailTemplateComponentUsage.trustLevel,
+      'refused',
+      'email template usage ask should stay on deterministic evidence lookup even when no references match'
+    );
+
+    const askCustomTabComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is Custom Tab Volunteer_Console used?'
+      })
+    });
+    assert.equal(
+      askCustomTabComponentUsageRes.status,
+      201,
+      'custom tab usage ask should return 201'
+    );
+    const askCustomTabComponentUsage = (await askCustomTabComponentUsageRes.json()) as {
+      plan?: {
+        semanticFrame?: {
+          intent?: string;
+          target?: { selected?: string };
+        };
+      };
+      deterministicAnswer: string;
+      trustLevel: string;
+    };
+    assert.equal(askCustomTabComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(
+      askCustomTabComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Custom Tab Volunteer_Console'
+    );
+    assert.match(
+      askCustomTabComponentUsage.deterministicAnswer,
+      /component usage lookup for Custom Tab Volunteer_Console/i
+    );
+    assert.notEqual(
+      askCustomTabComponentUsage.trustLevel,
+      'refused',
+      'custom tab usage ask should stay on deterministic evidence lookup even when no references match'
+    );
+
     const askComponentUsageRecordIdRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

@@ -330,6 +330,28 @@ function run(): void {
     'Apex Trigger CaseBeforeUpdate'
   );
 
+  const componentUsageEmailTemplatePlan = planner.plan(
+    'Where is Email Template Customer_Welcome used?'
+  );
+  assert.equal(componentUsageEmailTemplatePlan.intent, 'unknown');
+  assert.equal(componentUsageEmailTemplatePlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageEmailTemplatePlan.semanticFrame?.target?.selected,
+    'Email Template Customer_Welcome'
+  );
+  assert.equal(componentUsageEmailTemplatePlan.semanticFrame?.admissibility.status, 'accepted');
+
+  const componentUsageCustomTabPlan = planner.plan(
+    'Where is Custom Tab Volunteer_Console used?'
+  );
+  assert.equal(componentUsageCustomTabPlan.intent, 'unknown');
+  assert.equal(componentUsageCustomTabPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageCustomTabPlan.semanticFrame?.target?.selected,
+    'Custom Tab Volunteer_Console'
+  );
+  assert.equal(componentUsageCustomTabPlan.semanticFrame?.admissibility.status, 'accepted');
+
   const componentUsageRecordIdPlan = planner.plan('Where is 00X000000000123AAA used?');
   assert.equal(componentUsageRecordIdPlan.intent, 'unknown');
   assert.equal(componentUsageRecordIdPlan.semanticFrame?.intent, 'evidence_lookup');
