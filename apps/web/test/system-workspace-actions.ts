@@ -7,7 +7,8 @@ import type { OrgPreflightPayload, OrgStatusPayload } from '../app/workspaces/co
 import type {
   AskTrustDashboardPayload,
   MetaAdaptPayload,
-  MetaContextPayload
+  MetaContextPayload,
+  RuntimeMetricsPayload
 } from '../app/workspaces/system/types';
 
 function buildReadyPayload(): ReadyPayload {
@@ -132,6 +133,40 @@ function buildAskTrustDashboard(): AskTrustDashboardPayload {
   };
 }
 
+function buildRuntimeMetrics(): RuntimeMetricsPayload {
+  return {
+    status: 'ok',
+    dbBackend: 'sqlite',
+    totalRequests: 42,
+    byRoute: [
+      {
+        method: 'GET',
+        path: '/ready',
+        requestCount: 12,
+        avgElapsedMs: 14.2,
+        lastStatusCode: 200,
+        lastSeenAt: '2026-03-12T20:05:00Z'
+      },
+      {
+        method: 'POST',
+        path: '/refresh',
+        requestCount: 3,
+        avgElapsedMs: 185.5,
+        lastStatusCode: 500,
+        lastSeenAt: '2026-03-12T20:06:00Z'
+      },
+      {
+        method: 'GET',
+        path: '/ask/trust/dashboard',
+        requestCount: 4,
+        avgElapsedMs: 33.1,
+        lastStatusCode: 200,
+        lastSeenAt: '2026-03-12T20:07:00Z'
+      }
+    ]
+  };
+}
+
 function run(): void {
   const markup = renderToStaticMarkup(
     React.createElement(SystemWorkspace, {
@@ -149,11 +184,13 @@ function run(): void {
       metaContext: buildMetaContext(),
       metaAdaptResult: buildMetaAdaptResult(),
       askTrustDashboard: buildAskTrustDashboard(),
+      runtimeMetrics: buildRuntimeMetrics(),
       loading: false,
       onLoadMetaContext: () => undefined,
       onRunMetaAdapt: () => undefined,
       onLoadOrgStatus: () => undefined,
       onLoadAskTrustDashboard: () => undefined,
+      onLoadRuntimeMetrics: () => undefined,
       onRunPreflight: () => undefined,
       onRefreshStatus: () => undefined,
       onOpenConnect: () => undefined,
@@ -167,6 +204,7 @@ function run(): void {
   assert.match(markup, /Open Refresh &amp; Build/);
   assert.match(markup, /Ask Trust/);
   assert.match(markup, /Load Org Status/);
+  assert.match(markup, /Runtime Telemetry/);
   assert.match(markup, /Run Preflight/);
   assert.match(markup, /Open Org Sessions/);
   assert.match(markup, /Operator triage snapshot/);
@@ -189,6 +227,16 @@ function run(): void {
   assert.match(markup, /reads/);
   assert.match(markup, /Updated multipliers/);
   assert.match(markup, /impacts/);
+  assert.match(markup, /Runtime telemetry/);
+  assert.match(markup, /Route timings and failure signatures/);
+  assert.match(markup, /Requests: 42/);
+  assert.match(markup, /Failure routes: 1/);
+  assert.match(markup, /Hottest route/);
+  assert.match(markup, /Slowest route/);
+  assert.match(markup, /Latest route/);
+  assert.match(markup, /Failure signature:/);
+  assert.match(markup, /POST \/refresh/);
+  assert.match(markup, /last status 500/);
 }
 
 run();

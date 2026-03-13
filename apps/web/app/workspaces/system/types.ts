@@ -47,3 +47,17 @@ export interface AskTrustDashboardPayload {
     count: number;
   }>;
 }
+
+export interface RuntimeMetricsPayload {
+  status: 'ok';
+  dbBackend: string;
+  totalRequests: number;
+  byRoute: Array<{
+    path: string;
+    method: string;
+    requestCount: number;
+    avgElapsedMs: number;
+    lastStatusCode: number;
+    lastSeenAt: string;
+  }>;
+}

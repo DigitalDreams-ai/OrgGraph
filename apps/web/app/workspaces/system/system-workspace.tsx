@@ -3,7 +3,7 @@
 import { describeToolStatusSource, type ToolStatusSource } from '../../shell/org-status-surface';
 import type { ReadyPayload } from '../../shell/use-shell-runtime';
 import type { OrgPreflightIssue, OrgPreflightPayload, OrgStatusPayload } from '../connect/types';
-import type { AskTrustDashboardPayload, MetaAdaptPayload, MetaContextPayload } from './types';
+import type { AskTrustDashboardPayload, MetaAdaptPayload, MetaContextPayload, RuntimeMetricsPayload } from './types';
 import {
   buildStructuredSnapshot,
   deriveRuntimeIssues
@@ -27,11 +27,13 @@ interface SystemWorkspaceProps {
   metaContext: MetaContextPayload | null;
   metaAdaptResult: MetaAdaptPayload | null;
   askTrustDashboard: AskTrustDashboardPayload | null;
+  runtimeMetrics: RuntimeMetricsPayload | null;
   loading: boolean;
   onLoadMetaContext: () => void;
   onRunMetaAdapt: () => void;
   onLoadOrgStatus: () => void;
   onLoadAskTrustDashboard: () => void;
+  onLoadRuntimeMetrics: () => void;
   onRunPreflight: () => void;
   onRefreshStatus: () => void;
   onOpenConnect: () => void;
@@ -208,6 +210,84 @@ function renderAskTrustTelemetry(payload: AskTrustDashboardPayload | null): JSX.
       ) : (
         <p className="muted">Load Ask Trust to inspect replay rate, proof coverage, and recent failure classes.</p>
       )}
+    </article>
+  );
+}
+
+function renderRuntimeTelemetry(payload: RuntimeMetricsPayload | null): JSX.Element {
+  if (!payload) {
+    return (
+      <article className="sub-card">
+        <p className="panel-caption">Runtime telemetry</p>
+        <h3>Route timings and failure signatures</h3>
+        <p className="muted">Load Runtime Telemetry to inspect request volume, busiest routes, and recent non-200 signatures.</p>
+      </article>
+    );
+  }
+
+  const routesByTraffic = [...payload.byRoute].sort((left, right) => right.requestCount - left.requestCount || left.path.localeCompare(right.path));
+  const routesByLatency = [...payload.byRoute].sort((left, right) => right.avgElapsedMs - left.avgElapsedMs || left.path.localeCompare(right.path));
+  const routesByRecency = [...payload.byRoute].sort((left, right) => Date.parse(right.lastSeenAt) - Date.parse(left.lastSeenAt));
+  const failureRoutes = routesByRecency.filter((route) => route.lastStatusCode >= 400);
+  const hottestRoute = routesByTraffic[0];
+  const slowestRoute = routesByLatency[0];
+  const latestRoute = routesByRecency[0];
+
+  function describeRoute(route?: RuntimeMetricsPayload['byRoute'][number]): JSX.Element {
+    if (!route) {
+      return <span className="muted">n/a</span>;
+    }
+    return (
+      <span className="path-value">
+        {route.method} {route.path}
+      </span>
+    );
+  }
+
+  return (
+    <article className="sub-card">
+      <p className="panel-caption">Runtime telemetry</p>
+      <h3>Route timings and failure signatures</h3>
+      <div className="decision-meta">
+        <span className="decision-badge good">Requests: {payload.totalRequests}</span>
+        <span className="decision-badge muted">Routes: {payload.byRoute.length}</span>
+        <span className="decision-badge muted">DB: {payload.dbBackend}</span>
+        <span className={failureRoutes.length > 0 ? 'decision-badge bad' : 'decision-badge good'}>
+          Failure routes: {failureRoutes.length}
+        </span>
+      </div>
+      <div className="analysis-stat-grid">
+        <div className="packet-stat">
+          <span>Hottest route</span>
+          <strong>{hottestRoute ? hottestRoute.requestCount : 'n/a'}</strong>
+          <p>{describeRoute(hottestRoute)}</p>
+        </div>
+        <div className="packet-stat">
+          <span>Slowest route</span>
+          <strong>{slowestRoute ? `${slowestRoute.avgElapsedMs} ms` : 'n/a'}</strong>
+          <p>{describeRoute(slowestRoute)}</p>
+        </div>
+        <div className="packet-stat">
+          <span>Latest route</span>
+          <strong>{latestRoute ? formatTimestamp(latestRoute.lastSeenAt) : 'n/a'}</strong>
+          <p>{describeRoute(latestRoute)}</p>
+        </div>
+      </div>
+      <ul className="analysis-list">
+        {failureRoutes.length > 0 ? (
+          failureRoutes.slice(0, 3).map((route) => (
+            <li key={`${route.method}-${route.path}`}>
+              <strong>Failure signature:</strong>{' '}
+              <span className="path-value">
+                {route.method} {route.path}
+              </span>{' '}
+              last status {route.lastStatusCode}, average {route.avgElapsedMs} ms, seen {formatTimestamp(route.lastSeenAt)}
+            </li>
+          ))
+        ) : (
+          <li>No non-200 route signatures recorded in the current runtime window.</li>
+        )}
+      </ul>
     </article>
   );
 }
@@ -540,6 +620,9 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
         <button type="button" onClick={props.onLoadAskTrustDashboard} disabled={props.loading}>
           Ask Trust
         </button>
+        <button type="button" onClick={props.onLoadRuntimeMetrics} disabled={props.loading}>
+          Runtime Telemetry
+        </button>
         <button type="button" onClick={props.onLoadOrgStatus} disabled={props.loading}>
           Org Status
         </button>
@@ -588,6 +671,8 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
         {props.metaContext ? renderIntentBreakdown('Refused by intent', props.metaContext.context.provenance.refusedByIntent) : null}
 
         {renderAskTrustTelemetry(props.askTrustDashboard)}
+
+        {renderRuntimeTelemetry(props.runtimeMetrics)}
       </div>
 
       {props.metaAdaptResult ? (

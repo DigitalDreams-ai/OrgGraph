@@ -422,10 +422,12 @@ export default function Page(): JSX.Element {
               metaContext={systemWorkspace.metaContext}
               metaAdaptResult={systemWorkspace.metaAdaptResult}
               askTrustDashboard={systemWorkspace.askTrustDashboard}
+              runtimeMetrics={systemWorkspace.runtimeMetrics}
               loading={secondaryQueryRunner.loading}
               onLoadMetaContext={() => void systemWorkspace.loadMetaContext()}
               onRunMetaAdapt={() => void systemWorkspace.runMetaAdapt()}
               onLoadAskTrustDashboard={() => void systemWorkspace.loadAskTrustDashboard()}
+              onLoadRuntimeMetrics={() => void systemWorkspace.loadRuntimeMetrics()}
               onLoadOrgStatus={() => void systemWorkspace.loadOrgStatus()}
               onRunPreflight={() => void connectWorkspace.runPreflight(connectWorkspace.activeAlias)}
               onRefreshStatus={() => void shellRuntime.refreshStatuses()}

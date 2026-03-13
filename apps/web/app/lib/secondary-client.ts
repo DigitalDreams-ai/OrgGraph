@@ -7,6 +7,7 @@ export type SecondaryQueryKind =
   | 'permsSystem'
   | 'automation'
   | 'impact'
+  | 'runtimeMetrics'
   | 'askTrustDashboard'
   | 'metaContext'
   | 'metaAdapt';
@@ -104,6 +105,9 @@ function buildBoundaryRequest(kind: SecondaryQueryKind, payload: Record<string, 
     appendParam(params, 'explain', payload.explain);
     appendParam(params, 'includeLowConfidence', payload.includeLowConfidence);
     return { url: resolveBoundaryPath(`/impact?${params.toString()}`), init: { method: 'GET' } };
+  }
+  if (kind === 'runtimeMetrics') {
+    return { url: resolveBoundaryPath('/metrics'), init: { method: 'GET' } };
   }
   if (kind === 'askTrustDashboard') {
     return { url: resolveBoundaryPath('/ask/trust/dashboard'), init: { method: 'GET' } };
