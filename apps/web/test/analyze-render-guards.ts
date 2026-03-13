@@ -74,6 +74,61 @@ function run(): void {
   );
   assert.match(permissionMarkup, /<span class="path-value">Profile:Sales_User -grants-&gt; Object:Opportunity \| Object:Opportunity -blocks-&gt; Field:Opportunity.StageName<\/span>/);
   assert.match(permissionMarkup, /<p class="path-value">C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\maps\\principal-map\.json<\/p>/);
+  assert.match(permissionMarkup, />Open Ask for Permission Scope</);
+
+  const permissionMappingBlockedMarkup = renderToStaticMarkup(
+    React.createElement(AnalyzeWorkspace, {
+      analyzeMode: 'perms',
+      setAnalyzeMode: () => undefined,
+      user: 'sbingham@example.com',
+      setUser: () => undefined,
+      objectName: 'Opportunity',
+      setObjectName: () => undefined,
+      fieldName: 'Opportunity.StageName',
+      setFieldName: () => undefined,
+      systemPermission: 'ManageUsers',
+      setSystemPermission: () => undefined,
+      limitRaw: '25',
+      setLimitRaw: () => undefined,
+      strictMode: true,
+      setStrictMode: () => undefined,
+      explainMode: false,
+      setExplainMode: () => undefined,
+      debugMode: false,
+      setDebugMode: () => undefined,
+      permissionsResult: {
+        user: 'sbingham@example.com',
+        object: 'Opportunity',
+        field: 'Opportunity.StageName',
+        granted: false,
+        objectGranted: true,
+        fieldGranted: false,
+        mappingStatus: 'unmapped_user',
+        principalsChecked: [],
+        paths: [],
+        totalPaths: 0,
+        truncated: false,
+        explanation: 'Principal mapping is unresolved.',
+        warnings: ['Principal map missing.']
+      },
+      permissionDiagnosis: null,
+      automationResult: null,
+      impactResult: null,
+      systemPermissionResult: null,
+      loading: false,
+      onRunPermissions: () => undefined,
+      onDiagnoseUserMapping: () => undefined,
+      onRunAutomation: () => undefined,
+      onRunImpact: () => undefined,
+      onRunSystemPermission: () => undefined,
+      onOpenAsk: () => undefined,
+      onOpenBrowser: () => undefined,
+      onOpenRefresh: () => undefined
+    } as any)
+  );
+  assert.match(permissionMappingBlockedMarkup, /Resolve mapping before Ask handoff/);
+  assert.match(permissionMappingBlockedMarkup, />Diagnose User Mapping</);
+  assert.doesNotMatch(permissionMappingBlockedMarkup, />Open Ask for Permission Scope</);
 
   const mappingRecoveryMarkup = renderToStaticMarkup(
     React.createElement(AnalyzeWorkspace, {
