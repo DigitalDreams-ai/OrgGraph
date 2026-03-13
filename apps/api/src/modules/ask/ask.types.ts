@@ -153,6 +153,7 @@ export interface AskDecisionPacket {
     impactPathCount: number;
     topImpactedSources: string[];
   };
+  topCitationSources?: string[];
   flowImpact?: {
     readFieldCount: number;
     writeFieldCount: number;

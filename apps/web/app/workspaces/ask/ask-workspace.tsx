@@ -56,6 +56,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
   const componentUsage = decisionPacket?.componentUsage;
   const topAutomationNames = decisionPacket?.automationImpact?.topAutomationNames ?? [];
   const topImpactedSources = decisionPacket?.changeImpact?.topImpactedSources ?? [];
+  const topReviewCitationSources = decisionPacket?.topCitationSources ?? [];
   const topCitationSources = flowImpact?.topCitationSources ?? [];
   const topReferenceSources = componentUsage?.topReferenceSources ?? [];
   const flowSignalsLabel =
@@ -419,9 +420,19 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                 </div>
               ) : null}
 
-              {!isFlowPacket && !isImpactPacket && (topAutomationNames.length > 0 || topImpactedSources.length > 0) ? (
+              {!isFlowPacket && !isImpactPacket && (topAutomationNames.length > 0 || topImpactedSources.length > 0 || topReviewCitationSources.length > 0) ? (
                 <div>
                   <h4>Grounding spotlight</h4>
+                  {topReviewCitationSources.length > 0 ? (
+                    <>
+                      <p className="muted">Top citation sources</p>
+                      <ul className="proof-inline-list">
+                        {topReviewCitationSources.map((source) => (
+                          <li key={source} className="path-value">{source}</li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : null}
                   {topAutomationNames.length > 0 ? (
                     <>
                       <p className="muted">Top automation names</p>

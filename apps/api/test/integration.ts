@@ -1726,6 +1726,7 @@ async function run(): Promise<void> {
         permissionImpact: { user: string; summary: string; pathCount: number };
         automationImpact: { summary: string; automationCount: number; topAutomationNames: string[] };
         changeImpact: { summary: string; impactPathCount: number; topImpactedSources: string[] };
+        topCitationSources?: string[];
         evidenceGaps: string[];
         nextActions: Array<{ label: string; rationale: string }>;
       };
@@ -1759,12 +1760,14 @@ async function run(): Promise<void> {
     assert.equal(typeof askReview.decisionPacket?.permissionImpact.pathCount, 'number');
     assert.equal(typeof askReview.decisionPacket?.automationImpact.automationCount, 'number');
     assert.equal(typeof askReview.decisionPacket?.changeImpact.impactPathCount, 'number');
+    assert.ok((askReview.decisionPacket?.topCitationSources?.length ?? 0) >= 1);
     assert.ok((askReview.decisionPacket?.evidenceGaps.length ?? 0) >= 1);
     assert.ok((askReview.decisionPacket?.nextActions.length ?? 0) >= 3);
     assert.ok((askReview.decisionPacket?.automationImpact.topAutomationNames.length ?? 0) >= 1);
     assert.ok((askReview.decisionPacket?.changeImpact.topImpactedSources.length ?? 0) >= 1);
     const topAutomationName = askReview.decisionPacket?.automationImpact.topAutomationNames[0];
     const topImpactSource = askReview.decisionPacket?.changeImpact.topImpactedSources[0];
+    const topCitationSource = askReview.decisionPacket?.topCitationSources?.[0];
     assert.ok(
       askReview.decisionPacket?.topRiskDrivers.some((driver) => driver.toLowerCase().includes('top automation')),
       'review packet should include top automation spotlight in risk drivers'
@@ -1787,6 +1790,12 @@ async function run(): Promise<void> {
       assert.ok(
         askReview.decisionPacket?.topRiskDrivers.some((driver) => driver.includes(topImpactSource)),
         'review packet should include specific top impact sources'
+      );
+    }
+    if (topCitationSource) {
+      assert.ok(
+        askReview.decisionPacket?.topRiskDrivers.some((driver) => driver.includes(topCitationSource)),
+        'review packet should include specific top citation sources'
       );
     }
     const reviewAutomationAction = askReview.decisionPacket?.nextActions.find(
@@ -1834,6 +1843,7 @@ async function run(): Promise<void> {
         summary: string;
         riskLevel: string;
         topRiskDrivers: string[];
+        topCitationSources?: string[];
         recommendation: { verdict: string; summary: string };
         evidenceGaps: string[];
       };
@@ -1846,6 +1856,10 @@ async function run(): Promise<void> {
     assert.deepEqual(
       askReviewRepeat.decisionPacket?.topRiskDrivers,
       askReview.decisionPacket?.topRiskDrivers
+    );
+    assert.deepEqual(
+      askReviewRepeat.decisionPacket?.topCitationSources,
+      askReview.decisionPacket?.topCitationSources
     );
     assert.deepEqual(
       askReviewRepeat.decisionPacket?.recommendation,
@@ -1872,6 +1886,7 @@ async function run(): Promise<void> {
       decisionPacket?: {
         focus: string;
         targetLabel: string;
+        topCitationSources?: string[];
         recommendation: { verdict: string; summary: string };
         riskScore: number;
         summary: string;
@@ -1891,6 +1906,10 @@ async function run(): Promise<void> {
     assert.equal(
       askReviewVariant.decisionPacket?.recommendation.summary,
       askReview.decisionPacket?.recommendation.summary
+    );
+    assert.deepEqual(
+      askReviewVariant.decisionPacket?.topCitationSources,
+      askReview.decisionPacket?.topCitationSources
     );
 
     const askLatestRetrieveReviewUnsupportedRes = await fetch(`${base}/ask`, {

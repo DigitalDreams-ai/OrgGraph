@@ -169,6 +169,7 @@ function run(): void {
             impactPathCount: 6,
             topImpactedSources: ['OpportunityStageSync.flow-meta.xml', 'OpportunityImpactService.cls']
           },
+          topCitationSources: ['Opportunity.permissionset-meta.xml', 'OpportunityStageSync.flow-meta.xml'],
           evidenceGaps: ['permission coverage is incomplete'],
           nextActions: [{ label: 'Inspect automation', rationale: 'Review StageSyncFlow first.' }]
         },
@@ -197,6 +198,8 @@ function run(): void {
   );
 
   assert.match(reviewMarkup, />Grounding spotlight</);
+  assert.match(reviewMarkup, /Top citation sources/);
+  assert.match(reviewMarkup, /Opportunity\.permissionset-meta\.xml/);
   assert.match(reviewMarkup, /Top automation names/);
   assert.match(reviewMarkup, /StageSyncFlow/);
   assert.match(reviewMarkup, /StageApprovalFlow/);
