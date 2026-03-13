@@ -11,7 +11,7 @@ import { EvidenceStoreService } from '../evidence/evidence-store.service';
 import type { EvidenceSearchResult } from '../evidence/evidence.types';
 import { LlmService } from '../llm/llm.service';
 import { PlannerService } from '../planner/planner.service';
-import type { AskPlan } from '../planner/planner.types';
+import type { AskPlan, AskSemanticFrameSourceMode } from '../planner/planner.types';
 import { QueriesService } from '../queries/queries.service';
 import { AskMetricsStoreService } from './ask-metrics-store.service';
 import { AskProofStoreService } from './ask-proof-store.service';
@@ -785,6 +785,12 @@ export class AskService {
         }
         answer = usageSummary.explanation;
         deterministicAnswer = answer;
+        decisionPacket = this.buildComponentUsageDecisionPacket({
+          targetLabel,
+          citationCount: citations.length,
+          sourceMode: lookupFrame.sourceMode,
+          summary: usageSummary
+        });
         confidence =
           usageSummary.referenceHitCount > 0
             ? 0.82
@@ -2630,6 +2636,7 @@ export class AskService {
     matchedCount: number;
     referenceHitCount: number;
     sourceLabels: string[];
+    referenceSourceLabels: string[];
   } {
     const sourceLabels = [
       ...new Set(
@@ -2659,8 +2666,183 @@ export class AskService {
       explanation,
       matchedCount,
       referenceHitCount,
-      sourceLabels
+      sourceLabels,
+      referenceSourceLabels
     };
+  }
+
+  private buildComponentUsageDecisionPacket(input: {
+    targetLabel: string;
+    citationCount: number;
+    sourceMode: AskSemanticFrameSourceMode;
+    summary: {
+      explanation: string;
+      matchedCount: number;
+      referenceHitCount: number;
+      sourceLabels: string[];
+      referenceSourceLabels: string[];
+    };
+  }): AskDecisionPacket {
+    const parsed = this.parseComponentLookupTarget(input.targetLabel);
+    const familyLabel = this.describeComponentUsageFamily(parsed.familyHint);
+    const referenceSummary =
+      input.summary.referenceHitCount > 0
+        ? `${input.summary.referenceHitCount} referencing evidence hit(s) across ${input.summary.referenceSourceLabels.length} source file(s)`
+        : input.summary.matchedCount > 0
+          ? 'only the component definition is grounded in the current evidence scope'
+          : 'no deterministic usage evidence matched yet';
+    const coverageSummary =
+      input.summary.sourceLabels.length > 0
+        ? `${input.summary.sourceLabels.length} total grounded source file(s) in ${this.describeSemanticFrameSourceMode(input.sourceMode)}`
+        : `0 grounded source files in ${this.describeSemanticFrameSourceMode(input.sourceMode)}`;
+    const definitionSummary =
+      input.summary.matchedCount > 0
+        ? `Definition anchor: ${this.inferComponentDefinitionLabels(input.targetLabel).join(', ') || parsed.componentName}.`
+        : `Definition anchor for ${input.targetLabel} is not grounded yet.`;
+    const evidenceGaps = [
+      ...(input.summary.matchedCount === 0
+        ? [`no deterministic component usage evidence matched ${input.targetLabel}`]
+        : []),
+      ...(input.summary.matchedCount > 0 && input.summary.referenceHitCount === 0
+        ? [`only the component definition matched for ${input.targetLabel}`]
+        : []),
+      ...(input.citationCount < 3
+        ? ['citation coverage is light for this component-usage packet']
+        : [])
+    ].slice(0, 4);
+    const recommendation: AskDecisionPacket['recommendation'] =
+      input.summary.referenceHitCount > 0
+        ? {
+            verdict: 'review_before_approval',
+            summary: `Review the referencing metadata sources for ${input.targetLabel} before relying on this component-usage answer as complete impact evidence.`
+          }
+        : {
+            verdict: 'needs_more_evidence',
+            summary:
+              input.summary.matchedCount > 0
+                ? `Only the component definition was grounded for ${input.targetLabel}. Retrieve broader metadata before treating usage coverage as complete.`
+                : `Retrieve broader metadata or search by the exact metadata name/fullName before relying on this component-usage answer.`
+          };
+    const nextActions: AskDecisionPacket['nextActions'] = [
+      {
+        label: 'Inspect citation sources',
+        rationale:
+          input.summary.referenceSourceLabels.length > 0
+            ? `Start with: ${input.summary.referenceSourceLabels.slice(0, 3).join(', ')}.`
+            : 'Open the grounded citation sources to confirm whether only the component definition is present.'
+      },
+      {
+        label: 'Retrieve broader metadata scope',
+        rationale:
+          input.sourceMode === 'latest_retrieve'
+            ? 'Retrieve adjacent metadata families in Org Browser, then rerun Ask from the updated latest retrieve.'
+            : 'Retrieve adjacent metadata families in Org Browser if you need broader component-usage coverage.'
+      }
+    ];
+
+    return {
+      kind: 'metadata_component_usage',
+      focus: 'usage_lookup',
+      targetLabel: input.targetLabel,
+      targetType: 'metadata_component',
+      summary: input.summary.explanation,
+      recommendation,
+      riskScore:
+        input.summary.referenceHitCount > 0
+          ? 0.36
+          : input.summary.matchedCount > 0
+            ? 0.22
+            : 0.12,
+      riskLevel:
+        input.summary.referenceHitCount > 0
+          ? 'medium'
+          : input.summary.matchedCount > 0
+            ? 'low'
+            : 'low',
+      evidenceCoverage: {
+        citationCount: input.citationCount,
+        hasPermissionPaths: false,
+        hasAutomationCoverage: input.summary.referenceHitCount > 0,
+        hasImpactPaths: input.summary.referenceHitCount > 0
+      },
+      topRiskDrivers: [
+        referenceSummary,
+        coverageSummary,
+        `${familyLabel} target normalized as ${parsed.componentName}`,
+        definitionSummary
+      ],
+      permissionImpact: {
+        user: 'n/a',
+        summary: 'Permission reasoning is not part of metadata component usage lookup.',
+        granted: false,
+        pathCount: 0,
+        principalCount: 0,
+        warnings: ['permission coverage not evaluated in component-usage packet']
+      },
+      automationImpact: {
+        summary: input.summary.explanation,
+        automationCount: input.summary.referenceHitCount,
+        topAutomationNames: []
+      },
+      changeImpact: {
+        summary: referenceSummary,
+        impactPathCount: input.summary.referenceHitCount,
+        topImpactedSources: input.summary.referenceSourceLabels.slice(0, 3)
+      },
+      componentUsage: {
+        familyHint: parsed.familyHint,
+        matchedCount: input.summary.matchedCount,
+        referenceHitCount: input.summary.referenceHitCount,
+        sourceFileCount: input.summary.sourceLabels.length,
+        definitionOnly:
+          input.summary.matchedCount > 0 && input.summary.referenceHitCount === 0,
+        topReferenceSources: input.summary.referenceSourceLabels.slice(0, 5),
+        summaries: {
+          references: referenceSummary,
+          coverage: coverageSummary,
+          family: familyLabel,
+          definition: definitionSummary
+        }
+      },
+      evidenceGaps,
+      nextActions
+    };
+  }
+
+  private describeComponentUsageFamily(
+    familyHint?: ComponentLookupTarget['familyHint']
+  ): string {
+    switch (familyHint) {
+      case 'flow':
+        return 'Flow';
+      case 'layout':
+        return 'Layout';
+      case 'apex_class':
+        return 'Apex Class';
+      case 'apex_trigger':
+        return 'Apex Trigger';
+      case 'custom_object':
+        return 'Custom Object';
+      case 'custom_field':
+        return 'Custom Field';
+      case 'email_template':
+        return 'Email Template';
+      case 'tab':
+        return 'Custom Tab';
+      default:
+        return 'Metadata component';
+    }
+  }
+
+  private describeSemanticFrameSourceMode(sourceMode: AskSemanticFrameSourceMode): string {
+    switch (sourceMode) {
+      case 'latest_retrieve':
+        return 'latest retrieve';
+      case 'proof_history':
+        return 'proof history';
+      default:
+        return 'current semantic state';
+    }
   }
 
   private inferComponentDefinitionLabels(targetLabel: string): string[] {

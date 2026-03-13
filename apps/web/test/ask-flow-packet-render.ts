@@ -203,6 +203,115 @@ function run(): void {
   assert.match(reviewMarkup, /Top impacted sources/);
   assert.match(reviewMarkup, /OpportunityStageSync\.flow-meta\.xml/);
   assert.match(reviewMarkup, /OpportunityImpactService\.cls/);
+
+  const componentMarkup = renderToStaticMarkup(
+    createElement(AskWorkspace, {
+      activeAlias: 'shulman-uat',
+      sessionStatus: 'connected',
+      buildVersion: 'dev-local',
+      latestRetrieve: null,
+      latestRetrieveSelections: [],
+      askQuery: 'Where is Flow Civil_Rights_Intake_Questionnaire used?',
+      setAskQuery: () => undefined,
+      maxCitationsRaw: '10',
+      setMaxCitationsRaw: () => undefined,
+      consistencyCheck: true,
+      setConsistencyCheck: () => undefined,
+      includeLowConfidence: false,
+      setIncludeLowConfidence: () => undefined,
+      askElaboration: '',
+      askResult: {
+        confidence: 0.82,
+        trustLevel: 'trusted',
+        decisionPacket: {
+          kind: 'metadata_component_usage',
+          focus: 'usage_lookup',
+          targetLabel: 'Flow Civil_Rights_Intake_Questionnaire',
+          targetType: 'metadata_component',
+          summary: 'Deterministic component usage lookup for Flow Civil_Rights_Intake_Questionnaire found 3 referencing evidence hit(s) across 2 source file(s).',
+          recommendation: {
+            verdict: 'review_before_approval',
+            summary: 'Review the referencing metadata sources first.'
+          },
+          riskScore: 0.36,
+          riskLevel: 'medium',
+          evidenceCoverage: {
+            citationCount: 4,
+            hasPermissionPaths: false,
+            hasAutomationCoverage: true,
+            hasImpactPaths: true
+          },
+          topRiskDrivers: ['3 referencing evidence hit(s) across 2 source file(s)'],
+          permissionImpact: {
+            user: 'n/a',
+            summary: 'Permission reasoning is not part of metadata component usage lookup.',
+            granted: false,
+            pathCount: 0,
+            principalCount: 0,
+            warnings: ['permission coverage not evaluated in component-usage packet']
+          },
+          automationImpact: {
+            summary: 'grounded by deterministic evidence lookup',
+            automationCount: 3,
+            topAutomationNames: []
+          },
+          changeImpact: {
+            summary: '3 referencing evidence hit(s) across 2 source file(s)',
+            impactPathCount: 3,
+            topImpactedSources: ['FlowDefinition.flow-meta.xml']
+          },
+          componentUsage: {
+            familyHint: 'flow',
+            matchedCount: 4,
+            referenceHitCount: 3,
+            sourceFileCount: 2,
+            definitionOnly: false,
+            topReferenceSources: ['FlowDefinition.flow-meta.xml', 'QuickActions.cls'],
+            summaries: {
+              references: '3 referencing evidence hit(s) across 2 source file(s)',
+              coverage: '2 total grounded source file(s) in current semantic state',
+              family: 'Flow',
+              definition: 'Definition anchor: Civil_Rights_Intake_Questionnaire.flow-meta.xml.'
+            }
+          },
+          evidenceGaps: [],
+          nextActions: [{ label: 'Inspect citation sources', rationale: 'Start with the top reference sources.' }]
+        },
+        policy: { policyId: 'policy_fixture' },
+        proof: { proofId: 'proof_fixture', replayToken: 'trace_fixture', snapshotId: 'snap_fixture' },
+        citations: []
+      },
+      askSummary: 'Flow usage lookup grounded by 4 citation(s).',
+      askTrust: 'trusted',
+      askProofId: 'proof_fixture',
+      askReplayToken: 'trace_fixture',
+      askCitations: [],
+      loading: false,
+      trustTone: () => 'good',
+      onRunAsk: () => undefined,
+      onRunAskElaboration: () => undefined,
+      onOpenConnect: () => undefined,
+      onRefreshAliases: () => undefined,
+      onOpenBrowser: () => undefined,
+      onOpenRefresh: () => undefined,
+      onInspectAutomation: () => undefined,
+      onInspectPermissions: () => undefined,
+      onOpenProof: () => undefined,
+      onSaveToHistory: () => undefined
+    })
+  );
+
+  assert.match(componentMarkup, /Usage signals/);
+  assert.doesNotMatch(componentMarkup, /Permission model/);
+  assert.match(componentMarkup, /3 refs \/ 2 files/);
+  assert.match(componentMarkup, />Lookup status</);
+  assert.match(componentMarkup, />References</);
+  assert.match(componentMarkup, />Coverage</);
+  assert.match(componentMarkup, />Component family</);
+  assert.match(componentMarkup, />Source spotlight</);
+  assert.match(componentMarkup, /FlowDefinition\.flow-meta\.xml/);
+  assert.match(componentMarkup, /Open Org Browser/);
+  assert.match(componentMarkup, /Open Refresh &amp; Build/);
 }
 
 run();

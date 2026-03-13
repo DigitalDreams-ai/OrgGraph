@@ -50,16 +50,23 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
   const retrieveAwarePrompts = buildRetrieveAwarePromptGroups(props.latestRetrieveSelections);
   const decisionPacket = props.askResult?.decisionPacket;
   const isFlowPacket = decisionPacket?.targetType === 'flow';
+  const isComponentPacket = decisionPacket?.targetType === 'metadata_component';
   const flowImpact = decisionPacket?.flowImpact;
+  const componentUsage = decisionPacket?.componentUsage;
   const topAutomationNames = decisionPacket?.automationImpact?.topAutomationNames ?? [];
   const topImpactedSources = decisionPacket?.changeImpact?.topImpactedSources ?? [];
   const topCitationSources = flowImpact?.topCitationSources ?? [];
+  const topReferenceSources = componentUsage?.topReferenceSources ?? [];
   const flowSignalsLabel =
     typeof flowImpact?.readFieldCount === 'number' && typeof flowImpact?.writeFieldCount === 'number'
       ? `${flowImpact.readFieldCount} read / ${flowImpact.writeFieldCount} write`
       : 'n/a';
   const flowScopeLabel =
     typeof flowImpact?.referencedObjectCount === 'number' ? `${flowImpact.referencedObjectCount} objects` : 'n/a';
+  const componentSignalsLabel =
+    typeof componentUsage?.referenceHitCount === 'number' && typeof componentUsage?.sourceFileCount === 'number'
+      ? `${componentUsage.referenceHitCount} refs / ${componentUsage.sourceFileCount} files`
+      : 'n/a';
   return (
     <>
       <h2>Ask</h2>
@@ -238,9 +245,13 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                   <strong className="packet-value">{decisionPacket.targetLabel || 'n/a'}</strong>
                 </div>
                 <div className="packet-stat">
-                  <span>{isFlowPacket ? 'Flow signals' : 'Permission model'}</span>
+                  <span>{isFlowPacket ? 'Flow signals' : isComponentPacket ? 'Usage signals' : 'Permission model'}</span>
                   <strong className="packet-value path-value">
-                    {isFlowPacket ? flowSignalsLabel : decisionPacket.permissionImpact?.user || 'n/a'}
+                    {isFlowPacket
+                      ? flowSignalsLabel
+                      : isComponentPacket
+                        ? componentSignalsLabel
+                        : decisionPacket.permissionImpact?.user || 'n/a'}
                   </strong>
                 </div>
               </div>
@@ -262,7 +273,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
 
               <div className="packet-stat-grid">
                 <div className="packet-stat">
-                  <span>Recommendation</span>
+                  <span>{isComponentPacket ? 'Lookup status' : 'Recommendation'}</span>
                   <strong className="packet-value">
                     {decisionPacket.recommendation?.verdict || 'n/a'}
                   </strong>
@@ -288,6 +299,24 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                         {flowImpact?.summaries?.writeObjects || 'write objects unavailable'};{' '}
                         {flowImpact?.summaries?.triggerTypes || 'trigger types unavailable'}
                       </p>
+                    </div>
+                  </>
+                ) : isComponentPacket ? (
+                  <>
+                    <div className="packet-stat">
+                      <span>References</span>
+                      <strong className="packet-value">{componentUsage?.referenceHitCount ?? 'n/a'} hits</strong>
+                      <p>{componentUsage?.summaries?.references || 'No reference summary returned.'}</p>
+                    </div>
+                    <div className="packet-stat">
+                      <span>Coverage</span>
+                      <strong className="packet-value">{componentUsage?.sourceFileCount ?? 'n/a'} files</strong>
+                      <p>{componentUsage?.summaries?.coverage || 'No coverage summary returned.'}</p>
+                    </div>
+                    <div className="packet-stat">
+                      <span>Component family</span>
+                      <strong className="packet-value">{componentUsage?.summaries?.family || 'n/a'}</strong>
+                      <p>{componentUsage?.summaries?.definition || 'No definition summary returned.'}</p>
                     </div>
                   </>
                 ) : (
@@ -327,6 +356,15 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                   <h4>Source spotlight</h4>
                   <ul className="proof-inline-list">
                     {topCitationSources.map((source) => (
+                      <li key={source} className="path-value">{source}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : isComponentPacket && topReferenceSources.length > 0 ? (
+                <div>
+                  <h4>Source spotlight</h4>
+                  <ul className="proof-inline-list">
+                    {topReferenceSources.map((source) => (
                       <li key={source} className="path-value">{source}</li>
                     ))}
                   </ul>
@@ -412,12 +450,25 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
             </ul>
           ) : null}
           <div className="follow-up-grid">
-            <button type="button" className="ghost" onClick={props.onInspectAutomation}>
-              Inspect impacted automation
-            </button>
-            <button type="button" className="ghost" onClick={props.onInspectPermissions}>
-              Inspect permissions
-            </button>
+            {isComponentPacket ? (
+              <>
+                <button type="button" className="ghost" onClick={props.onOpenBrowser}>
+                  Open Org Browser
+                </button>
+                <button type="button" className="ghost" onClick={props.onOpenRefresh}>
+                  Open Refresh &amp; Build
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" className="ghost" onClick={props.onInspectAutomation}>
+                  Inspect impacted automation
+                </button>
+                <button type="button" className="ghost" onClick={props.onInspectPermissions}>
+                  Inspect permissions
+                </button>
+              </>
+            )}
             <button type="button" className="ghost" onClick={props.onOpenProof}>
               Open proof
             </button>

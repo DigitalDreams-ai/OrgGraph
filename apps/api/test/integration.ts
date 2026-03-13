@@ -1953,6 +1953,15 @@ async function run(): Promise<void> {
         };
       };
       deterministicAnswer: string;
+      decisionPacket?: {
+        kind?: string;
+        targetType?: string;
+        componentUsage?: {
+          familyHint?: string;
+          matchedCount?: number;
+          sourceFileCount?: number;
+        };
+      };
     };
     assert.equal(askComponentUsage.plan?.intent, 'unknown');
     assert.equal(askComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
@@ -1966,6 +1975,11 @@ async function run(): Promise<void> {
       askComponentUsage.deterministicAnswer,
       /component usage lookup for Layout Opportunity-Opportunity Layout/i
     );
+    assert.equal(askComponentUsage.decisionPacket?.kind, 'metadata_component_usage');
+    assert.equal(askComponentUsage.decisionPacket?.targetType, 'metadata_component');
+    assert.equal(askComponentUsage.decisionPacket?.componentUsage?.familyHint, 'layout');
+    assert.ok((askComponentUsage.decisionPacket?.componentUsage?.matchedCount ?? 0) >= 0);
+    assert.ok((askComponentUsage.decisionPacket?.componentUsage?.sourceFileCount ?? 0) >= 0);
 
     const askFlowComponentUsageRes = await fetch(`${base}/ask`, {
       method: 'POST',
@@ -1988,6 +2002,10 @@ async function run(): Promise<void> {
       };
       trustLevel: string;
       deterministicAnswer: string;
+      decisionPacket?: {
+        targetType?: string;
+        componentUsage?: { familyHint?: string };
+      };
     };
     assert.equal(askFlowComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
     assert.equal(askFlowComponentUsage.plan?.semanticFrame?.target?.kind, 'metadata_component');
@@ -1999,6 +2017,8 @@ async function run(): Promise<void> {
       askFlowComponentUsage.deterministicAnswer,
       /component usage lookup for Flow Civil_Rights_Intake_Questionnaire/i
     );
+    assert.equal(askFlowComponentUsage.decisionPacket?.targetType, 'metadata_component');
+    assert.equal(askFlowComponentUsage.decisionPacket?.componentUsage?.familyHint, 'flow');
     assert.notEqual(
       askFlowComponentUsage.trustLevel,
       'refused',
