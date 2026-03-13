@@ -400,6 +400,14 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
       props.onRefreshStatus();
       return;
     }
+    if (actionId === 'load-meta-context') {
+      props.onLoadMetaContext();
+      return;
+    }
+    if (actionId === 'run-meta-adapt') {
+      props.onRunMetaAdapt();
+      return;
+    }
     if (actionId === 'load-org-status') {
       props.onLoadOrgStatus();
       return;
@@ -706,6 +714,17 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
           ) : (
             <p className="muted">Load Meta Context to inspect semantic weighting and provenance.</p>
           )}
+          {renderQuickActions(
+            'Meta context quick actions',
+            [
+              {
+                id: 'load-meta-context',
+                label: props.metaContext ? 'Refresh Meta Context' : 'Load Meta Context'
+              }
+            ],
+            props.loading,
+            handleStructuredAction
+          )}
         </article>
 
         {renderRelationMultipliers(props.metaContext)}
@@ -719,90 +738,109 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
         {renderRuntimeTelemetry(props.runtimeMetrics, props.loading, props.onLoadRuntimeMetrics, props.onRefreshStatus)}
       </div>
 
-      {props.metaAdaptResult ? (
-        <div className="analysis-grid">
-          <article className="sub-card analysis-grid-full">
-            <p className="panel-caption">Latest meta adapt</p>
-            <h3>Adaptation result</h3>
-            <div className="decision-meta">
-              <span className="decision-badge good">Status: {props.metaAdaptResult.status}</span>
-              <span className={props.metaAdaptResult.dryRun ? 'decision-badge muted' : 'decision-badge good'}>
-                Dry run: {String(props.metaAdaptResult.dryRun)}
-              </span>
-              <span className={props.metaAdaptResult.changed ? 'decision-badge good' : 'decision-badge muted'}>
-                Changed: {String(props.metaAdaptResult.changed)}
-              </span>
-            </div>
-            <p>
-              <strong>Context path:</strong>{' '}
-              <span className="path-value">{props.metaAdaptResult.contextPath}</span>
-            </p>
-            <p>
-              <strong>Audit artifact:</strong>{' '}
-              <span className="path-value">{props.metaAdaptResult.auditArtifactPath}</span>
-            </p>
-          </article>
+      <div className="analysis-grid">
+        <article className="sub-card analysis-grid-full">
+          <p className="panel-caption">Latest meta adapt</p>
+          <h3>Adaptation result</h3>
+          {props.metaAdaptResult ? (
+            <>
+              <div className="decision-meta">
+                <span className="decision-badge good">Status: {props.metaAdaptResult.status}</span>
+                <span className={props.metaAdaptResult.dryRun ? 'decision-badge muted' : 'decision-badge good'}>
+                  Dry run: {String(props.metaAdaptResult.dryRun)}
+                </span>
+                <span className={props.metaAdaptResult.changed ? 'decision-badge good' : 'decision-badge muted'}>
+                  Changed: {String(props.metaAdaptResult.changed)}
+                </span>
+              </div>
+              <p>
+                <strong>Context path:</strong>{' '}
+                <span className="path-value">{props.metaAdaptResult.contextPath}</span>
+              </p>
+              <p>
+                <strong>Audit artifact:</strong>{' '}
+                <span className="path-value">{props.metaAdaptResult.auditArtifactPath}</span>
+              </p>
+            </>
+          ) : (
+            <p className="muted">Run Meta Adapt to inspect deterministic before/after deltas.</p>
+          )}
+          {renderQuickActions(
+            'Meta adapt quick actions',
+            [
+              {
+                id: 'run-meta-adapt',
+                label: props.metaAdaptResult ? 'Rerun Meta Adapt' : 'Run Meta Adapt'
+              }
+            ],
+            props.loading,
+            handleStructuredAction
+          )}
+        </article>
 
-          <article className="sub-card">
-            <p className="panel-caption">Adaptation delta</p>
-            <h3>Structured change summary</h3>
-            {metaAdaptSummary ? (
-              <>
-                <div className="analysis-stat-grid">
-                  <div className="packet-stat">
-                    <span>Relation changes</span>
-                    <strong>{metaAdaptSummary.relationChanges}</strong>
-                  </div>
-                  <div className="packet-stat">
-                    <span>Sample delta</span>
-                    <strong>{metaAdaptSummary.sampleDelta >= 0 ? `+${metaAdaptSummary.sampleDelta}` : metaAdaptSummary.sampleDelta}</strong>
-                  </div>
-                  <div className="packet-stat">
-                    <span>Formula version</span>
-                    <strong>{metaAdaptSummary.formulaChanged ? 'changed' : 'unchanged'}</strong>
-                  </div>
+        <article className="sub-card">
+          <p className="panel-caption">Adaptation delta</p>
+          <h3>Structured change summary</h3>
+          {metaAdaptSummary ? (
+            <>
+              <div className="analysis-stat-grid">
+                <div className="packet-stat">
+                  <span>Relation changes</span>
+                  <strong>{metaAdaptSummary.relationChanges}</strong>
                 </div>
-                <ul className="analysis-list">
-                  <li>
-                    <strong>Added relations</strong>
-                    <p>{metaAdaptSummary.addedRelations.length > 0 ? metaAdaptSummary.addedRelations.join(', ') : 'none'}</p>
-                  </li>
-                  <li>
-                    <strong>Removed relations</strong>
-                    <p>{metaAdaptSummary.removedRelations.length > 0 ? metaAdaptSummary.removedRelations.join(', ') : 'none'}</p>
-                  </li>
-                  <li>
-                    <strong>Updated multipliers</strong>
-                    <p>{metaAdaptSummary.changedRelations.length > 0 ? metaAdaptSummary.changedRelations.join(', ') : 'none'}</p>
-                  </li>
-                </ul>
-              </>
-            ) : (
-              <p className="muted">Run Meta Adapt to inspect deterministic before/after deltas.</p>
-            )}
-          </article>
+                <div className="packet-stat">
+                  <span>Sample delta</span>
+                  <strong>{metaAdaptSummary.sampleDelta >= 0 ? `+${metaAdaptSummary.sampleDelta}` : metaAdaptSummary.sampleDelta}</strong>
+                </div>
+                <div className="packet-stat">
+                  <span>Formula version</span>
+                  <strong>{metaAdaptSummary.formulaChanged ? 'changed' : 'unchanged'}</strong>
+                </div>
+              </div>
+              <ul className="analysis-list">
+                <li>
+                  <strong>Added relations</strong>
+                  <p>{metaAdaptSummary.addedRelations.length > 0 ? metaAdaptSummary.addedRelations.join(', ') : 'none'}</p>
+                </li>
+                <li>
+                  <strong>Removed relations</strong>
+                  <p>{metaAdaptSummary.removedRelations.length > 0 ? metaAdaptSummary.removedRelations.join(', ') : 'none'}</p>
+                </li>
+                <li>
+                  <strong>Updated multipliers</strong>
+                  <p>{metaAdaptSummary.changedRelations.length > 0 ? metaAdaptSummary.changedRelations.join(', ') : 'none'}</p>
+                </li>
+              </ul>
+            </>
+          ) : (
+            <p className="muted">Run Meta Adapt to inspect deterministic before/after deltas.</p>
+          )}
+        </article>
 
-          <article className="sub-card">
-            <p className="panel-caption">Before</p>
-            <h3>Relation multipliers</h3>
-            <ul className="analysis-chip-list">
-              {Object.entries(props.metaAdaptResult.before.relationMultipliers).map(([relation, value]) => (
-                <li key={`before-${relation}`}>{relation}: {value}</li>
-              ))}
-            </ul>
-          </article>
+        {props.metaAdaptResult ? (
+          <>
+            <article className="sub-card">
+              <p className="panel-caption">Before</p>
+              <h3>Relation multipliers</h3>
+              <ul className="analysis-chip-list">
+                {Object.entries(props.metaAdaptResult.before.relationMultipliers).map(([relation, value]) => (
+                  <li key={`before-${relation}`}>{relation}: {value}</li>
+                ))}
+              </ul>
+            </article>
 
-          <article className="sub-card">
-            <p className="panel-caption">After</p>
-            <h3>Relation multipliers</h3>
-            <ul className="analysis-chip-list">
-              {Object.entries(props.metaAdaptResult.after.relationMultipliers).map(([relation, value]) => (
-                <li key={`after-${relation}`}>{relation}: {value}</li>
-              ))}
-            </ul>
-          </article>
-        </div>
-      ) : null}
+            <article className="sub-card">
+              <p className="panel-caption">After</p>
+              <h3>Relation multipliers</h3>
+              <ul className="analysis-chip-list">
+                {Object.entries(props.metaAdaptResult.after.relationMultipliers).map(([relation, value]) => (
+                  <li key={`after-${relation}`}>{relation}: {value}</li>
+                ))}
+              </ul>
+            </article>
+          </>
+        ) : null}
+      </div>
     </>
   );
 }
