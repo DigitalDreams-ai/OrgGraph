@@ -202,7 +202,7 @@ function renderAskTrustTelemetry(payload: AskTrustDashboardPayload | null): JSX.
           <ul className="analysis-chip-list">
             {payload.failureClasses.map((item) => (
               <li key={item.class}>
-                {item.class}: {item.count}
+                <span className="path-value">{item.class}</span>: {item.count}
               </li>
             ))}
           </ul>

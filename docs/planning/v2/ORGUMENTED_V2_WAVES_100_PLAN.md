@@ -318,6 +318,7 @@ Scope:
 - explicit render guards for path-heavy Analyze/Diagnostics/Proofs surfaces
 - explicit render guards for long operator-machine paths in Settings & Diagnostics
 - explicit Ask dense-card render guards for long proof IDs, paths, and citation snippets
+- explicit telemetry render guards for Ask trust failure-class labels in Settings & Diagnostics
 
 Exit:
 - zero known clipping defects in Stage 1 surfaces
