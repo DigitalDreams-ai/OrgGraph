@@ -2314,7 +2314,7 @@ async function run(): Promise<void> {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        query: 'Where is Email Template Customer_Welcome used?'
+        query: 'Where is Email Template unfiled$public/Customer_Welcome used?'
       })
     });
     assert.equal(
@@ -2336,16 +2336,55 @@ async function run(): Promise<void> {
     assert.equal(askEmailTemplateComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
     assert.equal(
       askEmailTemplateComponentUsage.plan?.semanticFrame?.target?.selected,
-      'Email Template Customer_Welcome'
+      'Email Template unfiled$public/Customer_Welcome'
     );
     assert.match(
       askEmailTemplateComponentUsage.deterministicAnswer,
-      /component usage lookup for Email Template Customer_Welcome/i
+      /component usage lookup for Email Template unfiled\$public\/Customer_Welcome/i
     );
     assert.notEqual(
       askEmailTemplateComponentUsage.trustLevel,
       'refused',
       'email template usage ask should stay on deterministic evidence lookup even when no references match'
+    );
+
+    const askEmailTemplatePathComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query:
+          'Where is Email Template C:/tmp/force-app/main/default/email/unfiled$public/Customer_Welcome.email-meta.xml used?'
+      })
+    });
+    assert.equal(
+      askEmailTemplatePathComponentUsageRes.status,
+      201,
+      'email template path-qualified usage ask should return 201'
+    );
+    const askEmailTemplatePathComponentUsage =
+      (await askEmailTemplatePathComponentUsageRes.json()) as {
+        plan?: {
+          semanticFrame?: {
+            intent?: string;
+            target?: { selected?: string };
+          };
+        };
+        deterministicAnswer: string;
+        trustLevel: string;
+      };
+    assert.equal(askEmailTemplatePathComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(
+      askEmailTemplatePathComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Email Template unfiled$public/Customer_Welcome'
+    );
+    assert.match(
+      askEmailTemplatePathComponentUsage.deterministicAnswer,
+      /component usage lookup for Email Template unfiled\$public\/Customer_Welcome/i
+    );
+    assert.notEqual(
+      askEmailTemplatePathComponentUsage.trustLevel,
+      'refused',
+      'email template path-qualified usage ask should normalize to deterministic evidence lookup'
     );
 
     const askCustomTabComponentUsageRes = await fetch(`${base}/ask`, {

@@ -246,6 +246,7 @@ Scope:
 - expand that active-gate pattern incrementally across bounded families without widening latest-retrieve support beyond explicit proven cases
 - normalize family-qualified evidence-lookup targets (`Flow called X`, `Flow named X`, and file/path forms) so deterministic component-usage lookup is resilient to common operator phrasing without widening into freeform component search
 - accept metadata-arg evidence-lookup forms (`Flow:X`, `CustomField:Object.Field`) so Ask stays aligned with the metadata naming shapes operators already use in retrieve/build workflows
+- preserve folder-qualified Email Template fullNames and `email/<folder>/<template>.email-meta.xml` file-path forms so evidence-lookup and latest-retrieve component-usage prompts stay deterministic for real org template metadata
 
 Exit:
 - planner/integration/replay tests pass for selected families

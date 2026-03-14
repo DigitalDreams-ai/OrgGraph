@@ -331,15 +331,26 @@ function run(): void {
   );
 
   const componentUsageEmailTemplatePlan = planner.plan(
-    'Where is Email Template Customer_Welcome used?'
+    'Where is Email Template unfiled$public/Customer_Welcome used?'
   );
   assert.equal(componentUsageEmailTemplatePlan.intent, 'unknown');
   assert.equal(componentUsageEmailTemplatePlan.semanticFrame?.intent, 'evidence_lookup');
   assert.equal(
     componentUsageEmailTemplatePlan.semanticFrame?.target?.selected,
-    'Email Template Customer_Welcome'
+    'Email Template unfiled$public/Customer_Welcome'
   );
   assert.equal(componentUsageEmailTemplatePlan.semanticFrame?.admissibility.status, 'accepted');
+
+  const componentUsageEmailTemplatePathPlan = planner.plan(
+    'Where is Email Template C:/tmp/force-app/main/default/email/unfiled$public/Customer_Welcome.email-meta.xml used?'
+  );
+  assert.equal(componentUsageEmailTemplatePathPlan.intent, 'unknown');
+  assert.equal(componentUsageEmailTemplatePathPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageEmailTemplatePathPlan.semanticFrame?.target?.selected,
+    'Email Template unfiled$public/Customer_Welcome'
+  );
+  assert.equal(componentUsageEmailTemplatePathPlan.semanticFrame?.admissibility.status, 'accepted');
 
   const componentUsageCustomTabPlan = planner.plan(
     'Where is Custom Tab Volunteer_Console used?'

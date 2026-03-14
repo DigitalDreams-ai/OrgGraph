@@ -10,7 +10,7 @@ function run(): void {
     { type: 'Layout', members: ['Opportunity-Opportunity Layout'] },
     { type: 'ApexClass', members: ['CaseTypeService'] },
     { type: 'ApexTrigger', members: ['CaseBeforeUpdate'] },
-    { type: 'EmailTemplate', members: ['Customer_Welcome'] }
+    { type: 'EmailTemplate', members: ['unfiled$public/Customer_Welcome'] }
   ];
 
   const prompts = buildRetrieveAwarePromptGroups(selections);
@@ -30,7 +30,7 @@ function run(): void {
     'Based only on the latest retrieve, where is Custom Field Opportunity.StageName used?',
     'Based only on the latest retrieve, where is Custom Object Case used?',
     'Based only on the latest retrieve, where is Custom Object Opportunity used?',
-    'Based only on the latest retrieve, where is Email Template Customer_Welcome used?',
+    'Based only on the latest retrieve, where is Email Template unfiled$public/Customer_Welcome used?',
     'Based only on the latest retrieve, where is Flow Civil_Rights_Intake_Questionnaire used?',
     'Based only on the latest retrieve, where is Flow OpportunityStageSync used?',
     'Based only on the latest retrieve, where is Layout Opportunity-Opportunity Layout used?'

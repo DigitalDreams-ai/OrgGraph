@@ -444,7 +444,8 @@ export class PlannerService {
       [
         /^(?:email\s*template|emailtemplate|template)(?:\s+|:\s*)(.+)$/i,
         'Email Template',
-        [/\.email-meta\.xml$/i, /\.email$/i]
+        [/\.email-meta\.xml$/i, /\.email$/i],
+        /(?:^|\/)email\/(.+)$/i
       ],
       [
         /^(?:custom\s*tab|customtab|tab)(?:\s+|:\s*)(.+)$/i,
@@ -464,7 +465,8 @@ export class PlannerService {
         rawComponent,
         extensionPatterns,
         folderPattern,
-        familyLabel === 'Custom Field'
+        familyLabel === 'Custom Field',
+        familyLabel === 'Email Template'
       );
       return `${familyLabel} ${componentName}`;
     }
@@ -476,7 +478,8 @@ export class PlannerService {
     value: string,
     extensionPatterns: RegExp[],
     folderPattern?: RegExp,
-    isCustomField = false
+    isCustomField = false,
+    preserveQualifiedPath = false
   ): string {
     let normalized = value
       .trim()
@@ -497,7 +500,10 @@ export class PlannerService {
       if (folderMatch?.[1]) {
         normalized = folderMatch[1];
       } else if (normalizedPath.includes('/')) {
-        normalized = normalizedPath.split('/').pop() ?? normalized;
+        const pathSegments = normalizedPath.split('/').filter((segment) => segment.length > 0);
+        normalized = preserveQualifiedPath
+          ? pathSegments.slice(-2).join('/') || normalized
+          : normalizedPath.split('/').pop() ?? normalized;
       }
     } else if (normalizedPath.includes('/')) {
       normalized = normalizedPath.split('/').pop() ?? normalized;
