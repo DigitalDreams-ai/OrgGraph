@@ -139,7 +139,7 @@ Mandatory:
 | wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
 | wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |
 | wave6 | ask planner/compiler depth | B003, B009 | In Progress | Deepen evidence-lookup coverage beyond family-qualified metadata component prompts |
-| wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence |
+| wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence with explicit recommendation and evidence-gap publication |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage and diagnostics cards expose direct operator actions and no core recovery path depends on raw JSON or manual tab hunting |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first selection stays independent from advanced token lookup and reopen/replay/export remain history-first |
 | wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline with live-region coverage across all dynamic workspaces and proof-history identifier guardrails |
@@ -266,6 +266,7 @@ Scope:
 - impact asks emit dedicated impact packets instead of plain text or generic approval placeholders
 - metadata-component usage packets render component-specific stats instead of generic approval placeholders
 - concrete grounding spotlights are visible directly in the packet (top automation names, impacted sources, citation-source files), including approval-review packets
+- benchmark publication surfaces explicit recommendation verdict, recommendation summary, and evidence-gap count for approval-review packets
 - next-action relevance
 
 Exit:

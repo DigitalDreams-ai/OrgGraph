@@ -107,8 +107,17 @@ function formatRawJson(value) {
   return value ? 'yes' : 'no';
 }
 
+function formatScalar(value) {
+  if (value === null || typeof value === 'undefined' || value === '') {
+    return 'n/a';
+  }
+  return String(value);
+}
+
 function buildMarkdown(proxyArtifact, humanArtifact, metadata) {
   const proxyComparison = proxyArtifact.comparison ?? {};
+  const proxyDecisionPacket = proxyArtifact?.reviewPacket?.ask?.decisionPacket ?? {};
+  const proxyPacketQuality = proxyArtifact?.reviewPacket?.packetQuality ?? {};
   const thresholdChecks = humanArtifact.thresholds?.checks ?? {};
   const proxyNotes = Array.isArray(proxyArtifact.notes) ? proxyArtifact.notes : [];
   const humanNotes = Array.isArray(humanArtifact.notes) ? humanArtifact.notes : [];
@@ -147,9 +156,13 @@ The typed review-packet path materially reduced workflow friction on the automat
   - \`proofId\`
   - \`replayToken\`
   - replay parity
-- review packet specificity guard:
-  - top automation/impact spotlights are present
-  - action rationales reference concrete top sources
+- review packet recommendation verdict: \`${formatScalar(proxyDecisionPacket.recommendationVerdict)}\`
+- review packet recommendation summary: \`${formatScalar(proxyDecisionPacket.recommendationSummary)}\`
+- review packet evidence gaps visible: \`${formatScalar(
+    proxyDecisionPacket.evidenceGapCount ?? proxyPacketQuality.evidenceGapCount
+  )}\`
+- review packet specificity guard: \`${boolPass(proxyPacketQuality.passed)}\`
+- review packet recommendation present: \`${boolPass(proxyPacketQuality.hasRecommendation)}\`
 - both baseline and review-packet asks returned:
   - \`trustLevel = trusted\`
 

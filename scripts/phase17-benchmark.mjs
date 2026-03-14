@@ -258,11 +258,12 @@ function summarizeAskResponse(body) {
     replayToken: body.proof?.replayToken,
     planIntent: body.plan?.intent,
     decisionPacket: body.decisionPacket
-      ? {
+        ? {
           kind: body.decisionPacket.kind,
           focus: body.decisionPacket.focus,
           targetLabel: body.decisionPacket.targetLabel,
           recommendationVerdict: body.decisionPacket.recommendation?.verdict,
+          recommendationSummary: body.decisionPacket.recommendation?.summary,
           riskLevel: body.decisionPacket.riskLevel,
           topRiskDriverCount: Array.isArray(body.decisionPacket.topRiskDrivers)
             ? body.decisionPacket.topRiskDrivers.length
@@ -346,6 +347,7 @@ function buildReviewPacketQuality(decisionPacket) {
     hasSpecificImpactAction,
     hasRecommendation,
     recommendationVerdict,
+    recommendationSummary,
     evidenceGapCount: evidenceGaps.length,
     passed
   };

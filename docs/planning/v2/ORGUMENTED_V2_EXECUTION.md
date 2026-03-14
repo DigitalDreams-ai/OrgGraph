@@ -126,6 +126,7 @@ Materially true now:
 - review decision packets now surface explicit top automation names and top impact sources directly inside risk drivers and next-action rationales, with deterministic integration assertions
 - review decision packets now spotlight top citation source files directly in the packet grounding section and add an explicit `Inspect citation sources` action so operators can verify grounding evidence without raw JSON detours
 - phase17 benchmark guards now fail closed on review-packet specificity (spotlighted automation/impact drivers + source-specific next-action rationale) in prepare/human/verify/status tooling
+- phase17 benchmark proxy artifacts and canonical publication now surface explicit recommendation verdict, recommendation summary, and evidence-gap count for review packets, with a script-level regression gate on the publish path
 - proof history supports searchable labels and open-first artifact access
 - Ask `Save to history` now executes a true history handoff (sync proof identifiers, switch to Proofs, and refresh recent proof labels) instead of duplicating `Open proof`
 - Proofs & History action row now defaults to label-first wording (`Open/Replay Selected History`), while raw token lookup stays in advanced details with explicit fail-closed guidance when no selection is present
