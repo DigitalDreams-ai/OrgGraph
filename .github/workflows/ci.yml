@@ -102,6 +102,9 @@ jobs:
       - name: Test release evidence checker
         run: pnpm release:evidence:check:test
 
+      - name: Test human benchmark publication
+        run: pnpm phase17:benchmark:human:publish:test
+
       - name: Build API
         run: pnpm --filter api build
 
