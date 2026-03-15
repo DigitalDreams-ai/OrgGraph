@@ -386,7 +386,7 @@ async function main(): Promise<void> {
 
   server.tool(
     'seed_orgumented_baseline',
-    'Seed Orgumented-specific repo-map records for the current core subsystems: API runtime, operator surfaces, desktop transition architecture, ontology, and planning governance.',
+    'Seed Orgumented-specific repo-map records for the current core subsystems: API runtime, operator surfaces, desktop runtime architecture, ontology, and v2 planning governance.',
     {
       createdBy: z.string().min(1).default('codex')
     },
@@ -413,7 +413,7 @@ async function main(): Promise<void> {
 
   server.tool(
     'summarize_orgumented_waves',
-    'Read Orgumented Wave A-G tasklists from docs/planning and return deterministic completion counts for tasks and exit gates.',
+    'Read the v2 numbered-wave progress snapshot from docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md and return deterministic status summaries.',
     {},
     async () => {
       const waves = summarizeOrgumentedWaves(workspaceRoot);

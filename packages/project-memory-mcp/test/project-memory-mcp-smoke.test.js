@@ -16,15 +16,29 @@ async function run() {
   fs.writeFileSync(sourceFile, '# smoke\n', 'utf8');
   const baselineTime = new Date('2026-02-28T00:00:00.000Z');
   fs.utimesSync(sourceFile, baselineTime, baselineTime);
-  for (const wave of ['A', 'B', 'C', 'D', 'E', 'F', 'G']) {
-    const tasklist = path.join(workspaceRoot, 'docs', 'planning', `WAVE_${wave}_TASKLIST.md`);
-    fs.writeFileSync(
-      tasklist,
-      `# Wave ${wave} Tasklist\n\n## Tasks\n- [x] baseline\n- [ ] remaining\n\n## Exit Gates\n- [ ] pending\n`,
-      'utf8'
-    );
-    fs.utimesSync(tasklist, baselineTime, baselineTime);
-  }
+  const v2Plan = path.join(workspaceRoot, 'docs', 'planning', 'v2', 'ORGUMENTED_V2_WAVES_100_PLAN.md');
+  fs.mkdirSync(path.dirname(v2Plan), { recursive: true });
+  fs.writeFileSync(
+    v2Plan,
+    [
+      '# Orgumented v2 100% Completion Plan',
+      '',
+      '## Wave Progress Snapshot',
+      '',
+      '| Wave | Theme | Primary IDs | Status | Next Gate |',
+      '|---|---|---|---|---|',
+      '| wave1 | baseline lock and triage | B001 | Complete | Maintain drift-free docs |',
+      '| wave2 | runtime convergence | B002 | In Progress | Runtime parity proof |',
+      '| wave3 | sessions and toolchain reliability | B003 | Complete | Session restore proof |',
+      '| wave4 | org browser explorer | B004 | Complete | Browser parity hold |',
+      '| wave5 | retrieve -> refresh handoff | B005 | In Progress | Real-org handoff proof |',
+      '| wave6 | ask planner/compiler depth | B006 | In Progress | Semantic-frame depth |',
+      '',
+      '## wave1 - Baseline Lock And Triage'
+    ].join('\n'),
+    'utf8'
+  );
+  fs.utimesSync(v2Plan, baselineTime, baselineTime);
 
   const env = {
     ...process.env,
@@ -109,7 +123,10 @@ async function run() {
       arguments: {}
     });
     assert.ok(!waves.isError);
-    assert.equal(waves.structuredContent.total, 7);
+    assert.equal(waves.structuredContent.total, 6);
+    assert.equal(waves.structuredContent.waves[0].wave, 'wave1');
+    assert.equal(waves.structuredContent.waves[0].status, 'Complete');
+    assert.equal(waves.structuredContent.waves[1].nextGate, 'Runtime parity proof');
   } finally {
     await client.close();
     fs.rmSync(root, { recursive: true, force: true });
