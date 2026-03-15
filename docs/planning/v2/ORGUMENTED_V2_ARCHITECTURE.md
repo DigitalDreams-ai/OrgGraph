@@ -53,6 +53,29 @@ The runtime must preserve:
 - runtime history
 - config
 
+## Visual Architecture
+
+```mermaid
+graph TD
+    Operator[Operator] --> Shell[Tauri Shell]
+    Shell --> UI[Embedded Next.js UI]
+    Shell --> Engine[Local NestJS Semantic Engine]
+
+    UI -->|presentation requests| Engine
+
+    Engine --> Planner[Planner / Policy / Proof]
+    Engine --> Adapters[Tool Adapter Layer]
+    Engine --> Storage[(Local Persistence)]
+
+    Adapters --> SF[sf CLI]
+    Adapters --> CCI[cci]
+
+    Storage --> Graph[(Graph)]
+    Storage --> Evidence[(Evidence)]
+    Storage --> Proofs[(Proofs + History)]
+    Storage --> Logs[(Logs + Config)]
+```
+
 ## Auth Model
 
 Primary rule:
