@@ -53,10 +53,13 @@ prisma/migrations/**/migration_lock.toml
 
 # Local tooling artifacts
 .docker/
+.sfdx/
+.sf/
+.cci/
 
-# Salesforce (pulled metadata - optional: remove if you want to track)
-# force-app/
-# manifest/
+# Salesforce runtime retrieve output must never land in the product repo
+force-app/
+manifest/
 
 # Misc
 *.tsbuildinfo
