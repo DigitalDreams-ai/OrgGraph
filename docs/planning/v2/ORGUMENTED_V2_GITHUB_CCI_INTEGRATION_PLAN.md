@@ -8,6 +8,7 @@ Companion docs:
 - `docs/planning/v2/ORGUMENTED_V2_ROADMAP.md`
 - `docs/planning/v2/ORGUMENTED_V2_EXECUTION.md`
 - `docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md`
+- `docs/planning/v2/ORGUMENTED_V2_TOOLCHAIN_IMPLEMENTATION_POLICY.md`
 
 ## Purpose
 
@@ -66,6 +67,11 @@ Those remain Orgumented moat.
 
 Yes. A real GitHub repo plus checked-in project files makes broader CCI use reasonable, but only through the engine-side tool-adapter boundary.
 
+Concrete ownership rule:
+- GitHub integration does not change the primary Salesforce tool contract.
+- `sf` stays primary for org auth and raw metadata IO.
+- `cci` expands only as a typed project-aware orchestration layer.
+
 Current typed CCI use already exists:
 - `cci version`
 - `cci org info <alias>`
@@ -94,6 +100,7 @@ It is typed CCI job support inside Orgumented.
 3. Read-only or low-risk local jobs can run in the desktop runtime first.
 4. Org-mutating, release-affecting, or shared-environment flows should stay in GitHub Actions until wave12 release-readiness proof is closed.
 5. Every CCI-backed action must remain auditable in proof/history or job history.
+6. No commit-capable metadata flow may default to the Orgumented product repo; explicit user-bound repo binding is required first.
 
 ## Safe Migration Phases
 

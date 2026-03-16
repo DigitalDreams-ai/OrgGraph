@@ -128,6 +128,7 @@ As of March 1, 2026:
 - map the first integration slices to wave7, wave11, and wave12
 - keep local semantic runtime behavior independent when GitHub is unavailable
 - expand `cci` through typed engine-side jobs, not freeform UI shell access
+- keep `sf` as the primary Salesforce auth and raw retrieve/query tool while `cci` remains the typed project-aware orchestration layer
 
 ### Priority 6: Policy-aware approval support
 - only after packet quality and workflow adoption improve

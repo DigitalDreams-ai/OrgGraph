@@ -102,7 +102,12 @@ Purpose:
 - replacement matrix for what GitHub should own vs what Orgumented must keep
 - safe migration phases and typed CCI expansion rules
 
-18. `docs/planning/v2/archive/README.md`
+18. `docs/planning/v2/ORGUMENTED_V2_TOOLCHAIN_IMPLEMENTATION_POLICY.md`
+- concrete ownership policy for `sf`, `cci`, GitHub, and Orgumented
+- explicit rules for org auth, raw retrieve, typed CCI jobs, and metadata destination repos
+- implementation boundary for future GitHub-connected metadata workflows
+
+19. `docs/planning/v2/archive/README.md`
 - local archive for concluded v2 slice/evaluation/interim execution records
 - keeps `docs/planning/v2/` focused on the active control surface
 
@@ -130,9 +135,10 @@ Recommended order:
 8. `ORGUMENTED_V2_LEXICON.md`
 9. `ORGUMENTED_V2_SEMANTIC_RUNTIME_REFERENCE.md`
 10. `ORGUMENTED_V2_GITHUB_CCI_INTEGRATION_PLAN.md`
-11. `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
-12. `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
-13. `ORGUMENTED_V2_SOURCE_MAP.md`
+11. `ORGUMENTED_V2_TOOLCHAIN_IMPLEMENTATION_POLICY.md`
+12. `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
+13. `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
+14. `ORGUMENTED_V2_SOURCE_MAP.md`
 
 ## Default Execution Mode
 

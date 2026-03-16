@@ -309,6 +309,7 @@ Wave6 maintenance rule after closeout:
 
 Reference artifact:
 - `docs/planning/v2/ORGUMENTED_V2_GITHUB_CCI_INTEGRATION_PLAN.md`
+- `docs/planning/v2/ORGUMENTED_V2_TOOLCHAIN_IMPLEMENTATION_POLICY.md`
 
 This support track does not change the locked wave order.
 It runs across waves 7, 11, and 12.
@@ -335,8 +336,10 @@ Safe move order:
 CCI direction:
 - yes, `cci` should be used inside Orgumented for more than GitHub Actions
 - the safe model is typed engine-side jobs, not raw CLI entry from the UI
+- `sf` remains the primary org-auth and raw retrieve/query tool
 - local read-only or low-risk project-aware CCI jobs can expand now
 - mutating, shared, or release-affecting CCI flows should stay in GitHub Actions until wave12 release proof is closed
+- no commit-capable metadata workflow may default to the Orgumented product repo; user-bound repo binding is required first
 
 ## Execution Cadence (Mandatory)
 

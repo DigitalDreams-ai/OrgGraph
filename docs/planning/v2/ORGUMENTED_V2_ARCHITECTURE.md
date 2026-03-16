@@ -139,6 +139,9 @@ flowchart LR
 Primary rule:
 - Salesforce CLI keychain is the only authentication source of truth
 
+Concrete tool ownership and migration rules:
+- `docs/planning/v2/ORGUMENTED_V2_TOOLCHAIN_IMPLEMENTATION_POLICY.md`
+
 Desktop auth behavior:
 1. discover aliases through local `sf`
 2. validate aliases through local `sf`
@@ -186,6 +189,12 @@ Rules:
 ## CCI Expansion Rule
 
 `cci` may be used inside Orgumented beyond GitHub Actions, but only through typed engine-side jobs.
+
+Concrete tool split:
+- `sf` owns primary org auth and raw metadata IO
+- `cci` owns typed project-aware orchestration
+- GitHub owns repo/review/CI/release support surfaces
+- Orgumented owns semantic judgment, proof, replay, and trust
 
 Allowed direction:
 - project-aware local validation and diagnostics tasks
