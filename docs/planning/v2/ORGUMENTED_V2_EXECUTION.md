@@ -327,6 +327,14 @@ Orgumented keeps owning:
 - proof and replay
 - policy and trust evaluation
 
+Current support-track status:
+- planning and ownership policy are complete
+- overall implementation is still early, roughly 15%
+- no read-only repo/PR adapter is in the engine yet
+- no PR publication path is live yet
+- no typed GitHub workflow dispatch/status-ingest path is live yet
+- current live `cci` support remains the alias bridge / project-support baseline, not the full typed local job registry
+
 Safe move order:
 1. read-only repo / PR context in the engine
 2. decision-packet publication back to PRs as comments or checks

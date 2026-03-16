@@ -130,6 +130,13 @@ As of March 1, 2026:
 - expand `cci` through typed engine-side jobs, not freeform UI shell access
 - keep `sf` as the primary Salesforce auth and raw retrieve/query tool while `cci` remains the typed project-aware orchestration layer
 
+Current support-track status:
+- planning and ownership policy are complete
+- implementation is still early, at roughly 15%
+- read-only repo and PR context is not built yet
+- PR publication, workflow dispatch/status ingest, and release linkage are not built yet
+- current live `cci` support remains the alias bridge / project-support baseline, not the full typed job registry
+
 ### Priority 6: Policy-aware approval support
 - only after packet quality and workflow adoption improve
 

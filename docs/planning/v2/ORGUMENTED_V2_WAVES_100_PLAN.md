@@ -167,6 +167,25 @@ Mandatory:
 | UX/design/layout quality | wave10 | no clipping/overflow, action semantics locked, and dense redundant surfaces simplified |
 | Defect/release discipline | wave11, wave12, wave13 | P0/P1 zero, release evidence complete, stabilization clean |
 
+## GitHub / CCI Support Track Snapshot
+
+This is a cross-wave support track, not a replacement for the locked numbered wave order.
+
+Overall implementation progress:
+- approximately 15%
+- policy and ownership boundaries are complete
+- product integration slices are still mostly open
+
+| Support Track Item | Owning Wave(s) | Status | Approx. Complete | Next Gate |
+|---|---|---|---|---|
+| policy and ownership boundary (`sf`, `cci`, GitHub, Orgumented) | foundation | Complete | 100% | hold the tool boundary stable while implementation begins |
+| read-only repo / branch / PR context in the engine | wave7 | Open | 0% | typed GitHub adapter returns repo and PR scope without becoming a runtime dependency |
+| PR publication of decision packets, proof links, and review summaries | wave7 | Open | 0% | idempotent PR comment or check-run publication with deterministic proof references |
+| typed local `cci` job registry | wave7, wave11 | Planned | 20% | elevate current alias/info/import support into explicit typed jobs with allowlist, mutability class, timeout, and audit trail |
+| typed GitHub Actions dispatch and status ingest | wave11 | Open | 0% | workflow allowlist plus typed dispatch/status mapping back into Orgumented state |
+| explicit user-bound repo binding for commit-capable metadata workflows | wave11, wave12 | Planned | 10% | fail closed when the only available repo is the Orgumented product repo |
+| GitHub release / artifact linkage from canonical release evidence | wave12 | Open | 0% | release evidence links cleanly to GitHub artifacts without replacing local proof/replay storage |
+
 ## wave1 - Baseline Lock And Triage
 
 Objective:
