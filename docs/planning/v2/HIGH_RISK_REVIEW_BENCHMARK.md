@@ -210,6 +210,7 @@ Canonical publication output:
 Publication behavior:
 - reads both the latest automated proxy artifact and the latest human benchmark artifact
 - regenerates the canonical benchmark results markdown instead of relying on manual transcription
+- surfaces the proxy packet recommendation verdict, recommendation summary, and evidence-gap count directly in the canonical markdown when the proxy artifact provides them
 - fails closed if the human artifact still looks synthetic or smoke-only
 - carries the prepared capture-template path, signature, and proxy-artifact hash into the canonical results surface
 - `phase17:benchmark:human:verify` fails closed unless the human artifact is real, passes the Stage 1 threshold checks, and the canonical results surface still contains the matching provenance fields

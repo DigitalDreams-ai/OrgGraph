@@ -43,6 +43,7 @@
     "phase17:benchmark:human": "node ./scripts/phase17-human-benchmark.mjs",
     "phase17:benchmark:human:prepare": "node ./scripts/phase17-human-benchmark-prepare.mjs",
     "phase17:benchmark:human:publish": "node ./scripts/phase17-human-benchmark-publish.mjs",
+    "phase17:benchmark:human:publish:test": "node --test ./scripts/phase17-human-benchmark-publish.test.mjs",
     "phase17:benchmark:human:verify": "node ./scripts/phase17-human-benchmark-verify.mjs",
     "phase17:benchmark:human:finalize": "node ./scripts/phase17-human-benchmark-finalize.mjs",
     "phase17:benchmark:human:status": "node ./scripts/phase17-human-benchmark-status.mjs",
