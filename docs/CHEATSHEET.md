@@ -224,3 +224,6 @@ codex mcp add project-memory --env ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$PW
 Orgumented-specific tools:
 - `seed_orgumented_baseline`
 - `summarize_orgumented_waves`
+
+Current project-memory wave summary:
+- `summarize_orgumented_waves` reads the live numbered-wave snapshot from `docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md`, not the archived Wave A-G tasklists.

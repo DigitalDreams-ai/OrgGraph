@@ -91,8 +91,8 @@ codex mcp add project-memory --env ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$PW
 - Record verification runs with command, result, and artifact references.
 - Keep handoff notes short and linked to concrete files, commits, or docs.
 - Use `summarize_scope` before resuming a subsystem after a long gap.
-- Use `seed_orgumented_baseline` to create or refresh repo-map records for API runtime, operator surfaces, desktop transition architecture, ontology, and planning governance.
-- Use `summarize_orgumented_waves` to read Wave A-G tasklist completion counts directly from `docs/planning`.
+- Use `seed_orgumented_baseline` to create or refresh repo-map records for API runtime, operator surfaces, desktop runtime architecture, ontology, and v2 planning governance.
+- Use `summarize_orgumented_waves` to read the current numbered-wave status snapshot directly from `docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md`.
 - After changing the MCP package code, rebuild and restart the MCP session before expecting tool output to reflect new seed definitions or wave coverage.
 
 ## Anti-Patterns

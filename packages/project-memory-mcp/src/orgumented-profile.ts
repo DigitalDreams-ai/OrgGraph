@@ -4,16 +4,12 @@ import type { ProjectMemoryRecord, ProjectMemorySourceRef } from './types';
 
 export interface WaveSummary {
   wave: string;
-  title: string;
+  order: number;
+  theme: string;
+  primaryIds: string;
+  status: string;
+  nextGate: string;
   path: string;
-  taskCounts: {
-    completed: number;
-    pending: number;
-  };
-  exitGateCounts: {
-    completed: number;
-    pending: number;
-  };
 }
 
 interface RepoSeedDefinition {
@@ -39,7 +35,7 @@ const ORGUMENTED_SEED_DEFINITIONS: RepoSeedDefinition[] = [
     tags: ['api', 'runtime', 'nest'],
     sourceRefs: [
       { kind: 'file', ref: 'apps/api/src/app.module.ts' },
-      { kind: 'doc', ref: 'docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md' }
+      { kind: 'doc', ref: 'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md' }
     ],
     entryPoints: ['apps/api/src/main.ts', 'apps/api/src/app.module.ts'],
     keyPaths: ['apps/api/src/modules/ask', 'apps/api/src/modules/ingestion', 'apps/api/src/modules/org'],
@@ -48,46 +44,46 @@ const ORGUMENTED_SEED_DEFINITIONS: RepoSeedDefinition[] = [
       'npm exec --yes pnpm@9.12.3 -- --filter api test',
       'npm exec --yes pnpm@9.12.3 -- --filter api build'
     ],
-    docRefs: ['docs/USAGE_GUIDE.md', 'docs/planning/WAVE_B_TASKLIST.md']
+    docRefs: ['docs/USAGE_GUIDE.md', 'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md']
   },
   {
     title: 'Operator surfaces',
-    summary: 'Next.js operator surfaces today and the fresh desktop-facing UX transition path for Ask, org sessions, retrieval, proofs, and diagnostics.',
+    summary: 'Next.js operator surfaces for Ask, org sessions, retrieval, proofs, and diagnostics inside the desktop shell.',
     subsystem: 'operator-surfaces',
     scopePaths: ['apps/web'],
-    tags: ['web', 'nextjs', 'operator-ui', 'desktop-transition'],
+    tags: ['web', 'nextjs', 'operator-ui', 'desktop'],
     sourceRefs: [
       { kind: 'file', ref: 'apps/web/app/page.tsx' },
-      { kind: 'doc', ref: 'docs/planning/DESKTOP_UX_BLUEPRINT.md' }
+      { kind: 'doc', ref: 'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md' }
     ],
     entryPoints: ['apps/web/app/page.tsx', 'apps/web/app/layout.tsx'],
-    keyPaths: ['apps/web/app', 'docs/planning/WAVE_G_TASKLIST.md', 'docs/planning/DESKTOP_UX_BLUEPRINT.md'],
-    dependencies: ['apps/api', 'docs/planning/WAVE_G_TASKLIST.md', 'docs/planning/DESKTOP_TRANSITION_PLAN.md'],
+    keyPaths: ['apps/web/app', 'apps/web/test', 'docs/ORGUMENTED_LIFECYCLE.md'],
+    dependencies: ['apps/api', 'apps/desktop', 'docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md'],
     verificationCommands: ['npm exec --yes pnpm@9.12.3 -- desktop:smoke:release'],
-    docRefs: ['docs/planning/WAVE_G_TASKLIST.md', 'docs/planning/DESKTOP_UX_BLUEPRINT.md']
+    docRefs: ['docs/ORGUMENTED_LIFECYCLE.md', 'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md']
   },
   {
-    title: 'Desktop transition architecture',
-    summary: 'Desktop-native target architecture, local runtime boundaries, legacy removal, and migration sequencing for Tauri + Next.js + NestJS.',
-    subsystem: 'desktop-transition',
-    scopePaths: ['docs/planning'],
-    tags: ['desktop', 'tauri', 'migration', 'runtime'],
+    title: 'Desktop runtime architecture',
+    summary: 'Windows-native desktop runtime boundaries for Tauri + embedded Next.js UI + local Nest engine.',
+    subsystem: 'desktop-runtime',
+    scopePaths: ['apps/desktop', 'docs/planning/v2'],
+    tags: ['desktop', 'tauri', 'runtime', 'windows'],
     sourceRefs: [
-      { kind: 'doc', ref: 'docs/planning/DESKTOP_ARCHITECTURE.md' },
-      { kind: 'doc', ref: 'docs/planning/DESKTOP_TRANSITION_PLAN.md' }
+      { kind: 'doc', ref: 'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md' },
+      { kind: 'doc', ref: 'docs/ORGUMENTED_LIFECYCLE.md' }
     ],
-    entryPoints: ['docs/planning/DESKTOP_ARCHITECTURE.md', 'docs/planning/DESKTOP_TRANSITION_PLAN.md'],
+    entryPoints: ['apps/desktop/src-tauri/src/main.rs', 'apps/desktop/scripts/dev-runtime.mjs'],
     keyPaths: [
-      'docs/planning/LEGACY_REMOVAL_REGISTER.md',
-      'docs/planning/REUSE_REFACTOR_DELETE_MATRIX.md',
-      'docs/planning/WAVE_F_TASKLIST.md'
+      'apps/desktop/src-tauri',
+      'apps/desktop/scripts',
+      'docs/runbooks/DESKTOP_DEV_RUNTIME.md'
     ],
-    dependencies: ['docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md', 'docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md'],
-    verificationCommands: ['git diff -- docs/planning'],
+    dependencies: ['apps/web', 'apps/api', 'docs/planning/v2/ORGUMENTED_V2_EXECUTION.md'],
+    verificationCommands: ['pnpm desktop:build', 'pnpm desktop:smoke:release'],
     docRefs: [
-      'docs/planning/DESKTOP_ARCHITECTURE.md',
-      'docs/planning/DESKTOP_TRANSITION_PLAN.md',
-      'docs/planning/WAVE_F_TASKLIST.md'
+      'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md',
+      'docs/ORGUMENTED_LIFECYCLE.md',
+      'docs/runbooks/DESKTOP_DEV_RUNTIME.md'
     ]
   },
   {
@@ -98,42 +94,41 @@ const ORGUMENTED_SEED_DEFINITIONS: RepoSeedDefinition[] = [
     tags: ['ontology', 'semantic-runtime', 'contracts'],
     sourceRefs: [
       { kind: 'file', ref: 'packages/ontology/src/index.ts' },
-      { kind: 'doc', ref: 'docs/planning/ORGUMENTED_LEXICON.md' }
+      { kind: 'doc', ref: 'docs/planning/v2/ORGUMENTED_V2_LEXICON.md' }
     ],
     entryPoints: ['packages/ontology/src/index.ts'],
     keyPaths: ['packages/ontology/src/semantic-runtime.ts', 'packages/ontology/src/constraints.ts'],
-    dependencies: ['docs/planning/ORGUMENTED_LEXICON.md', 'docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md'],
+    dependencies: ['docs/planning/v2/ORGUMENTED_V2_LEXICON.md', 'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md'],
     verificationCommands: [
       'npm exec --yes pnpm@9.12.3 -- --filter @orgumented/ontology test',
       'npm exec --yes pnpm@9.12.3 -- --filter @orgumented/ontology typecheck'
     ],
-    docRefs: ['docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md', 'docs/planning/ORGUMENTED_LEXICON.md']
+    docRefs: ['docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md', 'docs/planning/v2/ORGUMENTED_V2_LEXICON.md']
   },
   {
-    title: 'Planning and wave governance',
-    summary: 'Blue-ocean execution docs, wave tasklists, and acceptance-gate planning artifacts.',
+    title: 'v2 planning and wave governance',
+    summary: 'Current v2 execution docs, numbered wave plan, and acceptance-gate governance artifacts.',
     subsystem: 'planning',
-    scopePaths: ['docs/planning'],
+    scopePaths: ['docs/planning/v2'],
     tags: ['planning', 'waves', 'governance'],
     sourceRefs: [
-      { kind: 'doc', ref: 'docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md' },
-      { kind: 'doc', ref: 'docs/planning/WAVE_A_TASKLIST.md' }
+      { kind: 'doc', ref: 'docs/planning/v2/README.md' },
+      { kind: 'doc', ref: 'docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md' }
     ],
-    entryPoints: ['docs/planning/BLUE_OCEAN_EXECUTION_PLAN.md', 'docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md'],
+    entryPoints: ['docs/planning/v2/README.md', 'docs/planning/v2/ORGUMENTED_V2_EXECUTION.md'],
     keyPaths: [
-      'docs/planning/WAVE_A_TASKLIST.md',
-      'docs/planning/WAVE_B_TASKLIST.md',
-      'docs/planning/WAVE_C_TASKLIST.md',
-      'docs/planning/WAVE_F_TASKLIST.md',
-      'docs/planning/WAVE_G_TASKLIST.md'
+      'docs/planning/v2/ORGUMENTED_V2_ROADMAP.md',
+      'docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md',
+      'docs/planning/v2/ORGUMENTED_V2_GOVERNANCE.md',
+      'docs/planning/v2/WAVE1_BACKLOG.md'
     ],
-    dependencies: ['docs/planning/ORGUMENTED_LEXICON.md', 'docs/planning/DESKTOP_TRANSITION_PLAN.md'],
+    dependencies: ['docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md', 'docs/planning/v2/ORGUMENTED_V2_PIVOT_LOCK.md'],
     verificationCommands: ['git diff -- docs/planning'],
     docRefs: [
-      'docs/planning/BLUE_OCEAN_PHASE_ROADMAP.md',
-      'docs/planning/WAVE_B_TASKLIST.md',
-      'docs/planning/WAVE_F_TASKLIST.md',
-      'docs/planning/WAVE_G_TASKLIST.md'
+      'docs/planning/v2/README.md',
+      'docs/planning/v2/ORGUMENTED_V2_EXECUTION.md',
+      'docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md',
+      'docs/planning/v2/ORGUMENTED_V2_GOVERNANCE.md'
     ]
   }
 ];
@@ -170,68 +165,53 @@ export function createOrgumentedBaselineRecords(
 }
 
 export function summarizeOrgumentedWaves(workspaceRoot: string): WaveSummary[] {
-  return ['A', 'B', 'C', 'D', 'E', 'F', 'G'].map((wave) => {
-    const relativePath = `docs/planning/WAVE_${wave}_TASKLIST.md`;
-    const absolutePath = path.join(workspaceRoot, relativePath);
-    const raw = fs.readFileSync(absolutePath, 'utf8');
-    const lines = raw.split('\n');
+  const relativePath = 'docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md';
+  const absolutePath = path.join(workspaceRoot, relativePath);
+  const raw = fs.readFileSync(absolutePath, 'utf8');
+  const lines = raw.split('\n');
+  const summaries: WaveSummary[] = [];
+  let insideSnapshot = false;
 
-    let section: 'tasks' | 'exit' | undefined;
-    let title = `Wave ${wave}`;
-    let tasksCompleted = 0;
-    let tasksPending = 0;
-    let exitCompleted = 0;
-    let exitPending = 0;
-
-    for (const line of lines) {
-      if (line.startsWith('# ')) {
-        title = line.replace(/^#\s*/, '').trim();
-        continue;
-      }
-      if (line.trim() === '## Tasks') {
-        section = 'tasks';
-        continue;
-      }
-      if (line.trim() === '## Exit Gates') {
-        section = 'exit';
-        continue;
-      }
-      if (line.startsWith('## ')) {
-        section = undefined;
-        continue;
-      }
-
-      if (section === 'tasks') {
-        if (line.trim().startsWith('- [x]')) {
-          tasksCompleted += 1;
-        }
-        if (line.trim().startsWith('- [ ]')) {
-          tasksPending += 1;
-        }
-      }
-
-      if (section === 'exit') {
-        if (line.trim().startsWith('- [x]')) {
-          exitCompleted += 1;
-        }
-        if (line.trim().startsWith('- [ ]')) {
-          exitPending += 1;
-        }
-      }
+  for (const line of lines) {
+    if (line.trim() === '## Wave Progress Snapshot') {
+      insideSnapshot = true;
+      continue;
     }
 
-    return {
-      wave: `Wave ${wave}`,
-      title,
-      path: relativePath,
-      taskCounts: {
-        completed: tasksCompleted,
-        pending: tasksPending
-      },
-      exitGateCounts: {
-        completed: exitCompleted,
-        pending: exitPending
-      }
-    };
-  });
+    if (!insideSnapshot) {
+      continue;
+    }
+
+    if (line.startsWith('## ') && line.trim() !== '## Wave Progress Snapshot') {
+      break;
+    }
+
+    if (!line.trim().startsWith('| wave')) {
+      continue;
+    }
+
+    const cells = line
+      .split('|')
+      .slice(1, -1)
+      .map((cell) => cell.trim());
+
+    if (cells.length !== 5) {
+      continue;
+    }
+
+    const [wave, theme, primaryIds, status, nextGate] = cells;
+    const order = Number.parseInt(wave.replace(/^wave/i, ''), 10);
+
+    summaries.push({
+      wave,
+      order: Number.isFinite(order) ? order : summaries.length + 1,
+      theme,
+      primaryIds,
+      status,
+      nextGate,
+      path: relativePath
+    });
+  }
+
+  return summaries;
 }
