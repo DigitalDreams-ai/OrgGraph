@@ -31,6 +31,7 @@ Materially true now:
 - `/ready` remains fail-closed when bootstrap grounding fails
 - runtime bootstrap now retries once on semantic-drift-budget startup failures after clearing stale semantic state artifacts, then remains fail-closed if recovery still fails
 - real-org session attach/switch and selective retrieve path is materially functional
+- GitHub is now planned as the borrowed support plane for repo history, PR review surfaces, CI orchestration, and release distribution; local Ask/proof/runtime behavior remains the product core
 - org browser supports name-first search and grouped explorer/tree selection
 - org browser now uses explicit cart language (`checked row = in cart`) with simpler explorer/retrieve actions
 - org browser action row now uses direct operator language (`Search`, `Load Full Family Catalog`, `Load Visible Children`, `Retrieve Cart`) and a quick workflow block clarifies checkbox-first selection from search/browse into retrieve cart
@@ -303,6 +304,39 @@ Rules:
 
 Wave6 maintenance rule after closeout:
 - preserve bounded semantic-frame admissibility, deterministic evidence-lookup normalization, and replay parity while Wave7+ work proceeds
+
+## GitHub / CCI Support Track
+
+Reference artifact:
+- `docs/planning/v2/ORGUMENTED_V2_GITHUB_CCI_INTEGRATION_PLAN.md`
+
+This support track does not change the locked wave order.
+It runs across waves 7, 11, and 12.
+
+GitHub replaces:
+- raw git history and file diff browsing
+- pull request review plumbing
+- checks / required status surfaces
+- CI workflow orchestration
+- release artifact distribution
+
+Orgumented keeps owning:
+- semantic snapshots and evidence
+- Ask planning and decision packets
+- proof and replay
+- policy and trust evaluation
+
+Safe move order:
+1. read-only repo / PR context in the engine
+2. decision-packet publication back to PRs as comments or checks
+3. typed GitHub Actions dispatch and status ingest
+4. release evidence and artifact linkage
+
+CCI direction:
+- yes, `cci` should be used inside Orgumented for more than GitHub Actions
+- the safe model is typed engine-side jobs, not raw CLI entry from the UI
+- local read-only or low-risk project-aware CCI jobs can expand now
+- mutating, shared, or release-affecting CCI flows should stay in GitHub Actions until wave12 release proof is closed
 
 ## Execution Cadence (Mandatory)
 

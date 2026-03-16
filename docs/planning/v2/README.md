@@ -92,6 +92,20 @@ Purpose:
 - narrow semantic-frame model for intent, target grounding, admissibility, and fail-closed clarification
 - wave6 planner/compiler-depth input artifact
 
+16. `docs/planning/v2/ORGUMENTED_V2_SEMANTIC_RUNTIME_REFERENCE.md`
+- live detailed semantic-runtime reference
+- current Mermaid architecture/lifecycle diagrams
+- deeper architectural model preserved alongside the compact v2 set
+
+17. `docs/planning/v2/ORGUMENTED_V2_GITHUB_CCI_INTEGRATION_PLAN.md`
+- GitHub repo / review / CI / release integration plan
+- replacement matrix for what GitHub should own vs what Orgumented must keep
+- safe migration phases and typed CCI expansion rules
+
+18. `docs/planning/v2/archive/README.md`
+- local archive for concluded v2 slice/evaluation/interim execution records
+- keeps `docs/planning/v2/` focused on the active control surface
+
 ## Wave1 Baseline Artifacts
 
 1. `docs/planning/v2/WAVE1_BACKLOG.md`
@@ -114,9 +128,11 @@ Recommended order:
 6. `ORGUMENTED_V2_GOVERNANCE.md`
 7. `ORGUMENTED_V2_PIVOT_LOCK.md`
 8. `ORGUMENTED_V2_LEXICON.md`
-9. `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
-10. `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
-11. `ORGUMENTED_V2_SOURCE_MAP.md`
+9. `ORGUMENTED_V2_SEMANTIC_RUNTIME_REFERENCE.md`
+10. `ORGUMENTED_V2_GITHUB_CCI_INTEGRATION_PLAN.md`
+11. `ORGUMENTED_V2_MULTI_AGENT_OPERATING_MODEL.md`
+12. `ORGUMENTED_V2_CODEX_MULTI_AGENT_RUNBOOK.md`
+13. `ORGUMENTED_V2_SOURCE_MAP.md`
 
 ## Default Execution Mode
 
@@ -138,7 +154,7 @@ This v2 set is meant to absorb the important content from:
 - build-vs-borrow and inspiration-alignment docs
 
 This set does not replace:
-- slice-specific evaluation files under `docs/planning/v2/`
+- concluded slice/evaluation/interim execution records under `docs/planning/v2/archive/`
 - archived source material kept under `docs/planning/archive/` for evidence, execution traceability, and historical context
 
 ## Current Position
@@ -160,4 +176,5 @@ Use archived planning files only when you need:
 - detailed execution history,
 - pre-v2 wave and DNA task tracking,
 - branch-level proof artifacts,
-- raw architectural evidence not carried forward into the v2 summaries.
+- raw architectural evidence not carried forward into the v2 summaries,
+- or concluded v2 slice/evaluation records that were intentionally moved into `docs/planning/v2/archive/`.

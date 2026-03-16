@@ -283,6 +283,7 @@ Scope:
 - next-action relevance
 - packet layout stays calm enough to function as the primary artifact without duplicate action rows or low-signal sections competing for attention
 - proof identifiers and citation detail stay available without occupying their own always-visible cards under the packet
+- decision packets can be published into GitHub PR review surfaces as comments or checks without losing provenance, proof links, or fail-closed semantics
 
 Exit:
 - benchmark packet accepted for real review scenario
@@ -290,6 +291,7 @@ Exit:
 - packet cites deterministic reads/writes/impact paths with minimal manual interpretation
 - packet hierarchy is clear enough that the primary recommendation, evidence, and next action are visible without scanning redundant cards
 - latest proxy benchmark run passes specificity and friction gates with explicit recommendation/evidence-gap publication, so the only remaining acceptance blocker is the real human benchmark capture plus canonical publish/verify cycle
+- packet summary is publishable to GitHub PR surfaces without collapsing into raw JSON or losing proof identity
 
 ## wave8 - Explain/Analyze Depth
 
@@ -384,6 +386,8 @@ Scope:
 - render-level regression locks for critical runtime status surfaces
 - release-evidence checker tests enforced in `validate`
 - human benchmark publication regression enforced in `validate`
+- typed GitHub workflow-dispatch and status-ingest path for Orgumented-managed validation or benchmark jobs
+- GitHub Actions remains the borrowed CI/reporting plane instead of new custom orchestration inside Orgumented
 
 Exit:
 - P0/P1 = zero and stable for one cycle
@@ -394,6 +398,7 @@ Exit:
 - release-evidence checker tests run in `validate`, keeping wave12 release-gate logic under CI instead of local-only verification
 - phase17 human benchmark publication regression runs in `validate`, keeping canonical benchmark publication logic under CI instead of local-only verification
 - edge metadata-family regression coverage includes Email Template and Custom Tab evidence-lookup prompts in addition to Flow, Layout, Apex, and CustomField families
+- GitHub-backed validation/reporting is additive and does not make local semantic workflows depend on GitHub reachability
 
 ## wave12 - Release Readiness And Operator Proof
 
@@ -416,11 +421,13 @@ Scope:
 - proofs/history advanced token path now has an explicit clear/exit action that removes typed debug tokens and token-only loaded state, making it easier to return to the normal history-first workflow after parity/debug inspection
 - proofs/history export filenames now prefer the selected history label so saved proof and replay JSON artifacts stay aligned to the primary history-first audit flow
 - proofs/history rows now include direct proof/replay export actions so the label-first lifecycle is available from the history list itself without detouring through the top action row
+- GitHub Release / artifact linkage for packaged desktop outputs and release evidence where useful, without replacing local proof/replay records
 
 Exit:
 - release candidate checklist fully green
 - non-author operator runbook pass with evidence
 - real-org quickstart and org-browser proof runbooks pass on clean machine
+- canonical release evidence can link cleanly to GitHub release/artifact surfaces without becoming dependent on them
 
 ## wave13 - Stabilization Window
 

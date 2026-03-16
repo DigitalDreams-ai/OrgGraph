@@ -53,6 +53,11 @@ The runtime must preserve:
 - runtime history
 - config
 
+6. Repository and automation support plane
+- GitHub repo, pull requests, checks, Actions, and releases
+- support surface only, not the semantic runtime
+- optional integration that must never become a hidden dependency for local fail-closed workflows
+
 ## Visual Architecture
 
 ```mermaid
@@ -83,6 +88,14 @@ flowchart LR
         CCI[cci support tooling]
     end
 
+    Support[GitHub support adapter]
+
+    subgraph RepoSupport["External repo / automation support plane"]
+        Repo[GitHub repo and PR context]
+        Actions[GitHub Actions workflows]
+        Review[PR comments, checks, releases]
+    end
+
     subgraph Storage["Local persistence"]
         Config[Explicit runtime config]
         GraphStore[(SQLite graph and state)]
@@ -103,6 +116,11 @@ flowchart LR
     Retrieve --> Adapter
     Adapter --> SF
     Adapter --> CCI
+
+    Engine --> Support
+    Support --> Repo
+    Support --> Actions
+    Support --> Review
 
     Retrieve --> RetrieveFiles
     Graph --> GraphStore
@@ -147,6 +165,37 @@ Responsibilities:
 
 Rule:
 - `sf` and `cci` assumptions must not leak into UI logic or core business logic
+
+## Repository And Automation Boundary
+
+GitHub is the preferred borrowed support plane for:
+- raw source history and diff
+- pull requests and review threads
+- checks and required status gates
+- workflow dispatch and CI orchestration
+- release artifacts and release notes
+
+GitHub is not the semantic runtime.
+
+Rules:
+- GitHub integration must be explicit, auditable, and revocable
+- local desktop workflows must remain fail-closed if GitHub is unavailable
+- GitHub must not become the hidden source of semantic truth, proof identity, or policy routing
+- Orgumented may publish semantic results to GitHub, but GitHub does not replace local proof/replay storage
+
+## CCI Expansion Rule
+
+`cci` may be used inside Orgumented beyond GitHub Actions, but only through typed engine-side jobs.
+
+Allowed direction:
+- project-aware local validation and diagnostics tasks
+- named task/flow execution from checked-in `cumulusci.yml`
+- GitHub Actions execution for longer-running, shared, or release-affecting flows
+
+Not allowed:
+- arbitrary shell-like `cci` command entry from the UI
+- hidden fallback from typed jobs to ad-hoc command text
+- UI ownership of CCI policy or mutability rules
 
 ## Operator Diagnostic States
 
@@ -239,6 +288,7 @@ Each job needs:
 
 - secrets remain local to the operator environment
 - Orgumented reads existing CLI/keychain state instead of storing Salesforce credentials itself
+- GitHub integration credentials must be separately scoped and auditable, and must not be conflated with Salesforce auth state
 - proofs and logs must avoid secret leakage
 - local config must be explicit about what is persisted and where
 

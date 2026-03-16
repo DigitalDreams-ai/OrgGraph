@@ -123,10 +123,16 @@ As of March 1, 2026:
 - remove token-bookkeeping dependence from proof/history access
 - simplify bloated workspace surfaces until each workflow has one clear primary artifact, one clear next action, and progressive disclosure for secondary detail
 
-### Priority 5: Policy-aware approval support
+### Priority 5: Borrow GitHub where it removes low-value custom platform work
+- use GitHub for raw git history/diff, pull requests, checks, Actions orchestration, releases, and work tracking
+- map the first integration slices to wave7, wave11, and wave12
+- keep local semantic runtime behavior independent when GitHub is unavailable
+- expand `cci` through typed engine-side jobs, not freeform UI shell access
+
+### Priority 6: Policy-aware approval support
 - only after packet quality and workflow adoption improve
 
-### Priority 6: Execution stability over platform churn
+### Priority 7: Execution stability over platform churn
 - no restart and no architecture re-opening while Stage 1 completion is achievable on current desktop model
 - apply module-level rebuild only when objective triggers are met (see `ORGUMENTED_V2_PIVOT_LOCK.md`)
 
@@ -143,6 +149,7 @@ Do not:
 - widen scope into a domain-agnostic platform
 - pursue governance or enforcement claims before workflow proof exists
 - custom-build substrate for its own sake
+- custom-build repo diff, PR review, CI orchestration, or release distribution surfaces that GitHub already provides acceptably
 
 ## Near-Term Roadmap Sequence (Locked)
 
@@ -155,6 +162,11 @@ Do not:
 6. complete defect/CI/release discipline (wave11 + wave12)
 7. run stabilization hold (wave13)
 8. only then evaluate policy-aware approval support expansion
+
+Cross-cutting support track during waves 7, 11, and 12:
+- GitHub replaces repo/review/check/release plumbing
+- Orgumented remains the semantic decision engine
+- typed `cci` expansion can proceed locally and through GitHub Actions without reopening the core runtime model
 
 ## Later Sequence
 

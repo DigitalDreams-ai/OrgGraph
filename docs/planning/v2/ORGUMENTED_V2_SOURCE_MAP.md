@@ -22,6 +22,7 @@ Mapped mainly into:
 - `ORGUMENTED_V2_STRATEGY.md`
 - `ORGUMENTED_V2_ARCHITECTURE.md`
 - `ORGUMENTED_V2_LEXICON.md`
+- `ORGUMENTED_V2_SEMANTIC_RUNTIME_REFERENCE.md`
 
 ### Architecture and runtime direction
 - `docs/planning/archive/pre-v2-2026-03-01/DESKTOP_ARCHITECTURE.md`
@@ -76,6 +77,22 @@ These remain valuable, but are not duplicated into the v2 set:
 - `docs/planning/archive/pre-v2-2026-03-01/RUNLOG.md`
 - archived wave tasklists as historical execution trackers
 
+## Local v2 Historical Support Archive
+
+The active `docs/planning/v2/` root is intentionally kept smaller than the full set of v2-era working records.
+
+Concluded v2 records now live under:
+- `docs/planning/v2/archive/`
+
+This local v2 archive is for:
+- slice-selection records
+- initiative-evaluation records
+- real-org interim execution plans that were absorbed into the active wave/execution docs or runbooks
+
+Reason:
+- keep the v2 root focused on the canonical control surface
+- preserve historical traceability without making one-off execution records look active
+
 ## Recommended v2 Control Surface
 
 If a future contributor wants the shortest reliable starting point, use:
@@ -99,3 +116,15 @@ Older files should remain available for:
 - execution traceability
 
 But new high-level planning should prefer the v2 set over creating more overlapping standalone planning files.
+
+## Revived Detailed Reference
+
+One pre-v2 source file is no longer archive-only:
+- `docs/planning/archive/pre-v2-2026-03-01/BLUE_OCEAN_EXECUTION_PLAN.md`
+
+Its maintained active counterpart is now:
+- `docs/planning/v2/ORGUMENTED_V2_SEMANTIC_RUNTIME_REFERENCE.md`
+
+Reason:
+- preserve the detailed semantic-runtime architecture and Mermaid diagrams as a live reference
+- keep the compact v2 control surface intact while avoiding loss of important architectural detail
