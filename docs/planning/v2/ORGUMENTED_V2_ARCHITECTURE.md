@@ -56,24 +56,64 @@ The runtime must preserve:
 ## Visual Architecture
 
 ```mermaid
-graph TD
-    Operator[Operator] --> Shell[Tauri Shell]
-    Shell --> UI[Embedded Next.js UI]
-    Shell --> Engine[Local NestJS Semantic Engine]
+flowchart LR
+    Operator[Operator]
 
-    UI -->|presentation requests| Engine
+    subgraph Desktop["Windows Desktop Runtime"]
+        Shell[Tauri shell<br/>lifecycle, packaging, native window]
+        UI[Embedded Next.js UI<br/>presentation and workflow state only]
+        Engine[Local NestJS semantic engine<br/>deterministic execution boundary]
 
-    Engine --> Planner[Planner / Policy / Proof]
-    Engine --> Adapters[Tool Adapter Layer]
-    Engine --> Storage[(Local Persistence)]
+        Shell --> UI
+        Shell --> Engine
+        UI <-->|typed HTTP / localhost boundary| Engine
+    end
 
-    Adapters --> SF[sf CLI]
-    Adapters --> CCI[cci]
+    subgraph EngineModules["Semantic engine subsystems"]
+        Sessions[Org session and status services]
+        Retrieve[Retrieve / refresh / rebuild jobs]
+        Planner[Ask planner / analysis / policy gates]
+        Proofs[Proof / replay / trust / metrics]
+        Graph[Graph / evidence / snapshot services]
+    end
 
-    Storage --> Graph[(Graph)]
-    Storage --> Evidence[(Evidence)]
-    Storage --> Proofs[(Proofs + History)]
-    Storage --> Logs[(Logs + Config)]
+    subgraph Tooling["Local tool adapter boundary"]
+        Adapter[Org tool adapter]
+        SF[sf CLI keychain auth]
+        CCI[cci support tooling]
+    end
+
+    subgraph Storage["Local persistence"]
+        Config[Explicit runtime config]
+        GraphStore[(SQLite graph and state)]
+        Evidence[(Evidence index)]
+        ProofStore[(Proof and replay history)]
+        Logs[(Logs / audit / metrics)]
+        RetrieveFiles[(Retrieved metadata workspace)]
+    end
+
+    Operator --> Shell
+    Engine --> Sessions
+    Engine --> Retrieve
+    Engine --> Planner
+    Engine --> Proofs
+    Engine --> Graph
+
+    Sessions --> Adapter
+    Retrieve --> Adapter
+    Adapter --> SF
+    Adapter --> CCI
+
+    Retrieve --> RetrieveFiles
+    Graph --> GraphStore
+    Graph --> Evidence
+    Proofs --> ProofStore
+    Engine --> Logs
+    Engine --> Config
+
+    Retrieve --> Graph
+    Planner --> Graph
+    Planner --> Proofs
 ```
 
 ## Auth Model
