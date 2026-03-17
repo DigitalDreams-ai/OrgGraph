@@ -138,6 +138,33 @@ Surface-level unless improved:
 - generic "AI for Salesforce" language
 - UX polish without workflow adoption
 
+## UI Product Posture
+
+Orgumented Stage 1 UI must be:
+- simplified
+- elegant
+- modern
+- operator-calm
+
+That means:
+- one primary job per workspace
+- one primary next action visible without card-scanning
+- progressive disclosure for secondary detail
+- raw JSON, debug payloads, and low-signal telemetry kept behind secondary affordances
+- no duplicate status summaries or repeated action rows in the same workflow
+- no dense dashboard behavior that forces the operator to interpret multiple competing cards before acting
+
+UI quality is not a cosmetic afterthought.
+It is part of trust:
+- a bloated or redundant surface weakens decision confidence
+- information overload raises operator error rate
+- unclear primary actions make deterministic workflows feel less trustworthy than they are
+
+Stage 1 therefore requires:
+- fewer, clearer primary surfaces
+- stronger hierarchy between primary artifact, secondary evidence, and debug detail
+- modern visual discipline that reduces clutter rather than adding more visible controls
+
 ## Strategic Kill-Switches
 
 Stop major strategic expansion if:
