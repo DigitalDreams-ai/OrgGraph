@@ -513,15 +513,7 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
           ) : (
             <p className="muted">All runtime readiness checks passed. Structured diagnostics are healthy.</p>
           )}
-          {renderQuickActions(
-            'Runtime health quick actions',
-            [
-              { id: 'refresh-status', label: 'Refresh Status' },
-              { id: 'open-refresh', label: 'Open Refresh & Build' }
-            ],
-            props.loading,
-            handleStructuredAction
-          )}
+          <p className="muted">Use the structured triage snapshot or primary controls above for Refresh Status and Open Refresh &amp; Build.</p>
           {props.readyDetails ? (
             <details className="debug-details">
               <summary>Raw readiness JSON</summary>
@@ -636,16 +628,7 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
               ) : (
                 <p className="muted">No preflight issues reported for the selected alias.</p>
               )}
-              {renderQuickActions(
-                'Toolchain quick actions',
-                [
-                  { id: 'load-org-status', label: 'Load Org Status' },
-                  { id: 'run-preflight', label: 'Run Preflight' },
-                  { id: 'open-connect', label: 'Open Org Sessions' }
-                ],
-                props.loading,
-                handleStructuredAction
-              )}
+              <p className="muted">Use the structured triage snapshot or primary controls above for Load Org Status, Run Preflight, and Open Org Sessions.</p>
             </>
           ) : (
             <p className="muted">Load Org Status to inspect CLI readiness and current session state.</p>
