@@ -228,7 +228,9 @@ function run(): void {
   assert.match(noSelectionMarkup, /disabled="">Clear Advanced Tokens/);
   assert.match(noSelectionMarkup, /History label: none/);
   assert.match(noSelectionMarkup, /Loaded proof: not opened/);
-  assert.match(noSelectionMarkup, /Advanced tokens: empty/);
+  assert.doesNotMatch(noSelectionMarkup, /Advanced debug active/);
+  assert.match(noSelectionMarkup, /Advanced debug tools/);
+  assert.doesNotMatch(noSelectionMarkup, /Advanced proof ID:/);
 
   const advancedOnlyMarkup = renderToStaticMarkup(
     React.createElement(ProofsWorkspace, {
@@ -261,7 +263,8 @@ function run(): void {
   assert.doesNotMatch(advancedOnlyMarkup, /disabled="">Open by Token/);
   assert.doesNotMatch(advancedOnlyMarkup, /disabled="">Replay by Token/);
   assert.doesNotMatch(advancedOnlyMarkup, /disabled="">Clear Advanced Tokens/);
-  assert.match(advancedOnlyMarkup, /Advanced tokens: present/);
+  assert.match(advancedOnlyMarkup, /Advanced debug active/);
+  assert.match(advancedOnlyMarkup, /Advanced debug tools/);
   assert.match(advancedOnlyMarkup, /Advanced proof ID: <span class="path-value">proof_alpha<\/span> • replay token:\s*<span class="path-value">trace_alpha<\/span>/);
 
   const selectedMarkup = renderToStaticMarkup(
@@ -298,7 +301,7 @@ function run(): void {
   assert.doesNotMatch(selectedMarkup, /disabled="">Export Selected History Replay/);
   assert.match(selectedMarkup, /History label: selected/);
   assert.match(selectedMarkup, /Loaded proof: not opened/);
-  assert.match(selectedMarkup, /Advanced tokens: empty/);
+  assert.doesNotMatch(selectedMarkup, /Advanced debug active/);
   assert.match(selectedMarkup, /Export Label Proof<\/button>/);
   assert.match(selectedMarkup, /Export Label Replay<\/button>/);
 
@@ -347,7 +350,7 @@ function run(): void {
   );
   assert.match(advancedLoadedMarkup, /History label: selected/);
   assert.match(advancedLoadedMarkup, /Loaded proof: advanced token lookup/);
-  assert.match(advancedLoadedMarkup, /Advanced tokens: present/);
+  assert.match(advancedLoadedMarkup, /Advanced debug active/);
 
   const detailMarkup = renderToStaticMarkup(
     React.createElement(ProofsWorkspace, {
@@ -434,8 +437,8 @@ function run(): void {
   );
   assert.match(detailMarkup, /History label: selected/);
   assert.match(detailMarkup, /Loaded proof: selected history/);
-  assert.match(detailMarkup, /Advanced tokens: empty/);
-  assert.match(detailMarkup, /Advanced proof ID: <span class="path-value">n\/a<\/span> • replay token:\s*<span class="path-value">n\/a<\/span>/);
+  assert.doesNotMatch(detailMarkup, /Advanced debug active/);
+  assert.doesNotMatch(detailMarkup, /Advanced proof ID:/);
   assert.match(detailMarkup, /<strong><span class="path-value">What touches Opportunity\.StageName\?<\/span><\/strong>/);
   assert.match(detailMarkup, /<strong>Snapshot:<\/strong> <span class="path-value">snap_alpha<\/span>/);
   assert.match(detailMarkup, /<strong>Generated:<\/strong> <span class="path-value">2026-03-01T10:00:00Z<\/span>/);

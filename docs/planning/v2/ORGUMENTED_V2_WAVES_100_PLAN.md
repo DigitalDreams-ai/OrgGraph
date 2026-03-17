@@ -320,6 +320,7 @@ Scope:
 - trust-envelope continuity across restarts
 - strict separation between history-label workflow and advanced token-only debug path
 - explicit current-selection status so mixed history/debug states remain operator-legible
+- advanced token state stays inside an explicit debug disclosure unless tokens are actually active, so the normal history-first workflow does not carry empty debug chrome
 
 Exit:
 - operator can run history-first proof workflows without token bookkeeping
