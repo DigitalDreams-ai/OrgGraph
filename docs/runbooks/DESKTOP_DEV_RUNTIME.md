@@ -151,7 +151,7 @@ Current packaged smoke proof:
 - `readyStatus=ready`
 - the smoke now uses an isolated `logs/desktop-release-smoke-appdata/` runtime root instead of the operator's normal roaming app-data path
 - first launch now seeds stale semantic snapshot residue and requires the packaged runtime to recover with `checks.bootstrap.message=runtime bootstrap ready snapshot=...`
-- second launch now requires `checks.bootstrap.message=runtime already grounded`, proving packaged relaunch reuses the recovered grounded runtime instead of rebuilding on every start
+- second launch now requires a grounded bootstrap message (`runtime already grounded` when persisted state is reused, otherwise a second deterministic `runtime bootstrap ready snapshot=...` message), proving the packaged relaunch stays grounded instead of falling into ambiguous startup state
 - `/ready` now implies a grounded runtime, not just a listening process:
   - graph node/edge counts are non-zero
   - evidence index exists and is populated

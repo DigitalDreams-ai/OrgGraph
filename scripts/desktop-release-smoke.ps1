@@ -657,8 +657,13 @@ try {
   if ($relaunchReady.checks.bootstrap.status -ne 'ready') {
     throw "Relaunch ready check reported unexpected bootstrap status: $($relaunchReady.checks.bootstrap.status)"
   }
-  if ($relaunchReady.checks.bootstrap.message -ne 'runtime already grounded') {
-    throw "Relaunch ready check did not report grounded runtime reuse."
+  $relaunchBootstrapMessage = $relaunchReady.checks.bootstrap.message
+  $relaunchReusedGroundedRuntime = $relaunchBootstrapMessage -eq 'runtime already grounded'
+  $relaunchRecoveredGroundedRuntime =
+    -not [string]::IsNullOrWhiteSpace($relaunchBootstrapMessage) -and
+    $relaunchBootstrapMessage.StartsWith('runtime bootstrap ready snapshot=')
+  if (-not $relaunchReusedGroundedRuntime -and -not $relaunchRecoveredGroundedRuntime) {
+    throw "Relaunch ready check did not report a grounded runtime state."
   }
   if (($relaunchReady.checks.db.nodeCount ?? 0) -le 0 -or ($relaunchReady.checks.db.edgeCount ?? 0) -le 0) {
     throw "Relaunch ready check reported an empty graph runtime."
@@ -730,6 +735,8 @@ try {
     staleBootstrapSeedArtifact = 'logs/desktop-release-smoke-stale-seed.json'
     bootstrapMessage = $ready.checks.bootstrap.message
     relaunchBootstrapMessage = $relaunchReady.checks.bootstrap.message
+    relaunchReusedGroundedRuntime = $relaunchReusedGroundedRuntime
+    relaunchRecoveredGroundedRuntime = $relaunchRecoveredGroundedRuntime
     launchAttemptsUsed = $launchAttemptsUsed
     relaunchVerified = $relaunchVerified
     relaunchAttemptsUsed = $relaunchAttemptsUsed

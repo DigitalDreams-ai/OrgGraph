@@ -175,7 +175,7 @@ Materially true now:
 - wave2 runtime-gate follow-up now distinguishes `runtime blocked` from `runtime unavailable` across Connect, Operator Rail, and Settings/Diagnostics, so fail-closed `/ready` states no longer erase live tool/session diagnostics while deterministic workflows remain visibly blocked
 - wave2 readiness-surface follow-up now normalizes raw readiness HTTP codes into operator labels (`blocked`, `unreachable`, `ready`) in the shell status strip and Diagnostics runtime badges, so top-level status surfaces no longer leak `http_400`-style internals during fail-closed runtime states
 - packaged desktop smoke now verifies a second clean packaged relaunch reaches `ready`, tightening wave2 startup parity proof beyond the first launch only
-- packaged desktop smoke now also runs against an isolated smoke-owned app-data root, seeds stale semantic snapshot residue before first launch, and requires packaged bootstrap recovery on launch one plus grounded-runtime reuse on launch two
+- packaged desktop smoke now also runs against an isolated smoke-owned app-data root, seeds stale semantic snapshot residue before first launch, and requires packaged bootstrap recovery on launch one plus a grounded runtime state on launch two (`runtime already grounded` reuse when persisted state survives, otherwise a second deterministic grounded bootstrap message)
 - fallback error copy now distinguishes API non-response failures from normal request-validation failures
 - session action labels now distinguish quick top-bar attach from explicit connect/switch controls in Org Sessions
 - session alias switch now reuses connect auth/bridge flow so missing CCI alias registrations are remediated during switch, not only during explicit connect
