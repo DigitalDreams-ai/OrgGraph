@@ -84,6 +84,8 @@ Materially true now:
 - wave7 follow-up now emits dedicated `impact_assessment` packets for deterministic impact asks, so field-impact questions surface `Impact signals`, scoped coverage, top impacted sources, and explicit impact-path follow-up actions instead of plain text with generic approval-card placeholders
 - wave7 packet-hierarchy follow-up now keeps decision-packet rationale in the primary Ask artifact by moving packet `nextActions` into the packet body itself, while the lower control card becomes workflow/navigation controls instead of a duplicate rationale surface
 - wave7 packet-hierarchy follow-up now also collapses Ask proof identifiers and citations into a single supporting-detail card with disclosure sections, so the decision packet stays primary and proof/evidence detail no longer competes as separate always-visible cards
+- wave7 proxy benchmark now passes on current main again: `pnpm phase17:benchmark` against a grounded local runtime returns explicit recommendation verdict/summary, explicit evidence-gap visibility, stable proof/replay identifiers, and a passing specificity guard for the approval-review packet
+- wave7 acceptance is now blocked by missing real human benchmark evidence, not by a known proxy packet-content failure; `pnpm phase17:benchmark:human:status` reports `pending_human_artifact_missing` when only the proxy artifact is present
 - flow read/write asks remain on the legacy planner path in this slice; semantic-frame rollout is still intentionally bounded to impact + field/object automation + graph-global permission asks only
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model
@@ -226,7 +228,7 @@ Materially true now:
 - wave10 follow-up now wraps long path/identifier values in Connect, Refresh, and System with explicit `path-value`/`diagnostic-code-block` hooks, and the runtime-status regression gate now render-checks those markup guards so long paths/JSON stay bounded
 
 Still unresolved:
-- decision packet quality is not yet benchmark-accepted for approval use
+- decision packet quality is still not benchmark-accepted for approval use because the real human benchmark artifact and canonical publish/verify pass are missing, even though the current proxy benchmark now passes
 - explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
 - proofs/history still needs full label-first lifecycle closure beyond current baseline auto-selection
 - layout/accessibility still needs final visual QA lock after latest density guardrail pass

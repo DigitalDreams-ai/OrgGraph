@@ -256,7 +256,9 @@ Current branch status:
 - desktop Ask renders the packet as the primary artifact
 - replay parity protection is green
 - automated proxy benchmark capture is now available through `pnpm phase17:benchmark`
-- latest proxy run is summarized in `HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
+- latest proxy run on current main passes the specificity guard and publishes explicit recommendation/evidence-gap signals in the raw artifact at `logs/high-risk-review-benchmark.json`
+- the canonical results file remains intentionally unchanged until a real human benchmark artifact exists and `pnpm phase17:benchmark:human:publish` / `verify` can regenerate it fail-closed
+- `pnpm phase17:benchmark:human:status` is the current truth source for whether Stage 1 human benchmark evidence is still missing, synthetic-only, unverified, or fully verified
 - human benchmark evidence is still required before claiming full Stage 1 lift proof
 - canonical benchmark publication is generated from artifacts rather than handwritten markdown edits
 - stale synthetic or test artifacts can now be archived out of the default benchmark paths with `pnpm phase17:benchmark:human:reset`
