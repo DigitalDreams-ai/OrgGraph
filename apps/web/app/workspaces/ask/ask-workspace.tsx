@@ -400,6 +400,20 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
                 </div>
               ) : null}
 
+              {decisionPacket.nextActions?.length ? (
+                <div>
+                  <h4>Operator next actions</h4>
+                  <ul className="packet-action-list">
+                    {decisionPacket.nextActions.map((action, index) => (
+                      <li key={`${action.label || 'action'}-${index}`}>
+                        <strong className="packet-action-label">{action.label || 'Suggested action'}</strong>
+                        <p className="packet-action-rationale">{action.rationale || 'No rationale returned.'}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
               {isFlowPacket && topCitationSources.length > 0 ? (
                 <div>
                   <h4>Source spotlight</h4>
@@ -496,18 +510,11 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
         </article>
 
         <article className="sub-card decision-card">
-          <p className="panel-caption">Follow-up actions</p>
-          <h3>Next actions</h3>
-          {props.askResult?.decisionPacket?.nextActions?.length ? (
-            <ul className="packet-action-list">
-              {props.askResult.decisionPacket.nextActions.map((action, index) => (
-                <li key={`${action.label || 'action'}-${index}`}>
-                  <strong className="packet-action-label">{action.label || 'Suggested action'}</strong>
-                  <p className="packet-action-rationale">{action.rationale || 'No rationale returned.'}</p>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <p className="panel-caption">Workflow controls</p>
+          <h3>Open related workflows</h3>
+          <p className="muted">
+            Use these controls to inspect the grounded evidence, jump to the relevant workspace, or persist the current packet.
+          </p>
           <div className="follow-up-grid">
             {isComponentPacket ? (
               <>

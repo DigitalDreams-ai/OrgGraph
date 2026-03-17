@@ -206,6 +206,11 @@ function run(): void {
   assert.match(reviewMarkup, /Top impacted sources/);
   assert.match(reviewMarkup, /OpportunityStageSync\.flow-meta\.xml/);
   assert.match(reviewMarkup, /OpportunityImpactService\.cls/);
+  assert.match(reviewMarkup, />Operator next actions</);
+  assert.match(reviewMarkup, /Inspect automation/);
+  assert.match(reviewMarkup, /Review StageSyncFlow first\./);
+  assert.match(reviewMarkup, />Open related workflows</);
+  assert.doesNotMatch(reviewMarkup, />Next actions</);
 
   const impactMarkup = renderToStaticMarkup(
     createElement(AskWorkspace, {
@@ -410,9 +415,12 @@ function run(): void {
   assert.match(componentMarkup, />Coverage</);
   assert.match(componentMarkup, />Component family</);
   assert.match(componentMarkup, />Source spotlight</);
+  assert.match(componentMarkup, />Operator next actions</);
+  assert.match(componentMarkup, /Inspect citation sources/);
   assert.match(componentMarkup, /FlowDefinition\.flow-meta\.xml/);
   assert.match(componentMarkup, /Open Org Browser/);
   assert.match(componentMarkup, /Open Refresh &amp; Build/);
+  assert.match(componentMarkup, />Open related workflows</);
 }
 
 run();
