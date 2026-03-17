@@ -152,6 +152,7 @@ Materially true now:
 - wave11 regression corpus now locks edge component-usage families for Apex Class and Apex Trigger prompts, including metadata-arg and path-qualified normalization so those asks cannot drift back into weak generic answers
 - wave11 regression corpus now also locks Email Template and Custom Tab component-usage prompts, ensuring those supported families stay on deterministic evidence-lookup routing instead of drifting back into generic refusal or weak fallback behavior
 - wave11 runtime regression coverage now also render-checks Connect and Operator Rail status surfaces so `runtime unavailable` cannot silently drift back into generic blocked or missing-tool wording
+- wave2 finish follow-up now centralizes operator-facing session/tool-install labels behind shared shell status helpers used by Connect, Operator Rail, and Settings & Diagnostics, and the runtime-status regression gate now also render-checks the runtime-unavailable diagnostics surface
 - release checklist now aligns to pnpm-only commands and includes explicit real-org operator workflow evidence requirements
 - wave12 release surfaces now include a dedicated rollback playbook plus release-notes evidence template, keeping release/rollback discipline aligned to the packaged desktop workflow instead of older mixed promotion language
 - wave12 now also includes a clean-machine operator-proof worksheet so non-author validation has a single explicit capture template instead of ad-hoc notes
@@ -258,25 +259,21 @@ Rules:
 
 ## Immediate Frontier (Next Slices)
 
-1. Wave2 finish slice:
-- lock runtime-unavailable vs tool-missing behavior across remaining workspace surfaces
-- add explicit regression tests for readiness + org status surfaces
-
-2. Wave7 finish slice:
+1. Wave7 finish slice:
 - deepen packet usefulness for approval and retrieved-metadata review scenarios
 - keep flow-target packets rendered as flow packets, not generic approval cards
 - keep reads/writes/change-impact synthesis specific enough to serve as a primary operator artifact
 
-3. Wave8 finish slice:
+2. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage
 - reduce raw JSON dependence in permission/automation/impact/map workflows
 - collapse redundant status/action surfaces so Analyze and Diagnostics present one clear recovery path before secondary telemetry or debug detail
 
-4. Wave9 finish slice:
+3. Wave9 finish slice:
 - complete label-first proof lifecycle (open/replay/export) without token-first dependence in normal workflows
 - keep token fields strictly advanced/debug while preserving replay parity checks and label-first selection semantics
 
-5. Wave10 finish slice:
+4. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 - simplify bloated workspace layouts, remove duplicate cards/action rows, and enforce progressive disclosure so the primary workflow is visible without scanning dense dashboards

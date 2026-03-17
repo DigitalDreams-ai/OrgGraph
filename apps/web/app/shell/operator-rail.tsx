@@ -3,7 +3,12 @@
 import type { ReadyPayload } from './use-shell-runtime';
 import type { AskPayload } from '../workspaces/ask/types';
 import type { OrgPreflightPayload, OrgSessionPayload, OrgStatusPayload } from '../workspaces/connect/types';
-import { describeToolStatusSource, type ToolStatusSource } from './org-status-surface';
+import {
+  describeInstalledSurfaceStatus,
+  describeSessionSurfaceStatus,
+  describeToolStatusSource,
+  type ToolStatusSource
+} from './org-status-surface';
 
 interface OperatorRailProps {
   copied: boolean;
@@ -56,9 +61,21 @@ function deriveRuntimeTriage(readyPayload: ReadyPayload | null): string[] {
 }
 
 export function OperatorRail(props: OperatorRailProps): JSX.Element {
-  const sessionLabel = props.runtimeUnavailable ? 'runtime unavailable' : props.sessionStatus;
-  const sfInstalledLabel = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.sf?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
-  const cciInstalledLabel = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.installed ? 'yes' : props.orgStatus ? 'no' : 'unknown';
+  const sessionLabel = describeSessionSurfaceStatus(props.runtimeUnavailable, props.sessionStatus);
+  const sfInstalledLabel = describeInstalledSurfaceStatus({
+    runtimeUnavailable: props.runtimeUnavailable,
+    installed: props.orgStatus?.sf?.installed,
+    hasLiveStatus: Boolean(props.orgStatus),
+    installedLabel: 'yes',
+    missingLabel: 'no'
+  });
+  const cciInstalledLabel = describeInstalledSurfaceStatus({
+    runtimeUnavailable: props.runtimeUnavailable,
+    installed: props.orgStatus?.cci?.installed,
+    hasLiveStatus: Boolean(props.orgStatus),
+    installedLabel: 'yes',
+    missingLabel: 'no'
+  });
   const toolSourceLabel = describeToolStatusSource(props.toolStatusSource);
   const runtimeTriage = deriveRuntimeTriage(props.readyPayload);
 
