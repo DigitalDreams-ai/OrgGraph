@@ -355,7 +355,7 @@ function run(): void {
         dryRun: true,
         changed: false,
         contextPath: 'C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\meta-context.json',
-        auditArtifactPath: 'C:\\Users\\sean\\Projects\\GitHub\\OrgGraph\\logs\\meta-adapt-audit.json',
+        auditArtifactPath: 'C:\\Users\\sean\\Projects\\GitHub\\Orgumented\\logs\\meta-adapt-audit.json',
         before: { relationMultipliers: {} },
         after: { relationMultipliers: {} }
       },
@@ -414,3 +414,4 @@ function run(): void {
 }
 
 run();
+

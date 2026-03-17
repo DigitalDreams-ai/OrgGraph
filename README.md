@@ -13,7 +13,7 @@ Current repo reality:
 ## Windows Bootstrap
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm install
 pnpm desktop:info
 $env:ORGUMENTED_DESKTOP_API_PORT="3200"
@@ -33,7 +33,7 @@ Project MCP config:
 Preferred local runtime:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 $env:ORGUMENTED_DESKTOP_API_PORT="3200"
 $env:ORGUMENTED_DESKTOP_WEB_PORT="3201"
 node apps/desktop/scripts/dev-runtime.mjs
@@ -42,14 +42,14 @@ node apps/desktop/scripts/dev-runtime.mjs
 Run the Tauri shell:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:dev
 ```
 
 Package the standalone desktop runtime:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:build
 ```
 
@@ -167,3 +167,4 @@ ORGUMENTED_WEB_LOG_ENABLED=true
   - [v2 Lexicon](./docs/planning/v2/ORGUMENTED_V2_LEXICON.md)
 - Archived pre-v2 planning and execution history:
   - [Planning Archive Index](./docs/planning/archive/README.md)
+

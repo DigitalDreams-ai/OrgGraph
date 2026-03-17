@@ -35,7 +35,7 @@ Type these commands in this order.
 ### Command 1
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 ```
 
 ### Command 2
@@ -74,9 +74,9 @@ If Command 3 does not print the capture command, stop and report that failure.
 
 After Command 3 finishes, these files must exist:
 
-- `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-capture-template.json`
-- `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-capture-template.md`
-- `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-benchmark.json`
+- `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-human-capture-template.json`
+- `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-human-capture-template.md`
+- `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-benchmark.json`
 
 If any of these are missing, stop.
 
@@ -183,8 +183,8 @@ pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:status
 
 At the end, these should exist:
 
-- `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-benchmark.json`
-- `C:\Users\sean\Projects\GitHub\OrgGraph\docs\planning\v2\HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
+- `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-human-benchmark.json`
+- `C:\Users\sean\Projects\GitHub\Orgumented\docs\planning\v2\HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
 
 ## If Something Goes Wrong
 
@@ -197,3 +197,5 @@ Good examples:
 - `capture template file was missing`
 - `I could not find proof ID or replay token`
 - `finalize failed`
+
+

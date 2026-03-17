@@ -32,7 +32,7 @@ Related files:
 Run:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 git checkout main
 git pull --ff-only
 git status --short
@@ -53,7 +53,7 @@ Expected result:
 Run:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 pnpm --reporter=append-only --loglevel=info install --frozen-lockfile
 ```
 
@@ -69,7 +69,7 @@ pnpm --reporter=append-only --loglevel=info install --frozen-lockfile
 Run:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 pnpm --filter api test
 pnpm --filter web typecheck
 pnpm --filter web build
@@ -143,7 +143,7 @@ Record:
 Run:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 pnpm release:evidence:check
 ```
 
@@ -169,7 +169,7 @@ Do not release if rollback target is missing.
 Run:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 sf org list --all --json
 sf org display --target-org <alias> --json
 git status --short
@@ -187,9 +187,10 @@ git status --short
 Final release step:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 git checkout main
 git pull --ff-only
 git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
+

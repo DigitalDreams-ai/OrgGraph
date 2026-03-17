@@ -4,7 +4,7 @@ Use this file as the canonical path reference for packaged desktop release evide
 
 All paths are relative to the repository root:
 
-`C:\Users\sean\Projects\GitHub\OrgGraph`
+`C:\Users\sean\Projects\GitHub\Orgumented`
 
 ## Packaged Desktop Outputs
 
@@ -64,3 +64,4 @@ Every release candidate should record:
 7. rollback target smoke artifact path
 
 If any of these paths are unknown, the release evidence is incomplete.
+

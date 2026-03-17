@@ -21,6 +21,7 @@ const webIndexPath = path.join(webNextRoot, 'server', 'app', 'index.html');
 const webStaticPath = path.join(webNextRoot, 'static');
 const nodeBinaryName = process.platform === 'win32' ? 'node.exe' : 'node';
 const runtimeNodePath = path.join(runtimeNodeRoot, nodeBinaryName);
+const workspaceRootPattern = workspaceRoot.replaceAll('/', '\\');
 const packagedConfigKeys = [
   'ORGUMENTED_BOOTSTRAP_ON_STARTUP',
   'PERMISSIONS_FIXTURES_PATH',
@@ -269,8 +270,8 @@ function stopLingeringPackagedProcesses() {
     [
       "$targets = Get-Process -Name orgumented-desktop,node -ErrorAction SilentlyContinue |",
       "  Where-Object {",
-      "    $_.Path -like '*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*' -or",
-      "    $_.Path -like '*OrgGraph\\apps\\desktop\\src-tauri\\runtime*'",
+      `    $_.Path -like '*${workspaceRootPattern}\\apps\\desktop\\src-tauri\\target\\release*' -or`,
+      `    $_.Path -like '*${workspaceRootPattern}\\apps\\desktop\\src-tauri\\runtime*'`,
       '  }',
       'if ($targets) {',
       '  $targets | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }',

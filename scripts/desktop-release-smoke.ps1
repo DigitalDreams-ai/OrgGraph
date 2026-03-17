@@ -1,8 +1,10 @@
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$repoRootPattern = $repoRoot.Replace('/', '\')
 $logsDir = Join-Path $repoRoot 'logs'
 $exePath = Join-Path $repoRoot 'apps\desktop\src-tauri\target\release\orgumented-desktop.exe'
+$smokeAppDataRoot = Join-Path $logsDir 'desktop-release-smoke-appdata'
 $stdoutLog = Join-Path $logsDir 'desktop-release-smoke.stdout.log'
 $stderrLog = Join-Path $logsDir 'desktop-release-smoke.stderr.log'
 $relaunchStdoutLog = Join-Path $logsDir 'desktop-release-smoke-relaunch.stdout.log'
@@ -26,7 +28,59 @@ $sessionAfterSwitchArtifact = Join-Path $logsDir 'desktop-release-smoke-session-
 $sessionRestoreArtifact = Join-Path $logsDir 'desktop-release-smoke-session-restore.json'
 $metadataSearchArtifact = Join-Path $logsDir 'desktop-release-smoke-metadata-search.json'
 $metadataRetrieveArtifact = Join-Path $logsDir 'desktop-release-smoke-metadata-retrieve.json'
+$staleSeedArtifact = Join-Path $logsDir 'desktop-release-smoke-stale-seed.json'
 $resultArtifact = Join-Path $logsDir 'desktop-release-smoke-result.json'
+
+function Test-PackagedProcessPath {
+  param(
+    [string]$ProcessPath
+  )
+
+  if ([string]::IsNullOrWhiteSpace($ProcessPath)) {
+    return $false
+  }
+
+  return $ProcessPath -like "*$repoRootPattern\\apps\\desktop\\src-tauri\\target\\release*" -or
+    $ProcessPath -like "*$repoRootPattern\\apps\\desktop\\src-tauri\\runtime*"
+}
+
+function Initialize-SmokeAppDataRoot {
+  param(
+    [string]$AppDataRoot,
+    [string]$StaleSeedPath
+  )
+
+  Remove-Item $AppDataRoot -Recurse -Force -ErrorAction SilentlyContinue
+  New-Item -ItemType Directory -Path (Join-Path $AppDataRoot 'refresh') -Force | Out-Null
+
+  $staleSnapshotPath = Join-Path $AppDataRoot 'refresh\semantic-snapshot.json'
+  $staleSnapshot = @{
+    snapshotId = 'desktop_release_smoke_stale_snapshot'
+    fingerprint = 'desktop-release-smoke-stale-fingerprint'
+    generatedAt = [DateTime]::UnixEpoch.ToString('o')
+    sourcePath = (Join-Path $AppDataRoot 'sf-project\force-app\main\default')
+    nodeCount = 25000
+    edgeCount = 40000
+    nodeDigest = 'desktop-release-smoke-stale-node-digest'
+    edgeDigest = 'desktop-release-smoke-stale-edge-digest'
+    nodeTypeCounts = @{
+      OBJECT = 5000
+      FIELD = 20000
+      FLOW = 8000
+    }
+    relationCounts = @{
+      references = 25000
+      updates = 15000
+    }
+  }
+  $staleSnapshot | ConvertTo-Json -Depth 8 | Set-Content -Path $staleSnapshotPath
+
+  @{
+    appDataRoot = $AppDataRoot
+    staleSnapshotPath = $staleSnapshotPath
+    seededAt = (Get-Date).ToString('o')
+  } | ConvertTo-Json -Depth 4 | Set-Content -Path $StaleSeedPath
+}
 
 function Stop-PackagedProcesses {
   param(
@@ -38,8 +92,7 @@ function Stop-PackagedProcesses {
   for ($attempt = 0; $attempt -lt $Attempts; $attempt += 1) {
     $processTargets = Get-Process -Name orgumented-desktop,node -ErrorAction SilentlyContinue |
       Where-Object {
-        $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
-        $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\runtime*"
+        Test-PackagedProcessPath -ProcessPath $_.Path
       }
     $portTarget = Get-NetTCPConnection -LocalPort $RuntimePort -State Listen -ErrorAction SilentlyContinue |
       Select-Object -ExpandProperty OwningProcess -Unique
@@ -60,8 +113,7 @@ function Stop-PackagedProcesses {
 
   $remainingProcesses = Get-Process -Name orgumented-desktop,node -ErrorAction SilentlyContinue |
     Where-Object {
-      $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
-      $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\runtime*"
+      Test-PackagedProcessPath -ProcessPath $_.Path
     }
   $remainingPort = Get-NetTCPConnection -LocalPort $RuntimePort -State Listen -ErrorAction SilentlyContinue |
     Select-Object -First 1
@@ -371,8 +423,10 @@ if (-not (Test-Path $exePath)) {
 }
 
 New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
-Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $proofArtifact, $recentProofsArtifact, $replayArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $metadataSearchArtifact, $metadataRetrieveArtifact, $resultArtifact -ErrorAction SilentlyContinue
+Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $proofArtifact, $recentProofsArtifact, $replayArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $metadataSearchArtifact, $metadataRetrieveArtifact, $staleSeedArtifact, $resultArtifact -ErrorAction SilentlyContinue
 Remove-Item $relaunchStdoutLog, $relaunchStderrLog, $relaunchHealthArtifact, $relaunchReadyArtifact -ErrorAction SilentlyContinue
+Initialize-SmokeAppDataRoot -AppDataRoot $smokeAppDataRoot -StaleSeedPath $staleSeedArtifact
+Set-Item -Path Env:ORGUMENTED_APP_DATA_ROOT -Value $smokeAppDataRoot
 
 $desktopProcess = $null
 $sessionBefore = $null
@@ -403,6 +457,12 @@ try {
   $ready = Invoke-JsonGet -Url 'http://127.0.0.1:3100/ready' -ArtifactPath $readyArtifact
   if ($ready.status -ne 'ready') {
     throw "Ready check did not return status=ready"
+  }
+  if ($ready.checks.bootstrap.status -ne 'ready') {
+    throw "Ready check reported unexpected bootstrap status: $($ready.checks.bootstrap.status)"
+  }
+  if ([string]::IsNullOrWhiteSpace($ready.checks.bootstrap.message) -or -not $ready.checks.bootstrap.message.StartsWith('runtime bootstrap ready snapshot=')) {
+    throw "Ready check did not report stale-bootstrap recovery via runtime bootstrap message."
   }
   if (($ready.checks.db.nodeCount ?? 0) -le 0 -or ($ready.checks.db.edgeCount ?? 0) -le 0) {
     throw "Ready check reported an empty graph runtime."
@@ -594,6 +654,17 @@ try {
   if ($relaunchReady.status -ne 'ready') {
     throw "Relaunch ready check did not return status=ready"
   }
+  if ($relaunchReady.checks.bootstrap.status -ne 'ready') {
+    throw "Relaunch ready check reported unexpected bootstrap status: $($relaunchReady.checks.bootstrap.status)"
+  }
+  $relaunchBootstrapMessage = $relaunchReady.checks.bootstrap.message
+  $relaunchReusedGroundedRuntime = $relaunchBootstrapMessage -eq 'runtime already grounded'
+  $relaunchRecoveredGroundedRuntime =
+    -not [string]::IsNullOrWhiteSpace($relaunchBootstrapMessage) -and
+    $relaunchBootstrapMessage.StartsWith('runtime bootstrap ready snapshot=')
+  if (-not $relaunchReusedGroundedRuntime -and -not $relaunchRecoveredGroundedRuntime) {
+    throw "Relaunch ready check did not report a grounded runtime state."
+  }
   if (($relaunchReady.checks.db.nodeCount ?? 0) -le 0 -or ($relaunchReady.checks.db.edgeCount ?? 0) -le 0) {
     throw "Relaunch ready check reported an empty graph runtime."
   }
@@ -605,6 +676,7 @@ try {
   $artifacts = @(
     'logs/desktop-release-smoke.stdout.log'
     'logs/desktop-release-smoke.stderr.log'
+    'logs/desktop-release-smoke-stale-seed.json'
     'logs/desktop-release-smoke-relaunch.stdout.log'
     'logs/desktop-release-smoke-relaunch.stderr.log'
     'logs/desktop-release-smoke-health.json'
@@ -659,6 +731,12 @@ try {
     metadataSearchStatus = $metadataSearchStatus
     metadataRetrieveStatus = $metadataRetrieveStatus
     metadataRetrieveArgCount = $metadataRetrieveArgCount
+    staleBootstrapSeeded = $true
+    staleBootstrapSeedArtifact = 'logs/desktop-release-smoke-stale-seed.json'
+    bootstrapMessage = $ready.checks.bootstrap.message
+    relaunchBootstrapMessage = $relaunchReady.checks.bootstrap.message
+    relaunchReusedGroundedRuntime = $relaunchReusedGroundedRuntime
+    relaunchRecoveredGroundedRuntime = $relaunchRecoveredGroundedRuntime
     launchAttemptsUsed = $launchAttemptsUsed
     relaunchVerified = $relaunchVerified
     relaunchAttemptsUsed = $relaunchAttemptsUsed

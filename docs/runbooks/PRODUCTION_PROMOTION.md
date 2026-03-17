@@ -26,7 +26,7 @@ Do not promote a release candidate unless all of the following are true:
 Run from Git Bash:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 git checkout main
 git pull --ff-only
 pnpm --reporter=append-only --loglevel=info install --frozen-lockfile
@@ -53,7 +53,7 @@ Promotion is allowed only after:
 After all gates are green:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 git checkout main
 git pull --ff-only
 git tag vX.Y.Z
@@ -66,3 +66,4 @@ Do not improvise recovery steps here.
 
 Use the canonical rollback procedure:
 - [Rollback Playbook](../releases/ROLLBACK_PLAYBOOK.md)
+

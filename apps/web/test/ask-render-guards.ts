@@ -198,14 +198,14 @@ function run(): void {
             sourceFileCount: 2,
             definitionOnly: false,
             topReferenceSources: [
-              'C:\\Users\\sean\\Projects\\GitHub\\OrgGraph\\force-app\\main\\default\\flows\\Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt.flow-meta.xml'
+              'C:\\Users\\sean\\Projects\\GitHub\\Orgumented\\force-app\\main\\default\\flows\\Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt.flow-meta.xml'
             ],
             summaries: {
               references: '2 referencing evidence hit(s) across 2 source file(s)',
               coverage: '2 total grounded source file(s) in current semantic state',
               family: 'Flow_With_A_Very_Long_Component_Family_Label',
               definition:
-                'Definition anchor: C:\\Users\\sean\\Projects\\GitHub\\OrgGraph\\force-app\\main\\default\\flows\\Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt.flow-meta.xml'
+                'Definition anchor: C:\\Users\\sean\\Projects\\GitHub\\Orgumented\\force-app\\main\\default\\flows\\Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt.flow-meta.xml'
             }
           },
           evidenceGaps: [],
@@ -243,8 +243,8 @@ function run(): void {
 
   assert.match(componentMarkup, /<strong class="packet-value path-value">Flow:Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt<\/strong>/);
   assert.match(componentMarkup, /<strong class="packet-value path-value">Flow_With_A_Very_Long_Component_Family_Label<\/strong>/);
-  assert.match(componentMarkup, /<p class="path-value">Definition anchor: C:\\Users\\sean\\Projects\\GitHub\\OrgGraph\\force-app\\main\\default\\flows\\Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt\.flow-meta\.xml<\/p>/);
-  assert.match(componentMarkup, /<li class="path-value">C:\\Users\\sean\\Projects\\GitHub\\OrgGraph\\force-app\\main\\default\\flows\\Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt\.flow-meta\.xml<\/li>/);
+  assert.match(componentMarkup, /<p class="path-value">Definition anchor: C:\\Users\\sean\\Projects\\GitHub\\Orgumented\\force-app\\main\\default\\flows\\Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt\.flow-meta\.xml<\/p>/);
+  assert.match(componentMarkup, /<li class="path-value">C:\\Users\\sean\\Projects\\GitHub\\Orgumented\\force-app\\main\\default\\flows\\Flow_With_A_Very_Long_Component_Name_And_Metadata_Arg_Syntax__mdt\.flow-meta\.xml<\/li>/);
 
   const css = readFileSync('app/globals.css', 'utf8');
   assert.match(css, /\.decision-card\s*\{[\s\S]*min-height:\s*100%;[\s\S]*min-width:\s*0;/);
@@ -255,3 +255,4 @@ function run(): void {
 }
 
 run();
+

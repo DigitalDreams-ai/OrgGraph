@@ -9,6 +9,7 @@ const outPath = process.argv[2] ?? path.join(repoRoot, 'logs', 'high-risk-review
 const logsDir = path.join(repoRoot, 'logs');
 const runtimeStdoutLog = path.join(logsDir, 'phase17-benchmark-runtime.stdout.log');
 const runtimeStderrLog = path.join(logsDir, 'phase17-benchmark-runtime.stderr.log');
+const repoRootPattern = repoRoot.replaceAll('/', '\\');
 const packagedExePath = path.join(
   repoRoot,
   'apps',
@@ -147,8 +148,8 @@ async function stopPackagedProcesses() {
   const command = `
 $runtimeTargets = Get-Process -Name orgumented-desktop,node -ErrorAction SilentlyContinue |
   Where-Object {
-    $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\target\\release*" -or
-    $_.Path -like "*OrgGraph\\apps\\desktop\\src-tauri\\runtime*"
+    $_.Path -like "*${repoRootPattern}\\apps\\desktop\\src-tauri\\target\\release*" -or
+    $_.Path -like "*${repoRootPattern}\\apps\\desktop\\src-tauri\\runtime*"
   }
 $portTarget = Get-NetTCPConnection -LocalPort 3100 -State Listen -ErrorAction SilentlyContinue |
   Select-Object -ExpandProperty OwningProcess -Unique
@@ -530,3 +531,4 @@ main()
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);
   });
+

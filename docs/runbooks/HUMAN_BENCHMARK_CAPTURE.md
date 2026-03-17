@@ -36,7 +36,7 @@ All commands in this runbook assume Git Bash.
 Repository root:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 ```
 
 Do not use PowerShell commands like `Set-Location` inside a bash terminal.
@@ -50,7 +50,7 @@ Enter them in this order:
 1. Change into the repo:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 ```
 
 2. Archive stale benchmark artifacts:
@@ -130,7 +130,7 @@ If a command appears to "just sit there", do not assume it is broken until you h
 ## Machine Requirements
 
 You are ready to run this benchmark only if all of these are true:
-- the repo exists at `C:\Users\sean\Projects\GitHub\OrgGraph`
+- the repo exists at `C:\Users\sean\Projects\GitHub\Orgumented`
 - `node` works in bash
 - `pnpm` works in bash
 - Orgumented dependencies are installed
@@ -141,7 +141,7 @@ You are ready to run this benchmark only if all of these are true:
 Run these commands in bash, one at a time:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 node --version
 pnpm --version
 pnpm --reporter=append-only --loglevel=info install
@@ -152,7 +152,7 @@ pnpm --reporter=append-only --loglevel=info --filter desktop build
 Recommended copy/paste pattern:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 ```
 
 then:
@@ -194,11 +194,11 @@ What success looks like:
 
 Important packaged desktop paths:
 - built executable:
-  - `C:\Users\sean\Projects\GitHub\OrgGraph\apps\desktop\src-tauri\target\release\orgumented-desktop.exe`
+  - `C:\Users\sean\Projects\GitHub\Orgumented\apps\desktop\src-tauri\target\release\orgumented-desktop.exe`
 - MSI bundle:
-  - `C:\Users\sean\Projects\GitHub\OrgGraph\apps\desktop\src-tauri\target\release\bundle\msi\Orgumented_0.1.0_x64_en-US.msi`
+  - `C:\Users\sean\Projects\GitHub\Orgumented\apps\desktop\src-tauri\target\release\bundle\msi\Orgumented_0.1.0_x64_en-US.msi`
 - NSIS installer:
-  - `C:\Users\sean\Projects\GitHub\OrgGraph\apps\desktop\src-tauri\target\release\bundle\nsis\Orgumented_0.1.0_x64-setup.exe`
+  - `C:\Users\sean\Projects\GitHub\Orgumented\apps\desktop\src-tauri\target\release\bundle\nsis\Orgumented_0.1.0_x64-setup.exe`
 
 If `pnpm desktop:build` has already succeeded on this machine and the executable path exists, you do not need to rebuild before every benchmark run.
 
@@ -231,7 +231,7 @@ Step-by-step meaning:
        - `Phase 17 artifacts archived. Start the next real capture with:`
        - or `No Phase 17 benchmark artifacts needed archiving.`
    - Where archived files go:
-     - `C:\Users\sean\Projects\GitHub\OrgGraph\logs\archive\phase17-human-benchmark\<timestamp>\`
+     - `C:\Users\sean\Projects\GitHub\Orgumented\logs\archive\phase17-human-benchmark\<timestamp>\`
    - What you should do:
      - let the command finish
      - do not manually move files yourself
@@ -278,7 +278,7 @@ Step-by-step meaning:
      - terminal output from `pnpm phase17:benchmark`
      - a benchmark artifact refresh under `logs/`
    - Expected file:
-     - `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-benchmark.json`
+     - `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-benchmark.json`
    - What you should do:
      - wait for the command to finish
    - If the session ends before this file exists:
@@ -290,8 +290,8 @@ Step-by-step meaning:
    - What you should see:
      - new template files under `logs/`
    - Required files:
-     - `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-capture-template.json`
-     - `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-capture-template.md`
+     - `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-human-capture-template.json`
+     - `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-human-capture-template.md`
    - What you should do:
      - confirm those files exist before continuing
    - If either file is missing:
@@ -339,7 +339,7 @@ If Orgumented opens and closes once during smoke, that is normal.
 Run these one at a time:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:reset
 pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:session -- --operator "Sean"
 ```
@@ -354,7 +354,7 @@ Do not:
 Recommended copy/paste pattern:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 ```
 
 then:
@@ -379,14 +379,14 @@ Do not continue until all of these are true.
 - [ ] The terminal printed `pnpm phase17:benchmark:human:finalize`
 - [ ] An Orgumented desktop window is open and usable
 - [ ] This file exists:
-  - `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-capture-template.json`
+  - `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-human-capture-template.json`
 - [ ] This file exists:
-  - `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-capture-template.md`
+  - `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-human-capture-template.md`
 - [ ] This file exists:
-  - `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-benchmark.json`
+  - `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-benchmark.json`
 
 Expected archive location after reset:
-- `C:\Users\sean\Projects\GitHub\OrgGraph\logs\archive\phase17-human-benchmark\<timestamp>\`
+- `C:\Users\sean\Projects\GitHub\Orgumented\logs\archive\phase17-human-benchmark\<timestamp>\`
 
 If any required file is missing, stop and report the failure instead of continuing.
 
@@ -406,7 +406,7 @@ Write these down before starting the timed work:
 Quick bash commands if you want the branch and commit:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 git branch --show-current
 git rev-parse --short HEAD
 ```
@@ -529,7 +529,7 @@ Use the exact capture command printed by the bootstrap session if possible.
 If you need the default command shape, run:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 pnpm --reporter=append-only --loglevel=info phase17:benchmark:human -- --capture-template logs/high-risk-review-human-capture-template.json --operator "Sean" --baseline-time-ms <baseline-ms> --baseline-evidence-steps <baseline-steps> --baseline-workspace-switches <baseline-switches> --baseline-raw-json yes|no --baseline-confidence <baseline-confidence> --review-time-ms <review-ms> --review-evidence-steps <review-steps> --review-workspace-switches <review-switches> --review-raw-json yes|no --review-confidence <review-confidence> --notes "<short observation>"
 ```
 
@@ -537,7 +537,7 @@ Replace every placeholder before pressing Enter.
 
 What success looks like:
 - a human benchmark artifact is written to:
-  - `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-benchmark.json`
+  - `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-human-benchmark.json`
 - the command does not fail on query mismatch, proxy artifact mismatch, or proof/replay mismatch
 
 ## Step 9: Finalize The Canonical Result
@@ -545,7 +545,7 @@ What success looks like:
 Run:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:finalize
 ```
 
@@ -555,25 +555,25 @@ What finalize must do:
 - fail closed if provenance does not match
 
 Canonical output path:
-- `C:\Users\sean\Projects\GitHub\OrgGraph\docs\planning\v2\HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
+- `C:\Users\sean\Projects\GitHub\Orgumented\docs\planning\v2\HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
 
 ## Step 10: Optional Status Check
 
 If you want a direct repository status summary after finalize, run:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 pnpm --reporter=append-only --loglevel=info phase17:benchmark:human:status
 ```
 
 ## Required Output Files
 
 By the end of a successful real run, these should exist:
-- `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-capture-template.json`
-- `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-capture-template.md`
-- `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-benchmark.json`
-- `C:\Users\sean\Projects\GitHub\OrgGraph\logs\high-risk-review-human-benchmark.json`
-- `C:\Users\sean\Projects\GitHub\OrgGraph\docs\planning\v2\HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
+- `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-human-capture-template.json`
+- `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-human-capture-template.md`
+- `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-benchmark.json`
+- `C:\Users\sean\Projects\GitHub\Orgumented\logs\high-risk-review-human-benchmark.json`
+- `C:\Users\sean\Projects\GitHub\Orgumented\docs\planning\v2\HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
 
 ## What To Send Back
 
@@ -611,7 +611,7 @@ Cause:
 Fix:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 ```
 
 ### Problem: the terminal shows nothing after paste
@@ -644,12 +644,12 @@ The real failure is only if:
 Run:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 pnpm --reporter=append-only --loglevel=info --filter desktop build
 ```
 
 Then confirm this path exists:
-- `C:\Users\sean\Projects\GitHub\OrgGraph\apps\desktop\src-tauri\target\release\orgumented-desktop.exe`
+- `C:\Users\sean\Projects\GitHub\Orgumented\apps\desktop\src-tauri\target\release\orgumented-desktop.exe`
 
 ### Problem: the capture template files are missing after bootstrap
 
@@ -679,3 +679,5 @@ Do not override these protections:
 - canonical publication must still pass verification against the same artifact set
 
 If any of those fail, the run does not count.
+
+

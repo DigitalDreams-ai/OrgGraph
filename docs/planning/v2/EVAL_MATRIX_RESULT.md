@@ -27,9 +27,9 @@ Prematurity judgment:
 
 | Criterion | Score | Justification |
 | --- | ---: | --- |
-| 1.1 Replay parity protection | 4 | The initiative explicitly keeps proof/replay custom and would add stronger contract validation around them rather than replacing them. Current replay protection already exists in [`phase12-replay-runtime.ts`](C:/Users/sean/Projects/GitHub/apps/api/test/phase12-replay-runtime.ts) and the architectural law in [`ORGUMENTED_V2_ARCHITECTURE.md`](C:/Users/sean/Projects/GitHub/OrgGraph/docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md) requires identical output under identical inputs. |
-| 1.2 Proof artifact integrity | 4 | `PROV`-style provenance vocabulary and schema enforcement would strengthen proof structure and export clarity without discarding the current proof contract in [`ask.service.ts`](C:/Users/sean/Projects/GitHub/OrgGraph/apps/api/src/modules/ask/ask.service.ts). This is additive to the current proof-first model, not a replacement. |
-| 1.3 Fail-closed clarity | 4 | Declarative policy evaluation could improve explicit refusal and gate clarity, and JSON-schema enforcement would improve contract rejection clarity. This aligns with the fail-closed law in [`ORGUMENTED_V2_ARCHITECTURE.md`](C:/Users/sean/Projects/GitHub/OrgGraph/docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md) and the governance discipline in [`ORGUMENTED_V2_GOVERNANCE.md`](C:/Users/sean/Projects/GitHub/OrgGraph/docs/planning/v2/ORGUMENTED_V2_GOVERNANCE.md). |
+| 1.1 Replay parity protection | 4 | The initiative explicitly keeps proof/replay custom and would add stronger contract validation around them rather than replacing them. Current replay protection already exists in [`phase12-replay-runtime.ts`](C:/Users/sean/Projects/GitHub/apps/api/test/phase12-replay-runtime.ts) and the architectural law in [`ORGUMENTED_V2_ARCHITECTURE.md`](C:/Users/sean/Projects/GitHub/Orgumented/docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md) requires identical output under identical inputs. |
+| 1.2 Proof artifact integrity | 4 | `PROV`-style provenance vocabulary and schema enforcement would strengthen proof structure and export clarity without discarding the current proof contract in [`ask.service.ts`](C:/Users/sean/Projects/GitHub/Orgumented/apps/api/src/modules/ask/ask.service.ts). This is additive to the current proof-first model, not a replacement. |
+| 1.3 Fail-closed clarity | 4 | Declarative policy evaluation could improve explicit refusal and gate clarity, and JSON-schema enforcement would improve contract rejection clarity. This aligns with the fail-closed law in [`ORGUMENTED_V2_ARCHITECTURE.md`](C:/Users/sean/Projects/GitHub/Orgumented/docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md) and the governance discipline in [`ORGUMENTED_V2_GOVERNANCE.md`](C:/Users/sean/Projects/GitHub/Orgumented/docs/planning/v2/ORGUMENTED_V2_GOVERNANCE.md). |
 | 1.4 Dev vs packaged parity | 4 | The initiative can preserve parity because the immediate adoption targets are standards and libraries, not a second hosted runtime. However, this is only true if `OPA` remains evaluation-stage and does not become a desktop-divergent sidecar prematurely. |
 
 Section 1 average:
@@ -42,10 +42,10 @@ Section 1 weighted score:
 
 | Criterion | Score | Justification |
 | --- | ---: | --- |
-| 2.1 Moves beyond regex-heavy routing | 2 | The current planner is still regex-heavy in [`planner.service.ts`](C:/Users/sean/Projects/GitHub/OrgGraph/apps/api/src/modules/planner/planner.service.ts). The initiative was still broad and did not yet commit to the current semantic-frame-first planner hardening path, so it did not itself deliver the planner change. |
+| 2.1 Moves beyond regex-heavy routing | 2 | The current planner is still regex-heavy in [`planner.service.ts`](C:/Users/sean/Projects/GitHub/Orgumented/apps/api/src/modules/planner/planner.service.ts). The initiative was still broad and did not yet commit to the current semantic-frame-first planner hardening path, so it did not itself deliver the planner change. |
 | 2.2 Increases ontology-aware reasoning depth | 3 | The initiative is directionally aligned with ontology-aware planning, but current repo state still uses shallow intent routing. Borrowed substrate evaluation could improve this later, but the present initiative does not materially deepen reasoning yet. |
 | 2.3 Improves composability of decision packets | 3 | Schema enforcement and provenance vocabulary can improve packet structure and consistency, but they do not materially change packet composition logic on their own. The existing packet model remains custom and useful, but not significantly more composable yet. |
-| 2.4 Enables measurable improvement in blast-radius or risk reasoning | 2 | No immediate part of the initiative changes the current risk or blast-radius engine behavior in [`analysis.service.ts`](C:/Users/sean/Projects/GitHub/OrgGraph/apps/api/src/modules/analysis/analysis.service.ts) or drift-policy reasoning in [`semantic-drift-policy.service.ts`](C:/Users/sean/Projects/GitHub/OrgGraph/apps/api/src/modules/ingestion/semantic-drift-policy.service.ts). |
+| 2.4 Enables measurable improvement in blast-radius or risk reasoning | 2 | No immediate part of the initiative changes the current risk or blast-radius engine behavior in [`analysis.service.ts`](C:/Users/sean/Projects/GitHub/Orgumented/apps/api/src/modules/analysis/analysis.service.ts) or drift-policy reasoning in [`semantic-drift-policy.service.ts`](C:/Users/sean/Projects/GitHub/Orgumented/apps/api/src/modules/ingestion/semantic-drift-policy.service.ts). |
 
 Section 2 average:
 - `(2 + 3 + 3 + 2) / 4 = 2.50`
@@ -57,10 +57,10 @@ Section 2 weighted score:
 
 | Criterion | Score | Justification |
 | --- | ---: | --- |
-| 3.1 Packets usable without raw JSON inspection | 3 | Better schemas and provenance language could improve packet clarity, but they do not by themselves change the packet’s operator-facing UX or workflow fit. Current workflow-fit pressure remains documented in [`ORGUMENTED_V2_STRATEGY.md`](C:/Users/sean/Projects/GitHub/OrgGraph/docs/planning/v2/ORGUMENTED_V2_STRATEGY.md). |
+| 3.1 Packets usable without raw JSON inspection | 3 | Better schemas and provenance language could improve packet clarity, but they do not by themselves change the packet’s operator-facing UX or workflow fit. Current workflow-fit pressure remains documented in [`ORGUMENTED_V2_STRATEGY.md`](C:/Users/sean/Projects/GitHub/Orgumented/docs/planning/v2/ORGUMENTED_V2_STRATEGY.md). |
 | 3.2 Reduces review-time evidence gathering | 3 | `PROV`-informed exports and clearer contracts could reduce reviewer confusion, but there is no direct workflow redesign or approval-flow integration in this initiative yet. The lift is plausible but indirect. |
-| 3.3 Increases operator trust | 4 | Stronger validation, clearer provenance vocabulary, and more explicit policy structure should improve trust in the packet as an artifact. This aligns with the trust and proof emphasis in [`ORGUMENTED_V2_STRATEGY.md`](C:/Users/sean/Projects/GitHub/OrgGraph/docs/planning/v2/ORGUMENTED_V2_STRATEGY.md). |
-| 3.4 Fits real review or approval workflows | 3 | The initiative can support future workflow fit, but it does not itself provide adoption proof. Governance rules in [`ORGUMENTED_V2_GOVERNANCE.md`](C:/Users/sean/Projects/GitHub/OrgGraph/docs/planning/v2/ORGUMENTED_V2_GOVERNANCE.md) still require real workflow evidence. |
+| 3.3 Increases operator trust | 4 | Stronger validation, clearer provenance vocabulary, and more explicit policy structure should improve trust in the packet as an artifact. This aligns with the trust and proof emphasis in [`ORGUMENTED_V2_STRATEGY.md`](C:/Users/sean/Projects/GitHub/Orgumented/docs/planning/v2/ORGUMENTED_V2_STRATEGY.md). |
+| 3.4 Fits real review or approval workflows | 3 | The initiative can support future workflow fit, but it does not itself provide adoption proof. Governance rules in [`ORGUMENTED_V2_GOVERNANCE.md`](C:/Users/sean/Projects/GitHub/Orgumented/docs/planning/v2/ORGUMENTED_V2_GOVERNANCE.md) still require real workflow evidence. |
 
 Section 3 average:
 - `(3 + 3 + 4 + 3) / 4 = 3.25`
@@ -75,7 +75,7 @@ Section 3 weighted score:
 | 4.1 Reduces browser-era seams | 2 | This initiative is not primarily about UI or browser seam reduction. It does not directly remove more standalone Next assumptions or page-shell seams. |
 | 4.2 Strengthens single UI→engine boundary | 3 | Better contract and policy structure can help the engine boundary indirectly, but this initiative does not directly simplify the desktop UI-to-engine boundary further. |
 | 4.3 Improves desktop startup/smoke reliability | 3 | `Ajv` and provenance vocabulary are runtime-neutral, but `OPA` or heavier borrowed engines could complicate packaging if adopted incautiously. As scoped today, the initiative is neutral-to-slightly-positive, not a clear runtime win. |
-| 4.4 Reduces standalone Next-server assumptions | 2 | The initiative does not directly address the current runtime convergence pressure identified in [`ORGUMENTED_V2_EXECUTION.md`](C:/Users/sean/Projects/GitHub/OrgGraph/docs/planning/v2/ORGUMENTED_V2_EXECUTION.md). |
+| 4.4 Reduces standalone Next-server assumptions | 2 | The initiative does not directly address the current runtime convergence pressure identified in [`ORGUMENTED_V2_EXECUTION.md`](C:/Users/sean/Projects/GitHub/Orgumented/docs/planning/v2/ORGUMENTED_V2_EXECUTION.md). |
 
 Section 4 average:
 - `(2 + 3 + 3 + 2) / 4 = 2.50`
@@ -194,3 +194,4 @@ Stop immediately if:
 Reason:
 - Phase 3 execution is allowed only if the initiative passes
 - this initiative is currently `DEFER`, not `PASS`
+

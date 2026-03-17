@@ -188,6 +188,7 @@ Exit:
 - manual packaged startup proof without ambiguous tool-missing false states
 - desktop startup does not fail from avoidable bootstrap drift conditions
 - shell status surfaces do not leak raw readiness HTTP codes to operators
+- packaged smoke proves stale-bootstrap recovery on launch one and a grounded runtime state on launch two from an isolated smoke-owned app-data root
 
 ## wave3 - Session And Toolchain Reliability
 
