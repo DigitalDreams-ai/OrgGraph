@@ -140,6 +140,7 @@ Materially true now:
 - Proofs & History now keeps manual advanced proof/replay token input isolated from label-first history selection, so selecting or opening a history label no longer marks the normal workflow as token-driven
 - Proofs & History advanced token lookup now includes an explicit `Clear Advanced Tokens` exit action that clears typed debug tokens and drops token-only loaded proof/replay state, letting operators return to the label-first workflow without manual field cleanup
 - Proofs & History advanced summary text now reflects only explicitly typed proof/replay tokens, so selecting a history label no longer makes the debug-only token surface appear populated
+- Proofs & History now only surfaces advanced token state in the primary status area when debug tokens are actually active, while the always-available advanced tooling stays under the dedicated disclosure instead of adding empty debug status to the normal history-first flow
 - Proofs & History export filenames now prefer the selected history label, so saved proof/replay JSON artifacts stay history-first instead of reverting to proof IDs or replay tokens in normal workflows
 - Proofs & History history rows now expose direct `Export Label Proof` / `Export Label Replay` actions, so the full label-first lifecycle is available from the history list itself without detouring back through the global action row
 - CI heavy Windows jobs are path-gated for minute efficiency

@@ -108,9 +108,9 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
           <span className={`decision-badge ${props.selectedProof ? 'good' : 'muted'}`}>
             Loaded proof: {loadedProofSource}
           </span>
-          <span className={`decision-badge ${hasAdvancedTokenInput ? 'muted' : 'good'}`}>
-            Advanced tokens: {hasAdvancedTokenInput ? 'present' : 'empty'}
-          </span>
+          {hasAdvancedTokenInput ? (
+            <span className="decision-badge muted">Advanced debug active</span>
+          ) : null}
         </div>
         {props.selectedRecentProof || props.selectedProof ? (
           <>
@@ -124,7 +124,9 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
             <p className="muted">
               {props.selectedRecentProof?.subtitle || `Trust ${props.selectedProof?.trustLevel || 'unknown'} • ${props.selectedProof?.snapshotId || 'snapshot n/a'}`}
             </p>
-            <p className="muted">Tokens stay in the advanced section and are not required for normal history workflows.</p>
+            {hasAdvancedTokenInput ? (
+              <p className="muted">Advanced debug tokens are active below; the history label remains the primary workflow.</p>
+            ) : null}
           </>
         ) : (
           <p className="muted">Select a recent decision artifact to inspect proof, replay parity, or trust history.</p>
@@ -271,13 +273,15 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
       </div>
 
       <details>
-        <summary>Advanced token lookup</summary>
-        <p className="muted">Keep raw proof identifiers available for debugging and parity checks, but do not treat them as the primary workflow.</p>
+        <summary>Advanced debug tools</summary>
+        <p className="muted">Use raw proof identifiers only for debugging or parity checks. Normal history workflows stay label-first.</p>
         <p className="muted">Typing a proof ID or replay token here does not change the selected history label above and only affects the explicit advanced actions below.</p>
-        <p className="muted">
-          Advanced proof ID: <span className="path-value">{advancedProofId || 'n/a'}</span> • replay token:{' '}
-          <span className="path-value">{advancedReplayToken || 'n/a'}</span>
-        </p>
+        {hasAdvancedTokenInput ? (
+          <p className="muted">
+            Advanced proof ID: <span className="path-value">{advancedProofId}</span> • replay token:{' '}
+            <span className="path-value">{advancedReplayToken || 'n/a'}</span>
+          </p>
+        ) : null}
         <div className="field-grid">
           <div>
             <label htmlFor="proofId">Proof ID</label>
