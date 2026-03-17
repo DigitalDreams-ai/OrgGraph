@@ -121,6 +121,7 @@ As of March 1, 2026:
 - complete product-grade Sessions, Browser, Refresh/Build, Analyze, Proofs/History, and Settings/Diagnostics flows
 - make org-wide selective retrieve a real operator workflow
 - remove token-bookkeeping dependence from proof/history access
+- simplify bloated workspace surfaces until each workflow has one clear primary artifact, one clear next action, and progressive disclosure for secondary detail
 
 ### Priority 5: Policy-aware approval support
 - only after packet quality and workflow adoption improve
@@ -128,6 +129,12 @@ As of March 1, 2026:
 ### Priority 6: Execution stability over platform churn
 - no restart and no architecture re-opening while Stage 1 completion is achievable on current desktop model
 - apply module-level rebuild only when objective triggers are met (see `ORGUMENTED_V2_PIVOT_LOCK.md`)
+
+### Priority 7: UI simplification and signal discipline
+- reduce information overload across Ask, Analyze, Browser, Refresh, Proofs, and Diagnostics
+- eliminate duplicate status summaries, repeated action rows, and card-density that obscures the primary workflow
+- keep raw JSON, debug payloads, and low-signal telemetry behind explicit secondary affordances
+- treat modern, elegant, calm operator surfaces as a product requirement rather than a post-completion polish pass
 
 ## What Not To Do
 
@@ -144,7 +151,7 @@ Do not:
 3. strengthen Ask grounding and packet quality (wave6 + wave7)
    - semantic-frame v1 defines the preferred wave6 direction for Ask interpretation hardening
 4. close structured analyze/proofs workflows (wave8 + wave9)
-5. finish layout/accessibility hardening (wave10)
+5. finish layout/accessibility hardening and workspace simplification (wave10)
 6. complete defect/CI/release discipline (wave11 + wave12)
 7. run stabilization hold (wave13)
 8. only then evaluate policy-aware approval support expansion

@@ -51,7 +51,7 @@ Remaining work is now primarily around:
 | decision packets | approval-grade, trusted by workflow | partial | wave7 acceptance benchmark and packet quality gates |
 | analyze/diagnostics | structured triage without JSON dependency | partial | wave8 card/action depth and synthesis improvements |
 | proofs/history | label-first reopen/replay/export as primary flow | near complete | close remaining universal history-first path gaps |
-| design/layout/a11y | no clipping + keyboard/focus baseline | improved | complete wave10 accessibility and final visual consistency pass |
+| design/layout/a11y | no clipping + keyboard/focus baseline | improved | complete wave10 accessibility, simplification, and final visual consistency pass |
 | defects/ci/release | P0/P1 zero, stable CI, release+rollback proven | in progress | wave11 burn-down + wave12 clean-machine/operator proof |
 
 ## 100% Scorecard Pillars
@@ -73,6 +73,7 @@ Every wave contributes to one or more pillars. "100%" is reached only when every
 4. UX/design/layout quality:
 - no clipping/overflow defects in supported desktop viewports
 - consistent labels, action semantics, and focus behavior
+- low-redundancy surfaces with one clear primary artifact and progressive disclosure for secondary detail
 
 5. Defect/release discipline:
 - P0/P1 defects closed and held stable
@@ -105,6 +106,8 @@ Orgumented is 100% complete for v2 scope only when all conditions below are true
 - no clipping/overflow/truncation on supported desktop viewports
 - selection, labels, and actions are predictable
 - keyboard/focus baseline passes on critical workflows
+- primary workflow state is visible without scanning dense, redundant card grids
+- raw JSON, debug payloads, and low-signal telemetry remain secondary surfaces
 
 5. Quality and release discipline is complete:
 - P0/P1 defects are zero
@@ -139,10 +142,10 @@ Mandatory:
 | wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
 | wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |
 | wave6 | ask planner/compiler depth | B003, B009 | In Progress | Deepen evidence-lookup coverage beyond family-qualified metadata component prompts |
-| wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence with explicit recommendation and evidence-gap publication |
-| wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage and diagnostics cards expose direct operator actions and no core recovery path depends on raw JSON or manual tab hunting |
+| wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence with explicit recommendation and evidence-gap publication, without dense packet clutter or duplicate follow-up surfaces |
+| wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage and diagnostics cards expose direct operator actions, no core recovery path depends on raw JSON or manual tab hunting, and redundant status/action surfaces are collapsed |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first selection stays independent from advanced token lookup and reopen/replay/export remain history-first |
-| wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline with live-region coverage across all dynamic workspaces and proof-history identifier guardrails |
+| wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline with live-region coverage, calmer workspace hierarchy, and proof-history identifier guardrails |
 | wave11 | bug burn-down and CI quality lock | B013, B018, B023 | In Progress | P0/P1 count to zero, stable trust gates, edge metadata-family regressions locked, embedded web regressions enforced in `validate`, and Actions retention policy regression-gated |
 | wave12 | release readiness and operator proof | B014, B019 | In Progress | Clean-machine runbook pass + rollback proof |
 | wave13 | post-100 stabilization | B024 | Open | No P0/P1 regressions during hold window |
@@ -154,7 +157,7 @@ Mandatory:
 | Core runtime integrity | wave2, wave3, wave12 | packaged runtime + session/toolchain parity proven |
 | Core workflow completeness | wave3, wave4, wave5, wave8, wave9 | all Stage 1 workflows pass runbook paths |
 | Planner/packet quality | wave6, wave7 | grounded Ask + approval-grade packet benchmark pass |
-| UX/design/layout quality | wave10 | no clipping/overflow and action semantics locked |
+| UX/design/layout quality | wave10 | no clipping/overflow, action semantics locked, and dense redundant surfaces simplified |
 | Defect/release discipline | wave11, wave12, wave13 | P0/P1 zero, release evidence complete, stabilization clean |
 
 ## wave1 - Baseline Lock And Triage
@@ -268,11 +271,13 @@ Scope:
 - concrete grounding spotlights are visible directly in the packet (top automation names, impacted sources, citation-source files), including approval-review packets
 - benchmark publication surfaces explicit recommendation verdict, recommendation summary, and evidence-gap count for approval-review packets
 - next-action relevance
+- packet layout stays calm enough to function as the primary artifact without duplicate action rows or low-signal sections competing for attention
 
 Exit:
 - benchmark packet accepted for real review scenario
 - proof/trust envelope remains deterministic and replayable
 - packet cites deterministic reads/writes/impact paths with minimal manual interpretation
+- packet hierarchy is clear enough that the primary recommendation, evidence, and next action are visible without scanning redundant cards
 
 ## wave8 - Explain/Analyze Depth
 
@@ -283,6 +288,7 @@ Scope:
 - structured permission/automation/impact/map cards
 - deterministic summaries with clear next actions
 - raw JSON as secondary surface only
+- redundant triage/status/action blocks are collapsed so operators see one clear recovery path before secondary telemetry or debug detail
 - detailed Analyze cards expose the same direct recovery actions as the structured snapshot, so operators can rerun analysis or jump into Browser/Refresh without returning to a separate triage panel
 - explicit Browser/Refresh recovery actions when automation or impact analysis returns no deterministic matches
 - structured Ask trust telemetry (replay/proof coverage/failure classes) visible from Settings & Diagnostics without raw API inspection
@@ -298,6 +304,7 @@ Exit:
 - core analysis tasks complete through card actions
 - deterministic equivalence preserved for same context
 - operator can diagnose common permission/automation/map failures without raw JSON as primary UI
+- primary triage state is readable without card overload or repeated action surfaces
 
 ## wave9 - Proofs/History Productization
 
@@ -322,12 +329,14 @@ Exit:
 ## wave10 - Design/Layout/Accessibility Hardening
 
 Objective:
-- remove layout defects and normalize core workspace readability
+- remove layout defects, simplify bloated workspace surfaces, and normalize core workspace readability
 
 Scope:
 - clipping/overflow/wrapping fixes
 - spacing and hierarchy normalization
 - keyboard/focus behavior for critical controls
+- progressive disclosure so raw JSON, debug payloads, and low-signal telemetry stay secondary
+- removal of duplicate status summaries, repeated action rows, and dashboard-like card density that hides the primary workflow
 - explicit render guards for path-heavy Analyze/Diagnostics/Proofs surfaces
 - explicit render guards for long operator-machine paths in Settings & Diagnostics
 - explicit Ask dense-card render guards for long proof IDs, paths, and citation snippets
@@ -345,6 +354,7 @@ Exit:
 - Ask follow-up action cards keep long operator guidance readable without horizontal spill
 - metadata-component usage packets keep long component labels and definition anchors bounded in Ask
 - Org Browser carts and retrieve handoff details stay bounded under long real-org metadata names and paths
+- Stage 1 workspaces present one clear primary artifact and one clear next action without dense dashboard-style overload
 
 ## wave11 - Bug Burn-Down And CI Quality Lock
 

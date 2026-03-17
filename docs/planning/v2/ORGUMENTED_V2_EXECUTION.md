@@ -216,6 +216,8 @@ Still unresolved:
 - explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
 - proofs/history still needs full label-first lifecycle closure beyond current baseline auto-selection
 - layout/accessibility still needs final visual QA lock after latest density guardrail pass
+- UI still carries too much density, redundancy, and competing status/action surfaces across multiple workspaces
+- several Stage 1 screens still do too much at once instead of presenting one clear primary artifact and one clear next action
 - clean-machine pass for the new real-org quickstart runbook is still pending
 - rollback proof still needs one executed candidate/known-good validation cycle, even though the canonical playbook now exists
 
@@ -231,7 +233,7 @@ Short version:
 1. close runtime/session clarity debt
 2. finish browser/retrieve operator workflow parity
 3. deepen Ask grounding and packet quality
-4. close layout/accessibility defects
+4. simplify bloated workspace flows and close layout/accessibility defects
 5. burn down P0/P1 and finish release/operator proof
 
 ## Locked Sequence (No Churn)
@@ -249,6 +251,7 @@ Rules:
 - no full restart while this sequence remains feasible
 - no Stage 2 expansion while Stage 1 gates remain open
 - fixture-only evidence does not close Stage 1 completion gates
+- do not add new primary UI surfaces while existing Stage 1 workspaces still carry redundant or low-signal visible elements
 
 ## Immediate Frontier (Next Slices)
 
@@ -264,6 +267,7 @@ Rules:
 3. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage
 - reduce raw JSON dependence in permission/automation/impact/map workflows
+- collapse redundant status/action surfaces so Analyze and Diagnostics present one clear recovery path before secondary telemetry or debug detail
 
 4. Wave9 finish slice:
 - complete label-first proof lifecycle (open/replay/export) without token-first dependence in normal workflows
@@ -272,6 +276,7 @@ Rules:
 5. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
+- simplify bloated workspace layouts, remove duplicate cards/action rows, and enforce progressive disclosure so the primary workflow is visible without scanning dense dashboards
 
 6. Wave11 finish slice:
 - complete P0/P1 burn-down lock and regression gates
@@ -304,6 +309,7 @@ These outcomes still need explicit proof:
 - Explain and Analyze as structured primary workflows
 - Proofs and History without token-bookkeeping dependency
 - Settings and Diagnostics with clear actionable triage paths
+- Stage 1 workspaces with calm, modern, low-redundancy operator surfaces instead of dashboard-style information overload
 - packaged desktop shell as primary operator path
 
 ## Acceptance Checkpoints
