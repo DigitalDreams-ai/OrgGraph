@@ -42,7 +42,6 @@ The following are now true in main and should not be re-planned as open:
 - packaged desktop smoke against alias `shulman-uat` now records `retrieveHandoffProof.status=verified` for `CustomObject Opportunity` in `logs/desktop-release-smoke-result.json`, so Wave5 packaged real-org handoff proof is no longer pending on ad hoc manual reconstruction
 
 Remaining work is now primarily around:
-- wave6 planner/compiler depth closure
 - wave7 packet quality acceptance
 - wave8 diagnostics/analyze depth
 - wave9 proof/history lifecycle closure
@@ -55,7 +54,7 @@ Remaining work is now primarily around:
 |---|---|---|---|
 | runtime core | packaged startup deterministic, fail-closed, no ambiguous status | mostly in place | close wave2 runtime/tooling parity gaps and startup drift edge cases |
 | sessions/browser/retrieve | connect/switch/restore deterministic and browser parity delivered | complete | maintain packaged handoff proof and lock end-to-end rebuild workflow parity |
-| ask/planner | grounded metadata asks with replay-safe proof | improved | finish deeper typed coverage and fallback elimination in wave6 |
+| ask/planner | grounded metadata asks with replay-safe proof | complete | maintain deterministic evidence-lookup normalization, replay parity, and bounded semantic-frame admissibility |
 | decision packets | approval-grade, trusted by workflow | partial | wave7 acceptance benchmark and packet quality gates |
 | analyze/diagnostics | structured triage without JSON dependency | partial | wave8 card/action depth and synthesis improvements |
 | proofs/history | label-first reopen/replay/export as primary flow | near complete | close remaining universal history-first path gaps |
@@ -149,7 +148,7 @@ Mandatory:
 | wave3 | sessions and toolchain reliability | B004, B005 | Complete | Session state persists active alias/switch timestamps and restore alias remains deterministic across relaunch |
 | wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
 | wave5 | retrieve -> refresh handoff | B008 | Complete | Maintain packaged real-org handoff smoke proof |
-| wave6 | ask planner/compiler depth | B003, B009 | In Progress | Deepen evidence-lookup coverage beyond family-qualified metadata component prompts |
+| wave6 | ask planner/compiler depth | B003, B009 | Complete | Maintain bounded semantic-frame admissibility and deterministic evidence-lookup coverage |
 | wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence with explicit recommendation and evidence-gap publication, without dense packet clutter or duplicate follow-up surfaces |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage and diagnostics cards expose direct operator actions, no core recovery path depends on raw JSON or manual tab hunting, and redundant status/action surfaces are collapsed |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first selection stays independent from advanced token lookup and reopen/replay/export remain history-first |
@@ -442,7 +441,7 @@ Exit:
 2. `dna-wave5-handoff-proof-guard`: close real-org retrieve -> refresh -> diff handoff proof and fail-closed guidance gaps.
 3. `dna-wave6-grounding-expansion`: deepen grounded Ask coverage and reduce weak fallback paths.
    - preferred next Ask-depth substrate is the semantic-frame-v1 contract in `ORGUMENTED_V2_SEMANTIC_FRAME_V1.md`
-   - impact-family and bounded field/object automation semantic-frame gating are now active; perms-family semantic frames are now in shadow mode with latest-retrieve refusal parity, and next work should decide whether perms can move to active gating without widening scope
+   - impact, bounded field/object automation, bounded perms, and bounded approval-review families now obey active semantic-frame admissibility; deterministic evidence-lookup coverage is active for the supported metadata component families
 4. `dna-wave7-decision-packet-quality-baseline`: raise packet quality to approval-workflow acceptance.
 
 ## Cross-Wave Non-Negotiable Gates

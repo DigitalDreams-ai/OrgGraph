@@ -117,6 +117,7 @@ Materially true now:
 - packaged desktop smoke now also verifies metadata search plus selective metadata retrieve handoff artifacts whenever a connected org session is available, while remaining explicit-skip in disconnected CI environments so wave5 proof coverage does not create false negatives
 - packaged desktop smoke now also verifies handoff-backed refresh summary, latest ingest snapshot lineage, and org-pipeline step output whenever a connected org session is available; refresh diff proof is recorded too when the handoff produces a distinct snapshot pair, otherwise the smoke records an explicit `skipped-same-snapshot` result instead of fabricating diff evidence
 - packaged desktop smoke against alias `shulman-uat` now emits a first-class `retrieveHandoffProof` result (`status=verified`, `selection=CustomObject Opportunity`, `refreshDiffStatus=skipped-same-snapshot`, `orgPipelineStatus=verified`) in `logs/desktop-release-smoke-result.json`, closing the remaining Wave5 packaged real-org proof gate
+- wave6 acceptance validation now passes on current `main`: planner, retrieve-aware prompts, integration coverage, and API typecheck all confirm deterministic evidence-lookup coverage plus active semantic-frame admissibility for the bounded impact, automation, perms, and approval-review families
 - flow grounding now prioritizes explicit flow-name asks over weak object-token inference (prevents false `no automation found for the` fallbacks)
 - flow grounding now adds deterministic targeted evidence retry for explicit flow-name asks when first-pass evidence ranking misses the named flow
 - flow grounding now tolerates quoted/article-prefixed flow references (for example `Flow "the X" reads and writes`) and keeps explicit-flow asks off the generic object fallback path
@@ -225,8 +226,6 @@ Materially true now:
 - wave10 follow-up now wraps long path/identifier values in Connect, Refresh, and System with explicit `path-value`/`diagnostic-code-block` hooks, and the runtime-status regression gate now render-checks those markup guards so long paths/JSON stay bounded
 
 Still unresolved:
-- planner/compiler still needs deeper typed coverage beyond current query families
-- semantic-frame v1 is authoritative for impact and bounded field/object automation asks; perms now emits shadow-mode frames, while broader Ask families still rely on the legacy planner path
 - decision packet quality is not yet benchmark-accepted for approval use
 - explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
 - proofs/history still needs full label-first lifecycle closure beyond current baseline auto-selection
@@ -271,43 +270,37 @@ Rules:
 
 ## Immediate Frontier (Next Slices)
 
-1. Wave6 finish slice:
-- deepen grounded Ask coverage beyond current metadata component evidence lookup
-- keep semantic-frame routing authoritative for bounded supported families while shrinking legacy planner fallback
-- preserve deterministic replay and explicit blocked states as coverage expands
-
-2. Wave7 finish slice:
+1. Wave7 finish slice:
 - deepen packet usefulness for approval and retrieved-metadata review scenarios
 - keep flow-target packets rendered as flow packets, not generic approval cards
 - keep reads/writes/change-impact synthesis specific enough to serve as a primary operator artifact
 - keep proof identifiers and citation detail behind progressive disclosure so the packet remains the first thing the operator reads
 
-3. Wave8 finish slice:
+2. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage
 - reduce raw JSON dependence in permission/automation/impact/map workflows
 - collapse redundant status/action surfaces so Analyze and Diagnostics present one clear recovery path before secondary telemetry or debug detail
 
-5. Wave9 finish slice:
+3. Wave9 finish slice:
 - complete label-first proof lifecycle (open/replay/export) without token-first dependence in normal workflows
 - keep token fields strictly advanced/debug while preserving replay parity checks and label-first selection semantics
 
-6. Wave10 finish slice:
+4. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 - simplify bloated workspace layouts, remove duplicate cards/action rows, and enforce progressive disclosure so the primary workflow is visible without scanning dense dashboards
 
-7. Wave11 finish slice:
+5. Wave11 finish slice:
 - complete P0/P1 burn-down lock and regression gates
 - keep CI strict while preserving minute-efficiency controls
 
-8. Wave12 finish slice:
+6. Wave12 finish slice:
 - complete clean-machine operator proof on the current real-org quickstart
 - execute one rollback validation cycle against the canonical rollback record and keep release evidence machine-checkable
 - keep Actions storage bounded with automated run-retention pruning and short artifact retention defaults
 
-Preferred wave6 follow-on after the current packet-quality work:
-- promote perms from semantic-frame shadow mode into active gating if the current fail-closed behavior can be preserved without widening scope
-- keep proving better grounding and admissibility behavior without replay regression
+Wave6 maintenance rule after closeout:
+- preserve bounded semantic-frame admissibility, deterministic evidence-lookup normalization, and replay parity while Wave7+ work proceeds
 
 ## Execution Cadence (Mandatory)
 
