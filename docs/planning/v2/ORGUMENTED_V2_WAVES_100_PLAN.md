@@ -137,7 +137,7 @@ Mandatory:
 | Wave | Theme | Primary IDs | Status | Next Gate |
 |---|---|---|---|---|
 | wave1 | baseline lock and triage | B001-B024 mapped | Complete | Maintain drift-free docs |
-| wave2 | runtime convergence | B001, B002 | In Progress | Distinguish runtime unreachable vs tool missing everywhere; keep web status-surface regression gate green |
+| wave2 | runtime convergence | B001, B002 | Complete | Maintain status-surface regression gate and packaged startup proof |
 | wave3 | sessions and toolchain reliability | B004, B005 | Complete | Session state persists active alias/switch timestamps and restore alias remains deterministic across relaunch |
 | wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
 | wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |

@@ -1,6 +1,11 @@
 'use client';
 
-import { describeToolStatusSource, type ToolStatusSource } from '../../shell/org-status-surface';
+import {
+  describeInstalledSurfaceStatus,
+  describeSessionSurfaceStatus,
+  describeToolStatusSource,
+  type ToolStatusSource
+} from '../../shell/org-status-surface';
 import { describeReadySurfaceStatus } from '../../shell/runtime-gate';
 import type { ReadyPayload } from '../../shell/use-shell-runtime';
 import type { OrgPreflightIssue, OrgPreflightPayload, OrgStatusPayload } from '../connect/types';
@@ -438,11 +443,22 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
     buildAskTrustSummary(props.askTrustDashboard),
     buildRuntimeTelemetrySummary(props.runtimeMetrics)
   ];
-  const sfState =
-    props.runtimeUnavailable ? 'unavailable' : props.orgStatus ? (props.orgStatus.sf?.installed ? 'installed' : 'missing') : 'unknown';
-  const cciState =
-    props.runtimeUnavailable ? 'unavailable' : props.orgStatus ? (props.orgStatus.cci?.installed ? 'installed' : 'missing') : 'unknown';
+  const sfState = describeInstalledSurfaceStatus({
+    runtimeUnavailable: props.runtimeUnavailable,
+    installed: props.orgStatus?.sf?.installed,
+    hasLiveStatus: Boolean(props.orgStatus),
+    installedLabel: 'installed',
+    missingLabel: 'missing'
+  });
+  const cciState = describeInstalledSurfaceStatus({
+    runtimeUnavailable: props.runtimeUnavailable,
+    installed: props.orgStatus?.cci?.installed,
+    hasLiveStatus: Boolean(props.orgStatus),
+    installedLabel: 'installed',
+    missingLabel: 'missing'
+  });
   const toolSourceLabel = describeToolStatusSource(props.toolStatusSource);
+  const sessionLabel = describeSessionSurfaceStatus(props.runtimeUnavailable, props.orgStatus?.session?.status);
   const toolingMessage = props.runtimeUnavailable
     ? 'Runtime is currently unreachable. Relaunch Orgumented desktop, then run Refresh Status before checking toolchain state.'
     : props.runtimeBlocked
@@ -584,7 +600,7 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
                         : 'decision-badge muted'
                   }
                 >
-                  Session: {props.runtimeUnavailable ? 'runtime unavailable' : props.orgStatus?.session?.status || 'unknown'}
+                  Session: {sessionLabel}
                 </span>
               </div>
               {props.runtimeUnavailable ? (

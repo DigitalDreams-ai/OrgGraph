@@ -1,6 +1,11 @@
 'use client';
 
-import { describeToolStatusSource, type ToolStatusSource } from '../../shell/org-status-surface';
+import {
+  describeInstalledSurfaceStatus,
+  describeSessionSurfaceStatus,
+  describeToolStatusSource,
+  type ToolStatusSource
+} from '../../shell/org-status-surface';
 import type {
   OrgAliasSummary,
   OrgPreflightIssue,
@@ -63,10 +68,22 @@ function formatTimestamp(value?: string): string {
 }
 
 export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
-  const sessionLabel = props.runtimeUnavailable ? 'runtime unavailable' : props.sessionStatus;
+  const sessionLabel = describeSessionSurfaceStatus(props.runtimeUnavailable, props.sessionStatus);
   const toolingLabel = props.runtimeUnavailable ? 'unavailable' : props.toolingReady ? 'ready' : 'degraded';
-  const sfState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.sf?.installed ? 'installed' : props.orgStatus ? 'missing' : 'unknown';
-  const cciState = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.installed ? 'installed' : props.orgStatus ? 'missing' : 'unknown';
+  const sfState = describeInstalledSurfaceStatus({
+    runtimeUnavailable: props.runtimeUnavailable,
+    installed: props.orgStatus?.sf?.installed,
+    hasLiveStatus: Boolean(props.orgStatus),
+    installedLabel: 'installed',
+    missingLabel: 'missing'
+  });
+  const cciState = describeInstalledSurfaceStatus({
+    runtimeUnavailable: props.runtimeUnavailable,
+    installed: props.orgStatus?.cci?.installed,
+    hasLiveStatus: Boolean(props.orgStatus),
+    installedLabel: 'installed',
+    missingLabel: 'missing'
+  });
   const cciVersion = props.runtimeUnavailable ? 'unavailable' : props.orgStatus?.cci?.version || 'n/a';
   const toolStatusSourceLabel = describeToolStatusSource(props.toolStatusSource);
   const sfMessage =

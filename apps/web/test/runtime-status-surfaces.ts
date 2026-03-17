@@ -2,7 +2,11 @@ import assert from 'node:assert/strict';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { OperatorRail } from '../app/shell/operator-rail';
-import { describeToolStatusSource } from '../app/shell/org-status-surface';
+import {
+  describeInstalledSurfaceStatus,
+  describeSessionSurfaceStatus,
+  describeToolStatusSource
+} from '../app/shell/org-status-surface';
 import { deriveRuntimeGateState, describeReadySurfaceStatus } from '../app/shell/runtime-gate';
 import { StatusStrip } from '../app/shell/status-strip';
 import { ConnectWorkspace } from '../app/workspaces/connect/connect-workspace';
@@ -14,6 +18,39 @@ function run(): void {
   assert.equal(describeToolStatusSource('runtime_unavailable'), 'runtime unavailable');
   assert.equal(describeToolStatusSource('live'), 'live status');
   assert.equal(describeToolStatusSource('unknown'), 'status not loaded');
+  assert.equal(describeSessionSurfaceStatus(true, 'connected'), 'runtime unavailable');
+  assert.equal(describeSessionSurfaceStatus(false, 'connected'), 'connected');
+  assert.equal(describeSessionSurfaceStatus(false, ''), 'unknown');
+  assert.equal(
+    describeInstalledSurfaceStatus({
+      runtimeUnavailable: true,
+      installed: false,
+      hasLiveStatus: true,
+      installedLabel: 'installed',
+      missingLabel: 'missing'
+    }),
+    'unavailable'
+  );
+  assert.equal(
+    describeInstalledSurfaceStatus({
+      runtimeUnavailable: false,
+      installed: false,
+      hasLiveStatus: true,
+      installedLabel: 'installed',
+      missingLabel: 'missing'
+    }),
+    'missing'
+  );
+  assert.equal(
+    describeInstalledSurfaceStatus({
+      runtimeUnavailable: false,
+      installed: undefined,
+      hasLiveStatus: false,
+      installedLabel: 'installed',
+      missingLabel: 'missing'
+    }),
+    'unknown'
+  );
   assert.equal(describeReadySurfaceStatus('ready'), 'ready');
   assert.equal(describeReadySurfaceStatus('http_400'), 'blocked');
   assert.equal(describeReadySurfaceStatus('unreachable'), 'unreachable');
@@ -411,6 +448,40 @@ function run(): void {
   );
   assert.match(systemBlockedMarkup, /Health: ok/);
   assert.match(systemBlockedMarkup, /Ready: blocked/);
+
+  const systemUnavailableMarkup = renderToStaticMarkup(
+    React.createElement(SystemWorkspace, {
+      metaDryRun: true,
+      setMetaDryRun: () => undefined,
+      healthStatus: 'unreachable',
+      readyStatus: 'unreachable',
+      readyDetails: '{"status":"unreachable"}',
+      readyPayload: null,
+      orgStatus: null,
+      orgPreflight: null,
+      runtimeUnavailable: true,
+      runtimeBlocked: true,
+      toolStatusSource: 'runtime_unavailable',
+      metaContext: null,
+      metaAdaptResult: null,
+      askTrustDashboard: null,
+      runtimeMetrics: null,
+      loading: false,
+      onLoadMetaContext: () => undefined,
+      onRunMetaAdapt: () => undefined,
+      onLoadAskTrustDashboard: () => undefined,
+      onLoadRuntimeMetrics: () => undefined,
+      onLoadOrgStatus: () => undefined,
+      onRunPreflight: () => undefined,
+      onRefreshStatus: () => undefined,
+      onOpenConnect: () => undefined,
+      onOpenRefresh: () => undefined
+    } as any)
+  );
+  assert.match(systemUnavailableMarkup, /Source: runtime unavailable/);
+  assert.match(systemUnavailableMarkup, /Session: runtime unavailable/);
+  assert.match(systemUnavailableMarkup, /<span>sf<\/span><strong>unavailable<\/strong>/);
+  assert.match(systemUnavailableMarkup, /<span>cci<\/span><strong>unavailable<\/strong>/);
 }
 
 run();
