@@ -39,9 +39,9 @@ The following are now true in main and should not be re-planned as open:
 5. Wave5 packaged handoff proof hardening:
 - packaged desktop smoke now verifies latest ingest lineage, handoff-backed refresh summary, and org-pipeline step output after selective metadata retrieve whenever a connected org session is available
 - when the handoff produces only one deterministic snapshot ID, smoke records an explicit `skipped-same-snapshot` diff status instead of claiming a fake drift proof
+- packaged desktop smoke against alias `shulman-uat` now records `retrieveHandoffProof.status=verified` for `CustomObject Opportunity` in `logs/desktop-release-smoke-result.json`, so Wave5 packaged real-org handoff proof is no longer pending on ad hoc manual reconstruction
 
 Remaining work is now primarily around:
-- wave5 retrieve -> refresh proof closure
 - wave6 planner/compiler depth closure
 - wave7 packet quality acceptance
 - wave8 diagnostics/analyze depth
@@ -54,7 +54,7 @@ Remaining work is now primarily around:
 | Domain | 100% Definition | Current | Remaining |
 |---|---|---|---|
 | runtime core | packaged startup deterministic, fail-closed, no ambiguous status | mostly in place | close wave2 runtime/tooling parity gaps and startup drift edge cases |
-| sessions/browser/retrieve | connect/switch/restore deterministic and browser parity delivered | materially functional | complete wave5 handoff proof and lock end-to-end rebuild workflow parity |
+| sessions/browser/retrieve | connect/switch/restore deterministic and browser parity delivered | complete | maintain packaged handoff proof and lock end-to-end rebuild workflow parity |
 | ask/planner | grounded metadata asks with replay-safe proof | improved | finish deeper typed coverage and fallback elimination in wave6 |
 | decision packets | approval-grade, trusted by workflow | partial | wave7 acceptance benchmark and packet quality gates |
 | analyze/diagnostics | structured triage without JSON dependency | partial | wave8 card/action depth and synthesis improvements |
@@ -148,7 +148,7 @@ Mandatory:
 | wave2 | runtime convergence | B001, B002 | Complete | Maintain status-surface regression gate and packaged startup proof |
 | wave3 | sessions and toolchain reliability | B004, B005 | Complete | Session state persists active alias/switch timestamps and restore alias remains deterministic across relaunch |
 | wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
-| wave5 | retrieve -> refresh handoff | B008 | In Progress | End-to-end real-org handoff proof in packaged app |
+| wave5 | retrieve -> refresh handoff | B008 | Complete | Maintain packaged real-org handoff smoke proof |
 | wave6 | ask planner/compiler depth | B003, B009 | In Progress | Deepen evidence-lookup coverage beyond family-qualified metadata component prompts |
 | wave7 | decision-packet quality | B010, B017 | In Progress | Approval-quality packet benchmark evidence with explicit recommendation and evidence-gap publication, without dense packet clutter or duplicate follow-up surfaces |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage and diagnostics cards expose direct operator actions, no core recovery path depends on raw JSON or manual tab hunting, and redundant status/action surfaces are collapsed |

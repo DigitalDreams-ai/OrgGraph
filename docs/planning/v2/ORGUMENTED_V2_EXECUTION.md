@@ -116,6 +116,7 @@ Materially true now:
 - wave5 retrieve -> refresh -> diff handoff closure is now materially complete (`B008`, `D005`, `G007`, `G008`), with the primary operator path visible and executable without raw JSON
 - packaged desktop smoke now also verifies metadata search plus selective metadata retrieve handoff artifacts whenever a connected org session is available, while remaining explicit-skip in disconnected CI environments so wave5 proof coverage does not create false negatives
 - packaged desktop smoke now also verifies handoff-backed refresh summary, latest ingest snapshot lineage, and org-pipeline step output whenever a connected org session is available; refresh diff proof is recorded too when the handoff produces a distinct snapshot pair, otherwise the smoke records an explicit `skipped-same-snapshot` result instead of fabricating diff evidence
+- packaged desktop smoke against alias `shulman-uat` now emits a first-class `retrieveHandoffProof` result (`status=verified`, `selection=CustomObject Opportunity`, `refreshDiffStatus=skipped-same-snapshot`, `orgPipelineStatus=verified`) in `logs/desktop-release-smoke-result.json`, closing the remaining Wave5 packaged real-org proof gate
 - flow grounding now prioritizes explicit flow-name asks over weak object-token inference (prevents false `no automation found for the` fallbacks)
 - flow grounding now adds deterministic targeted evidence retry for explicit flow-name asks when first-pass evidence ranking misses the named flow
 - flow grounding now tolerates quoted/article-prefixed flow references (for example `Flow "the X" reads and writes`) and keeps explicit-flow asks off the generic object fallback path
@@ -270,23 +271,18 @@ Rules:
 
 ## Immediate Frontier (Next Slices)
 
-1. Wave5 finish slice:
-- close real-org Browser -> Retrieve -> Refresh -> Diff -> Org Retrieve proof in the packaged desktop flow
-- keep staged handoff summaries and guardrails stable across relaunch
-- keep incomplete handoff states fail-closed and operator-readable without raw JSON
-
-2. Wave6 finish slice:
+1. Wave6 finish slice:
 - deepen grounded Ask coverage beyond current metadata component evidence lookup
 - keep semantic-frame routing authoritative for bounded supported families while shrinking legacy planner fallback
 - preserve deterministic replay and explicit blocked states as coverage expands
 
-3. Wave7 finish slice:
+2. Wave7 finish slice:
 - deepen packet usefulness for approval and retrieved-metadata review scenarios
 - keep flow-target packets rendered as flow packets, not generic approval cards
 - keep reads/writes/change-impact synthesis specific enough to serve as a primary operator artifact
 - keep proof identifiers and citation detail behind progressive disclosure so the packet remains the first thing the operator reads
 
-4. Wave8 finish slice:
+3. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage
 - reduce raw JSON dependence in permission/automation/impact/map workflows
 - collapse redundant status/action surfaces so Analyze and Diagnostics present one clear recovery path before secondary telemetry or debug detail

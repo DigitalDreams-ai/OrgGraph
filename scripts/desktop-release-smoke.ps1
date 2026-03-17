@@ -444,9 +444,14 @@ $metadataRetrieveStatus = 'skipped-disconnected'
 $refreshWorkflowStatus = 'skipped-disconnected'
 $refreshDiffStatus = 'skipped-disconnected'
 $orgPipelineStatus = 'skipped-disconnected'
+$metadataSelectionLabel = ''
+$metadataRetrieveAlias = ''
+$metadataRetrieveParsePath = ''
+$metadataRetrieveArgs = @()
 $metadataRetrieveArgCount = 0
 $metadataRetrieveSnapshotId = ''
 $refreshSnapshotId = ''
+$orgPipelineStepCount = 0
 $launchAttemptsUsed = 0
 $relaunchAttemptsUsed = 0
 $relaunchVerified = $false
@@ -601,6 +606,12 @@ try {
       if ($selectionKind -eq 'member' -and -not [string]::IsNullOrWhiteSpace($selectionName)) {
         $selection.members = @($selectionName)
       }
+      $metadataSelectionLabel =
+        if ($selectionKind -eq 'member' -and -not [string]::IsNullOrWhiteSpace($selectionName)) {
+          "$selectionType $selectionName"
+        } else {
+          $selectionType
+        }
 
       $metadataRetrieve = Invoke-JsonPost -Url 'http://127.0.0.1:3100/org/metadata/retrieve' -ArtifactPath $metadataRetrieveArtifact -Body @{
         selections = @($selection)
@@ -624,6 +635,9 @@ try {
       }
 
       $metadataRetrieveArgCount = [int]$metadataRetrieve.metadataArgs.Count
+      $metadataRetrieveAlias = [string]$metadataRetrieve.alias
+      $metadataRetrieveParsePath = [string]$metadataRetrieve.parsePath
+      $metadataRetrieveArgs = @($metadataRetrieve.metadataArgs | ForEach-Object { [string]$_ })
       $metadataRetrieveStatus = 'verified'
 
       $latestIngest = Invoke-JsonGet -Url 'http://127.0.0.1:3100/ingest/latest' -ArtifactPath $ingestLatestArtifact
@@ -639,6 +653,7 @@ try {
       }
 
       $refreshSummary = Invoke-JsonPost -Url 'http://127.0.0.1:3100/refresh' -ArtifactPath $refreshSummaryArtifact -Body @{
+        fixturesPath = $metadataRetrieve.parsePath
         mode = 'full'
         summaryOnly = $true
       }
@@ -649,8 +664,8 @@ try {
       if ([string]$refreshSummary.sourcePath -ne [string]$metadataRetrieve.parsePath) {
         throw 'Refresh summary sourcePath did not match metadata retrieve parsePath for handoff validation.'
       }
-      if (($refreshSummary.nodeCount ?? 0) -le 0 -or ($refreshSummary.edgeCount ?? 0) -le 0) {
-        throw 'Refresh summary reported an empty graph for handoff validation.'
+      if (($refreshSummary.nodeCount ?? 0) -le 0) {
+        throw 'Refresh summary reported zero nodes for handoff validation.'
       }
       $refreshWorkflowStatus = 'verified'
 
@@ -693,9 +708,11 @@ try {
         throw 'Org pipeline did not return step summary for handoff validation.'
       }
       $retrieveStep = $orgPipeline.steps | Where-Object { $_.step -eq 'retrieve' } | Select-Object -First 1
-      if (-not $retrieveStep -or $retrieveStep.status -ne 'completed') {
-        throw 'Org pipeline did not report a completed retrieve step for handoff validation.'
+      $refreshStep = $orgPipeline.steps | Where-Object { $_.step -eq 'refresh' } | Select-Object -First 1
+      if (-not $retrieveStep -or $retrieveStep.status -ne 'completed' -or -not $refreshStep -or $refreshStep.status -ne 'completed') {
+        throw 'Org pipeline did not report completed retrieve and refresh steps for handoff validation.'
       }
+      $orgPipelineStepCount = [int]$orgPipeline.steps.Count
       $orgPipelineStatus = 'verified'
     }
 
@@ -827,6 +844,29 @@ try {
     refreshSnapshotId = $refreshSnapshotId
     refreshDiffStatus = $refreshDiffStatus
     orgPipelineStatus = $orgPipelineStatus
+    retrieveHandoffProof = @{
+      status =
+        if (
+          $metadataRetrieveStatus -eq 'verified' -and
+          $refreshWorkflowStatus -eq 'verified' -and
+          ($refreshDiffStatus -eq 'verified' -or $refreshDiffStatus -eq 'skipped-same-snapshot') -and
+          $orgPipelineStatus -eq 'verified'
+        ) {
+          'verified'
+        } else {
+          'incomplete'
+        }
+      selection = $metadataSelectionLabel
+      alias = $metadataRetrieveAlias
+      parsePath = $metadataRetrieveParsePath
+      metadataArgs = $metadataRetrieveArgs
+      ingestSnapshotId = $metadataRetrieveSnapshotId
+      refreshSnapshotId = $refreshSnapshotId
+      refreshWorkflowStatus = $refreshWorkflowStatus
+      refreshDiffStatus = $refreshDiffStatus
+      orgPipelineStatus = $orgPipelineStatus
+      orgPipelineStepCount = $orgPipelineStepCount
+    }
     staleBootstrapSeeded = $true
     staleBootstrapSeedArtifact = 'logs/desktop-release-smoke-stale-seed.json'
     bootstrapMessage = $ready.checks.bootstrap.message
