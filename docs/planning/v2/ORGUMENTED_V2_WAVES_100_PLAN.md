@@ -273,6 +273,7 @@ Scope:
 - benchmark publication surfaces explicit recommendation verdict, recommendation summary, and evidence-gap count for approval-review packets
 - next-action relevance
 - packet layout stays calm enough to function as the primary artifact without duplicate action rows or low-signal sections competing for attention
+- proof identifiers and citation detail stay available without occupying their own always-visible cards under the packet
 
 Exit:
 - benchmark packet accepted for real review scenario

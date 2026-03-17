@@ -211,6 +211,9 @@ function run(): void {
   assert.match(reviewMarkup, /Review StageSyncFlow first\./);
   assert.match(reviewMarkup, />Open related workflows</);
   assert.doesNotMatch(reviewMarkup, />Next actions</);
+  assert.match(reviewMarkup, /<h3>Proof and evidence<\/h3>/);
+  assert.match(reviewMarkup, /<summary>Proof context<\/summary>/);
+  assert.match(reviewMarkup, /<summary>Citations \(0\)<\/summary>/);
 
   const impactMarkup = renderToStaticMarkup(
     createElement(AskWorkspace, {
