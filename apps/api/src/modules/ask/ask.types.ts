@@ -180,7 +180,10 @@ export interface AskDecisionPacket {
       | 'custom_object'
       | 'custom_field'
       | 'email_template'
-      | 'tab';
+      | 'tab'
+      | 'connected_app'
+      | 'permission_set_group'
+      | 'custom_permission';
     matchedCount: number;
     referenceHitCount: number;
     sourceFileCount: number;

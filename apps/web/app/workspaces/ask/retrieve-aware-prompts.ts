@@ -35,7 +35,10 @@ const COMPONENT_USAGE_PROMPT_FAMILIES: ComponentPromptFamily[] = [
   { type: 'CustomObject', prefix: 'Custom Object', limit: 3 },
   { type: 'CustomField', prefix: 'Custom Field', limit: 4 },
   { type: 'EmailTemplate', prefix: 'Email Template', limit: 3 },
-  { type: 'CustomTab', prefix: 'Custom Tab', limit: 3 }
+  { type: 'CustomTab', prefix: 'Custom Tab', limit: 3 },
+  { type: 'ConnectedApp', prefix: 'Connected App', limit: 3 },
+  { type: 'PermissionSetGroup', prefix: 'Permission Set Group', limit: 3 },
+  { type: 'CustomPermission', prefix: 'Custom Permission', limit: 3 }
 ];
 
 export function buildRetrieveAwarePromptGroups(

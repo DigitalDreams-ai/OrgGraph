@@ -10,7 +10,10 @@ function run(): void {
     { type: 'Layout', members: ['Opportunity-Opportunity Layout'] },
     { type: 'ApexClass', members: ['CaseTypeService'] },
     { type: 'ApexTrigger', members: ['CaseBeforeUpdate'] },
-    { type: 'EmailTemplate', members: ['unfiled$public/Customer_Welcome'] }
+    { type: 'EmailTemplate', members: ['unfiled$public/Customer_Welcome'] },
+    { type: 'ConnectedApp', members: ['OrgumentedAPI'] },
+    { type: 'PermissionSetGroup', members: ['Support_Users'] },
+    { type: 'CustomPermission', members: ['CanApproveIntake'] }
   ];
 
   const prompts = buildRetrieveAwarePromptGroups(selections);
@@ -26,14 +29,17 @@ function run(): void {
     'Based only on the latest retrieve, what touches Opportunity.StageName?',
     'Based only on the latest retrieve, where is Apex Class CaseTypeService used?',
     'Based only on the latest retrieve, where is Apex Trigger CaseBeforeUpdate used?',
+    'Based only on the latest retrieve, where is Connected App OrgumentedAPI used?',
     'Based only on the latest retrieve, where is Custom Field Case.Status used?',
     'Based only on the latest retrieve, where is Custom Field Opportunity.StageName used?',
     'Based only on the latest retrieve, where is Custom Object Case used?',
     'Based only on the latest retrieve, where is Custom Object Opportunity used?',
+    'Based only on the latest retrieve, where is Custom Permission CanApproveIntake used?',
     'Based only on the latest retrieve, where is Email Template unfiled$public/Customer_Welcome used?',
     'Based only on the latest retrieve, where is Flow Civil_Rights_Intake_Questionnaire used?',
     'Based only on the latest retrieve, where is Flow OpportunityStageSync used?',
-    'Based only on the latest retrieve, where is Layout Opportunity-Opportunity Layout used?'
+    'Based only on the latest retrieve, where is Layout Opportunity-Opportunity Layout used?',
+    'Based only on the latest retrieve, where is Permission Set Group Support_Users used?'
   ]);
 
   assert.ok(

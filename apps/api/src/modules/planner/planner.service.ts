@@ -452,6 +452,24 @@ export class PlannerService {
         'Custom Tab',
         [/\.tab-meta\.xml$/i],
         /(?:^|\/)tabs\/([^/]+)$/i
+      ],
+      [
+        /^(?:connected\s*app|connectedapp|app)(?:\s+|:\s*)(.+)$/i,
+        'Connected App',
+        [/\.connectedApp-meta\.xml$/i],
+        /(?:^|\/)connectedapps\/([^/]+)$/i
+      ],
+      [
+        /^(?:permission\s*set\s*group|permissionsetgroup)(?:\s+|:\s*)(.+)$/i,
+        'Permission Set Group',
+        [/\.permissionsetgroup-meta\.xml$/i],
+        /(?:^|\/)permissionsetgroups\/([^/]+)$/i
+      ],
+      [
+        /^(?:custom\s*permission|custompermission)(?:\s+|:\s*)(.+)$/i,
+        'Custom Permission',
+        [/\.customPermission-meta\.xml$/i],
+        /(?:^|\/)custompermissions\/([^/]+)$/i
       ]
     ];
 

@@ -2424,6 +2424,122 @@ async function run(): Promise<void> {
       'custom tab usage ask should stay on deterministic evidence lookup even when no references match'
     );
 
+    const askConnectedAppComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is Connected App OrgumentedAPI used?'
+      })
+    });
+    assert.equal(
+      askConnectedAppComponentUsageRes.status,
+      201,
+      'connected app usage ask should return 201'
+    );
+    const askConnectedAppComponentUsage = (await askConnectedAppComponentUsageRes.json()) as {
+      plan?: {
+        semanticFrame?: {
+          intent?: string;
+          target?: { selected?: string };
+        };
+      };
+      deterministicAnswer: string;
+      trustLevel: string;
+    };
+    assert.equal(askConnectedAppComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(
+      askConnectedAppComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Connected App OrgumentedAPI'
+    );
+    assert.match(
+      askConnectedAppComponentUsage.deterministicAnswer,
+      /component usage lookup for Connected App OrgumentedAPI/i
+    );
+    assert.notEqual(
+      askConnectedAppComponentUsage.trustLevel,
+      'refused',
+      'connected app usage ask should stay on deterministic evidence lookup'
+    );
+
+    const askPermissionSetGroupComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is Permission Set Group Support_Users used?'
+      })
+    });
+    assert.equal(
+      askPermissionSetGroupComponentUsageRes.status,
+      201,
+      'permission set group usage ask should return 201'
+    );
+    const askPermissionSetGroupComponentUsage =
+      (await askPermissionSetGroupComponentUsageRes.json()) as {
+        plan?: {
+          semanticFrame?: {
+            intent?: string;
+            target?: { selected?: string };
+          };
+        };
+        deterministicAnswer: string;
+        trustLevel: string;
+      };
+    assert.equal(
+      askPermissionSetGroupComponentUsage.plan?.semanticFrame?.intent,
+      'evidence_lookup'
+    );
+    assert.equal(
+      askPermissionSetGroupComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Permission Set Group Support_Users'
+    );
+    assert.match(
+      askPermissionSetGroupComponentUsage.deterministicAnswer,
+      /component usage lookup for Permission Set Group Support_Users/i
+    );
+    assert.notEqual(
+      askPermissionSetGroupComponentUsage.trustLevel,
+      'refused',
+      'permission set group usage ask should stay on deterministic evidence lookup'
+    );
+
+    const askCustomPermissionComponentUsageRes = await fetch(`${base}/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        query: 'Where is Custom Permission CanApproveIntake used?'
+      })
+    });
+    assert.equal(
+      askCustomPermissionComponentUsageRes.status,
+      201,
+      'custom permission usage ask should return 201'
+    );
+    const askCustomPermissionComponentUsage =
+      (await askCustomPermissionComponentUsageRes.json()) as {
+        plan?: {
+          semanticFrame?: {
+            intent?: string;
+            target?: { selected?: string };
+          };
+        };
+        deterministicAnswer: string;
+        trustLevel: string;
+      };
+    assert.equal(askCustomPermissionComponentUsage.plan?.semanticFrame?.intent, 'evidence_lookup');
+    assert.equal(
+      askCustomPermissionComponentUsage.plan?.semanticFrame?.target?.selected,
+      'Custom Permission CanApproveIntake'
+    );
+    assert.match(
+      askCustomPermissionComponentUsage.deterministicAnswer,
+      /component usage lookup for Custom Permission CanApproveIntake/i
+    );
+    assert.notEqual(
+      askCustomPermissionComponentUsage.trustLevel,
+      'refused',
+      'custom permission usage ask should stay on deterministic evidence lookup'
+    );
+
     const askComponentUsageRecordIdRes = await fetch(`${base}/ask`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
