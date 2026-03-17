@@ -28,6 +28,10 @@ $sessionAfterSwitchArtifact = Join-Path $logsDir 'desktop-release-smoke-session-
 $sessionRestoreArtifact = Join-Path $logsDir 'desktop-release-smoke-session-restore.json'
 $metadataSearchArtifact = Join-Path $logsDir 'desktop-release-smoke-metadata-search.json'
 $metadataRetrieveArtifact = Join-Path $logsDir 'desktop-release-smoke-metadata-retrieve.json'
+$ingestLatestArtifact = Join-Path $logsDir 'desktop-release-smoke-ingest-latest.json'
+$refreshSummaryArtifact = Join-Path $logsDir 'desktop-release-smoke-refresh-summary.json'
+$refreshDiffArtifact = Join-Path $logsDir 'desktop-release-smoke-refresh-diff.json'
+$orgPipelineArtifact = Join-Path $logsDir 'desktop-release-smoke-org-pipeline.json'
 $staleSeedArtifact = Join-Path $logsDir 'desktop-release-smoke-stale-seed.json'
 $resultArtifact = Join-Path $logsDir 'desktop-release-smoke-result.json'
 
@@ -423,7 +427,7 @@ if (-not (Test-Path $exePath)) {
 }
 
 New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
-Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $proofArtifact, $recentProofsArtifact, $replayArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $metadataSearchArtifact, $metadataRetrieveArtifact, $staleSeedArtifact, $resultArtifact -ErrorAction SilentlyContinue
+Remove-Item $stdoutLog, $stderrLog, $healthArtifact, $readyArtifact, $askArtifact, $askRepeatArtifact, $proofArtifact, $recentProofsArtifact, $replayArtifact, $orgStatusArtifact, $sessionBeforeArtifact, $sessionAliasesArtifact, $sessionConnectArtifact, $sessionAfterConnectArtifact, $sessionSwitchArtifact, $sessionAfterSwitchArtifact, $sessionRestoreArtifact, $metadataSearchArtifact, $metadataRetrieveArtifact, $ingestLatestArtifact, $refreshSummaryArtifact, $refreshDiffArtifact, $orgPipelineArtifact, $staleSeedArtifact, $resultArtifact -ErrorAction SilentlyContinue
 Remove-Item $relaunchStdoutLog, $relaunchStderrLog, $relaunchHealthArtifact, $relaunchReadyArtifact -ErrorAction SilentlyContinue
 Initialize-SmokeAppDataRoot -AppDataRoot $smokeAppDataRoot -StaleSeedPath $staleSeedArtifact
 Set-Item -Path Env:ORGUMENTED_APP_DATA_ROOT -Value $smokeAppDataRoot
@@ -437,7 +441,12 @@ $sessionConnectAlias = $null
 $sessionSwitchAlias = $null
 $metadataSearchStatus = 'skipped-disconnected'
 $metadataRetrieveStatus = 'skipped-disconnected'
+$refreshWorkflowStatus = 'skipped-disconnected'
+$refreshDiffStatus = 'skipped-disconnected'
+$orgPipelineStatus = 'skipped-disconnected'
 $metadataRetrieveArgCount = 0
+$metadataRetrieveSnapshotId = ''
+$refreshSnapshotId = ''
 $launchAttemptsUsed = 0
 $relaunchAttemptsUsed = 0
 $relaunchVerified = $false
@@ -616,6 +625,78 @@ try {
 
       $metadataRetrieveArgCount = [int]$metadataRetrieve.metadataArgs.Count
       $metadataRetrieveStatus = 'verified'
+
+      $latestIngest = Invoke-JsonGet -Url 'http://127.0.0.1:3100/ingest/latest' -ArtifactPath $ingestLatestArtifact
+      if (-not $latestIngest.latest) {
+        throw 'Latest ingest summary did not include a current refresh state for handoff validation.'
+      }
+      $metadataRetrieveSnapshotId = [string]$latestIngest.latest.snapshotId
+      if ([string]::IsNullOrWhiteSpace($metadataRetrieveSnapshotId)) {
+        throw 'Latest ingest summary did not include snapshotId for handoff validation.'
+      }
+      if ([string]$latestIngest.latest.sourcePath -ne [string]$metadataRetrieve.parsePath) {
+        throw 'Latest ingest summary sourcePath did not match metadata retrieve parsePath for handoff validation.'
+      }
+
+      $refreshSummary = Invoke-JsonPost -Url 'http://127.0.0.1:3100/refresh' -ArtifactPath $refreshSummaryArtifact -Body @{
+        mode = 'full'
+        summaryOnly = $true
+      }
+      $refreshSnapshotId = [string]$refreshSummary.snapshotId
+      if ([string]::IsNullOrWhiteSpace($refreshSnapshotId)) {
+        throw 'Refresh summary did not include snapshotId for handoff validation.'
+      }
+      if ([string]$refreshSummary.sourcePath -ne [string]$metadataRetrieve.parsePath) {
+        throw 'Refresh summary sourcePath did not match metadata retrieve parsePath for handoff validation.'
+      }
+      if (($refreshSummary.nodeCount ?? 0) -le 0 -or ($refreshSummary.edgeCount ?? 0) -le 0) {
+        throw 'Refresh summary reported an empty graph for handoff validation.'
+      }
+      $refreshWorkflowStatus = 'verified'
+
+      if ($metadataRetrieveSnapshotId -eq $refreshSnapshotId) {
+        $refreshDiffStatus = 'skipped-same-snapshot'
+      } else {
+        $refreshDiff = Invoke-JsonGet -Url "http://127.0.0.1:3100/refresh/diff/$metadataRetrieveSnapshotId/$refreshSnapshotId" -ArtifactPath $refreshDiffArtifact
+        if (
+          [string]$refreshDiff.snapshots.from.snapshotId -ne $metadataRetrieveSnapshotId -or
+          [string]$refreshDiff.snapshots.to.snapshotId -ne $refreshSnapshotId
+        ) {
+          throw 'Refresh diff snapshot lineage did not match the expected handoff-backed snapshot pair.'
+        }
+        if ([string]::IsNullOrWhiteSpace([string]$refreshDiff.meaningChangeSummary)) {
+          throw 'Refresh diff did not include meaningChangeSummary for handoff validation.'
+        }
+        $refreshDiffStatus = 'verified'
+      }
+
+      $orgPipeline = Invoke-JsonPost -Url 'http://127.0.0.1:3100/org/retrieve' -ArtifactPath $orgPipelineArtifact -Body @{
+        alias = $metadataRetrieve.alias
+        runAuth = $false
+        runRetrieve = $true
+        autoRefresh = $true
+        selections = @($selection)
+      }
+      if ($orgPipeline.status -ne 'completed') {
+        throw 'Org pipeline did not return status=completed for handoff validation.'
+      }
+      if ([string]$orgPipeline.alias -ne [string]$metadataRetrieve.alias) {
+        throw 'Org pipeline alias did not match metadata retrieve alias for handoff validation.'
+      }
+      if ([string]$orgPipeline.parsePath -ne [string]$metadataRetrieve.parsePath) {
+        throw 'Org pipeline parsePath did not match metadata retrieve parsePath for handoff validation.'
+      }
+      if (-not $orgPipeline.metadataArgs -or $orgPipeline.metadataArgs.Count -le 0) {
+        throw 'Org pipeline did not return metadata arguments for handoff validation.'
+      }
+      if (-not $orgPipeline.steps -or $orgPipeline.steps.Count -le 0) {
+        throw 'Org pipeline did not return step summary for handoff validation.'
+      }
+      $retrieveStep = $orgPipeline.steps | Where-Object { $_.step -eq 'retrieve' } | Select-Object -First 1
+      if (-not $retrieveStep -or $retrieveStep.status -ne 'completed') {
+        throw 'Org pipeline did not report a completed retrieve step for handoff validation.'
+      }
+      $orgPipelineStatus = 'verified'
     }
 
     if ($sessionBefore.status -eq 'connected' -and -not [string]::IsNullOrWhiteSpace($sessionBefore.activeAlias)) {
@@ -697,6 +778,16 @@ try {
   }
   if ($metadataRetrieveStatus -eq 'verified') {
     $artifacts += 'logs/desktop-release-smoke-metadata-retrieve.json'
+    $artifacts += 'logs/desktop-release-smoke-ingest-latest.json'
+  }
+  if ($refreshWorkflowStatus -eq 'verified') {
+    $artifacts += 'logs/desktop-release-smoke-refresh-summary.json'
+  }
+  if ($refreshDiffStatus -eq 'verified') {
+    $artifacts += 'logs/desktop-release-smoke-refresh-diff.json'
+  }
+  if ($orgPipelineStatus -eq 'verified') {
+    $artifacts += 'logs/desktop-release-smoke-org-pipeline.json'
   }
   if ($sessionConnectStatus -eq 'verified') {
     $artifacts += 'logs/desktop-release-smoke-session-connect.json'
@@ -731,6 +822,11 @@ try {
     metadataSearchStatus = $metadataSearchStatus
     metadataRetrieveStatus = $metadataRetrieveStatus
     metadataRetrieveArgCount = $metadataRetrieveArgCount
+    metadataRetrieveSnapshotId = $metadataRetrieveSnapshotId
+    refreshWorkflowStatus = $refreshWorkflowStatus
+    refreshSnapshotId = $refreshSnapshotId
+    refreshDiffStatus = $refreshDiffStatus
+    orgPipelineStatus = $orgPipelineStatus
     staleBootstrapSeeded = $true
     staleBootstrapSeedArtifact = 'logs/desktop-release-smoke-stale-seed.json'
     bootstrapMessage = $ready.checks.bootstrap.message

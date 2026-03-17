@@ -36,6 +36,9 @@ The following are now true in main and should not be re-planned as open:
 4. Wave2 runtime convergence closure:
 - packaged desktop smoke now proves isolated stale-bootstrap recovery on launch one and a grounded runtime state on launch two
 - operator-facing readiness surfaces now normalize shell, Diagnostics, and Connect workspace status into deterministic labels instead of leaking raw readiness codes or boolean internals
+5. Wave5 packaged handoff proof hardening:
+- packaged desktop smoke now verifies latest ingest lineage, handoff-backed refresh summary, and org-pipeline step output after selective metadata retrieve whenever a connected org session is available
+- when the handoff produces only one deterministic snapshot ID, smoke records an explicit `skipped-same-snapshot` diff status instead of claiming a fake drift proof
 
 Remaining work is now primarily around:
 - wave5 retrieve -> refresh proof closure
