@@ -208,6 +208,8 @@ function run(): void {
   assert.match(markup, /Run Preflight/);
   assert.match(markup, /Open Org Sessions/);
   assert.match(markup, /Operator triage snapshot/);
+  assert.doesNotMatch(markup, /Operator recovery checklist/);
+  assert.doesNotMatch(markup, /Session\/toolchain recovery checklist/);
   assert.match(markup, /Ask trust snapshot/);
   assert.match(markup, /Runtime telemetry snapshot/);
   assert.match(markup, /Ask trust telemetry/);
@@ -292,6 +294,8 @@ function run(): void {
   assert.match(emptyMarkup, /Load Runtime Telemetry to inspect route volume, latency, and recent non-200 signatures\./);
   assert.match(emptyMarkup, /Load Runtime Telemetry/);
   assert.match(emptyMarkup, /Load Runtime Telemetry from the primary controls or triage snapshot/);
+  assert.doesNotMatch(emptyMarkup, /Operator recovery checklist/);
+  assert.doesNotMatch(emptyMarkup, /Session\/toolchain recovery checklist/);
 }
 
 run();

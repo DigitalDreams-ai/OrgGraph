@@ -14,7 +14,6 @@ import {
   buildStructuredSnapshot,
   deriveRuntimeIssues
 } from './runtime-status';
-import type { RuntimeIssue } from './runtime-status';
 import type { StructuredRuntimeActionId } from './runtime-status';
 import type { StructuredSummary } from './runtime-status';
 import type { RuntimeGateState } from '../../shell/runtime-gate';
@@ -71,46 +70,6 @@ function renderIntentBreakdown(title: string, values: Record<string, number>): J
           entries.map(([intent, count]) => <li key={`${title}-${intent}`}>{intent}: {count}</li>)
         ) : (
           <li>No intent samples recorded.</li>
-        )}
-      </ul>
-    </article>
-  );
-}
-
-function renderRuntimeActionChecklist(issues: RuntimeIssue[]): JSX.Element {
-  const actions = Array.from(new Set(issues.map((issue) => issue.remediation)));
-  return (
-    <article className="sub-card">
-      <p className="panel-caption">Triage actions</p>
-      <h3>Operator recovery checklist</h3>
-      <ul className="analysis-list">
-        {actions.length > 0 ? (
-          actions.map((action) => <li key={action}>{action}</li>)
-        ) : (
-          <li>Runtime checks are healthy. No recovery action needed.</li>
-        )}
-      </ul>
-    </article>
-  );
-}
-
-function renderPreflightActionChecklist(preflight: OrgPreflightPayload | null): JSX.Element {
-  const actions = Array.from(
-    new Set(
-      (preflight?.issues ?? [])
-        .map((issue) => issue.remediation?.trim() ?? '')
-        .filter((value) => value.length > 0)
-    )
-  );
-  return (
-    <article className="sub-card">
-      <p className="panel-caption">Tooling triage actions</p>
-      <h3>Session/toolchain recovery checklist</h3>
-      <ul className="analysis-list">
-        {actions.length > 0 ? (
-          actions.map((action) => <li key={action}>{action}</li>)
-        ) : (
-          <li>Preflight did not report remediation items for the selected alias.</li>
         )}
       </ul>
     </article>
@@ -733,8 +692,6 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
             ))}
           </ul>
         </article>
-        {renderRuntimeActionChecklist(runtimeIssues)}
-        {renderPreflightActionChecklist(props.orgPreflight)}
       </div>
 
       <label className="check-row" htmlFor="metaDryRun">
