@@ -81,6 +81,7 @@ Materially true now:
 - wave7 evidence-lookup follow-up now renders metadata-component usage asks as dedicated packets (`Usage signals`, `References`, `Coverage`, `Component family`) with source-spotlight references and Browser/Refresh follow-up actions, so component-usage answers no longer fall back to generic approval-card framing
 - wave7 follow-up now emits dedicated `impact_assessment` packets for deterministic impact asks, so field-impact questions surface `Impact signals`, scoped coverage, top impacted sources, and explicit impact-path follow-up actions instead of plain text with generic approval-card placeholders
 - wave7 packet-hierarchy follow-up now keeps decision-packet rationale in the primary Ask artifact by moving packet `nextActions` into the packet body itself, while the lower control card becomes workflow/navigation controls instead of a duplicate rationale surface
+- wave7 packet-hierarchy follow-up now also collapses Ask proof identifiers and citations into a single supporting-detail card with disclosure sections, so the decision packet stays primary and proof/evidence detail no longer competes as separate always-visible cards
 - flow read/write asks remain on the legacy planner path in this slice; semantic-frame rollout is still intentionally bounded to impact + field/object automation + graph-global permission asks only
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model
@@ -267,6 +268,7 @@ Rules:
 - deepen packet usefulness for approval and retrieved-metadata review scenarios
 - keep flow-target packets rendered as flow packets, not generic approval cards
 - keep reads/writes/change-impact synthesis specific enough to serve as a primary operator artifact
+- keep proof identifiers and citation detail behind progressive disclosure so the packet remains the first thing the operator reads
 
 2. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage

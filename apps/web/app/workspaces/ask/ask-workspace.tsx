@@ -482,31 +482,35 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
         </article>
 
         <article className="sub-card decision-card">
-          <p className="panel-caption">Proof context</p>
-          <h3>Why this answer is trusted</h3>
-          <p><strong>Workflow:</strong> {props.askResult?.decisionPacket?.kind || props.askResult?.decisionPacket?.focus || 'standard ask'}</p>
-          <p><strong>Policy:</strong> <span className="path-value">{props.askResult?.policy?.policyId || 'n/a'}</span></p>
-          <p><strong>Proof ID:</strong> <span className="path-value">{props.askProofId || 'n/a'}</span></p>
-          <p><strong>Replay token:</strong> <span className="path-value">{props.askReplayToken || 'n/a'}</span></p>
-          <p><strong>Snapshot:</strong> <span className="path-value">{props.askResult?.proof?.snapshotId || 'n/a'}</span></p>
-        </article>
-
-        <article className="sub-card decision-card">
-          <p className="panel-caption">Evidence</p>
-          <h3>Citations</h3>
-          {props.askCitations.length > 0 ? (
-            <ul className="citation-list">
-              {props.askCitations.map((citation, index) => (
-                <li key={`${citation.sourcePath || 'citation'}-${index}`} className="citation-item">
-                  <strong className="citation-source">{citation.sourcePath || `citation-${index + 1}`}</strong>
-                  <span>score {typeof citation.score === 'number' ? citation.score : 'n/a'}</span>
-                  <p className="citation-snippet">{citation.snippet || 'No snippet returned.'}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="muted">Run Ask to populate grounded evidence.</p>
-          )}
+          <p className="panel-caption">Supporting detail</p>
+          <h3>Proof and evidence</h3>
+          <p className="muted">
+            The packet above is the primary artifact. Expand these sections only when you need proof identifiers or raw citation detail.
+          </p>
+          <details className="debug-details">
+            <summary>Proof context</summary>
+            <p><strong>Workflow:</strong> {props.askResult?.decisionPacket?.kind || props.askResult?.decisionPacket?.focus || 'standard ask'}</p>
+            <p><strong>Policy:</strong> <span className="path-value">{props.askResult?.policy?.policyId || 'n/a'}</span></p>
+            <p><strong>Proof ID:</strong> <span className="path-value">{props.askProofId || 'n/a'}</span></p>
+            <p><strong>Replay token:</strong> <span className="path-value">{props.askReplayToken || 'n/a'}</span></p>
+            <p><strong>Snapshot:</strong> <span className="path-value">{props.askResult?.proof?.snapshotId || 'n/a'}</span></p>
+          </details>
+          <details className="debug-details">
+            <summary>Citations ({props.askCitations.length})</summary>
+            {props.askCitations.length > 0 ? (
+              <ul className="citation-list">
+                {props.askCitations.map((citation, index) => (
+                  <li key={`${citation.sourcePath || 'citation'}-${index}`} className="citation-item">
+                    <strong className="citation-source">{citation.sourcePath || `citation-${index + 1}`}</strong>
+                    <span>score {typeof citation.score === 'number' ? citation.score : 'n/a'}</span>
+                    <p className="citation-snippet">{citation.snippet || 'No snippet returned.'}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">Run Ask to populate grounded evidence.</p>
+            )}
+          </details>
         </article>
 
         <article className="sub-card decision-card">
