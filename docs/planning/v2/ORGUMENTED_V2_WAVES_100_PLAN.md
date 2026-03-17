@@ -290,7 +290,7 @@ Scope:
 - deterministic summaries with clear next actions
 - raw JSON as secondary surface only
 - redundant triage/status/action blocks are collapsed so operators see one clear recovery path before secondary telemetry or debug detail
-- detailed Analyze cards expose the same direct recovery actions as the structured snapshot, so operators can rerun analysis or jump into Browser/Refresh without returning to a separate triage panel
+- structured triage snapshot remains the primary Analyze action surface, while detailed cards stay evidence-first and point back to the snapshot instead of repeating checklist or button blocks
 - explicit Browser/Refresh recovery actions when automation or impact analysis returns no deterministic matches
 - structured Ask trust telemetry (replay/proof coverage/failure classes) visible from Settings & Diagnostics without raw API inspection
 - card-local Ask trust and runtime telemetry quick actions available directly inside Settings & Diagnostics telemetry cards
