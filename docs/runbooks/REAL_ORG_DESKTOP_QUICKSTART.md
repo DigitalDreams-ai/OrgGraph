@@ -27,7 +27,7 @@ Run each command in order.
 
 Command 1:
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 ```
 
 Command 2:
@@ -183,7 +183,7 @@ Record:
 Run if the desktop workflow fails.
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 pnpm --reporter=append-only --loglevel=info desktop:info
 curl -sS http://127.0.0.1:3100/ready
 curl -sS http://127.0.0.1:3100/org/status
@@ -201,3 +201,4 @@ sf org login web --alias shulman-uat --instance-url https://test.salesforce.com
 ```
 
 Then reopen Orgumented and repeat section 2.
+

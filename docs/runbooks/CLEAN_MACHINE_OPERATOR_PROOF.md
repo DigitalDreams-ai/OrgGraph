@@ -39,7 +39,7 @@ It is not acceptable to reuse prior Orgumented runtime artifacts without rebuild
 Run in Git Bash:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 git checkout main
 git pull --ff-only
 node --version
@@ -137,3 +137,4 @@ Wave12 is not complete until:
 - the results are appended to the canonical proof-results file
 - the release checklist references that completed evidence
 - [Release Notes](../releases/RELEASE.md) includes the clean-machine proof summary and proof-results link
+

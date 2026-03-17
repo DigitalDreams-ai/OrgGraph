@@ -125,7 +125,7 @@ Capture at minimum:
 Automated proxy harness:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:smoke:release
 pnpm phase17:benchmark
 ```
@@ -153,7 +153,7 @@ What still requires human capture:
 Human capture command:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:smoke:release
 pnpm phase17:benchmark
 pnpm phase17:benchmark:human:reset
@@ -164,7 +164,7 @@ pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-c
 Session bootstrap command:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm phase17:benchmark:human:session -- --operator "<name>"
 ```
 
@@ -185,7 +185,7 @@ Human capture outputs:
 Canonical publication command:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm phase17:benchmark:human:publish
 pnpm phase17:benchmark:human:verify
 ```
@@ -193,14 +193,14 @@ pnpm phase17:benchmark:human:verify
 Preferred one-step finalize command:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm phase17:benchmark:human:finalize
 ```
 
 Evidence status command:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm phase17:benchmark:human:status
 ```
 
@@ -272,3 +272,4 @@ This benchmark is the gate between:
 and
 
 - "Orgumented materially improves one real Stage 1 architecture-review workflow"
+

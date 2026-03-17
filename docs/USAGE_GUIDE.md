@@ -21,7 +21,7 @@ Packaged desktop builds now stage a static embedded UI and a bundled local API r
 Start the managed desktop runtime:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 $env:ORGUMENTED_DESKTOP_API_PORT="3200"
 $env:ORGUMENTED_DESKTOP_WEB_PORT="3201"
 node apps/desktop/scripts/dev-runtime.mjs
@@ -35,14 +35,14 @@ Default behavior:
 Run the Tauri shell:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:dev
 ```
 
 Build the packaged desktop app:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:build
 ```
 
@@ -61,7 +61,7 @@ Packaged build behavior:
 Run the packaged desktop smoke:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:smoke:release
 ```
 
@@ -389,7 +389,7 @@ Use this when Codex needs advisory project continuity across many files and movi
 Start the MCP:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm --filter @orgumented/project-memory-mcp build
 npm run mcp:project-memory
 ```
@@ -398,13 +398,13 @@ Optional overrides:
 
 ```powershell
 $env:ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl"
-$env:ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$env:USERPROFILE\Projects\GitHub\OrgGraph"
+$env:ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$env:USERPROFILE\Projects\GitHub\Orgumented"
 ```
 
 Codex registration:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 codex mcp add project-memory --env ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$PWD" --env ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl" -- node "$PWD\packages\project-memory-mcp\dist\index.js"
 ```
 
@@ -460,3 +460,4 @@ pnpm phase17:benchmark:human -- --capture-template logs/high-risk-review-human-c
 - `phase17:benchmark:human:verify` fails closed unless the human artifact is real, passed, and still matches the canonical published benchmark results
 - `phase17:benchmark:human:status` reports whether Stage 1 human evidence is still missing, synthetic-only, unverified, or fully verified
 - the full operator walkthrough lives in `docs/runbooks/HUMAN_BENCHMARK_CAPTURE.md`
+

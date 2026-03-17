@@ -19,13 +19,13 @@ Optional overrides in PowerShell:
 
 ```powershell
 $env:ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl"
-$env:ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$env:USERPROFILE\Projects\GitHub\OrgGraph"
+$env:ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$env:USERPROFILE\Projects\GitHub\Orgumented"
 ```
 
 ## Start The MCP
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm --filter @orgumented/project-memory-mcp build
 npm run mcp:project-memory
 ```
@@ -57,7 +57,7 @@ This repo now includes a committed project config at `.cursor/mcp.json`:
 ## Register In Codex
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 codex mcp add project-memory --env ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$PWD" --env ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl" -- node "$PWD\packages\project-memory-mcp\dist\index.js"
 ```
 
@@ -114,3 +114,4 @@ Expected proof:
 - stdio MCP smoke test passes
 - Codex reports the `project-memory` MCP as enabled
 - standalone desktop MCP baseline remains limited to `github` and `project-memory`
+

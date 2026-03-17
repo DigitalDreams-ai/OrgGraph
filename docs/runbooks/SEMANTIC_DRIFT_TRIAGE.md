@@ -9,7 +9,7 @@ Provide a deterministic root-cause workflow when semantic drift changes exceed b
 
 ## 1. Capture Baseline Drift Report
 ```bash
-cd "$env:USERPROFILE\\Projects\\GitHub\\OrgGraph"
+cd "$env:USERPROFILE\\Projects\\GitHub\\Orgumented"
 ./scripts/phase14-drift-report.sh latest latest artifacts/phase14-drift-report.json
 ```
 
@@ -50,3 +50,4 @@ CI executes:
 ```
 
 This fails the pipeline if drift policy is out of budget.
+

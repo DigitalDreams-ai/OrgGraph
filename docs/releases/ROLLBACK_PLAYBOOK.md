@@ -46,7 +46,7 @@ If the packaged runtime is still running in a shell, stop it before continuing.
 From Git Bash:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 git fetch --tags --prune
 git checkout <known-good-tag>
 pnpm --reporter=append-only --loglevel=info install --frozen-lockfile
@@ -63,7 +63,7 @@ Expected result:
 Run the packaged binary:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 ./apps/desktop/src-tauri/target/release/orgumented-desktop.exe
 ```
 
@@ -96,7 +96,7 @@ Complete:
 After rollback proof is captured:
 
 ```bash
-cd /c/Users/sean/Projects/GitHub/OrgGraph
+cd /c/Users/sean/Projects/GitHub/Orgumented
 git checkout main
 git pull --ff-only
 ```
@@ -104,3 +104,4 @@ git pull --ff-only
 Then create a fix branch from `main`.
 
 Do not continue development from the detached known-good tag checkout.
+

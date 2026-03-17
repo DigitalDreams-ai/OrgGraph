@@ -25,7 +25,7 @@ Non-goal for product support:
 ## Check Desktop Shell Readiness
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:info
 ```
 
@@ -41,7 +41,7 @@ This starts:
 - production-backed embedded UI on a local port
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 $env:ORGUMENTED_DESKTOP_API_PORT="3200"
 $env:ORGUMENTED_DESKTOP_WEB_PORT="3201"
 node apps/desktop/scripts/dev-runtime.mjs
@@ -66,7 +66,7 @@ Default runtime behavior:
 On the supported Windows desktop runtime:
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:dev
 ```
 
@@ -90,7 +90,7 @@ Current operator rule:
 ## Build Packaged Desktop Runtime
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:build
 ```
 
@@ -121,7 +121,7 @@ Observed packaged proof in current repo state:
 ## Run Packaged Desktop Smoke
 
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:build
 pnpm desktop:smoke:release
 ```
@@ -129,6 +129,7 @@ pnpm desktop:smoke:release
 Smoke artifacts:
 - `logs/desktop-release-smoke.stdout.log`
 - `logs/desktop-release-smoke.stderr.log`
+- `logs/desktop-release-smoke-stale-seed.json`
 - `logs/desktop-release-smoke-health.json`
 - `logs/desktop-release-smoke-ready.json`
 - `logs/desktop-release-smoke-ask.json`
@@ -148,6 +149,9 @@ Current packaged smoke proof:
 - shell launch succeeded
 - `healthStatus=ok`
 - `readyStatus=ready`
+- the smoke now uses an isolated `logs/desktop-release-smoke-appdata/` runtime root instead of the operator's normal roaming app-data path
+- first launch now seeds stale semantic snapshot residue and requires the packaged runtime to recover with `checks.bootstrap.message=runtime bootstrap ready snapshot=...`
+- second launch now requires `checks.bootstrap.message=runtime already grounded`, proving packaged relaunch reuses the recovered grounded runtime instead of rebuilding on every start
 - `/ready` now implies a grounded runtime, not just a listening process:
   - graph node/edge counts are non-zero
   - evidence index exists and is populated
@@ -225,3 +229,4 @@ Wave F proof captured on February 28, 2026:
 
 Repo development and planning can happen outside Windows, but the supported product runtime is the Windows desktop shell only.
 Linux-specific Tauri launch blockers do not block the product path unless they also reproduce on Windows.
+
