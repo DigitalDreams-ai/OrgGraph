@@ -65,7 +65,10 @@ interface ComponentLookupTarget {
     | 'custom_object'
     | 'custom_field'
     | 'email_template'
-    | 'tab';
+    | 'tab'
+    | 'connected_app'
+    | 'permission_set_group'
+    | 'custom_permission';
 }
 
 @Injectable()
@@ -2179,6 +2182,12 @@ export class AskService {
         return 'EmailTemplate';
       case 'tab':
         return 'CustomTab';
+      case 'connected_app':
+        return 'ConnectedApp';
+      case 'permission_set_group':
+        return 'PermissionSetGroup';
+      case 'custom_permission':
+        return 'CustomPermission';
       default:
         return undefined;
     }
@@ -2677,6 +2686,21 @@ export class AskService {
         queries.add(`${parsed.componentName}.tab-meta.xml`);
         queries.add(`tabs/${parsed.componentName}`);
         break;
+      case 'connected_app':
+        queries.add(`${parsed.componentName}.connectedApp-meta.xml`);
+        queries.add(`connectedapps/${parsed.componentName}`);
+        queries.add(`connected app ${parsed.componentName}`);
+        break;
+      case 'permission_set_group':
+        queries.add(`${parsed.componentName}.permissionsetgroup-meta.xml`);
+        queries.add(`permissionsetgroups/${parsed.componentName}`);
+        queries.add(`permission set group ${parsed.componentName}`);
+        break;
+      case 'custom_permission':
+        queries.add(`${parsed.componentName}.customPermission-meta.xml`);
+        queries.add(`custompermissions/${parsed.componentName}`);
+        queries.add(`custom permission ${parsed.componentName}`);
+        break;
       default:
         break;
     }
@@ -2885,6 +2909,12 @@ export class AskService {
         return 'Email Template';
       case 'tab':
         return 'Custom Tab';
+      case 'connected_app':
+        return 'Connected App';
+      case 'permission_set_group':
+        return 'Permission Set Group';
+      case 'custom_permission':
+        return 'Custom Permission';
       default:
         return 'Metadata component';
     }
@@ -2931,6 +2961,12 @@ export class AskService {
         return [`${parsed.componentName}.email`, `${parsed.componentName}.email-meta.xml`];
       case 'tab':
         return [`${parsed.componentName}.tab-meta.xml`];
+      case 'connected_app':
+        return [`${parsed.componentName}.connectedApp-meta.xml`];
+      case 'permission_set_group':
+        return [`${parsed.componentName}.permissionsetgroup-meta.xml`];
+      case 'custom_permission':
+        return [`${parsed.componentName}.customPermission-meta.xml`];
       default:
         return [];
     }
@@ -2957,7 +2993,13 @@ export class AskService {
       [/^(?:custom\s*object|customobject|object)(?:\s+|:\s*)(.+)$/i, 'custom_object'],
       [/^(?:custom\s*field|customfield|field)(?:\s+|:\s*)(.+)$/i, 'custom_field'],
       [/^(?:email\s*template|emailtemplate|template)(?:\s+|:\s*)(.+)$/i, 'email_template'],
-      [/^(?:custom\s*tab|customtab|tab)(?:\s+|:\s*)(.+)$/i, 'tab']
+      [/^(?:custom\s*tab|customtab|tab)(?:\s+|:\s*)(.+)$/i, 'tab'],
+      [/^(?:connected\s*app|connectedapp|app)(?:\s+|:\s*)(.+)$/i, 'connected_app'],
+      [
+        /^(?:permission\s*set\s*group|permissionsetgroup)(?:\s+|:\s*)(.+)$/i,
+        'permission_set_group'
+      ],
+      [/^(?:custom\s*permission|custompermission)(?:\s+|:\s*)(.+)$/i, 'custom_permission']
     ];
 
     for (const [pattern, familyHint] of matchers) {
@@ -3071,6 +3113,36 @@ export class AskService {
           normalized = normalizedPath.split('/').pop() ?? normalized;
         }
         normalized = stripExtensions(normalized, [/\.tab-meta\.xml$/i]);
+        break;
+      }
+      case 'connected_app': {
+        const connectedAppPathMatch = normalizedPath.match(/(?:^|\/)connectedapps\/([^/]+)$/i);
+        if (connectedAppPathMatch?.[1]) {
+          normalized = connectedAppPathMatch[1];
+        } else if (normalizedPath.includes('/')) {
+          normalized = normalizedPath.split('/').pop() ?? normalized;
+        }
+        normalized = stripExtensions(normalized, [/\.connectedApp-meta\.xml$/i]);
+        break;
+      }
+      case 'permission_set_group': {
+        const groupPathMatch = normalizedPath.match(/(?:^|\/)permissionsetgroups\/([^/]+)$/i);
+        if (groupPathMatch?.[1]) {
+          normalized = groupPathMatch[1];
+        } else if (normalizedPath.includes('/')) {
+          normalized = normalizedPath.split('/').pop() ?? normalized;
+        }
+        normalized = stripExtensions(normalized, [/\.permissionsetgroup-meta\.xml$/i]);
+        break;
+      }
+      case 'custom_permission': {
+        const customPermissionPathMatch = normalizedPath.match(/(?:^|\/)custompermissions\/([^/]+)$/i);
+        if (customPermissionPathMatch?.[1]) {
+          normalized = customPermissionPathMatch[1];
+        } else if (normalizedPath.includes('/')) {
+          normalized = normalizedPath.split('/').pop() ?? normalized;
+        }
+        normalized = stripExtensions(normalized, [/\.customPermission-meta\.xml$/i]);
         break;
       }
       default:

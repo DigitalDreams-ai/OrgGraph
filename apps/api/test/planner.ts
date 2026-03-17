@@ -363,6 +363,39 @@ function run(): void {
   );
   assert.equal(componentUsageCustomTabPlan.semanticFrame?.admissibility.status, 'accepted');
 
+  const componentUsageConnectedAppPlan = planner.plan(
+    'Where is Connected App OrgumentedAPI used?'
+  );
+  assert.equal(componentUsageConnectedAppPlan.intent, 'unknown');
+  assert.equal(componentUsageConnectedAppPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageConnectedAppPlan.semanticFrame?.target?.selected,
+    'Connected App OrgumentedAPI'
+  );
+  assert.equal(componentUsageConnectedAppPlan.semanticFrame?.admissibility.status, 'accepted');
+
+  const componentUsagePermissionSetGroupPlan = planner.plan(
+    'Where is Permission Set Group Support_Users used?'
+  );
+  assert.equal(componentUsagePermissionSetGroupPlan.intent, 'unknown');
+  assert.equal(componentUsagePermissionSetGroupPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsagePermissionSetGroupPlan.semanticFrame?.target?.selected,
+    'Permission Set Group Support_Users'
+  );
+  assert.equal(componentUsagePermissionSetGroupPlan.semanticFrame?.admissibility.status, 'accepted');
+
+  const componentUsageCustomPermissionPlan = planner.plan(
+    'Where is Custom Permission CanApproveIntake used?'
+  );
+  assert.equal(componentUsageCustomPermissionPlan.intent, 'unknown');
+  assert.equal(componentUsageCustomPermissionPlan.semanticFrame?.intent, 'evidence_lookup');
+  assert.equal(
+    componentUsageCustomPermissionPlan.semanticFrame?.target?.selected,
+    'Custom Permission CanApproveIntake'
+  );
+  assert.equal(componentUsageCustomPermissionPlan.semanticFrame?.admissibility.status, 'accepted');
+
   const componentUsageRecordIdPlan = planner.plan('Where is 00X000000000123AAA used?');
   assert.equal(componentUsageRecordIdPlan.intent, 'unknown');
   assert.equal(componentUsageRecordIdPlan.semanticFrame?.intent, 'evidence_lookup');
