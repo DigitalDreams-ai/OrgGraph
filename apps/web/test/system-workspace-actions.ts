@@ -198,8 +198,8 @@ function run(): void {
     })
   );
 
-  assert.match(markup, /Runtime health quick actions/);
-  assert.match(markup, /Toolchain quick actions/);
+  assert.match(markup, /Use the structured triage snapshot or primary controls above for Refresh Status and Open Refresh &amp; Build\./);
+  assert.match(markup, /Use the structured triage snapshot or primary controls above for Load Org Status, Run Preflight, and Open Org Sessions\./);
   assert.match(markup, /Refresh Status/);
   assert.match(markup, /Open Refresh &amp; Build/);
   assert.match(markup, /Ask Trust/);
@@ -251,6 +251,8 @@ function run(): void {
   assert.doesNotMatch(markup, /Runtime telemetry quick actions/);
   assert.doesNotMatch(markup, /Meta context quick actions/);
   assert.doesNotMatch(markup, /Meta adapt quick actions/);
+  assert.doesNotMatch(markup, /Runtime health quick actions/);
+  assert.doesNotMatch(markup, /Toolchain quick actions/);
 
   const emptyMarkup = renderToStaticMarkup(
     React.createElement(SystemWorkspace, {
