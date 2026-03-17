@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { OperatorRail } from '../app/shell/operator-rail';
 import {
   describeInstalledSurfaceStatus,
+  describeRuntimeAwareBinaryLabel,
   describeSessionSurfaceStatus,
   describeToolStatusSource
 } from '../app/shell/org-status-surface';
@@ -18,6 +19,9 @@ function run(): void {
   assert.equal(describeToolStatusSource('runtime_unavailable'), 'runtime unavailable');
   assert.equal(describeToolStatusSource('live'), 'live status');
   assert.equal(describeToolStatusSource('unknown'), 'status not loaded');
+  assert.equal(describeRuntimeAwareBinaryLabel(false, true, { trueLabel: 'ready', falseLabel: 'not ready' }), 'ready');
+  assert.equal(describeRuntimeAwareBinaryLabel(false, false, { trueLabel: 'ready', falseLabel: 'not ready' }), 'not ready');
+  assert.equal(describeRuntimeAwareBinaryLabel(true, true, { trueLabel: 'ready', falseLabel: 'not ready' }), 'unknown');
   assert.equal(describeSessionSurfaceStatus(true, 'connected'), 'runtime unavailable');
   assert.equal(describeSessionSurfaceStatus(false, 'connected'), 'connected');
   assert.equal(describeSessionSurfaceStatus(false, ''), 'unknown');
@@ -190,6 +194,12 @@ function run(): void {
       onInspectAlias: () => undefined
     } as any)
   );
+  assert.match(connectMarkup, /Ready to connect: ready/);
+  assert.match(connectMarkup, /Browser seeded: yes/);
+  assert.match(connectMarkup, /Session connected: yes/);
+  assert.match(connectMarkup, /Authenticated in sf:<\/strong> yes/);
+  assert.match(connectMarkup, /CCI alias available:<\/strong> yes/);
+  assert.match(connectMarkup, /Parse path present:<\/strong> yes/);
   assert.match(connectMarkup, /Org ID:<\/strong> <span class="path-value">00Dxx000001kjZRUAY<\/span>/);
   assert.match(connectMarkup, /Instance URL:<\/strong> <span class="path-value">https:\/\/shulman-hill--uat\.sandbox\.my\.salesforce\.com<\/span>/);
   assert.match(connectMarkup, /<pre class="diagnostic-code-block"># 1\) Authenticate in sf keychain/);
@@ -234,6 +244,9 @@ function run(): void {
   );
   assert.match(connectUnavailableMarkup, /Session: runtime unavailable/);
   assert.match(connectUnavailableMarkup, /Tooling status: unavailable/);
+  assert.match(connectUnavailableMarkup, /Ready to connect: unknown/);
+  assert.match(connectUnavailableMarkup, /Browser seeded: unknown/);
+  assert.match(connectUnavailableMarkup, /Session connected: unknown/);
   assert.match(connectUnavailableMarkup, /Runtime is unavailable, so tool checks are blocked\./);
 
   const statusStripBlockedMarkup = renderToStaticMarkup(

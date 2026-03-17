@@ -12,6 +12,31 @@ export function describeToolStatusSource(source: ToolStatusSource): string {
   return 'status not loaded';
 }
 
+export function describeRuntimeAwareBinaryLabel(
+  runtimeUnavailable: boolean,
+  value: boolean | undefined,
+  labels: {
+    trueLabel: string;
+    falseLabel: string;
+    unavailableLabel?: string;
+    unknownLabel?: string;
+  }
+): string {
+  if (runtimeUnavailable) {
+    return labels.unavailableLabel || 'unknown';
+  }
+
+  if (value === true) {
+    return labels.trueLabel;
+  }
+
+  if (value === false) {
+    return labels.falseLabel;
+  }
+
+  return labels.unknownLabel || 'unknown';
+}
+
 export function describeSessionSurfaceStatus(
   runtimeUnavailable: boolean,
   sessionStatus?: string | null
