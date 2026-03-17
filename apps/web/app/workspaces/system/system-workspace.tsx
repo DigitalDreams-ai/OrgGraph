@@ -165,9 +165,9 @@ function buildMetaAdaptSummary(payload: MetaAdaptPayload): {
 
 function renderAskTrustTelemetry(
   payload: AskTrustDashboardPayload | null,
-  loading: boolean,
-  onLoadAskTrustDashboard: () => void,
-  onLoadRuntimeMetrics: () => void
+  _loading: boolean,
+  _onLoadAskTrustDashboard: () => void,
+  _onLoadRuntimeMetrics: () => void
 ): JSX.Element {
   return (
     <article className="sub-card">
@@ -213,26 +213,11 @@ function renderAskTrustTelemetry(
               </li>
             ))}
           </ul>
-          <div className="action-row" aria-label="Ask trust quick actions">
-            <button type="button" className="ghost" onClick={onLoadAskTrustDashboard} disabled={loading}>
-              Refresh Ask Trust
-            </button>
-            <button type="button" className="ghost" onClick={onLoadRuntimeMetrics} disabled={loading}>
-              Open Runtime Telemetry
-            </button>
-          </div>
+          <p className="muted">Use the triage snapshot or primary controls above to refresh trust or load related telemetry.</p>
         </>
       ) : (
         <>
-          <p className="muted">Load Ask Trust to inspect replay rate, proof coverage, and recent failure classes.</p>
-          <div className="action-row" aria-label="Ask trust quick actions">
-            <button type="button" className="ghost" onClick={onLoadAskTrustDashboard} disabled={loading}>
-              Load Ask Trust
-            </button>
-            <button type="button" className="ghost" onClick={onLoadRuntimeMetrics} disabled={loading}>
-              Open Runtime Telemetry
-            </button>
-          </div>
+          <p className="muted">Load Ask Trust from the primary controls or triage snapshot to inspect replay rate, proof coverage, and recent failure classes.</p>
         </>
       )}
     </article>
@@ -241,24 +226,16 @@ function renderAskTrustTelemetry(
 
 function renderRuntimeTelemetry(
   payload: RuntimeMetricsPayload | null,
-  loading: boolean,
-  onLoadRuntimeMetrics: () => void,
-  onRefreshStatus: () => void
+  _loading: boolean,
+  _onLoadRuntimeMetrics: () => void,
+  _onRefreshStatus: () => void
 ): JSX.Element {
   if (!payload) {
     return (
       <article className="sub-card">
         <p className="panel-caption">Runtime telemetry</p>
         <h3>Route timings and failure signatures</h3>
-        <p className="muted">Load Runtime Telemetry to inspect request volume, busiest routes, and recent non-200 signatures.</p>
-        <div className="action-row" aria-label="Runtime telemetry quick actions">
-          <button type="button" className="ghost" onClick={onLoadRuntimeMetrics} disabled={loading}>
-            Load Runtime Telemetry
-          </button>
-          <button type="button" className="ghost" onClick={onRefreshStatus} disabled={loading}>
-            Refresh Status
-          </button>
-        </div>
+        <p className="muted">Load Runtime Telemetry from the primary controls or triage snapshot to inspect request volume, busiest routes, and recent non-200 signatures.</p>
       </article>
     );
   }
@@ -326,14 +303,7 @@ function renderRuntimeTelemetry(
           <li>No non-200 route signatures recorded in the current runtime window.</li>
         )}
       </ul>
-      <div className="action-row" aria-label="Runtime telemetry quick actions">
-        <button type="button" className="ghost" onClick={onLoadRuntimeMetrics} disabled={loading}>
-          Refresh Runtime Telemetry
-        </button>
-        <button type="button" className="ghost" onClick={onRefreshStatus} disabled={loading}>
-          Refresh Status
-        </button>
-      </div>
+      <p className="muted">Use the triage snapshot or primary controls above to refresh telemetry or runtime status.</p>
     </article>
   );
 }
@@ -807,17 +777,6 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
           ) : (
             <p className="muted">Load Meta Context to inspect semantic weighting and provenance.</p>
           )}
-          {renderQuickActions(
-            'Meta context quick actions',
-            [
-              {
-                id: 'load-meta-context',
-                label: props.metaContext ? 'Refresh Meta Context' : 'Load Meta Context'
-              }
-            ],
-            props.loading,
-            handleStructuredAction
-          )}
         </article>
 
         {renderRelationMultipliers(props.metaContext)}
@@ -857,17 +816,6 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
             </>
           ) : (
             <p className="muted">Run Meta Adapt to inspect deterministic before/after deltas.</p>
-          )}
-          {renderQuickActions(
-            'Meta adapt quick actions',
-            [
-              {
-                id: 'run-meta-adapt',
-                label: props.metaAdaptResult ? 'Rerun Meta Adapt' : 'Run Meta Adapt'
-              }
-            ],
-            props.loading,
-            handleStructuredAction
           )}
         </article>
 

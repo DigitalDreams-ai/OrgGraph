@@ -300,12 +300,14 @@ Scope:
 - structured Meta Adapt delta summary visible from Settings & Diagnostics without raw before/after payload inspection
 - system-permission edge states expose `Diagnose User Mapping` as the primary structured recovery action until deterministic grant context exists
 - Meta Context and Meta Adapt cards expose their own local actions so semantic weighting refresh and adapt reruns do not depend on the shared top action row
+- secondary diagnostics detail cards do not repeat their own quick-action rows once the same actions already exist in the primary controls and structured triage snapshot
 
 Exit:
 - core analysis tasks complete through card actions
 - deterministic equivalence preserved for same context
 - operator can diagnose common permission/automation/map failures without raw JSON as primary UI
 - primary triage state is readable without card overload or repeated action surfaces
+- secondary detail cards no longer duplicate the same recovery actions already provided by the primary controls and structured snapshot
 
 ## wave9 - Proofs/History Productization
 
