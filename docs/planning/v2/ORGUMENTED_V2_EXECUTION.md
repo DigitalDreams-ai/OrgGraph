@@ -179,6 +179,7 @@ Materially true now:
 - web regression coverage now locks runtime-gate and tool-status surface copy for Connect, Operator Rail, and Settings/Diagnostics (`pnpm --filter web test:runtime-status`)
 - wave2 runtime-gate follow-up now distinguishes `runtime blocked` from `runtime unavailable` across Connect, Operator Rail, and Settings/Diagnostics, so fail-closed `/ready` states no longer erase live tool/session diagnostics while deterministic workflows remain visibly blocked
 - wave2 readiness-surface follow-up now normalizes raw readiness HTTP codes into operator labels (`blocked`, `unreachable`, `ready`) in the shell status strip and Diagnostics runtime badges, so top-level status surfaces no longer leak `http_400`-style internals during fail-closed runtime states
+- wave2 connect follow-up now normalizes workspace readiness and preflight booleans into operator-safe labels (`ready` / `not ready` / `unknown`, `yes` / `no` / `unknown`) so Connect no longer leaks raw `true`/`false`/`unknown` values in its primary recovery surface
 - packaged desktop smoke now verifies a second clean packaged relaunch reaches `ready`, tightening wave2 startup parity proof beyond the first launch only
 - packaged desktop smoke now also runs against an isolated smoke-owned app-data root, seeds stale semantic snapshot residue before first launch, and requires packaged bootstrap recovery on launch one plus a grounded runtime state on launch two (`runtime already grounded` reuse when persisted state survives, otherwise a second deterministic grounded bootstrap message)
 - fallback error copy now distinguishes API non-response failures from normal request-validation failures
@@ -262,36 +263,48 @@ Rules:
 - no Stage 2 expansion while Stage 1 gates remain open
 - fixture-only evidence does not close Stage 1 completion gates
 - do not add new primary UI surfaces while existing Stage 1 workspaces still carry redundant or low-signal visible elements
+- close the earliest incomplete wave before taking later-wave feature slices, unless a failing regression or merge blocker requires out-of-order repair
 
 ## Immediate Frontier (Next Slices)
 
-1. Wave7 finish slice:
+1. Wave5 finish slice:
+- close real-org Browser -> Retrieve -> Refresh -> Diff -> Org Retrieve proof in the packaged desktop flow
+- keep staged handoff summaries and guardrails stable across relaunch
+- keep incomplete handoff states fail-closed and operator-readable without raw JSON
+
+2. Wave6 finish slice:
+- deepen grounded Ask coverage beyond current metadata component evidence lookup
+- keep semantic-frame routing authoritative for bounded supported families while shrinking legacy planner fallback
+- preserve deterministic replay and explicit blocked states as coverage expands
+
+3. Wave7 finish slice:
 - deepen packet usefulness for approval and retrieved-metadata review scenarios
 - keep flow-target packets rendered as flow packets, not generic approval cards
 - keep reads/writes/change-impact synthesis specific enough to serve as a primary operator artifact
 - keep proof identifiers and citation detail behind progressive disclosure so the packet remains the first thing the operator reads
 
-2. Wave8 finish slice:
+4. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage
 - reduce raw JSON dependence in permission/automation/impact/map workflows
 - collapse redundant status/action surfaces so Analyze and Diagnostics present one clear recovery path before secondary telemetry or debug detail
 
-3. Wave9 finish slice:
+5. Wave9 finish slice:
 - complete label-first proof lifecycle (open/replay/export) without token-first dependence in normal workflows
 - keep token fields strictly advanced/debug while preserving replay parity checks and label-first selection semantics
 
-4. Wave10 finish slice:
+6. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 - simplify bloated workspace layouts, remove duplicate cards/action rows, and enforce progressive disclosure so the primary workflow is visible without scanning dense dashboards
 
-6. Wave11 finish slice:
+7. Wave11 finish slice:
 - complete P0/P1 burn-down lock and regression gates
 - keep CI strict while preserving minute-efficiency controls
-- keep Actions storage bounded with automated run-retention pruning and short artifact retention defaults
 
-7. Wave12 finish slice:
-- close clean-machine quickstart proof and release/rollback evidence gates
+8. Wave12 finish slice:
+- complete clean-machine operator proof on the current real-org quickstart
+- execute one rollback validation cycle against the canonical rollback record and keep release evidence machine-checkable
+- keep Actions storage bounded with automated run-retention pruning and short artifact retention defaults
 
 Preferred wave6 follow-on after the current packet-quality work:
 - promote perms from semantic-frame shadow mode into active gating if the current fail-closed behavior can be preserved without widening scope

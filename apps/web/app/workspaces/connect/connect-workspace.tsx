@@ -2,6 +2,7 @@
 
 import {
   describeInstalledSurfaceStatus,
+  describeRuntimeAwareBinaryLabel,
   describeSessionSurfaceStatus,
   describeToolStatusSource,
   type ToolStatusSource
@@ -94,13 +95,46 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
     props.runtimeUnavailable
       ? 'Refresh Overview could not reach the local desktop runtime. Relaunch Orgumented or restore the packaged API before checking CCI again.'
       : props.orgStatus?.cci?.message || 'Refresh the overview to validate local cci access.';
-  const readinessLabel = props.runtimeUnavailable ? 'unknown' : String(props.selectedAliasReady);
-  const browserSeededLabel = props.runtimeUnavailable ? 'unknown' : String(props.browserSeeded);
-  const sessionConnectedLabel =
-    props.runtimeUnavailable ? 'unknown' : String(props.orgPreflight?.checks?.sessionConnected ?? false);
-  const authenticatedLabel = props.runtimeUnavailable ? 'unknown' : props.orgPreflight?.checks?.aliasAuthenticated ? 'yes' : 'no';
-  const cciAliasLabel = props.runtimeUnavailable ? 'unknown' : props.orgPreflight?.checks?.cciAliasAvailable ? 'yes' : 'no';
-  const parsePathLabel = props.runtimeUnavailable ? 'unknown' : props.orgPreflight?.checks?.parsePathPresent ? 'yes' : 'no';
+  const readinessLabel = describeRuntimeAwareBinaryLabel(props.runtimeUnavailable, props.selectedAliasReady, {
+    trueLabel: 'ready',
+    falseLabel: 'not ready'
+  });
+  const browserSeededLabel = describeRuntimeAwareBinaryLabel(props.runtimeUnavailable, props.browserSeeded, {
+    trueLabel: 'yes',
+    falseLabel: 'no'
+  });
+  const sessionConnectedLabel = describeRuntimeAwareBinaryLabel(
+    props.runtimeUnavailable,
+    props.orgPreflight?.checks?.sessionConnected,
+    {
+      trueLabel: 'yes',
+      falseLabel: 'no'
+    }
+  );
+  const authenticatedLabel = describeRuntimeAwareBinaryLabel(
+    props.runtimeUnavailable,
+    props.orgPreflight?.checks?.aliasAuthenticated,
+    {
+      trueLabel: 'yes',
+      falseLabel: 'no'
+    }
+  );
+  const cciAliasLabel = describeRuntimeAwareBinaryLabel(
+    props.runtimeUnavailable,
+    props.orgPreflight?.checks?.cciAliasAvailable,
+    {
+      trueLabel: 'yes',
+      falseLabel: 'no'
+    }
+  );
+  const parsePathLabel = describeRuntimeAwareBinaryLabel(
+    props.runtimeUnavailable,
+    props.orgPreflight?.checks?.parsePathPresent,
+    {
+      trueLabel: 'yes',
+      falseLabel: 'no'
+    }
+  );
 
   return (
     <>
@@ -171,7 +205,11 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           <p className="panel-caption">Selected alias</p>
           <h3>Readiness for attach</h3>
           <div className="decision-meta">
-            <span className={`decision-badge ${props.selectedAliasReady && !props.runtimeUnavailable ? 'good' : 'muted'}`}>
+            <span
+              className={`decision-badge ${
+                props.selectedAliasReady && !props.runtimeUnavailable ? 'good' : readinessLabel === 'unknown' ? 'muted' : 'bad'
+              }`}
+            >
               Ready to connect: {readinessLabel}
             </span>
             <span className={`decision-badge ${props.browserSeeded ? 'good' : 'muted'}`}>

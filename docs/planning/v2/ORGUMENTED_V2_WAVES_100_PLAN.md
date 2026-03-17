@@ -33,12 +33,17 @@ The following are now true in main and should not be re-planned as open:
 - browser limited-coverage warning copy and long discovery-warning wrapping are now regression-gated as part of the wave10 finish path, so partial live catalog states remain readable and operator-safe
 - long path/identifier surfaces in Connect, Refresh, and System now use explicit wrappers, and the runtime-status regression gate render-checks those guards so raw JSON and path-heavy summaries stay bounded
 - targeted web regression gates are now part of the wave11 CI lock path, so Ask/Analyze/Proofs/System UI regressions fail in `validate` instead of remaining local-only checks
+4. Wave2 runtime convergence closure:
+- packaged desktop smoke now proves isolated stale-bootstrap recovery on launch one and a grounded runtime state on launch two
+- operator-facing readiness surfaces now normalize shell, Diagnostics, and Connect workspace status into deterministic labels instead of leaking raw readiness codes or boolean internals
 
 Remaining work is now primarily around:
-- wave2 runtime convergence closure
 - wave5 retrieve -> refresh proof closure
+- wave6 planner/compiler depth closure
 - wave7 packet quality acceptance
 - wave8 diagnostics/analyze depth
+- wave9 proof/history lifecycle closure
+- wave10 final visual and accessibility closure
 - wave11/12 defect + release discipline
 
 ## 100% Domain Matrix
@@ -188,6 +193,7 @@ Exit:
 - manual packaged startup proof without ambiguous tool-missing false states
 - desktop startup does not fail from avoidable bootstrap drift conditions
 - shell status surfaces do not leak raw readiness HTTP codes to operators
+- Connect workspace readiness and preflight state do not leak raw boolean internals to operators
 - packaged smoke proves stale-bootstrap recovery on launch one and a grounded runtime state on launch two from an isolated smoke-owned app-data root
 
 ## wave3 - Session And Toolchain Reliability
