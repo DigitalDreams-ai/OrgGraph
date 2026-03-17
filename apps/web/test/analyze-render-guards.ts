@@ -75,6 +75,8 @@ function run(): void {
   assert.match(permissionMarkup, /<span class="path-value">Profile:Sales_User -grants-&gt; Object:Opportunity \| Object:Opportunity -blocks-&gt; Field:Opportunity.StageName<\/span>/);
   assert.match(permissionMarkup, /<p class="path-value">C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\maps\\principal-map\.json<\/p>/);
   assert.match(permissionMarkup, />Open Ask for Permission Scope</);
+  assert.match(permissionMarkup, /Ask handoff stays in the triage snapshot/);
+  assert.doesNotMatch(permissionMarkup, /Open permission decision packet/);
 
   const permissionMappingBlockedMarkup = renderToStaticMarkup(
     React.createElement(AnalyzeWorkspace, {
@@ -126,9 +128,10 @@ function run(): void {
       onOpenRefresh: () => undefined
     } as any)
   );
-  assert.match(permissionMappingBlockedMarkup, /Resolve mapping before Ask handoff/);
   assert.match(permissionMappingBlockedMarkup, />Diagnose User Mapping</);
   assert.doesNotMatch(permissionMappingBlockedMarkup, />Open Ask for Permission Scope</);
+  assert.match(permissionMappingBlockedMarkup, /Resolve mapping from the triage snapshot first/);
+  assert.doesNotMatch(permissionMappingBlockedMarkup, /Resolve mapping before Ask handoff/);
 
   const mappingRecoveryMarkup = renderToStaticMarkup(
     React.createElement(AnalyzeWorkspace, {
@@ -179,6 +182,8 @@ function run(): void {
   assert.match(mappingRecoveryMarkup, />Open Org Browser</);
   assert.match(mappingRecoveryMarkup, />Open Refresh &amp; Build</);
   assert.match(mappingRecoveryMarkup, />Diagnose User Mapping</);
+  assert.match(mappingRecoveryMarkup, /Mapping recovery stays in the triage snapshot/);
+  assert.doesNotMatch(mappingRecoveryMarkup, /Run mapping recovery/);
 
   const automationRecoveryMarkup = renderToStaticMarkup(
     React.createElement(AnalyzeWorkspace, {
@@ -229,6 +234,8 @@ function run(): void {
   assert.match(automationRecoveryMarkup, />Open Refresh &amp; Build</);
   assert.match(automationRecoveryMarkup, />Run Automation Analysis</);
   assert.doesNotMatch(automationRecoveryMarkup, />Open Ask for Automation Scope</);
+  assert.match(automationRecoveryMarkup, /Automation recovery stays in the triage snapshot/);
+  assert.doesNotMatch(automationRecoveryMarkup, /Recover automation coverage/);
 
   const impactMarkup = renderToStaticMarkup(
     React.createElement(AnalyzeWorkspace, {
@@ -336,6 +343,8 @@ function run(): void {
   assert.match(impactRecoveryMarkup, />Open Refresh &amp; Build</);
   assert.match(impactRecoveryMarkup, />Run Impact Analysis</);
   assert.doesNotMatch(impactRecoveryMarkup, />Open Ask for Impact Scope</);
+  assert.match(impactRecoveryMarkup, /Impact recovery stays in the triage snapshot/);
+  assert.doesNotMatch(impactRecoveryMarkup, /Recover impact coverage/);
 
   const systemMarkup = renderToStaticMarkup(
     React.createElement(AnalyzeWorkspace, {
@@ -446,6 +455,8 @@ function run(): void {
   assert.match(systemRecoveryMarkup, />Run System Permission Check</);
   assert.match(systemRecoveryMarkup, />Diagnose User Mapping</);
   assert.doesNotMatch(systemRecoveryMarkup, />Open Ask for System Permission</);
+  assert.match(systemRecoveryMarkup, /Grant-context recovery stays in the triage snapshot/);
+  assert.doesNotMatch(systemRecoveryMarkup, /Recover grant context/);
 }
 
 run();

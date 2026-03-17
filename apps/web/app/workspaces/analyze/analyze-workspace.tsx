@@ -78,27 +78,15 @@ function renderActionChecklist(title: string, actions: string[]): JSX.Element {
   );
 }
 
-function renderActionButtonsCard(
+function renderSecondaryWorkflowGuidance(
   title: string,
-  description: string,
-  actions: { label: string; onClick: () => void }[]
-): JSX.Element | null {
-  if (actions.length === 0) {
-    return null;
-  }
-
+  description: string
+): JSX.Element {
   return (
     <div className="sub-card">
-      <p className="panel-caption">Direct actions</p>
+      <p className="panel-caption">Workflow guidance</p>
       <h3>{title}</h3>
       <p className="muted">{description}</p>
-      <div className="action-row">
-        {actions.map((action) => (
-          <button key={action.label} type="button" className="ghost" onClick={action.onClick}>
-            {action.label}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
@@ -662,36 +650,14 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
 
           {renderWarnings(props.permissionsResult.warnings)}
 
-          <div className="sub-card">
-            <p className="panel-caption">Ask handoff</p>
-            {props.permissionsResult.mappingStatus === 'resolved' ? (
-              <>
-                <h3>Open permission decision packet</h3>
-                <p className="muted">Carry this deterministic permission context into Ask for trust envelope, proof ID, and replay token output.</p>
-                <div className="action-row">
-                  <button
-                    type="button"
-                    className="ghost"
-                    onClick={() => props.onOpenAsk(buildPermissionScopeAskQuery(props.permissionsResult, props.user, props.fieldName, props.objectName))}
-                  >
-                    Open Ask for Permission Scope
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h3>Resolve mapping before Ask handoff</h3>
-                <p className="muted">
-                  Permission Ask handoff stays blocked until principal mapping is resolved, so Ask cannot inherit stale or ambiguous grant context.
-                </p>
-                <div className="action-row">
-                  <button type="button" className="ghost" onClick={props.onDiagnoseUserMapping}>
-                    Diagnose User Mapping
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          {renderSecondaryWorkflowGuidance(
+            props.permissionsResult.mappingStatus === 'resolved'
+              ? 'Ask handoff stays in the triage snapshot'
+              : 'Resolve mapping from the triage snapshot first',
+            props.permissionsResult.mappingStatus === 'resolved'
+              ? 'Use the structured triage snapshot above to open the permission decision packet. This detail card stays evidence-only so the recovery path is not duplicated.'
+              : 'Permission Ask handoff stays blocked until principal mapping is resolved. Use the structured triage snapshot above to diagnose mapping instead of relying on a duplicate card-local action.'
+          )}
         </div>
       ) : null}
 
@@ -750,16 +716,9 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               : [])
           ])}
 
-          {renderActionButtonsCard(
-            'Run mapping recovery',
-            'Execute the recommended recovery steps directly from the mapping diagnosis card.',
-            [
-              { label: 'Diagnose User Mapping', onClick: props.onDiagnoseUserMapping },
-              ...(!props.permissionDiagnosis.mapExists ? [{ label: 'Open Org Browser', onClick: props.onOpenBrowser }] : []),
-              ...(props.permissionDiagnosis.stale || !props.permissionDiagnosis.mapExists
-                ? [{ label: 'Open Refresh & Build', onClick: props.onOpenRefresh }]
-                : [])
-            ]
+          {renderSecondaryWorkflowGuidance(
+            'Mapping recovery stays in the triage snapshot',
+            'Use the structured triage snapshot above for Diagnose User Mapping and any Browser or Refresh recovery steps. This diagnosis card stays focused on evidence and warnings.'
           )}
 
           {renderWarnings(props.permissionDiagnosis.warnings)}
@@ -829,32 +788,17 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
           ])}
 
           {props.automationResult.automations.length === 0
-            ? renderActionButtonsCard(
-                'Recover automation coverage',
-                'Use the same recovery steps from the structured snapshot without leaving the detailed automation card.',
-                [
-                  { label: 'Run Automation Analysis', onClick: props.onRunAutomation },
-                  { label: 'Open Org Browser', onClick: props.onOpenBrowser },
-                  { label: 'Open Refresh & Build', onClick: props.onOpenRefresh }
-                ]
+            ? renderSecondaryWorkflowGuidance(
+                'Automation recovery stays in the triage snapshot',
+                'Use the structured triage snapshot above for rerun, Browser, and Refresh actions. This detail card stays focused on evidence instead of repeating the same controls.'
               )
             : null}
 
           {props.automationResult.automations.length > 0 ? (
-            <div className="sub-card">
-              <p className="panel-caption">Ask handoff</p>
-              <h3>Open decision packet workflow</h3>
-              <p className="muted">Move this deterministic automation context into Ask for policy-aware trust, proof, and replay artifacts.</p>
-              <div className="action-row">
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() => props.onOpenAsk(buildAutomationScopeAskQuery(props.automationResult, props.objectName))}
-                >
-                  Open Ask for Automation Scope
-                </button>
-              </div>
-            </div>
+            renderSecondaryWorkflowGuidance(
+              'Ask handoff stays in the triage snapshot',
+              'Use the structured triage snapshot above to open the automation decision packet. This detail card stays focused on matched automation evidence.'
+            )
           ) : null}
         </div>
       ) : null}
@@ -922,32 +866,17 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
           ])}
 
           {props.impactResult.paths.length === 0
-            ? renderActionButtonsCard(
-                'Recover impact coverage',
-                'Use the same recovery steps from the structured snapshot without leaving the detailed impact card.',
-                [
-                  { label: 'Run Impact Analysis', onClick: props.onRunImpact },
-                  { label: 'Open Org Browser', onClick: props.onOpenBrowser },
-                  { label: 'Open Refresh & Build', onClick: props.onOpenRefresh }
-                ]
+            ? renderSecondaryWorkflowGuidance(
+                'Impact recovery stays in the triage snapshot',
+                'Use the structured triage snapshot above for rerun, Browser, and Refresh actions. This detail card stays focused on deterministic impact evidence.'
               )
             : null}
 
           {props.impactResult.paths.length > 0 ? (
-            <div className="sub-card">
-              <p className="panel-caption">Ask handoff</p>
-              <h3>Open approval packet workflow</h3>
-              <p className="muted">Carry this deterministic impact context into Ask to generate an approval-ready packet with trust envelope and next actions.</p>
-              <div className="action-row">
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() => props.onOpenAsk(buildImpactScopeAskQuery(props.impactResult, props.fieldName))}
-                >
-                  Open Ask for Impact Scope
-                </button>
-              </div>
-            </div>
+            renderSecondaryWorkflowGuidance(
+              'Ask handoff stays in the triage snapshot',
+              'Use the structured triage snapshot above to open the impact approval packet. This detail card stays focused on deterministic path evidence.'
+            )
           ) : null}
         </div>
       ) : null}
@@ -1017,34 +946,20 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
           ])}
 
           {props.systemPermissionResult.mappingStatus !== 'resolved'
-            ? renderActionButtonsCard(
-                'Recover grant context',
-                'Resolve user mapping before treating this system-permission result as actionable.',
-                [
-                  { label: 'Run System Permission Check', onClick: props.onRunSystemPermission },
-                  { label: 'Diagnose User Mapping', onClick: props.onDiagnoseUserMapping }
-                ]
+            ? renderSecondaryWorkflowGuidance(
+                'Grant-context recovery stays in the triage snapshot',
+                'Use the structured triage snapshot above to rerun the system-permission check or diagnose user mapping. This detail card stays focused on evidence and warnings.'
               )
             : null}
 
           {renderWarnings(props.systemPermissionResult.warnings)}
 
-          {props.systemPermissionResult.mappingStatus === 'resolved' ? (
-            <div className="sub-card">
-              <p className="panel-caption">Ask handoff</p>
-              <h3>Open system-permission packet</h3>
-              <p className="muted">Move this deterministic system-permission context into Ask to produce a trusted approval packet.</p>
-              <div className="action-row">
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={() => props.onOpenAsk(buildSystemPermissionAskQuery(props.systemPermissionResult, props.user, props.systemPermission))}
-                >
-                  Open Ask for System Permission
-                </button>
-              </div>
-            </div>
-          ) : null}
+          {props.systemPermissionResult.mappingStatus === 'resolved'
+            ? renderSecondaryWorkflowGuidance(
+                'Ask handoff stays in the triage snapshot',
+                'Use the structured triage snapshot above to open the system-permission approval packet. This detail card stays focused on deterministic grant evidence.'
+              )
+            : null}
         </div>
       ) : null}
     </>
