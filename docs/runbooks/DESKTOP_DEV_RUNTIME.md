@@ -173,6 +173,7 @@ Current packaged smoke proof:
 - when local aliases are available, the smoke verifies `POST /org/session/connect` and restores the original session state before shutdown
 - when a connected org session is available, the smoke now verifies handoff-backed latest ingest state, a forced refresh summary, and an org pipeline run after selective metadata retrieve
 - when the refresh chain still resolves to one deterministic snapshot ID, the smoke records `refreshDiffStatus=skipped-same-snapshot` instead of claiming diff proof that the workflow did not actually produce
+- `logs/desktop-release-smoke-result.json` now includes a first-class `retrieveHandoffProof` block so release evidence can cite one machine-readable handoff result instead of reconstructing it from separate artifact files
 - cleanup now retries until packaged `orgumented-desktop.exe` and bundled `node.exe` are actually gone
 - the smoke also forces port `3100` clear before launch, so repeated packaged verification runs do not fail on a stale listener
 - the current packaged benchmark query now returns `askTrustLevel=trusted`

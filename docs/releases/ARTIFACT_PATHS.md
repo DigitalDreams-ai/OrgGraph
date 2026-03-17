@@ -36,6 +36,11 @@ Common examples:
 - `logs/desktop-release-smoke.stdout.log`
 - `logs/desktop-release-smoke.stderr.log`
 - `logs/desktop-release-smoke.json`
+- `logs/desktop-release-smoke-result.json`
+- `logs/desktop-release-smoke-ingest-latest.json`
+- `logs/desktop-release-smoke-refresh-summary.json`
+- `logs/desktop-release-smoke-refresh-diff.json`
+- `logs/desktop-release-smoke-org-pipeline.json`
 
 ## Real-Org Operator Proof Artifacts
 

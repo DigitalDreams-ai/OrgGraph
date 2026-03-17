@@ -42,6 +42,12 @@ Canonical path reference:
 - `relaunchVerified`:
 - `metadataSearchStatus`:
 - `metadataRetrieveStatus`:
+- `retrieveHandoffProof.status`:
+- `retrieveHandoffProof.selection`:
+- `retrieveHandoffProof.ingestSnapshotId`:
+- `retrieveHandoffProof.refreshSnapshotId`:
+- `retrieveHandoffProof.refreshDiffStatus`:
+- `retrieveHandoffProof.orgPipelineStatus`:
 - Smoke evidence captured by:
 
 ## Real-Org Operator Proof
