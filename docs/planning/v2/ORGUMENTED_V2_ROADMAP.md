@@ -167,7 +167,7 @@ Do not:
 2. close org browser and retrieve-handoff parity (wave4 + wave5)
 3. strengthen Ask grounding and packet quality (wave6 + wave7)
    - semantic-frame v1 defines the preferred wave6 direction for Ask interpretation hardening
-4. close structured analyze/proofs workflows (wave8 + wave9)
+4. close remaining proofs/history workflows (wave9)
 5. finish layout/accessibility hardening and workspace simplification (wave10)
 6. complete defect/CI/release discipline (wave11 + wave12)
 7. run stabilization hold (wave13)
