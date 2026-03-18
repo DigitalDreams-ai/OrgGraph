@@ -66,19 +66,6 @@ function renderWarnings(warnings: string[]): JSX.Element | null {
   );
 }
 
-function renderSecondaryWorkflowGuidance(
-  title: string,
-  description: string
-): JSX.Element {
-  return (
-    <div className="sub-card">
-      <p className="panel-caption">Workflow guidance</p>
-      <h3>{title}</h3>
-      <p className="muted">{description}</p>
-    </div>
-  );
-}
-
 type StructuredAnalyzeActionId =
   | 'run-permissions'
   | 'diagnose-mapping'
@@ -622,15 +609,6 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
           </div>
 
           {renderWarnings(props.permissionsResult.warnings)}
-
-          {renderSecondaryWorkflowGuidance(
-            props.permissionsResult.mappingStatus === 'resolved'
-              ? 'Ask handoff stays in the triage snapshot'
-              : 'Resolve mapping from the triage snapshot first',
-            props.permissionsResult.mappingStatus === 'resolved'
-              ? 'Use the structured triage snapshot above to open the permission decision packet. This detail card stays evidence-only so the recovery path is not duplicated.'
-              : 'Permission Ask handoff stays blocked until principal mapping is resolved. Use the structured triage snapshot above to diagnose mapping instead of relying on a duplicate card-local action.'
-          )}
         </div>
       ) : null}
 
@@ -676,12 +654,6 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               )}
             </ul>
           </div>
-
-          {renderSecondaryWorkflowGuidance(
-            'Mapping recovery stays in the triage snapshot',
-            'Use the structured triage snapshot above for Diagnose User Mapping and any Browser or Refresh recovery steps. This diagnosis card stays focused on evidence and warnings.'
-          )}
-
           {renderWarnings(props.permissionDiagnosis.warnings)}
         </div>
       ) : null}
@@ -735,20 +707,6 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               )}
             </ul>
           </div>
-
-          {props.automationResult.automations.length === 0
-            ? renderSecondaryWorkflowGuidance(
-                'Automation recovery stays in the triage snapshot',
-                'Use the structured triage snapshot above for rerun, Browser, and Refresh actions. This detail card stays focused on evidence instead of repeating the same controls.'
-              )
-            : null}
-
-          {props.automationResult.automations.length > 0 ? (
-            renderSecondaryWorkflowGuidance(
-              'Ask handoff stays in the triage snapshot',
-              'Use the structured triage snapshot above to open the automation decision packet. This detail card stays focused on matched automation evidence.'
-            )
-          ) : null}
         </div>
       ) : null}
 
@@ -801,20 +759,6 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               )}
             </ul>
           </div>
-
-          {props.impactResult.paths.length === 0
-            ? renderSecondaryWorkflowGuidance(
-                'Impact recovery stays in the triage snapshot',
-                'Use the structured triage snapshot above for rerun, Browser, and Refresh actions. This detail card stays focused on deterministic impact evidence.'
-              )
-            : null}
-
-          {props.impactResult.paths.length > 0 ? (
-            renderSecondaryWorkflowGuidance(
-              'Ask handoff stays in the triage snapshot',
-              'Use the structured triage snapshot above to open the impact approval packet. This detail card stays focused on deterministic path evidence.'
-            )
-          ) : null}
         </div>
       ) : null}
 
@@ -866,22 +810,7 @@ export function AnalyzeWorkspace(props: AnalyzeWorkspaceProps): JSX.Element {
               )}
             </ul>
           </div>
-
-          {props.systemPermissionResult.mappingStatus !== 'resolved'
-            ? renderSecondaryWorkflowGuidance(
-                'Grant-context recovery stays in the triage snapshot',
-                'Use the structured triage snapshot above to rerun the system-permission check or diagnose user mapping. This detail card stays focused on evidence and warnings.'
-              )
-            : null}
-
           {renderWarnings(props.systemPermissionResult.warnings)}
-
-          {props.systemPermissionResult.mappingStatus === 'resolved'
-            ? renderSecondaryWorkflowGuidance(
-                'Ask handoff stays in the triage snapshot',
-                'Use the structured triage snapshot above to open the system-permission approval packet. This detail card stays focused on deterministic grant evidence.'
-              )
-            : null}
         </div>
       ) : null}
     </>

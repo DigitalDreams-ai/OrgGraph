@@ -75,8 +75,9 @@ function run(): void {
   assert.match(permissionMarkup, /<span class="path-value">Profile:Sales_User -grants-&gt; Object:Opportunity \| Object:Opportunity -blocks-&gt; Field:Opportunity.StageName<\/span>/);
   assert.match(permissionMarkup, /<p class="path-value">C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\maps\\principal-map\.json<\/p>/);
   assert.match(permissionMarkup, />Open Ask for Permission Scope</);
-  assert.match(permissionMarkup, /Ask handoff stays in the triage snapshot/);
   assert.doesNotMatch(permissionMarkup, /Open permission decision packet/);
+  assert.doesNotMatch(permissionMarkup, /Workflow guidance/);
+  assert.doesNotMatch(permissionMarkup, /triage snapshot/);
   assert.doesNotMatch(permissionMarkup, />Operator actions</);
 
   const permissionMappingBlockedMarkup = renderToStaticMarkup(
@@ -131,7 +132,7 @@ function run(): void {
   );
   assert.match(permissionMappingBlockedMarkup, />Diagnose User Mapping</);
   assert.doesNotMatch(permissionMappingBlockedMarkup, />Open Ask for Permission Scope</);
-  assert.match(permissionMappingBlockedMarkup, /Resolve mapping from the triage snapshot first/);
+  assert.doesNotMatch(permissionMappingBlockedMarkup, /Resolve mapping from the triage snapshot first/);
   assert.doesNotMatch(permissionMappingBlockedMarkup, /Resolve mapping before Ask handoff/);
 
   const mappingRecoveryMarkup = renderToStaticMarkup(
@@ -183,8 +184,9 @@ function run(): void {
   assert.match(mappingRecoveryMarkup, />Open Org Browser</);
   assert.match(mappingRecoveryMarkup, />Open Refresh &amp; Build</);
   assert.match(mappingRecoveryMarkup, />Diagnose User Mapping</);
-  assert.match(mappingRecoveryMarkup, /Mapping recovery stays in the triage snapshot/);
+  assert.doesNotMatch(mappingRecoveryMarkup, /Mapping recovery stays in the triage snapshot/);
   assert.doesNotMatch(mappingRecoveryMarkup, /Run mapping recovery/);
+  assert.doesNotMatch(mappingRecoveryMarkup, /Workflow guidance/);
   assert.doesNotMatch(mappingRecoveryMarkup, />Operator actions</);
 
   const automationRecoveryMarkup = renderToStaticMarkup(
@@ -236,8 +238,9 @@ function run(): void {
   assert.match(automationRecoveryMarkup, />Open Refresh &amp; Build</);
   assert.match(automationRecoveryMarkup, />Run Automation Analysis</);
   assert.doesNotMatch(automationRecoveryMarkup, />Open Ask for Automation Scope</);
-  assert.match(automationRecoveryMarkup, /Automation recovery stays in the triage snapshot/);
+  assert.doesNotMatch(automationRecoveryMarkup, /Automation recovery stays in the triage snapshot/);
   assert.doesNotMatch(automationRecoveryMarkup, /Recover automation coverage/);
+  assert.doesNotMatch(automationRecoveryMarkup, /Workflow guidance/);
   assert.doesNotMatch(automationRecoveryMarkup, />Operator actions</);
 
   const impactMarkup = renderToStaticMarkup(
@@ -346,8 +349,9 @@ function run(): void {
   assert.match(impactRecoveryMarkup, />Open Refresh &amp; Build</);
   assert.match(impactRecoveryMarkup, />Run Impact Analysis</);
   assert.doesNotMatch(impactRecoveryMarkup, />Open Ask for Impact Scope</);
-  assert.match(impactRecoveryMarkup, /Impact recovery stays in the triage snapshot/);
+  assert.doesNotMatch(impactRecoveryMarkup, /Impact recovery stays in the triage snapshot/);
   assert.doesNotMatch(impactRecoveryMarkup, /Recover impact coverage/);
+  assert.doesNotMatch(impactRecoveryMarkup, /Workflow guidance/);
   assert.doesNotMatch(impactRecoveryMarkup, />Operator actions</);
 
   const systemMarkup = renderToStaticMarkup(
@@ -459,8 +463,9 @@ function run(): void {
   assert.match(systemRecoveryMarkup, />Run System Permission Check</);
   assert.match(systemRecoveryMarkup, />Diagnose User Mapping</);
   assert.doesNotMatch(systemRecoveryMarkup, />Open Ask for System Permission</);
-  assert.match(systemRecoveryMarkup, /Grant-context recovery stays in the triage snapshot/);
+  assert.doesNotMatch(systemRecoveryMarkup, /Grant-context recovery stays in the triage snapshot/);
   assert.doesNotMatch(systemRecoveryMarkup, /Recover grant context/);
+  assert.doesNotMatch(systemRecoveryMarkup, /Workflow guidance/);
   assert.doesNotMatch(systemRecoveryMarkup, />Operator actions</);
 }
 

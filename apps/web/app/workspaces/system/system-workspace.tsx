@@ -177,7 +177,6 @@ function renderAskTrustTelemetry(
               </li>
             ))}
           </ul>
-          <p className="muted">Use the triage snapshot or primary controls above to refresh trust or load related telemetry.</p>
         </>
       ) : (
         <>
@@ -267,7 +266,6 @@ function renderRuntimeTelemetry(
           <li>No non-200 route signatures recorded in the current runtime window.</li>
         )}
       </ul>
-      <p className="muted">Use the triage snapshot or primary controls above to refresh telemetry or runtime status.</p>
     </article>
   );
 }
@@ -513,7 +511,6 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
           ) : (
             <p className="muted">All runtime readiness checks passed. Structured diagnostics are healthy.</p>
           )}
-          <p className="muted">Use the structured triage snapshot or primary controls above for Refresh Status and Open Refresh &amp; Build.</p>
           {props.readyDetails ? (
             <details className="debug-details">
               <summary>Raw readiness JSON</summary>
@@ -628,7 +625,6 @@ export function SystemWorkspace(props: SystemWorkspaceProps): JSX.Element {
               ) : (
                 <p className="muted">No preflight issues reported for the selected alias.</p>
               )}
-              <p className="muted">Use the structured triage snapshot or primary controls above for Load Org Status, Run Preflight, and Open Org Sessions.</p>
             </>
           ) : (
             <p className="muted">Load Org Status to inspect CLI readiness and current session state.</p>
