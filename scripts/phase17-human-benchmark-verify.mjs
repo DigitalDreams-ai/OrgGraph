@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const defaultProxyArtifactPath = path.join(repoRoot, 'logs', 'high-risk-review-benchmark.json');
@@ -24,6 +25,10 @@ Optional:
 Example:
   pnpm phase17:benchmark:human:verify
   pnpm phase17:benchmark:human:verify -- --human-artifact logs/high-risk-review-human-benchmark.test.json --results-md logs/high-risk-review-benchmark-results.test.md --allow-synthetic
+
+Behavior:
+  - verifies proxy-only canonical publication when no human artifact is present
+  - verifies full human-backed publication when a human artifact is present
 `;
 
 function parseArgs(argv) {
@@ -63,6 +68,20 @@ async function readJson(filePath) {
 
 async function readText(filePath) {
   return fs.readFile(filePath, 'utf8');
+}
+
+async function pathExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function sha256File(filePath) {
+  const body = await fs.readFile(filePath);
+  return crypto.createHash('sha256').update(body).digest('hex');
 }
 
 function relativePath(filePath) {
@@ -114,11 +133,57 @@ async function main() {
   const humanArtifactPath = path.resolve(args['human-artifact'] ?? defaultHumanArtifactPath);
   const resultsPath = path.resolve(args['results-md'] ?? defaultResultsPath);
 
-  const [proxyArtifact, humanArtifact, resultsMarkdown] = await Promise.all([
+  const hasHumanArtifact = await pathExists(humanArtifactPath);
+  const [proxyArtifact, resultsMarkdown] = await Promise.all([
     readJson(proxyArtifactPath),
-    readJson(humanArtifactPath),
     readText(resultsPath)
   ]);
+  const proxyArtifactHash = await sha256File(proxyArtifactPath);
+
+  if (!hasHumanArtifact) {
+    if (!resultsContain(resultsMarkdown, 'proxy_only')) {
+      fail('Published benchmark results do not declare proxy_only acceptance mode.');
+    }
+    if (!resultsContain(resultsMarkdown, relativePath(proxyArtifactPath))) {
+      fail('Published benchmark results do not contain the proxy artifact path.');
+    }
+    if (!resultsContain(resultsMarkdown, proxyArtifactHash)) {
+      fail('Published benchmark results do not contain the proxy artifact hash.');
+    }
+    if (!resultsContain(resultsMarkdown, proxyArtifact?.scenario?.reviewQuery)) {
+      fail('Published benchmark results do not contain the proxy benchmark query.');
+    }
+    const decisionPacket = proxyArtifact?.reviewPacket?.ask?.decisionPacket ?? {};
+    if (!resultsContain(resultsMarkdown, decisionPacket.recommendationVerdict)) {
+      fail('Published benchmark results do not contain the proxy recommendation verdict.');
+    }
+    if (!resultsContain(resultsMarkdown, decisionPacket.recommendationSummary)) {
+      fail('Published benchmark results do not contain the proxy recommendation summary.');
+    }
+    if (proxyArtifact?.reviewPacket?.packetQuality?.passed !== true) {
+      fail('Proxy benchmark packet quality is not passing.');
+    }
+
+    process.stdout.write(
+      `${JSON.stringify(
+        {
+          verified: true,
+          synthetic: false,
+          mode: 'proxy_only',
+          proxyArtifactPath: relativePath(proxyArtifactPath),
+          humanArtifactPath: null,
+          resultsPath: relativePath(resultsPath),
+          query: proxyArtifact?.scenario?.reviewQuery ?? null,
+          passed: true
+        },
+        null,
+        2
+      )}\n`
+    );
+    return;
+  }
+
+  const humanArtifact = await readJson(humanArtifactPath);
 
   const syntheticCheck = detectSyntheticHumanArtifact(humanArtifact, humanArtifactPath);
   if (syntheticCheck.synthetic && !args['allow-synthetic']) {

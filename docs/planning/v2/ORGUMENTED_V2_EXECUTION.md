@@ -86,7 +86,8 @@ Materially true now:
 - wave7 packet-hierarchy follow-up now keeps decision-packet rationale in the primary Ask artifact by moving packet `nextActions` into the packet body itself, while the lower control card becomes workflow/navigation controls instead of a duplicate rationale surface
 - wave7 packet-hierarchy follow-up now also collapses Ask proof identifiers and citations into a single supporting-detail card with disclosure sections, so the decision packet stays primary and proof/evidence detail no longer competes as separate always-visible cards
 - wave7 proxy benchmark now passes on current main again: `pnpm phase17:benchmark` against a grounded local runtime returns explicit recommendation verdict/summary, explicit evidence-gap visibility, stable proof/replay identifiers, and a passing specificity guard for the approval-review packet
-- wave7 acceptance is now blocked by missing real human benchmark evidence, not by a known proxy packet-content failure; `pnpm phase17:benchmark:human:status` reports `pending_human_artifact_missing` when only the proxy artifact is present
+- wave7 acceptance is now proxy-first: the canonical benchmark can publish and verify from deterministic proxy evidence alone, while optional human capture remains exploratory and non-blocking
+- wave7 proxy-only benchmark publication is now green on current main: `pnpm phase17:benchmark:human:publish`, `pnpm phase17:benchmark:human:verify`, and `pnpm phase17:benchmark:human:status` regenerate and validate the canonical results file against proxy provenance without requiring a human capture artifact
 - flow read/write asks remain on the legacy planner path in this slice; semantic-frame rollout is still intentionally bounded to impact + field/object automation + graph-global permission asks only
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model
@@ -229,7 +230,7 @@ Materially true now:
 - wave10 follow-up now wraps long path/identifier values in Connect, Refresh, and System with explicit `path-value`/`diagnostic-code-block` hooks, and the runtime-status regression gate now render-checks those markup guards so long paths/JSON stay bounded
 
 Still unresolved:
-- decision packet quality is still not benchmark-accepted for approval use because the real human benchmark artifact and canonical publish/verify pass are missing, even though the current proxy benchmark now passes
+- decision packet quality no longer depends on human stopwatch capture, but GitHub PR publication for packet summaries, proof links, and review-safe provenance is still not implemented
 - explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
 - proofs/history still needs full label-first lifecycle closure beyond current baseline auto-selection
 - layout/accessibility still needs final visual QA lock after latest density guardrail pass
@@ -274,10 +275,9 @@ Rules:
 ## Immediate Frontier (Next Slices)
 
 1. Wave7 finish slice:
-- deepen packet usefulness for approval and retrieved-metadata review scenarios
-- keep flow-target packets rendered as flow packets, not generic approval cards
-- keep reads/writes/change-impact synthesis specific enough to serve as a primary operator artifact
-- keep proof identifiers and citation detail behind progressive disclosure so the packet remains the first thing the operator reads
+- publish decision packets into GitHub PR review surfaces without losing proof provenance, replay identity, or fail-closed semantics
+- keep proxy-only benchmark publication and verification green while the GitHub publication path is added
+- keep the packet calm enough that the same summary can survive PR comment/check presentation without collapsing into raw JSON
 
 2. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage

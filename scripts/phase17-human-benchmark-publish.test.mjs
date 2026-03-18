@@ -130,3 +130,69 @@ test('phase17 benchmark publish surfaces recommendation and evidence-gap proxy s
   assert.match(markdown, /review packet specificity guard: `pass`/);
   assert.match(markdown, /review packet recommendation present: `pass`/);
 });
+
+test('phase17 benchmark publish supports canonical proxy-only publication when no human artifact exists', async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'orgumented-phase17-publish-proxy-'));
+  const proxyArtifactPath = path.join(tempDir, 'proxy.json');
+  const outMdPath = path.join(tempDir, 'results.md');
+
+  const proxyArtifact = {
+    runtimeMode: 'existing-runtime',
+    scenario: {
+      reviewQuery: 'Should we approve changing Opportunity.StageName for jane@example.com?'
+    },
+    baseline: {
+      operatorProxyElapsedMs: 246,
+      evidenceSteps: 5,
+      workspaceSwitches: 4
+    },
+    reviewPacket: {
+      operatorProxyElapsedMs: 15,
+      evidenceSteps: 1,
+      workspaceSwitches: 0,
+      ask: {
+        decisionPacket: {
+          recommendationVerdict: 'do_not_approve_yet',
+          recommendationSummary: 'Do not approve yet. Resolve deterministic permission gaps first.',
+          evidenceGapCount: 1
+        }
+      },
+      packetQuality: {
+        passed: true,
+        hasRecommendation: true,
+        evidenceGapCount: 1
+      }
+    },
+    comparison: {
+      proxyTimeDeltaMs: 231,
+      proxyTimeImprovementRatio: 0.939,
+      evidenceStepDelta: 4,
+      workspaceSwitchDelta: 4
+    },
+    notes: ['proxy note']
+  };
+
+  await fs.writeFile(proxyArtifactPath, `${JSON.stringify(proxyArtifact, null, 2)}\n`, 'utf8');
+
+  const { stdout } = await execFileAsync(
+    process.execPath,
+    [
+      publishScriptPath,
+      '--proxy-artifact',
+      proxyArtifactPath,
+      '--out-md',
+      outMdPath
+    ],
+    { cwd: repoRoot }
+  );
+
+  const markdown = await fs.readFile(outMdPath, 'utf8');
+  const summary = JSON.parse(stdout);
+
+  assert.equal(summary.mode, 'proxy_only');
+  assert.equal(summary.humanArtifactPath, null);
+  assert.equal(summary.passed, true);
+  assert.match(markdown, /Acceptance mode:\s*- `proxy_only`/);
+  assert.match(markdown, /Human Benchmark Capture\s+Status:\s+- `not required for current Wave 7 acceptance`/s);
+  assert.match(markdown, /review packet recommendation verdict: `do_not_approve_yet`/);
+});

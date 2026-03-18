@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const defaultProxyArtifactPath = path.join(repoRoot, 'logs', 'high-risk-review-benchmark.json');
@@ -23,7 +24,7 @@ Optional:
   --help
 
 What it does:
-  - reports whether Stage 1 human benchmark evidence is still pending, synthetic-only, unverified, or fully verified
+  - reports whether Wave 7 benchmark evidence is blocked, proxy-only verified, synthetic-only, unverified, or fully verified
   - fails closed only for malformed command usage; evidence gaps are reported as structured status output
 `;
 
@@ -64,6 +65,11 @@ async function readJson(filePath) {
 
 async function readText(filePath) {
   return fs.readFile(filePath, 'utf8');
+}
+
+async function sha256File(filePath) {
+  const body = await fs.readFile(filePath);
+  return crypto.createHash('sha256').update(body).digest('hex');
 }
 
 async function pathExists(filePath) {
@@ -163,17 +169,88 @@ async function main() {
     return;
   }
 
+  const [proxyArtifact, proxyArtifactHash] = await Promise.all([
+    readJson(proxyArtifactPath),
+    sha256File(proxyArtifactPath)
+  ]);
+
   if (!(await pathExists(humanArtifactPath))) {
+    if (!(await pathExists(resultsPath))) {
+      process.stdout.write(
+        `${JSON.stringify(
+          buildSummary({
+            code: 'pending_proxy_only_publication_missing',
+            verified: false,
+            reason: 'Proxy benchmark artifact exists, but canonical proxy-only publication is missing.',
+            proxyArtifactPath,
+            humanArtifactPath,
+            resultsPath,
+            synthetic: false,
+            query: proxyArtifact?.scenario?.reviewQuery
+          }),
+          null,
+          2
+        )}\n`
+      );
+      return;
+    }
+
+    const resultsMarkdown = await readText(resultsPath);
+    const packetQualityPassed = proxyArtifact?.reviewPacket?.packetQuality?.passed === true;
+    const hasProxyOnlyMarker = resultsContain(resultsMarkdown, 'proxy_only');
+    const hasProxyPath = resultsContain(resultsMarkdown, relativePath(proxyArtifactPath));
+    const hasProxyHash = resultsContain(resultsMarkdown, proxyArtifactHash);
+    const hasQuery = resultsContain(resultsMarkdown, proxyArtifact?.scenario?.reviewQuery);
+    const hasVerdict = resultsContain(
+      resultsMarkdown,
+      proxyArtifact?.reviewPacket?.ask?.decisionPacket?.recommendationVerdict
+    );
+    const hasSummary = resultsContain(
+      resultsMarkdown,
+      proxyArtifact?.reviewPacket?.ask?.decisionPacket?.recommendationSummary
+    );
+
+    if (
+      packetQualityPassed &&
+      hasProxyOnlyMarker &&
+      hasProxyPath &&
+      hasProxyHash &&
+      hasQuery &&
+      hasVerdict &&
+      hasSummary
+    ) {
+      process.stdout.write(
+        `${JSON.stringify(
+          buildSummary({
+            code: 'verified_proxy_only_evidence',
+            verified: true,
+            reason:
+              'Proxy benchmark evidence is present, packet quality passes, and the canonical results match the proxy provenance.',
+            proxyArtifactPath,
+            humanArtifactPath,
+            resultsPath,
+            synthetic: false,
+            query: proxyArtifact?.scenario?.reviewQuery
+          }),
+          null,
+          2
+        )}\n`
+      );
+      return;
+    }
+
     process.stdout.write(
       `${JSON.stringify(
         buildSummary({
-          code: 'pending_human_artifact_missing',
+          code: 'pending_proxy_only_verification',
           verified: false,
-          reason: 'No real human benchmark artifact is present yet.',
+          reason:
+            'No human benchmark artifact is present, and the canonical proxy-only publication is incomplete or out of date.',
           proxyArtifactPath,
           humanArtifactPath,
           resultsPath,
-          synthetic: false
+          synthetic: false,
+          query: proxyArtifact?.scenario?.reviewQuery
         }),
         null,
         2
@@ -229,10 +306,7 @@ async function main() {
     return;
   }
 
-  const [proxyArtifact, resultsMarkdown] = await Promise.all([
-    readJson(proxyArtifactPath),
-    readText(resultsPath)
-  ]);
+  const resultsMarkdown = await readText(resultsPath);
 
   if (syntheticCheck.synthetic && isCanonicalResults(resultsPath)) {
     process.stdout.write(

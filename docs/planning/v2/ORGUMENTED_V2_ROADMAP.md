@@ -115,7 +115,8 @@ As of March 1, 2026:
 
 ### Priority 3: Decision-packet adoption
 - make proof artifacts usable in real review workflows
-- measure time-to-trusted-answer and evidence-gathering reduction
+- keep proxy-backed packet publication and provenance verification green
+- reduce evidence-gathering and publication friction without depending on human stopwatch timing on test data
 
 ### Priority 4: Stage 1 desktop workflow parity
 - complete product-grade Sessions, Browser, Refresh/Build, Analyze, Proofs/History, and Settings/Diagnostics flows

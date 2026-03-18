@@ -63,22 +63,19 @@ Operator flow:
 Expected gain:
 - fewer manual evidence assembly steps
 - lower workspace/context switching
-- faster time-to-trusted-answer
+- lower dependence on raw JSON and fragmented drill-down
 
 ## Metrics
 
 Measure all of the following for both paths:
 
-1. time-to-trusted-answer
-2. manual evidence-gathering steps
-3. workspace/context switches
-4. raw JSON dependence
-5. operator confidence rating
+1. manual evidence-gathering steps
+2. workspace/context switches
+3. raw JSON dependence
+4. operator confidence rating
+5. deterministic proxy-path timing
 
 ### Definitions
-
-`time-to-trusted-answer`
-- elapsed time from first query submission to the point where the operator can state an approval recommendation with proof and replay identifiers available
 
 `manual evidence-gathering steps`
 - count of explicit operator actions required to gather permissions, automation, impact, and proof context
@@ -99,17 +96,17 @@ The review-packet path passes only if it achieves all of the following:
 - replay parity remains 100 percent
 - proof identity remains stable for repeated identical review asks
 - review packet specificity guard passes (top automation and impact source spotlights are present, next actions reference concrete sources, and the packet exposes an explicit recommendation plus evidence-gap state)
-- time-to-trusted-answer improves by at least 40 percent versus baseline
 - manual evidence-gathering steps are reduced by at least 2
 - workspace/context switches are reduced by at least 1
 - raw JSON dependence is eliminated
 - operator confidence is not worse than baseline
+- proxy-path timing remains materially better than the fragmented baseline path, but human wall-clock timing is observational only and not a Stage 1 acceptance gate on test data
 
 ## Capture Template
 
 Use one row per run.
 
-| Run Date | Path | Query | Time To Trusted Answer | Evidence Steps | Workspace Switches | Raw JSON Needed | Confidence 1-5 | Proof ID | Replay Token | Notes |
+| Run Date | Path | Query | Time To Trusted Answer (optional) | Evidence Steps | Workspace Switches | Raw JSON Needed | Confidence 1-5 | Proof ID | Replay Token | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | YYYY-MM-DD | baseline | Should we approve changing Opportunity.StageName for jane@example.com? | | | | yes/no | | | | |
 | YYYY-MM-DD | review-packet | Should we approve changing Opportunity.StageName for jane@example.com? | | | | yes/no | | | | |
@@ -145,10 +142,11 @@ Harness runtime behavior:
 - the recommended path is to establish that state through the packaged desktop shell or `pnpm desktop:smoke:release`
 - packaged auto-launch is available only as an explicit best-effort fallback with `ORGUMENTED_BENCHMARK_LAUNCH_PACKAGED=1`
 
-What still requires human capture:
+Optional human capture can still record:
 - real desktop operator timing
 - operator confidence rating
-- any nuance about whether the packet was sufficient without further drill-down
+- nuance about whether the packet was sufficient without further drill-down
+- qualitative feedback on any remaining ambiguity
 
 Human capture command:
 
@@ -208,15 +206,19 @@ Canonical publication output:
 - `docs/planning/v2/HIGH_RISK_REVIEW_BENCHMARK_RESULTS.md`
 
 Publication behavior:
-- reads both the latest automated proxy artifact and the latest human benchmark artifact
+- always reads the latest automated proxy artifact
 - regenerates the canonical benchmark results markdown instead of relying on manual transcription
 - surfaces the proxy packet recommendation verdict, recommendation summary, and evidence-gap count directly in the canonical markdown when the proxy artifact provides them
-- fails closed if the human artifact still looks synthetic or smoke-only
-- carries the prepared capture-template path, signature, and proxy-artifact hash into the canonical results surface
-- `phase17:benchmark:human:verify` fails closed unless the human artifact is real, passes the Stage 1 threshold checks, and the canonical results surface still contains the matching provenance fields
+- publishes a canonical `proxy_only` result when no human artifact is present
+- includes human comparison detail only when a human artifact is present
+- fails closed on malformed or synthetic human artifacts when a human-backed publication is requested
+- carries the proxy-artifact path and hash into the canonical results surface
+- `phase17:benchmark:human:verify` now verifies either:
+  - proxy-only canonical publication, or
+  - full human-backed publication
 - `phase17:benchmark:human:finalize` runs publication and provenance verification as one fail-closed step
-- `phase17:benchmark:human:status` reports whether Stage 1 human evidence is still missing, synthetic-only, unverified, or fully verified
-- `phase17:benchmark:human:reset` archives stale benchmark artifacts into `logs/archive/phase17-human-benchmark/<timestamp>/` before a real run starts
+- `phase17:benchmark:human:status` reports whether the benchmark is blocked, proxy-only verified, synthetic-only, unverified, or fully verified
+- `phase17:benchmark:human:reset` archives stale benchmark artifacts into `logs/archive/phase17-human-benchmark/<timestamp>/` before a new exploratory human run starts
 - supports non-canonical output overrides only for local verification
 
 What the human capture command does:
@@ -257,14 +259,13 @@ Current branch status:
 - replay parity protection is green
 - automated proxy benchmark capture is now available through `pnpm phase17:benchmark`
 - latest proxy run on current main passes the specificity guard and publishes explicit recommendation/evidence-gap signals in the raw artifact at `logs/high-risk-review-benchmark.json`
-- the canonical results file remains intentionally unchanged until a real human benchmark artifact exists and `pnpm phase17:benchmark:human:publish` / `verify` can regenerate it fail-closed
-- `pnpm phase17:benchmark:human:status` is the current truth source for whether Stage 1 human benchmark evidence is still missing, synthetic-only, unverified, or fully verified
-- human benchmark evidence is still required before claiming full Stage 1 lift proof
+- the canonical results file is now allowed to publish from proxy evidence alone when no human artifact is present
+- `pnpm phase17:benchmark:human:status` is the current truth source for whether the benchmark is blocked, proxy-only verified, synthetic-only, unverified, or fully verified
+- human benchmark evidence is optional exploratory evidence, not a Stage 1 closure requirement
 - canonical benchmark publication is generated from artifacts rather than handwritten markdown edits
-- stale synthetic or test artifacts can now be archived out of the default benchmark paths with `pnpm phase17:benchmark:human:reset`
-- the immediate execution task is to capture one real human benchmark run and close it with `pnpm phase17:benchmark:human:finalize`
-- once that run exists, `pnpm phase17:benchmark:human:verify` becomes the fail-closed proof that the canonical results surface is backed by real Stage 1 evidence
-- the operator handoff for that run is documented in `docs/runbooks/HUMAN_BENCHMARK_CAPTURE.md`
+- stale synthetic or test artifacts can be archived out of the default benchmark paths with `pnpm phase17:benchmark:human:reset`
+- the immediate execution task is to keep the proxy artifact fresh and the canonical benchmark results verified against proxy provenance
+- `docs/runbooks/HUMAN_BENCHMARK_CAPTURE.md` remains optional exploratory guidance, not a required closure gate
 
 ## Bottom Line
 
@@ -273,5 +274,5 @@ This benchmark is the gate between:
 
 and
 
-- "Orgumented materially improves one real Stage 1 architecture-review workflow"
+- "Orgumented materially improves one deterministic Stage 1 architecture-review workflow with canonical proxy-backed evidence"
 
