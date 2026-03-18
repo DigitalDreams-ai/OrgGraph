@@ -139,6 +139,14 @@ function run(): void {
     React.createElement(ConnectWorkspace, {
       orgAlias: 'shulman-uat',
       setOrgAlias: () => undefined,
+      githubRepoOwner: 'sean',
+      setGithubRepoOwner: () => undefined,
+      githubRepoName: 'orgumented-runtime',
+      setGithubRepoName: () => undefined,
+      githubRepoDescription: '',
+      setGithubRepoDescription: () => undefined,
+      githubRepoPrivate: true,
+      setGithubRepoPrivate: () => undefined,
       activeAlias: 'shulman-uat',
       sessionStatus: 'connected',
       orgStatus: {
@@ -161,8 +169,38 @@ function run(): void {
       orgAliases: { activeAlias: 'shulman-uat', aliases: [] },
       orgSessionHistory: { restoreAlias: 'shulman-uat', events: [] },
       orgSession: { status: 'connected', alias: 'shulman-uat' },
+      githubSession: {
+        status: 'authenticated',
+        cliInstalled: true,
+        authSource: 'gh_cli',
+        viewer: {
+          login: 'sean',
+          name: 'Sean',
+          url: 'https://github.com/sean'
+        },
+        selectedRepo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime',
+          defaultBranch: 'main'
+        }
+      },
       aliasInventory: [],
+      githubAccessibleRepos: [],
+      githubSelectedRepo: {
+        owner: 'sean',
+        name: 'orgumented-runtime',
+        fullName: 'sean/orgumented-runtime',
+        private: true,
+        visibility: 'private',
+        url: 'https://github.com/sean/orgumented-runtime',
+        defaultBranch: 'main'
+      },
       recentSessionEvents: [],
+      githubIssues: [],
       selectedAlias: {
         alias: 'shulman-uat',
         username: 'sbingham@example.com',
@@ -191,7 +229,12 @@ function run(): void {
       onDisconnect: () => undefined,
       onRestoreLastSession: () => undefined,
       onSelectAlias: () => undefined,
-      onInspectAlias: () => undefined
+      onInspectAlias: () => undefined,
+      onRefreshGithubStatus: () => undefined,
+      onAuthorizeGithub: () => undefined,
+      onLoadGithubRepos: () => undefined,
+      onCreateGithubRepo: () => undefined,
+      onSelectGithubRepo: () => undefined
     } as any)
   );
   assert.match(connectMarkup, /Ready to connect: ready/);
@@ -208,6 +251,14 @@ function run(): void {
     React.createElement(ConnectWorkspace, {
       orgAlias: 'shulman-uat',
       setOrgAlias: () => undefined,
+      githubRepoOwner: '',
+      setGithubRepoOwner: () => undefined,
+      githubRepoName: '',
+      setGithubRepoName: () => undefined,
+      githubRepoDescription: '',
+      setGithubRepoDescription: () => undefined,
+      githubRepoPrivate: true,
+      setGithubRepoPrivate: () => undefined,
       activeAlias: 'shulman-uat',
       sessionStatus: 'connected',
       orgStatus: null,
@@ -215,8 +266,12 @@ function run(): void {
       orgAliases: null,
       orgSessionHistory: null,
       orgSession: null,
+      githubSession: null,
       aliasInventory: [],
+      githubAccessibleRepos: [],
+      githubSelectedRepo: null,
       recentSessionEvents: [],
+      githubIssues: [],
       selectedAlias: null,
       preflightIssues: [],
       toolingReady: false,
@@ -239,7 +294,12 @@ function run(): void {
       onDisconnect: () => undefined,
       onRestoreLastSession: () => undefined,
       onSelectAlias: () => undefined,
-      onInspectAlias: () => undefined
+      onInspectAlias: () => undefined,
+      onRefreshGithubStatus: () => undefined,
+      onAuthorizeGithub: () => undefined,
+      onLoadGithubRepos: () => undefined,
+      onCreateGithubRepo: () => undefined,
+      onSelectGithubRepo: () => undefined
     } as any)
   );
   assert.match(connectUnavailableMarkup, /Session: runtime unavailable/);

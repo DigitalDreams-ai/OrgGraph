@@ -9,10 +9,21 @@ function run(): void {
   const longOrgId = '00Dxx000001kjZRUAY-VERY-LONG-ORG-IDENTIFIER-SEGMENT';
   const longInstanceUrl =
     'https://shulman-hill--uat.sandbox.my.salesforce.com/services/data/v62.0/sobjects/Very_Long_Resource_Name_With_Many_Segments';
+  const longGithubRepo = 'sean/Orgumented-runtime-repo-with-a-very-long-selected-binding-name';
+  const longGithubUrl =
+    'https://github.com/sean/Orgumented-runtime-repo-with-a-very-long-selected-binding-name';
   const connectMarkup = renderToStaticMarkup(
     React.createElement(ConnectWorkspace, {
       orgAlias: longAlias,
       setOrgAlias: () => undefined,
+      githubRepoOwner: 'sean',
+      setGithubRepoOwner: () => undefined,
+      githubRepoName: 'Orgumented-runtime-repo-with-a-very-long-selected-binding-name',
+      setGithubRepoName: () => undefined,
+      githubRepoDescription: 'Repo used for Orgumented metadata publication.',
+      setGithubRepoDescription: () => undefined,
+      githubRepoPrivate: true,
+      setGithubRepoPrivate: () => undefined,
       activeAlias: longAlias,
       sessionStatus: 'connected',
       orgStatus: {
@@ -35,6 +46,26 @@ function run(): void {
       orgAliases: { activeAlias: longAlias, aliases: [] },
       orgSessionHistory: { restoreAlias: longAlias, events: [] },
       orgSession: { status: 'connected', alias: longAlias, connectedAt: '2026-03-13T01:00:00Z' },
+      githubSession: {
+        status: 'authenticated',
+        cliInstalled: true,
+        authSource: 'gh_cli',
+        viewer: {
+          login: 'sean',
+          name: 'Sean Longname',
+          url: 'https://github.com/sean'
+        },
+        selectedRepo: {
+          owner: 'sean',
+          name: 'Orgumented-runtime-repo-with-a-very-long-selected-binding-name',
+          fullName: longGithubRepo,
+          private: true,
+          visibility: 'private',
+          url: longGithubUrl,
+          defaultBranch: 'main',
+          selectedAt: '2026-03-17T12:00:00Z'
+        }
+      },
       aliasInventory: [
         {
           alias: longAlias,
@@ -44,7 +75,30 @@ function run(): void {
           isDefault: true
         }
       ],
+      githubAccessibleRepos: [
+        {
+          owner: 'sean',
+          name: 'Orgumented-runtime-repo-with-a-very-long-selected-binding-name',
+          fullName: longGithubRepo,
+          private: true,
+          visibility: 'private',
+          url: longGithubUrl,
+          defaultBranch: 'main',
+          selected: true
+        }
+      ],
+      githubSelectedRepo: {
+        owner: 'sean',
+        name: 'Orgumented-runtime-repo-with-a-very-long-selected-binding-name',
+        fullName: longGithubRepo,
+        private: true,
+        visibility: 'private',
+        url: longGithubUrl,
+        defaultBranch: 'main',
+        selected: true
+      },
       recentSessionEvents: [],
+      githubIssues: [],
       selectedAlias: {
         alias: longAlias,
         username: longUsername,
@@ -73,7 +127,12 @@ function run(): void {
       onDisconnect: () => undefined,
       onRestoreLastSession: () => undefined,
       onSelectAlias: () => undefined,
-      onInspectAlias: () => undefined
+      onInspectAlias: () => undefined,
+      onRefreshGithubStatus: () => undefined,
+      onAuthorizeGithub: () => undefined,
+      onLoadGithubRepos: () => undefined,
+      onCreateGithubRepo: () => undefined,
+      onSelectGithubRepo: () => undefined
     } as any)
   );
 
@@ -88,6 +147,11 @@ function run(): void {
   );
   assert.match(connectMarkup, /<strong>Active alias:<\/strong> <span class="path-value">shulman-uat-with-a-very-long-alias-name-that-must-wrap-cleanly<\/span>/);
   assert.match(connectMarkup, /<strong><span class="path-value">shulman-uat-with-a-very-long-alias-name-that-must-wrap-cleanly<\/span><\/strong>/);
+  assert.match(connectMarkup, /<strong>Selected repo:<\/strong> <span class="path-value">sean\/Orgumented-runtime-repo-with-a-very-long-selected-binding-name<\/span>/);
+  assert.match(connectMarkup, /<strong>URL:<\/strong> <span class="path-value">https:\/\/github\.com\/sean\/Orgumented-runtime-repo-with-a-very-long-selected-binding-name<\/span>/);
+  assert.match(connectMarkup, /Authorize GitHub<\/button>/);
+  assert.match(connectMarkup, /Create Repo<\/button>/);
+  assert.match(connectMarkup, /Use Repo<\/button>/);
   assert.match(connectMarkup, /<summary>Advanced session tools<\/summary>/);
   assert.match(connectMarkup, /Bridge CCI Alias<\/button>/);
   assert.doesNotMatch(connectMarkup, /<p class="panel-caption">Operator commands<\/p>/);

@@ -3,6 +3,13 @@
 import { useMemo, useState } from 'react';
 import type { QueryResponse } from '../../lib/ask-client';
 import {
+  createGithubRepo,
+  getGithubSessionStatus,
+  listGithubRepos,
+  loginGithubSession,
+  selectGithubRepo
+} from '../../lib/github-client';
+import {
   bridgeOrgSessionAlias,
   connectOrgSession,
   disconnectOrgSession,
@@ -14,6 +21,10 @@ import {
   switchOrgSession
 } from '../../lib/org-client';
 import type {
+  GithubRepoListPayload,
+  GithubRepoSummary,
+  GithubSessionIssue,
+  GithubSessionPayload,
   OrgAliasSummary,
   OrgPreflightIssue,
   OrgPreflightPayload,
@@ -79,11 +90,17 @@ function responseIndicatesRuntimeUnavailable(response: QueryResponse): boolean {
 
 export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   const [orgAlias, setOrgAlias] = useState('orgumented-sandbox');
+  const [githubRepoOwner, setGithubRepoOwner] = useState('');
+  const [githubRepoName, setGithubRepoName] = useState('');
+  const [githubRepoDescription, setGithubRepoDescription] = useState('');
+  const [githubRepoPrivate, setGithubRepoPrivate] = useState(true);
   const [orgSession, setOrgSession] = useState<OrgSessionPayload | null>(null);
   const [orgStatus, setOrgStatus] = useState<OrgStatusPayload | null>(null);
   const [orgPreflight, setOrgPreflight] = useState<OrgPreflightPayload | null>(null);
   const [orgAliases, setOrgAliases] = useState<OrgSessionAliasesPayload | null>(null);
   const [orgSessionHistory, setOrgSessionHistory] = useState<OrgSessionHistoryPayload | null>(null);
+  const [githubSession, setGithubSession] = useState<GithubSessionPayload | null>(null);
+  const [githubRepos, setGithubRepos] = useState<GithubRepoListPayload | null>(null);
   const [runtimeUnavailable, setRuntimeUnavailable] = useState(false);
 
   const aliasInventory = orgAliases?.aliases ?? [];
@@ -105,6 +122,9 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       orgPreflight?.checks?.aliasAuthenticated &&
       orgPreflight?.checks?.sfInstalled
   );
+  const githubAccessibleRepos = githubRepos?.repos ?? [];
+  const githubSelectedRepo = githubRepos?.selectedRepo || githubSession?.selectedRepo || null;
+  const githubIssues = githubSession?.issues ?? [];
 
   async function runAction(
     action: () => Promise<QueryResponse>,
@@ -293,14 +313,104 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     await refreshOverview(alias);
   }
 
+  function syncGithubOwnerDefaults(
+    payload: GithubSessionPayload | GithubRepoListPayload | null,
+    preserveExistingOwner = true
+  ): void {
+    const viewerLogin = payload?.viewer?.login?.trim();
+    if (!viewerLogin) {
+      return;
+    }
+
+    if (!preserveExistingOwner || githubRepoOwner.trim().length === 0) {
+      setGithubRepoOwner(viewerLogin);
+    }
+  }
+
+  function refreshGithubStatus(): Promise<QueryResponse | null> {
+    return runAction(() => getGithubSessionStatus(), (response) => {
+      const payload = readPayload<GithubSessionPayload>(response);
+      setGithubSession(payload);
+      syncGithubOwnerDefaults(payload);
+    });
+  }
+
+  function authorizeGithub(): Promise<QueryResponse | null> {
+    return runAction(() => loginGithubSession(), async (response) => {
+      const payload = readPayload<GithubSessionPayload>(response);
+      setGithubSession(payload);
+      syncGithubOwnerDefaults(payload, false);
+      const reposResponse = await listGithubRepos();
+      const reposPayload = readPayload<GithubRepoListPayload>(reposResponse);
+      setGithubRepos(reposPayload);
+    });
+  }
+
+  function loadGithubReposAction(): Promise<QueryResponse | null> {
+    return runAction(() => listGithubRepos(), (response) => {
+      const payload = readPayload<GithubRepoListPayload>(response);
+      setGithubRepos(payload);
+      syncGithubOwnerDefaults(payload);
+    });
+  }
+
+  function createGithubRepoAction(): Promise<QueryResponse | QueryResponse | null> {
+    const name = githubRepoName.trim();
+    const owner = githubRepoOwner.trim();
+    if (!name) {
+      const fallback: QueryResponse = { ok: false, error: { message: 'GitHub repo name is required.' } };
+      options.presentResponse(fallback);
+      options.setErrorText('Enter a GitHub repo name before creating a repo.');
+      return Promise.resolve(fallback);
+    }
+
+    return runAction(
+      () =>
+        createGithubRepo({
+          owner: owner || undefined,
+          name,
+          description: githubRepoDescription.trim() || undefined,
+          visibility: githubRepoPrivate ? 'private' : 'public'
+        }),
+      async (response) => {
+        await refreshGithubStatus();
+        await loadGithubReposAction();
+        const payload = readPayload<{ selectedRepo?: GithubRepoSummary }>(response);
+        if (payload?.selectedRepo?.owner) {
+          setGithubRepoOwner(payload.selectedRepo.owner);
+        }
+        setGithubRepoName('');
+        setGithubRepoDescription('');
+      }
+    );
+  }
+
+  function selectGithubRepoAction(owner: string, repo: string): Promise<QueryResponse | null> {
+    return runAction(() => selectGithubRepo({ owner, repo }), async () => {
+      await refreshGithubStatus();
+      await loadGithubReposAction();
+      setGithubRepoOwner(owner);
+    });
+  }
+
   return {
     orgAlias,
     setOrgAlias,
+    githubRepoOwner,
+    setGithubRepoOwner,
+    githubRepoName,
+    setGithubRepoName,
+    githubRepoDescription,
+    setGithubRepoDescription,
+    githubRepoPrivate,
+    setGithubRepoPrivate,
     orgSession,
     orgStatus,
     orgPreflight,
     orgAliases,
     orgSessionHistory,
+    githubSession,
+    githubRepos,
     activeAlias,
     sessionStatus,
     restoreAlias,
@@ -313,6 +423,9 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     browserSeeded,
     selectedAliasReady,
     runtimeUnavailable,
+    githubAccessibleRepos,
+    githubSelectedRepo,
+    githubIssues: githubIssues as GithubSessionIssue[],
     loadAliases,
     checkSession,
     loadSessionHistory,
@@ -325,6 +438,11 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     disconnect,
     restoreLastSession,
     selectAlias,
-    inspectAlias
+    inspectAlias,
+    refreshGithubStatus,
+    authorizeGithub,
+    loadGithubRepos: loadGithubReposAction,
+    createGithubRepo: createGithubRepoAction,
+    selectGithubRepo: selectGithubRepoAction
   };
 }

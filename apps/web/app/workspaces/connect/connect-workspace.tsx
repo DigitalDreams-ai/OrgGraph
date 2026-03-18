@@ -8,6 +8,9 @@ import {
   type ToolStatusSource
 } from '../../shell/org-status-surface';
 import type {
+  GithubRepoSummary,
+  GithubSessionIssue,
+  GithubSessionPayload,
   OrgAliasSummary,
   OrgPreflightIssue,
   OrgPreflightPayload,
@@ -21,6 +24,14 @@ import type {
 interface ConnectWorkspaceProps {
   orgAlias: string;
   setOrgAlias: (value: string) => void;
+  githubRepoOwner: string;
+  setGithubRepoOwner: (value: string) => void;
+  githubRepoName: string;
+  setGithubRepoName: (value: string) => void;
+  githubRepoDescription: string;
+  setGithubRepoDescription: (value: string) => void;
+  githubRepoPrivate: boolean;
+  setGithubRepoPrivate: (value: boolean) => void;
   activeAlias: string;
   sessionStatus: string;
   orgStatus: OrgStatusPayload | null;
@@ -28,8 +39,12 @@ interface ConnectWorkspaceProps {
   orgAliases: OrgSessionAliasesPayload | null;
   orgSessionHistory: OrgSessionHistoryPayload | null;
   orgSession: OrgSessionPayload | null;
+  githubSession: GithubSessionPayload | null;
   aliasInventory: OrgAliasSummary[];
+  githubAccessibleRepos: GithubRepoSummary[];
+  githubSelectedRepo: GithubRepoSummary | null;
   recentSessionEvents: OrgSessionAuditEntry[];
+  githubIssues: GithubSessionIssue[];
   selectedAlias: OrgAliasSummary | null;
   preflightIssues: OrgPreflightIssue[];
   toolingReady: boolean;
@@ -53,6 +68,11 @@ interface ConnectWorkspaceProps {
   onRestoreLastSession: () => void;
   onSelectAlias: (alias: string) => void;
   onInspectAlias: (alias: string) => void;
+  onRefreshGithubStatus: () => void;
+  onAuthorizeGithub: () => void;
+  onLoadGithubRepos: () => void;
+  onCreateGithubRepo: () => void;
+  onSelectGithubRepo: (owner: string, repo: string) => void;
 }
 
 function formatTimestamp(value?: string): string {
@@ -135,6 +155,16 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
       falseLabel: 'no'
     }
   );
+  const githubStatus = props.githubSession?.status || 'unauthenticated';
+  const githubViewer = props.githubSession?.viewer;
+  const githubSelectedRepo = props.githubSelectedRepo;
+  const githubCliLabel = props.githubSession?.cliInstalled ? 'installed' : 'missing';
+  const githubAuthSource =
+    props.githubSession?.authSource === 'env_token'
+      ? 'env token'
+      : props.githubSession?.authSource === 'gh_cli'
+        ? 'gh cli'
+        : 'none';
 
   return (
     <>
@@ -241,6 +271,33 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           <p><strong>Inventory source:</strong> sf CLI keychain</p>
           <p className="muted">Use Refresh Overview to re-sync status, aliases, and preflight in one pass.</p>
         </article>
+
+        <article className="sub-card">
+          <p className="panel-caption">GitHub support plane</p>
+          <h3>Auth and selected repo</h3>
+          <div className="decision-meta">
+            <span className={`decision-badge ${githubStatus === 'authenticated' ? 'good' : 'muted'}`}>
+              GitHub: {githubStatus}
+            </span>
+            <span className={`decision-badge ${props.githubSession?.cliInstalled ? 'good' : 'bad'}`}>
+              gh: {githubCliLabel}
+            </span>
+            <span className="decision-badge muted">Source: {githubAuthSource}</span>
+          </div>
+          <p><strong>Viewer:</strong> <span className="path-value">{githubViewer?.login || 'n/a'}</span></p>
+          <p><strong>Name:</strong> <span className="path-value">{githubViewer?.name || 'n/a'}</span></p>
+          <p><strong>Selected repo:</strong> <span className="path-value">{githubSelectedRepo?.fullName || 'n/a'}</span></p>
+          <p><strong>Visibility:</strong> {githubSelectedRepo?.visibility || 'n/a'}</p>
+          <p><strong>Default branch:</strong> <span className="path-value">{githubSelectedRepo?.defaultBranch || 'n/a'}</span></p>
+          <p className="muted">
+            Orgumented uses local <code>gh</code> for GitHub sign-in and keeps one explicit selected repo binding for future repo-backed workflows.
+          </p>
+          <div className="action-row">
+            <button type="button" onClick={props.onRefreshGithubStatus} disabled={props.loading}>Refresh GitHub</button>
+            <button type="button" onClick={props.onAuthorizeGithub} disabled={props.loading}>Authorize GitHub</button>
+            <button type="button" className="ghost" onClick={props.onLoadGithubRepos} disabled={props.loading}>Load Repos</button>
+          </div>
+        </article>
       </div>
 
       <div className="action-row">
@@ -301,6 +358,59 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           ) : (
             <p className="muted">No recent auth/session events have been recorded yet.</p>
           )}
+        </article>
+
+        <article className="sub-card" role="status" aria-live="polite">
+          <p className="panel-caption">GitHub readiness</p>
+          <h3>Issues and repo tools</h3>
+          {props.githubIssues.length > 0 ? (
+            <ul className="issue-list">
+              {props.githubIssues.map((issue) => (
+                <li key={`${issue.code || 'issue'}-${issue.message || 'message'}`}>
+                  <div className="decision-meta">
+                    <span className={`decision-badge ${issue.severity === 'error' ? 'bad' : 'muted'}`}>
+                      {issue.severity || 'warning'}
+                    </span>
+                    <span className="decision-badge muted">{issue.code || 'issue'}</span>
+                  </div>
+                  <p><strong>{issue.message || 'Unknown issue'}</strong></p>
+                  <p>{issue.remediation || 'No remediation provided.'}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">No current GitHub auth issues are recorded.</p>
+          )}
+
+          <div className="ops-grid compact-grid">
+            <label>
+              GitHub repo owner
+              <input value={props.githubRepoOwner} onChange={(e) => props.setGithubRepoOwner(e.target.value)} placeholder="owner or org" />
+            </label>
+            <label>
+              GitHub repo name
+              <input value={props.githubRepoName} onChange={(e) => props.setGithubRepoName(e.target.value)} placeholder="orgumented-runtime" />
+            </label>
+          </div>
+          <label>
+            Description
+            <input
+              value={props.githubRepoDescription}
+              onChange={(e) => props.setGithubRepoDescription(e.target.value)}
+              placeholder="Optional repo description"
+            />
+          </label>
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={props.githubRepoPrivate}
+              onChange={(e) => props.setGithubRepoPrivate(e.target.checked)}
+            />
+            Create as private repo
+          </label>
+          <div className="action-row">
+            <button type="button" onClick={props.onCreateGithubRepo} disabled={props.loading}>Create Repo</button>
+          </div>
         </article>
       </div>
 
@@ -368,6 +478,35 @@ cci org info ${props.orgAlias}`}</pre>
                 </li>
               );
             })}
+          </ul>
+        </div>
+      ) : null}
+
+      {props.githubAccessibleRepos.length > 0 ? (
+        <div className="sub-card">
+          <p className="panel-caption">Accessible repos</p>
+          <h3>Available GitHub bindings</h3>
+          <ul className="ops-list">
+            {props.githubAccessibleRepos.map((repo) => (
+              <li key={repo.fullName} className="ops-list-item">
+                <div>
+                  <div className="decision-meta">
+                    <span className={`decision-badge ${repo.selected ? 'good' : 'muted'}`}>
+                      {repo.selected ? 'selected' : repo.visibility}
+                    </span>
+                    <span className="decision-badge muted">{repo.defaultBranch || 'no default branch'}</span>
+                  </div>
+                  <p><strong><span className="path-value">{repo.fullName}</span></strong></p>
+                  <p>{repo.description || 'No description provided.'}</p>
+                  <p><strong>URL:</strong> <span className="path-value">{repo.url || 'n/a'}</span></p>
+                </div>
+                <div className="ops-list-actions">
+                  <button type="button" onClick={() => props.onSelectGithubRepo(repo.owner, repo.name)}>
+                    Use Repo
+                  </button>
+                </div>
+              </li>
+            ))}
           </ul>
         </div>
       ) : null}

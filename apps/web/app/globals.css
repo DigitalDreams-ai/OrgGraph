@@ -848,6 +848,10 @@ button.ghost {
   margin-bottom: 0.8rem;
 }
 
+.compact-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
 .analysis-grid > *,
 .analysis-stat-grid > *,
 .ops-grid > * {
@@ -898,6 +902,12 @@ button.ghost {
   flex-wrap: wrap;
   gap: 0.45rem;
   justify-content: flex-end;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
 }
 
 pre {

@@ -168,4 +168,8 @@ export class RuntimePathsService {
   orgRetrieveAuditPath(): string {
     return path.join(this.appDataRoot(), 'org', 'sf-retrieve-audit.log');
   }
+
+  githubSelectedRepoPath(): string {
+    return path.join(this.appDataRoot(), 'github', 'selected-repo.json');
+  }
 }
