@@ -232,6 +232,14 @@ export default function Page(): JSX.Element {
             <ConnectWorkspace
               orgAlias={connectWorkspace.orgAlias}
               setOrgAlias={connectWorkspace.setOrgAlias}
+              githubRepoOwner={connectWorkspace.githubRepoOwner}
+              setGithubRepoOwner={connectWorkspace.setGithubRepoOwner}
+              githubRepoName={connectWorkspace.githubRepoName}
+              setGithubRepoName={connectWorkspace.setGithubRepoName}
+              githubRepoDescription={connectWorkspace.githubRepoDescription}
+              setGithubRepoDescription={connectWorkspace.setGithubRepoDescription}
+              githubRepoPrivate={connectWorkspace.githubRepoPrivate}
+              setGithubRepoPrivate={connectWorkspace.setGithubRepoPrivate}
               activeAlias={connectWorkspace.activeAlias}
               sessionStatus={connectWorkspace.sessionStatus}
               orgStatus={connectWorkspace.orgStatus}
@@ -239,8 +247,12 @@ export default function Page(): JSX.Element {
               orgAliases={connectWorkspace.orgAliases}
               orgSessionHistory={connectWorkspace.orgSessionHistory}
               orgSession={connectWorkspace.orgSession}
+              githubSession={connectWorkspace.githubSession}
               aliasInventory={connectWorkspace.aliasInventory}
+              githubAccessibleRepos={connectWorkspace.githubAccessibleRepos}
+              githubSelectedRepo={connectWorkspace.githubSelectedRepo}
               recentSessionEvents={connectWorkspace.recentSessionEvents}
+              githubIssues={connectWorkspace.githubIssues}
               selectedAlias={connectWorkspace.selectedAlias}
               preflightIssues={connectWorkspace.preflightIssues}
               toolingReady={connectWorkspace.toolingReady}
@@ -264,6 +276,11 @@ export default function Page(): JSX.Element {
               onRestoreLastSession={() => void connectWorkspace.restoreLastSession()}
               onSelectAlias={connectWorkspace.selectAlias}
               onInspectAlias={(alias) => void connectWorkspace.inspectAlias(alias)}
+              onRefreshGithubStatus={() => void connectWorkspace.refreshGithubStatus()}
+              onAuthorizeGithub={() => void connectWorkspace.authorizeGithub()}
+              onLoadGithubRepos={() => void connectWorkspace.loadGithubRepos()}
+              onCreateGithubRepo={() => void connectWorkspace.createGithubRepo()}
+              onSelectGithubRepo={(owner, repo) => void connectWorkspace.selectGithubRepo(owner, repo)}
             />
           )}
 

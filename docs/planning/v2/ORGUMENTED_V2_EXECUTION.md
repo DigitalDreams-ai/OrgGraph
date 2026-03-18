@@ -89,6 +89,7 @@ Materially true now:
 - wave7 acceptance is now proxy-first: the canonical benchmark can publish and verify from deterministic proxy evidence alone, while optional human capture remains exploratory and non-blocking
 - wave7 proxy-only benchmark publication is now green on current main: `pnpm phase17:benchmark:human:publish`, `pnpm phase17:benchmark:human:verify`, and `pnpm phase17:benchmark:human:status` regenerate and validate the canonical results file against proxy provenance without requiring a human capture artifact
 - wave7 GitHub publication is now live in the engine as a fail-closed, proof-bound PR comment publisher: `/github/pr/comment-review-packet` upserts one review-packet comment per `proofId`, preserving `proofId`, `replayToken`, snapshot/policy provenance, recommendation summary, evidence gaps, and next actions without publishing raw JSON
+- wave11 GitHub support-plane follow-up now adds local `gh`-backed GitHub session status/login plus typed repo list/create/select flows in Org Sessions, so operators can authorize GitHub locally, inspect accessible repos, and bind one explicit destination repo without inventing a separate OAuth stack
 - flow read/write asks remain on the legacy planner path in this slice; semantic-frame rollout is still intentionally bounded to impact + field/object automation + graph-global permission asks only
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model
@@ -329,8 +330,9 @@ Orgumented keeps owning:
 
 Current support-track status:
 - planning and ownership policy are complete
-- overall implementation is still early, roughly 25%
-- no read-only repo/PR adapter is in the engine yet
+- overall implementation is still early, roughly 40%
+- local `gh`-backed GitHub auth/session plus typed repo list/create/select is now live in the engine and Connect workspace
+- no read-only branch/PR-context adapter is in the engine yet
 - a proof-bound PR comment publication path is now live in the engine
 - no typed GitHub workflow dispatch/status-ingest path is live yet
 - current live `cci` support remains the alias bridge / project-support baseline, not the full typed local job registry

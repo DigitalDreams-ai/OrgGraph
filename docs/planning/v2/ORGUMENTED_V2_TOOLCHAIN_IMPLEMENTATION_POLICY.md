@@ -13,6 +13,7 @@ Companion docs:
 Define the concrete ownership boundary between:
 - `sf`
 - `cci`
+- local `gh`
 - GitHub / GitHub Actions
 - Orgumented itself
 
@@ -34,6 +35,7 @@ This policy exists to prevent tool overlap, hidden fallback, and accidental reim
 | Concern | Primary owner | Secondary owner | Reason |
 |---|---|---|---|
 | org authorization / alias login | `sf` | none | `sf` is the current authenticated source of truth and the repo already enforces `sf_cli_keychain` as the auth method |
+| GitHub sign-in / local repo authorization | local `gh` | env token as explicit override | reuse the standard local GitHub CLI login flow instead of inventing a custom OAuth surface first |
 | alias discovery / current-org inspection | `sf` | `cci` for registry visibility only | alias/session truth should come from the authenticated Salesforce CLI state |
 | raw metadata list/search/retrieve | `sf` | none by default | raw metadata IO is a direct platform primitive and should stay deterministic and tool-simple |
 | future direct org query/read commands | `sf` | typed engine adapters | direct query/read should stay on the raw authenticated CLI path unless a stronger typed adapter is introduced |
@@ -84,6 +86,11 @@ Rule:
 
 ### GitHub / GitHub Actions Own
 
+Local `gh` owns:
+- interactive GitHub login / authorization on the operator machine
+- local authenticated GitHub user context
+- local fallback token resolution when a dedicated `GITHUB_TOKEN` override is not configured
+
 GitHub owns:
 - repository history and compare surfaces
 - pull requests and review threads
@@ -99,6 +106,7 @@ GitHub Actions is the preferred place for:
 
 Rule:
 - if the task is shared, review-facing, CI-facing, or release-facing, prefer GitHub / GitHub Actions
+- if the task is local GitHub sign-in or local repo selection, prefer `gh`
 
 ## What Must Not Move To `cci`
 

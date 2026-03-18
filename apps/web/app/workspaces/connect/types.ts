@@ -78,3 +78,51 @@ export type OrgPreflightPayload = {
   issues?: OrgPreflightIssue[];
   session?: OrgSessionPayload;
 };
+
+export type GithubSessionIssue = {
+  code?: string;
+  severity?: 'error' | 'warning';
+  message?: string;
+  remediation?: string;
+};
+
+export type GithubViewerSummary = {
+  login: string;
+  name?: string;
+  url?: string;
+};
+
+export type GithubRepoSummary = {
+  owner: string;
+  name: string;
+  fullName: string;
+  description?: string;
+  visibility: 'public' | 'private' | 'internal';
+  private: boolean;
+  url?: string;
+  cloneUrl?: string;
+  defaultBranch?: string;
+  selected?: boolean;
+};
+
+export type GithubSelectedRepo = GithubRepoSummary & {
+  selectedAt?: string;
+};
+
+export type GithubSessionPayload = {
+  status?: 'authenticated' | 'unauthenticated';
+  hostname?: string;
+  cliInstalled?: boolean;
+  authSource?: 'env_token' | 'gh_cli' | 'none';
+  viewer?: GithubViewerSummary;
+  selectedRepo?: GithubSelectedRepo;
+  issues?: GithubSessionIssue[];
+};
+
+export type GithubRepoListPayload = {
+  status?: 'loaded';
+  hostname?: string;
+  viewer?: GithubViewerSummary;
+  selectedRepo?: GithubSelectedRepo;
+  repos?: GithubRepoSummary[];
+};

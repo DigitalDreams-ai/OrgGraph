@@ -9,6 +9,7 @@ import { OrgToolAdapterService } from './org-tool-adapter.service';
 @Module({
   imports: [ConfigModule, IngestionModule],
   providers: [OrgService, CommandRunnerService, OrgToolAdapterService],
-  controllers: [OrgController]
+  controllers: [OrgController],
+  exports: [CommandRunnerService]
 })
 export class OrgModule {}

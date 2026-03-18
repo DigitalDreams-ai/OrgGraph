@@ -55,6 +55,14 @@ function run(): void {
     createElement(ConnectWorkspace, {
       orgAlias: 'shulman-uat',
       setOrgAlias: () => undefined,
+      githubRepoOwner: 'sean',
+      setGithubRepoOwner: () => undefined,
+      githubRepoName: 'orgumented-runtime',
+      setGithubRepoName: () => undefined,
+      githubRepoDescription: '',
+      setGithubRepoDescription: () => undefined,
+      githubRepoPrivate: true,
+      setGithubRepoPrivate: () => undefined,
       activeAlias: 'shulman-uat',
       sessionStatus: 'connected',
       orgStatus: {
@@ -73,8 +81,36 @@ function run(): void {
       orgAliases: null,
       orgSessionHistory: null,
       orgSession: null,
+      githubSession: {
+        status: 'authenticated',
+        cliInstalled: true,
+        authSource: 'gh_cli',
+        viewer: {
+          login: 'sean',
+          name: 'Sean',
+          url: 'https://github.com/sean'
+        },
+        selectedRepo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime'
+        }
+      },
       aliasInventory: [],
+      githubAccessibleRepos: [],
+      githubSelectedRepo: {
+        owner: 'sean',
+        name: 'orgumented-runtime',
+        fullName: 'sean/orgumented-runtime',
+        private: true,
+        visibility: 'private',
+        url: 'https://github.com/sean/orgumented-runtime'
+      },
       recentSessionEvents: [],
+      githubIssues: [],
       selectedAlias: null,
       preflightIssues: [{ severity: 'warning', code: 'missing_parse_path', message: 'Parse path missing.' }],
       toolingReady: true,
@@ -97,7 +133,12 @@ function run(): void {
       onDisconnect: () => undefined,
       onRestoreLastSession: () => undefined,
       onSelectAlias: () => undefined,
-      onInspectAlias: () => undefined
+      onInspectAlias: () => undefined,
+      onRefreshGithubStatus: () => undefined,
+      onAuthorizeGithub: () => undefined,
+      onLoadGithubRepos: () => undefined,
+      onCreateGithubRepo: () => undefined,
+      onSelectGithubRepo: () => undefined
     })
   );
   assert.match(connectMarkup, /for="orgAlias"/);

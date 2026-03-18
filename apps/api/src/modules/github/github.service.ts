@@ -5,13 +5,27 @@ import {
   NotFoundException,
   ServiceUnavailableException
 } from '@nestjs/common';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import { AppConfigService } from '../../config/app-config.service';
+import { RuntimePathsService } from '../../config/runtime-paths.service';
 import { AskProofStoreService } from '../ask/ask-proof-store.service';
 import type { AskDecisionPacket, AskProofArtifact } from '../ask/ask.types';
+import { GithubToolAdapterService } from './github-tool-adapter.service';
 import type {
+  GithubCreateRepoRequest,
+  GithubCreateRepoResponse,
   GithubPublishReviewPacketCommentRequest,
   GithubPublishReviewPacketCommentResponse,
-  GithubReviewPacketPayload
+  GithubRepoListResponse,
+  GithubRepoSummary,
+  GithubReviewPacketPayload,
+  GithubSelectedRepoState,
+  GithubSelectRepoRequest,
+  GithubSelectRepoResponse,
+  GithubSessionIssue,
+  GithubSessionStatusResponse,
+  GithubViewerSummary
 } from './github.types';
 
 interface GithubIssueComment {
@@ -20,30 +34,200 @@ interface GithubIssueComment {
   html_url?: string;
 }
 
+interface GithubApiRepo {
+  name?: string;
+  full_name?: string;
+  private?: boolean;
+  visibility?: 'public' | 'private' | 'internal';
+  html_url?: string;
+  clone_url?: string;
+  description?: string | null;
+  default_branch?: string;
+  owner?: {
+    login?: string;
+  };
+}
+
+interface GithubViewerApiPayload {
+  login?: string;
+  name?: string | null;
+  html_url?: string;
+}
+
+type ResolvedGithubAuth = {
+  token: string;
+  authSource: 'env_token' | 'gh_cli';
+  cliInstalled: boolean;
+};
+
 @Injectable()
 export class GithubService {
+  private static readonly HOSTNAME = 'github.com';
+
   constructor(
     private readonly config: AppConfigService,
-    private readonly proofStore: AskProofStoreService
+    private readonly runtimePaths: RuntimePathsService,
+    private readonly proofStore: AskProofStoreService,
+    private readonly githubToolAdapter: GithubToolAdapterService
   ) {}
+
+  async sessionStatus(): Promise<GithubSessionStatusResponse> {
+    const cwd = this.runtimePaths.workspaceRoot();
+    const cliProbe = await this.githubToolAdapter.probeGh(cwd);
+    const cliInstalled = cliProbe.exitCode === 0;
+    const issues: GithubSessionIssue[] = [];
+    const selectedRepo = this.readSelectedRepoState();
+
+    try {
+      const auth = await this.resolveGithubAuth();
+      const viewer = await this.loadViewer(auth.token);
+      return {
+        status: 'authenticated',
+        hostname: GithubService.HOSTNAME,
+        cliInstalled: auth.cliInstalled,
+        authSource: auth.authSource,
+        viewer,
+        selectedRepo,
+        issues
+      };
+    } catch {
+      if (!cliInstalled && !this.config.githubToken()) {
+        issues.push({
+          code: 'GH_CLI_MISSING',
+          severity: 'error',
+          message: 'GitHub CLI is not available in the local runtime.',
+          remediation: 'Install gh locally or configure GITHUB_TOKEN for explicit API access.'
+        });
+      } else {
+        issues.push({
+          code: 'GITHUB_NOT_AUTHENTICATED',
+          severity: 'warning',
+          message: 'No authenticated GitHub session is available for Orgumented.',
+          remediation: 'Use Authorize GitHub to sign in with gh, or configure GITHUB_TOKEN explicitly.'
+        });
+      }
+
+      return {
+        status: 'unauthenticated',
+        hostname: GithubService.HOSTNAME,
+        cliInstalled,
+        authSource: 'none',
+        selectedRepo,
+        issues
+      };
+    }
+  }
+
+  async loginSession(): Promise<GithubSessionStatusResponse> {
+    if (this.config.githubToken()) {
+      return this.sessionStatus();
+    }
+
+    const cwd = this.runtimePaths.workspaceRoot();
+    const cliProbe = await this.githubToolAdapter.probeGh(cwd);
+    if (cliProbe.exitCode !== 0) {
+      throw new ServiceUnavailableException('GitHub CLI is not available in the local runtime');
+    }
+
+    const login = await this.githubToolAdapter.authLogin(cwd, GithubService.HOSTNAME);
+    if (login.exitCode !== 0) {
+      throw new BadGatewayException(login.stderr || login.stdout || 'GitHub login failed');
+    }
+
+    return this.sessionStatus();
+  }
+
+  async listRepos(limitRaw?: number): Promise<GithubRepoListResponse> {
+    const limit = this.normalizeRepoLimit(limitRaw);
+    const auth = await this.resolveGithubAuth();
+    const viewer = await this.loadViewer(auth.token);
+    const response = await this.githubRequest(
+      auth.token,
+      `/user/repos?sort=updated&per_page=${limit}&affiliation=owner,collaborator,organization_member`,
+      { method: 'GET' }
+    );
+    const repos = ((await response.json()) as GithubApiRepo[])
+      .map((repo) => this.mapRepo(repo, this.readSelectedRepoState()))
+      .filter((repo): repo is GithubRepoSummary => repo !== undefined)
+      .sort((left, right) => left.fullName.localeCompare(right.fullName));
+
+    return {
+      status: 'loaded',
+      hostname: GithubService.HOSTNAME,
+      viewer,
+      selectedRepo: this.readSelectedRepoState(),
+      repos
+    };
+  }
+
+  async createRepo(request: GithubCreateRepoRequest): Promise<GithubCreateRepoResponse> {
+    const name = request.name?.trim();
+    if (!name) {
+      throw new BadRequestException('name is required');
+    }
+    if (!/^[A-Za-z0-9._-]+$/.test(name)) {
+      throw new BadRequestException('name may contain only letters, numbers, dot, underscore, and dash');
+    }
+
+    const auth = await this.resolveGithubAuth();
+    const viewer = await this.loadViewer(auth.token);
+    const owner = request.owner?.trim() || viewer.login;
+    const description = request.description?.trim() || undefined;
+    const visibility = request.visibility === 'public' ? 'public' : 'private';
+    const body = {
+      name,
+      description,
+      private: visibility !== 'public'
+    };
+
+    const relativePath =
+      owner.toLowerCase() === viewer.login.toLowerCase() ? '/user/repos' : `/orgs/${encodeURIComponent(owner)}/repos`;
+    const response = await this.githubRequest(auth.token, relativePath, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    const repo = this.mapRepo((await response.json()) as GithubApiRepo);
+    if (!repo) {
+      throw new BadGatewayException('GitHub create repo response was missing repository details');
+    }
+
+    const selectedRepo = this.persistSelectedRepo(repo);
+    return {
+      status: 'created',
+      repo: {
+        ...repo,
+        selected: true
+      },
+      selectedRepo
+    };
+  }
+
+  async selectRepo(request: GithubSelectRepoRequest): Promise<GithubSelectRepoResponse> {
+    const owner = request.owner?.trim();
+    const repo = request.repo?.trim();
+    if (!owner || !repo) {
+      throw new BadRequestException('owner and repo are required');
+    }
+
+    const auth = await this.resolveGithubAuth();
+    const response = await this.githubRequest(auth.token, `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, {
+      method: 'GET'
+    });
+    const mappedRepo = this.mapRepo((await response.json()) as GithubApiRepo);
+    if (!mappedRepo) {
+      throw new BadGatewayException('GitHub repo lookup response was missing repository details');
+    }
+
+    return {
+      status: 'selected',
+      repo: this.persistSelectedRepo(mappedRepo)
+    };
+  }
 
   async publishReviewPacketComment(
     request: GithubPublishReviewPacketCommentRequest
   ): Promise<GithubPublishReviewPacketCommentResponse> {
-    if (!this.config.githubIntegrationEnabled()) {
-      throw new ServiceUnavailableException('GitHub integration is disabled');
-    }
-
-    const token = this.config.githubToken();
-    if (!token) {
-      throw new ServiceUnavailableException('GitHub token is not configured');
-    }
-
-    const owner = request.owner?.trim() || this.config.githubRepoOwner();
-    const repo = request.repo?.trim() || this.config.githubRepoName();
-    if (!owner || !repo) {
-      throw new BadRequestException('owner and repo are required');
-    }
+    const auth = await this.resolveGithubAuth();
 
     if (!Number.isInteger(request.pullNumber) || request.pullNumber < 1) {
       throw new BadRequestException('pullNumber must be a positive integer');
@@ -51,6 +235,11 @@ export class GithubService {
 
     if (typeof request.proofId !== 'string' || request.proofId.trim().length === 0) {
       throw new BadRequestException('proofId is required');
+    }
+
+    const targetRepo = this.resolveTargetRepo(request.owner, request.repo);
+    if (!targetRepo) {
+      throw new BadRequestException('owner and repo are required or a selected GitHub repo must be bound first');
     }
 
     const proof = this.proofStore.findByProofId(request.proofId.trim());
@@ -69,14 +258,20 @@ export class GithubService {
 
     const marker = this.buildCommentMarker(proof.proofId);
     const body = this.buildReviewPacketComment(marker, proof, payload);
-    const existing = await this.findExistingComment(token, owner, repo, request.pullNumber, marker);
+    const existing = await this.findExistingComment(
+      auth.token,
+      targetRepo.owner,
+      targetRepo.repo,
+      request.pullNumber,
+      marker
+    );
 
     if (existing) {
-      const updated = await this.patchComment(token, owner, repo, existing.id, body);
+      const updated = await this.patchComment(auth.token, targetRepo.owner, targetRepo.repo, existing.id, body);
       return {
         status: 'published',
-        owner,
-        repo,
+        owner: targetRepo.owner,
+        repo: targetRepo.repo,
         pullNumber: request.pullNumber,
         proofId: proof.proofId,
         replayToken: proof.replayToken,
@@ -86,11 +281,11 @@ export class GithubService {
       };
     }
 
-    const created = await this.createComment(token, owner, repo, request.pullNumber, body);
+    const created = await this.createComment(auth.token, targetRepo.owner, targetRepo.repo, request.pullNumber, body);
     return {
       status: 'published',
-      owner,
-      repo,
+      owner: targetRepo.owner,
+      repo: targetRepo.repo,
       pullNumber: request.pullNumber,
       proofId: proof.proofId,
       replayToken: proof.replayToken,
@@ -98,6 +293,176 @@ export class GithubService {
       commentId: created.id,
       commentUrl: created.html_url
     };
+  }
+
+  private normalizeRepoLimit(limitRaw?: number): number {
+    if (limitRaw === undefined) {
+      return 100;
+    }
+    if (!Number.isInteger(limitRaw) || limitRaw < 1 || limitRaw > 100) {
+      throw new BadRequestException('limit must be an integer between 1 and 100');
+    }
+    return limitRaw;
+  }
+
+  private async resolveGithubAuth(): Promise<ResolvedGithubAuth> {
+    const envToken = this.config.githubToken();
+    if (envToken) {
+      return {
+        token: envToken,
+        authSource: 'env_token',
+        cliInstalled: (await this.githubToolAdapter.probeGh(this.runtimePaths.workspaceRoot())).exitCode === 0
+      };
+    }
+
+    const cwd = this.runtimePaths.workspaceRoot();
+    const cliProbe = await this.githubToolAdapter.probeGh(cwd);
+    if (cliProbe.exitCode !== 0) {
+      throw new ServiceUnavailableException('GitHub CLI is not available in the local runtime');
+    }
+
+    const tokenResult = await this.githubToolAdapter.authToken(cwd, GithubService.HOSTNAME);
+    const token = tokenResult.stdout.trim();
+    if (tokenResult.exitCode !== 0 || token.length === 0) {
+      throw new ServiceUnavailableException('GitHub is not authenticated locally');
+    }
+
+    return {
+      token,
+      authSource: 'gh_cli',
+      cliInstalled: true
+    };
+  }
+
+  private async loadViewer(token: string): Promise<GithubViewerSummary> {
+    const response = await this.githubRequest(token, '/user', { method: 'GET' });
+    const viewer = (await response.json()) as GithubViewerApiPayload;
+    if (!viewer.login || typeof viewer.login !== 'string') {
+      throw new BadGatewayException('GitHub viewer response did not include a login');
+    }
+    return {
+      login: viewer.login.trim(),
+      name: typeof viewer.name === 'string' ? viewer.name.trim() || undefined : undefined,
+      url: typeof viewer.html_url === 'string' ? viewer.html_url.trim() || undefined : undefined
+    };
+  }
+
+  private mapRepo(repo: GithubApiRepo, selectedRepo = this.readSelectedRepoState()): GithubRepoSummary | undefined {
+    const owner = typeof repo.owner?.login === 'string' ? repo.owner.login.trim() : '';
+    const name = typeof repo.name === 'string' ? repo.name.trim() : '';
+    const fullName =
+      typeof repo.full_name === 'string' && repo.full_name.trim().length > 0 ? repo.full_name.trim() : owner && name ? `${owner}/${name}` : '';
+    if (!owner || !name || !fullName) {
+      return undefined;
+    }
+
+    const visibility =
+      repo.visibility === 'private' || repo.visibility === 'internal' || repo.visibility === 'public'
+        ? repo.visibility
+        : repo.private
+          ? 'private'
+          : 'public';
+
+    return {
+      owner,
+      name,
+      fullName,
+      description: typeof repo.description === 'string' ? repo.description.trim() || undefined : undefined,
+      visibility,
+      private: Boolean(repo.private),
+      url: typeof repo.html_url === 'string' ? repo.html_url.trim() || undefined : undefined,
+      cloneUrl: typeof repo.clone_url === 'string' ? repo.clone_url.trim() || undefined : undefined,
+      defaultBranch: typeof repo.default_branch === 'string' ? repo.default_branch.trim() || undefined : undefined,
+      selected: Boolean(
+        selectedRepo &&
+          selectedRepo.owner.toLowerCase() === owner.toLowerCase() &&
+          selectedRepo.repo.toLowerCase() === name.toLowerCase()
+      )
+    };
+  }
+
+  private resolveTargetRepo(
+    ownerRaw?: string,
+    repoRaw?: string
+  ): { owner: string; repo: string } | undefined {
+    const owner = ownerRaw?.trim();
+    const repo = repoRaw?.trim();
+    if (owner && repo) {
+      return { owner, repo };
+    }
+
+    const selectedRepo = this.readSelectedRepoState();
+    if (selectedRepo) {
+      return {
+        owner: selectedRepo.owner,
+        repo: selectedRepo.repo
+      };
+    }
+
+    const defaultOwner = this.config.githubRepoOwner();
+    const defaultRepo = this.config.githubRepoName();
+    if (defaultOwner && defaultRepo) {
+      return {
+        owner: defaultOwner,
+        repo: defaultRepo
+      };
+    }
+
+    return undefined;
+  }
+
+  private persistSelectedRepo(repo: GithubRepoSummary): GithubSelectedRepoState {
+    const state: GithubSelectedRepoState = {
+      owner: repo.owner,
+      repo: repo.name,
+      fullName: repo.fullName,
+      visibility: repo.visibility,
+      private: repo.private,
+      url: repo.url,
+      cloneUrl: repo.cloneUrl,
+      defaultBranch: repo.defaultBranch,
+      selectedAt: new Date().toISOString()
+    };
+
+    const targetPath = this.runtimePaths.githubSelectedRepoPath();
+    mkdirSync(path.dirname(targetPath), { recursive: true });
+    writeFileSync(targetPath, JSON.stringify(state, null, 2), 'utf8');
+    return state;
+  }
+
+  private readSelectedRepoState(): GithubSelectedRepoState | undefined {
+    const targetPath = this.runtimePaths.githubSelectedRepoPath();
+    try {
+      const parsed = JSON.parse(readFileSync(targetPath, 'utf8')) as Partial<GithubSelectedRepoState>;
+      if (
+        typeof parsed.owner === 'string' &&
+        parsed.owner.trim().length > 0 &&
+        typeof parsed.repo === 'string' &&
+        parsed.repo.trim().length > 0 &&
+        typeof parsed.fullName === 'string' &&
+        parsed.fullName.trim().length > 0 &&
+        (parsed.visibility === 'public' || parsed.visibility === 'private' || parsed.visibility === 'internal') &&
+        typeof parsed.private === 'boolean' &&
+        typeof parsed.selectedAt === 'string' &&
+        parsed.selectedAt.trim().length > 0
+      ) {
+        return {
+          owner: parsed.owner.trim(),
+          repo: parsed.repo.trim(),
+          fullName: parsed.fullName.trim(),
+          visibility: parsed.visibility,
+          private: parsed.private,
+          url: typeof parsed.url === 'string' ? parsed.url.trim() || undefined : undefined,
+          cloneUrl: typeof parsed.cloneUrl === 'string' ? parsed.cloneUrl.trim() || undefined : undefined,
+          defaultBranch: typeof parsed.defaultBranch === 'string' ? parsed.defaultBranch.trim() || undefined : undefined,
+          selectedAt: parsed.selectedAt
+        };
+      }
+    } catch {
+      return undefined;
+    }
+
+    return undefined;
   }
 
   private parseReviewPacketPayload(proof: AskProofArtifact): GithubReviewPacketPayload {

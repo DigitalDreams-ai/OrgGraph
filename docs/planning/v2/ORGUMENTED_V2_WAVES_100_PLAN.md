@@ -172,18 +172,19 @@ Mandatory:
 This is a cross-wave support track, not a replacement for the locked numbered wave order.
 
 Overall implementation progress:
-- approximately 25%
+- approximately 40%
 - policy and ownership boundaries are complete
-- product integration slices are still mostly open
+- local auth/repo-management slices are now live, but PR context, workflow dispatch, and release linkage remain open
 
 | Support Track Item | Owning Wave(s) | Status | Approx. Complete | Next Gate |
 |---|---|---|---|---|
 | policy and ownership boundary (`sf`, `cci`, GitHub, Orgumented) | foundation | Complete | 100% | hold the tool boundary stable while implementation begins |
+| local GitHub auth and repo-management path (`gh`-backed login, status, list, create, select) | wave11 | In Progress | 70% | keep the Connect workspace calm while routing later repo-backed workflows through the selected binding |
 | read-only repo / branch / PR context in the engine | wave7 | Open | 0% | typed GitHub adapter returns repo and PR scope without becoming a runtime dependency |
 | PR publication of decision packets, proof links, and review summaries | wave7 | Complete | 100% | maintain proof-bound idempotent PR comment publication while check-run publication remains optional future extension |
 | typed local `cci` job registry | wave7, wave11 | Planned | 20% | elevate current alias/info/import support into explicit typed jobs with allowlist, mutability class, timeout, and audit trail |
 | typed GitHub Actions dispatch and status ingest | wave11 | Open | 0% | workflow allowlist plus typed dispatch/status mapping back into Orgumented state |
-| explicit user-bound repo binding for commit-capable metadata workflows | wave11, wave12 | Planned | 10% | fail closed when the only available repo is the Orgumented product repo |
+| explicit user-bound repo binding for commit-capable metadata workflows | wave11, wave12 | In Progress | 45% | fail closed in future commit-capable metadata flows unless the selected bound repo is present and not the Orgumented product repo |
 | GitHub release / artifact linkage from canonical release evidence | wave12 | Open | 0% | release evidence links cleanly to GitHub artifacts without replacing local proof/replay storage |
 
 ## wave1 - Baseline Lock And Triage

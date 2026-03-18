@@ -132,6 +132,16 @@ Safety:
 - read-only first
 - no PR mutation yet
 
+Current state:
+- local GitHub session status/login is now live through the engine using local `gh`
+- Connect workspace can now:
+  - inspect GitHub auth state
+  - authorize GitHub locally
+  - list accessible repos
+  - create a new repo
+  - select one explicit repo binding for later repo-backed workflows
+- branch / PR context is still not modeled in the engine yet
+
 ### Phase 2: Publish Review Output Back To GitHub
 
 Add:
