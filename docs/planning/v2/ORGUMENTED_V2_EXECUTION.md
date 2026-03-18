@@ -231,10 +231,10 @@ Materially true now:
 - wave10 density guardrails now widen card-grid minima and heading wrapping to reduce clipping/overlap in Ask, Analyze, Proofs, and Diagnostics
 - wave10 accessibility baseline now includes explicit focus-visible rings across core interactive controls and standardized checkbox/radio sizing for keyboard clarity
 - wave10 follow-up now wraps long path/identifier values in Connect, Refresh, and System with explicit `path-value`/`diagnostic-code-block` hooks, and the runtime-status regression gate now render-checks those markup guards so long paths/JSON stay bounded
+- wave9 is now closed: history rows, top actions, and exports all resolve from the selected history label by default, while advanced proof/replay tokens stay isolated behind the debug disclosure and never drive the primary workflow
 
 Still unresolved:
 - explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
-- proofs/history still needs full label-first lifecycle closure beyond current baseline auto-selection
 - layout/accessibility still needs final visual QA lock after latest density guardrail pass
 - UI still carries too much density, redundancy, and competing status/action surfaces across multiple workspaces
 - several Stage 1 screens still do too much at once instead of presenting one clear primary artifact and one clear next action

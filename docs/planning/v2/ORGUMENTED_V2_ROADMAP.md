@@ -167,11 +167,10 @@ Do not:
 2. close org browser and retrieve-handoff parity (wave4 + wave5)
 3. strengthen Ask grounding and packet quality (wave6 + wave7)
    - semantic-frame v1 defines the preferred wave6 direction for Ask interpretation hardening
-4. close remaining proofs/history workflows (wave9)
-5. finish layout/accessibility hardening and workspace simplification (wave10)
-6. complete defect/CI/release discipline (wave11 + wave12)
-7. run stabilization hold (wave13)
-8. only then evaluate policy-aware approval support expansion
+4. finish layout/accessibility hardening and workspace simplification (wave10)
+5. complete defect/CI/release discipline (wave11 + wave12)
+6. run stabilization hold (wave13)
+7. only then evaluate policy-aware approval support expansion
 
 Cross-cutting support track during waves 7, 11, and 12:
 - GitHub replaces repo/review/check/release plumbing

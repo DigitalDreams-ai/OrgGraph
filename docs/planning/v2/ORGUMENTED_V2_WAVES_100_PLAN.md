@@ -56,8 +56,8 @@ Remaining work is now primarily around:
 | sessions/browser/retrieve | connect/switch/restore deterministic and browser parity delivered | complete | maintain packaged handoff proof and lock end-to-end rebuild workflow parity |
 | ask/planner | grounded metadata asks with replay-safe proof | complete | maintain deterministic evidence-lookup normalization, replay parity, and bounded semantic-frame admissibility |
 | decision packets | approval-grade, trusted by workflow | complete | maintain proxy benchmark verification and proof-bound PR publication |
-| analyze/diagnostics | structured triage without JSON dependency | partial | wave8 card/action depth and synthesis improvements |
-| proofs/history | label-first reopen/replay/export as primary flow | near complete | close remaining universal history-first path gaps |
+| analyze/diagnostics | structured triage without JSON dependency | complete | maintain one clear triage path with evidence-first secondary cards |
+| proofs/history | label-first reopen/replay/export as primary flow | complete | maintain history-first selection semantics and keep advanced tokens debug-only |
 | design/layout/a11y | no clipping + keyboard/focus baseline | improved | complete wave10 accessibility, simplification, and final visual consistency pass |
 | defects/ci/release | P0/P1 zero, stable CI, release+rollback proven | in progress | wave11 burn-down + wave12 clean-machine/operator proof |
 
@@ -151,7 +151,7 @@ Mandatory:
 | wave6 | ask planner/compiler depth | B003, B009 | Complete | Maintain bounded semantic-frame admissibility and deterministic evidence-lookup coverage |
 | wave7 | decision-packet quality | B010, B017 | Complete | Maintain proxy benchmark verification and proof-bound PR publication |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | Complete | Maintain one clear triage path through structured actions while keeping secondary Analyze and Diagnostics cards evidence-first |
-| wave9 | proofs/history productization | B011 | In Progress | Label-first selection stays independent from advanced token lookup and reopen/replay/export remain history-first |
+| wave9 | proofs/history productization | B011 | Complete | Maintain label-first selection independence and keep advanced token lookup debug-only |
 | wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline with live-region coverage, calmer workspace hierarchy, and proof-history identifier guardrails |
 | wave11 | bug burn-down and CI quality lock | B013, B018, B023 | In Progress | P0/P1 count to zero, stable trust gates, edge metadata-family regressions locked, embedded web regressions enforced in `validate`, and Actions retention policy regression-gated |
 | wave12 | release readiness and operator proof | B014, B019 | In Progress | Clean-machine runbook pass + rollback proof |
