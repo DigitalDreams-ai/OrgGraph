@@ -215,6 +215,7 @@ Materially true now:
 - wave8 diagnostics follow-up now also removes the card-local quick-action rows from Runtime Health and Tooling Status, so recovery actions live only in the primary top controls and structured triage snapshot instead of a third competing action layer
 - wave8 Analyze simplification now applies the same rule to permission, mapping, automation, impact, and system-permission detail cards: the structured triage snapshot owns rerun, Browser, Refresh, and Ask-handoff actions, while the lower cards stay evidence-first and point back to the snapshot instead of duplicating buttons
 - wave8 simplification now also removes the leftover workflow-guidance cards and loaded-state reminder prose that only repeated "use the triage snapshot above"; Analyze detail cards and loaded Diagnostics detail cards stay evidence-first without repeating the same operator-instruction chrome under every section
+- wave8 is now closed: structured triage owns operator actions across Analyze and Settings & Diagnostics, raw JSON is secondary only, and lower cards remain evidence-first without duplicate action rows or reminder chrome
 - wave10 diagnostics follow-up now wraps Ask trust failure-class labels with explicit `path-value` guards, keeping structured telemetry labels aligned with the same bounded rendering contract used across the rest of Settings & Diagnostics
 - Analyze now keeps operator actions in the structured triage snapshot instead of repeating separate checklist cards under each detailed evidence view
 - Analyze now includes one-click Ask handoff actions for automation and impact results so deterministic analysis context can be promoted directly into trust/proof decision packets
@@ -261,7 +262,7 @@ Mandatory order for active slices:
 1. wave2 + wave3 reliability closure
 2. wave4 + wave5 workflow parity closure
 3. wave6 + wave7 grounding + packet quality
-4. wave8 + wave9 structured analysis + proof lifecycle closure
+4. wave9 proof lifecycle closure
 5. wave10 layout/accessibility closure
 6. wave11 + wave12 defect/release closure
 7. wave13 stabilization hold

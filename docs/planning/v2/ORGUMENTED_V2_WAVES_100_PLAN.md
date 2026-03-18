@@ -150,7 +150,7 @@ Mandatory:
 | wave5 | retrieve -> refresh handoff | B008 | Complete | Maintain packaged real-org handoff smoke proof |
 | wave6 | ask planner/compiler depth | B003, B009 | Complete | Maintain bounded semantic-frame admissibility and deterministic evidence-lookup coverage |
 | wave7 | decision-packet quality | B010, B017 | Complete | Maintain proxy benchmark verification and proof-bound PR publication |
-| wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage and diagnostics cards expose direct operator actions, no core recovery path depends on raw JSON or manual tab hunting, and redundant status/action surfaces are collapsed |
+| wave8 | analyze and diagnostics depth | B015, B016, B022 | Complete | Maintain one clear triage path through structured actions while keeping secondary Analyze and Diagnostics cards evidence-first |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first selection stays independent from advanced token lookup and reopen/replay/export remain history-first |
 | wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline with live-region coverage, calmer workspace hierarchy, and proof-history identifier guardrails |
 | wave11 | bug burn-down and CI quality lock | B013, B018, B023 | In Progress | P0/P1 count to zero, stable trust gates, edge metadata-family regressions locked, embedded web regressions enforced in `validate`, and Actions retention policy regression-gated |
@@ -326,13 +326,11 @@ Scope:
 - structured triage snapshot remains the primary Analyze action surface, while detailed cards stay evidence-first and point back to the snapshot instead of repeating checklist or button blocks
 - explicit Browser/Refresh recovery actions when automation or impact analysis returns no deterministic matches
 - structured Ask trust telemetry (replay/proof coverage/failure classes) visible from Settings & Diagnostics without raw API inspection
-- card-local Ask trust and runtime telemetry quick actions available directly inside Settings & Diagnostics telemetry cards
-- Ask trust and runtime telemetry also surface in the top structured diagnostics snapshot with direct actions, so operators can triage replay/failure health without scrolling into secondary cards
+- Ask trust and runtime telemetry also surface in the top structured diagnostics snapshot with direct actions, so operators can triage replay/failure health without raw payload inspection or manual tab hunting
 - permission-analysis Ask handoff stays blocked until mapping is resolved, aligning Analyze recovery paths with deterministic grant-context requirements
 - structured runtime telemetry (request volume, route timings, recent non-200 signatures) visible from Settings & Diagnostics without raw `/metrics` inspection
 - structured Meta Adapt delta summary visible from Settings & Diagnostics without raw before/after payload inspection
 - system-permission edge states expose `Diagnose User Mapping` as the primary structured recovery action until deterministic grant context exists
-- Meta Context and Meta Adapt cards expose their own local actions so semantic weighting refresh and adapt reruns do not depend on the shared top action row
 - secondary diagnostics detail cards do not repeat their own quick-action rows or checklist prose once the same recovery path already exists in the primary controls and structured triage snapshot
 - Runtime Health and Tooling Status do not expose their own recovery button rows once the same actions already exist in the primary controls and structured triage snapshot
 - Analyze detail cards and loaded diagnostics detail cards do not repeat separate workflow-guidance prose once the structured triage snapshot already owns the recovery path
