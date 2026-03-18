@@ -384,6 +384,7 @@ Scope:
 - explicit Org Browser render guards for long retrieve parse paths, metadata args, and selected member chips
 - explicit Org Sessions render guards for long alias, username, org ID, and instance URL values
 - Ask launch chrome is reduced so operator readiness and next-step navigation no longer consume separate top-level cards ahead of the primary question and packet flow
+- Org Sessions keeps manual bridge commands and secondary alias/session probes behind a single advanced disclosure, reducing connect-screen card overload without removing explicit fallback tooling
 
 Exit:
 - zero known clipping defects in Stage 1 surfaces
