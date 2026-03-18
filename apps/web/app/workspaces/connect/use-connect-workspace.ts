@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { QueryResponse } from '../../lib/ask-client';
 import {
   createGithubRepo,
+  getGithubRepoContext,
   getGithubSessionStatus,
   listGithubRepos,
   loginGithubSession,
@@ -22,6 +23,7 @@ import {
 } from '../../lib/org-client';
 import type {
   GithubRepoListPayload,
+  GithubRepoContextPayload,
   GithubRepoSummary,
   GithubSessionIssue,
   GithubSessionPayload,
@@ -101,6 +103,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   const [orgSessionHistory, setOrgSessionHistory] = useState<OrgSessionHistoryPayload | null>(null);
   const [githubSession, setGithubSession] = useState<GithubSessionPayload | null>(null);
   const [githubRepos, setGithubRepos] = useState<GithubRepoListPayload | null>(null);
+  const [githubRepoContext, setGithubRepoContext] = useState<GithubRepoContextPayload | null>(null);
   const [runtimeUnavailable, setRuntimeUnavailable] = useState(false);
 
   const aliasInventory = orgAliases?.aliases ?? [];
@@ -331,6 +334,9 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     return runAction(() => getGithubSessionStatus(), (response) => {
       const payload = readPayload<GithubSessionPayload>(response);
       setGithubSession(payload);
+      if (!payload?.selectedRepo) {
+        setGithubRepoContext(null);
+      }
       syncGithubOwnerDefaults(payload);
     });
   }
@@ -343,6 +349,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       const reposResponse = await listGithubRepos();
       const reposPayload = readPayload<GithubRepoListPayload>(reposResponse);
       setGithubRepos(reposPayload);
+      setGithubRepoContext(null);
     });
   }
 
@@ -375,6 +382,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       async (response) => {
         await refreshGithubStatus();
         await loadGithubReposAction();
+        await loadGithubRepoContextAction();
         const payload = readPayload<{ selectedRepo?: GithubRepoSummary }>(response);
         if (payload?.selectedRepo?.owner) {
           setGithubRepoOwner(payload.selectedRepo.owner);
@@ -389,8 +397,23 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     return runAction(() => selectGithubRepo({ owner, repo }), async () => {
       await refreshGithubStatus();
       await loadGithubReposAction();
+      await loadGithubRepoContextAction(owner, repo);
       setGithubRepoOwner(owner);
     });
+  }
+
+  function loadGithubRepoContextAction(owner?: string, repo?: string): Promise<QueryResponse | null> {
+    return runAction(
+      () =>
+        getGithubRepoContext({
+          owner: owner?.trim() || undefined,
+          repo: repo?.trim() || undefined
+        }),
+      (response) => {
+        const payload = readPayload<GithubRepoContextPayload>(response);
+        setGithubRepoContext(payload);
+      }
+    );
   }
 
   return {
@@ -411,6 +434,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     orgSessionHistory,
     githubSession,
     githubRepos,
+    githubRepoContext,
     activeAlias,
     sessionStatus,
     restoreAlias,
@@ -442,6 +466,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     refreshGithubStatus,
     authorizeGithub,
     loadGithubRepos: loadGithubReposAction,
+    loadGithubRepoContext: loadGithubRepoContextAction,
     createGithubRepo: createGithubRepoAction,
     selectGithubRepo: selectGithubRepoAction
   };

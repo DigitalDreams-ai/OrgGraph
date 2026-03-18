@@ -99,6 +99,18 @@ function run(): void {
           url: 'https://github.com/sean/orgumented-runtime'
         }
       },
+      githubRepoContext: {
+        repo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime'
+        },
+        branches: [],
+        pullRequests: []
+      },
       aliasInventory: [],
       githubAccessibleRepos: [],
       githubSelectedRepo: {
@@ -137,6 +149,7 @@ function run(): void {
       onRefreshGithubStatus: () => undefined,
       onAuthorizeGithub: () => undefined,
       onLoadGithubRepos: () => undefined,
+      onLoadGithubRepoContext: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
     })

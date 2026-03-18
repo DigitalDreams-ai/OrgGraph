@@ -8,6 +8,9 @@ import {
   type ToolStatusSource
 } from '../../shell/org-status-surface';
 import type {
+  GithubBranchSummary,
+  GithubPullRequestSummary,
+  GithubRepoContextPayload,
   GithubRepoSummary,
   GithubSessionIssue,
   GithubSessionPayload,
@@ -40,6 +43,7 @@ interface ConnectWorkspaceProps {
   orgSessionHistory: OrgSessionHistoryPayload | null;
   orgSession: OrgSessionPayload | null;
   githubSession: GithubSessionPayload | null;
+  githubRepoContext: GithubRepoContextPayload | null;
   aliasInventory: OrgAliasSummary[];
   githubAccessibleRepos: GithubRepoSummary[];
   githubSelectedRepo: GithubRepoSummary | null;
@@ -71,6 +75,7 @@ interface ConnectWorkspaceProps {
   onRefreshGithubStatus: () => void;
   onAuthorizeGithub: () => void;
   onLoadGithubRepos: () => void;
+  onLoadGithubRepoContext: () => void;
   onCreateGithubRepo: () => void;
   onSelectGithubRepo: (owner: string, repo: string) => void;
 }
@@ -158,6 +163,9 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
   const githubStatus = props.githubSession?.status || 'unauthenticated';
   const githubViewer = props.githubSession?.viewer;
   const githubSelectedRepo = props.githubSelectedRepo;
+  const githubContextRepo = props.githubRepoContext?.repo || githubSelectedRepo;
+  const githubContextBranches = (props.githubRepoContext?.branches ?? []) as GithubBranchSummary[];
+  const githubContextPullRequests = (props.githubRepoContext?.pullRequests ?? []) as GithubPullRequestSummary[];
   const githubCliLabel = props.githubSession?.cliInstalled ? 'installed' : 'missing';
   const githubAuthSource =
     props.githubSession?.authSource === 'env_token'
@@ -410,6 +418,9 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           </label>
           <div className="action-row">
             <button type="button" onClick={props.onCreateGithubRepo} disabled={props.loading}>Create Repo</button>
+            <button type="button" className="ghost" onClick={props.onLoadGithubRepoContext} disabled={props.loading}>
+              Load Repo Context
+            </button>
           </div>
         </article>
       </div>
@@ -508,6 +519,70 @@ cci org info ${props.orgAlias}`}</pre>
               </li>
             ))}
           </ul>
+        </div>
+      ) : null}
+
+      {githubContextRepo ? (
+        <div className="sub-card" role="status" aria-live="polite">
+          <p className="panel-caption">Selected repo context</p>
+          <h3>Branches and open pull requests</h3>
+          <div className="decision-meta">
+            <span className="decision-badge muted">Repo: {githubContextRepo.fullName}</span>
+            <span className="decision-badge muted">Branches: {githubContextBranches.length}</span>
+            <span className="decision-badge muted">Open PRs: {githubContextPullRequests.length}</span>
+          </div>
+          <p><strong>Default branch:</strong> <span className="path-value">{githubContextRepo.defaultBranch || 'n/a'}</span></p>
+          <p><strong>URL:</strong> <span className="path-value">{githubContextRepo.url || 'n/a'}</span></p>
+          <p className="muted">
+            This remains a read-only support-plane view. It is intended to scope future repo-backed workflows without changing local decision determinism.
+          </p>
+
+          {githubContextBranches.length > 0 ? (
+            <>
+              <p><strong>Recent branches</strong></p>
+              <ul className="issue-list">
+                {githubContextBranches.map((branch) => (
+                  <li key={branch.name}>
+                    <div className="decision-meta">
+                      <span className={`decision-badge ${branch.protected ? 'good' : 'muted'}`}>
+                        {branch.protected ? 'protected' : 'branch'}
+                      </span>
+                      {branch.lastCommitSha ? <span className="decision-badge muted">{branch.lastCommitSha.slice(0, 7)}</span> : null}
+                    </div>
+                    <p><strong><span className="path-value">{branch.name}</span></strong></p>
+                    <p><strong>Last commit:</strong> <span className="path-value">{branch.lastCommitUrl || branch.url || 'n/a'}</span></p>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="muted">No branch context is loaded yet.</p>
+          )}
+
+          {githubContextPullRequests.length > 0 ? (
+            <>
+              <p><strong>Open pull requests</strong></p>
+              <ul className="issue-list">
+                {githubContextPullRequests.map((pullRequest) => (
+                  <li key={pullRequest.number}>
+                    <div className="decision-meta">
+                      <span className={`decision-badge ${pullRequest.draft ? 'muted' : 'good'}`}>
+                        {pullRequest.draft ? 'draft' : 'open'}
+                      </span>
+                      <span className="decision-badge muted">#{pullRequest.number}</span>
+                      {pullRequest.baseRef ? <span className="decision-badge muted">{pullRequest.baseRef}</span> : null}
+                    </div>
+                    <p><strong><span className="path-value">{pullRequest.title}</span></strong></p>
+                    <p><strong>Head:</strong> <span className="path-value">{pullRequest.headRef || 'n/a'}</span></p>
+                    <p><strong>Author:</strong> <span className="path-value">{pullRequest.author || 'n/a'}</span></p>
+                    <p><strong>Updated:</strong> <span className="path-value">{formatTimestamp(pullRequest.updatedAt)}</span></p>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="muted">No open pull requests are loaded for the selected repo.</p>
+          )}
         </div>
       ) : null}
     </>

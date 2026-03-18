@@ -172,15 +172,15 @@ Mandatory:
 This is a cross-wave support track, not a replacement for the locked numbered wave order.
 
 Overall implementation progress:
-- approximately 40%
+- approximately 55%
 - policy and ownership boundaries are complete
-- local auth/repo-management slices are now live, but PR context, workflow dispatch, and release linkage remain open
+- local auth/repo-management and read-only repo context slices are now live, but workflow dispatch and release linkage remain open
 
 | Support Track Item | Owning Wave(s) | Status | Approx. Complete | Next Gate |
 |---|---|---|---|---|
 | policy and ownership boundary (`sf`, `cci`, GitHub, Orgumented) | foundation | Complete | 100% | hold the tool boundary stable while implementation begins |
 | local GitHub auth and repo-management path (`gh`-backed login, status, list, create, select) | wave11 | In Progress | 70% | keep the Connect workspace calm while routing later repo-backed workflows through the selected binding |
-| read-only repo / branch / PR context in the engine | wave7 | Open | 0% | typed GitHub adapter returns repo and PR scope without becoming a runtime dependency |
+| read-only repo / branch / PR context in the engine | wave7 | In Progress | 70% | keep repo context read-only and typed while later review/diff workflows consume the selected repo binding |
 | PR publication of decision packets, proof links, and review summaries | wave7 | Complete | 100% | maintain proof-bound idempotent PR comment publication while check-run publication remains optional future extension |
 | typed local `cci` job registry | wave7, wave11 | Planned | 20% | elevate current alias/info/import support into explicit typed jobs with allowlist, mutability class, timeout, and audit trail |
 | typed GitHub Actions dispatch and status ingest | wave11 | Open | 0% | workflow allowlist plus typed dispatch/status mapping back into Orgumented state |

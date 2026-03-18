@@ -248,6 +248,7 @@ export default function Page(): JSX.Element {
               orgSessionHistory={connectWorkspace.orgSessionHistory}
               orgSession={connectWorkspace.orgSession}
               githubSession={connectWorkspace.githubSession}
+              githubRepoContext={connectWorkspace.githubRepoContext}
               aliasInventory={connectWorkspace.aliasInventory}
               githubAccessibleRepos={connectWorkspace.githubAccessibleRepos}
               githubSelectedRepo={connectWorkspace.githubSelectedRepo}
@@ -279,6 +280,7 @@ export default function Page(): JSX.Element {
               onRefreshGithubStatus={() => void connectWorkspace.refreshGithubStatus()}
               onAuthorizeGithub={() => void connectWorkspace.authorizeGithub()}
               onLoadGithubRepos={() => void connectWorkspace.loadGithubRepos()}
+              onLoadGithubRepoContext={() => void connectWorkspace.loadGithubRepoContext()}
               onCreateGithubRepo={() => void connectWorkspace.createGithubRepo()}
               onSelectGithubRepo={(owner, repo) => void connectWorkspace.selectGithubRepo(owner, repo)}
             />

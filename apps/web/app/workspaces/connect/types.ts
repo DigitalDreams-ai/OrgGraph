@@ -109,6 +109,27 @@ export type GithubSelectedRepo = GithubRepoSummary & {
   selectedAt?: string;
 };
 
+export type GithubBranchSummary = {
+  name: string;
+  protected: boolean;
+  url?: string;
+  lastCommitSha?: string;
+  lastCommitUrl?: string;
+};
+
+export type GithubPullRequestSummary = {
+  number: number;
+  title: string;
+  state: 'open';
+  url?: string;
+  author?: string;
+  draft: boolean;
+  headRef?: string;
+  baseRef?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type GithubSessionPayload = {
   status?: 'authenticated' | 'unauthenticated';
   hostname?: string;
@@ -125,4 +146,14 @@ export type GithubRepoListPayload = {
   viewer?: GithubViewerSummary;
   selectedRepo?: GithubSelectedRepo;
   repos?: GithubRepoSummary[];
+};
+
+export type GithubRepoContextPayload = {
+  status?: 'loaded';
+  hostname?: string;
+  viewer?: GithubViewerSummary;
+  selectedRepo?: GithubSelectedRepo;
+  repo?: GithubRepoSummary;
+  branches?: GithubBranchSummary[];
+  pullRequests?: GithubPullRequestSummary[];
 };

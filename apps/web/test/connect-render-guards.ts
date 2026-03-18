@@ -66,6 +66,37 @@ function run(): void {
           selectedAt: '2026-03-17T12:00:00Z'
         }
       },
+      githubRepoContext: {
+        repo: {
+          owner: 'sean',
+          name: 'Orgumented-runtime-repo-with-a-very-long-selected-binding-name',
+          fullName: longGithubRepo,
+          private: true,
+          visibility: 'private',
+          url: longGithubUrl,
+          defaultBranch: 'main'
+        },
+        branches: [
+          {
+            name: 'feature/very-long-branch-name-for-orgumented-review-context-rendering',
+            protected: true,
+            lastCommitSha: 'abcdef1234567890',
+            lastCommitUrl: `${longGithubUrl}/commit/abcdef1234567890`
+          }
+        ],
+        pullRequests: [
+          {
+            number: 42,
+            title: 'Improve Orgumented review packet wiring for long selected repository bindings',
+            state: 'open',
+            author: 'sean',
+            draft: false,
+            headRef: 'feature/github-context',
+            baseRef: 'main',
+            updatedAt: '2026-03-18T12:00:00Z'
+          }
+        ]
+      },
       aliasInventory: [
         {
           alias: longAlias,
@@ -131,6 +162,7 @@ function run(): void {
       onRefreshGithubStatus: () => undefined,
       onAuthorizeGithub: () => undefined,
       onLoadGithubRepos: () => undefined,
+      onLoadGithubRepoContext: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
     } as any)
@@ -149,6 +181,10 @@ function run(): void {
   assert.match(connectMarkup, /<strong><span class="path-value">shulman-uat-with-a-very-long-alias-name-that-must-wrap-cleanly<\/span><\/strong>/);
   assert.match(connectMarkup, /<strong>Selected repo:<\/strong> <span class="path-value">sean\/Orgumented-runtime-repo-with-a-very-long-selected-binding-name<\/span>/);
   assert.match(connectMarkup, /<strong>URL:<\/strong> <span class="path-value">https:\/\/github\.com\/sean\/Orgumented-runtime-repo-with-a-very-long-selected-binding-name<\/span>/);
+  assert.match(connectMarkup, /Load Repo Context<\/button>/);
+  assert.match(connectMarkup, /Selected repo context/);
+  assert.match(connectMarkup, /feature\/very-long-branch-name-for-orgumented-review-context-rendering/);
+  assert.match(connectMarkup, /Improve Orgumented review packet wiring for long selected repository bindings/);
   assert.match(connectMarkup, /Authorize GitHub<\/button>/);
   assert.match(connectMarkup, /Create Repo<\/button>/);
   assert.match(connectMarkup, /Use Repo<\/button>/);
