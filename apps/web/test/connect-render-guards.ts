@@ -88,6 +88,9 @@ function run(): void {
   );
   assert.match(connectMarkup, /<strong>Active alias:<\/strong> <span class="path-value">shulman-uat-with-a-very-long-alias-name-that-must-wrap-cleanly<\/span>/);
   assert.match(connectMarkup, /<strong><span class="path-value">shulman-uat-with-a-very-long-alias-name-that-must-wrap-cleanly<\/span><\/strong>/);
+  assert.match(connectMarkup, /<summary>Advanced session tools<\/summary>/);
+  assert.match(connectMarkup, /Bridge CCI Alias<\/button>/);
+  assert.doesNotMatch(connectMarkup, /<p class="panel-caption">Operator commands<\/p>/);
 }
 
 run();

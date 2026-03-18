@@ -256,15 +256,6 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
         `Attach Active Alias` in the top bar runs the same attach action against the currently selected alias. Use the buttons here when you need explicit connect/switch control.
       </p>
 
-      <div className="action-row">
-        <button type="button" className="ghost" onClick={props.onLoadAliases} disabled={props.loading}>Load Aliases</button>
-        <button type="button" className="ghost" onClick={props.onCheckSession} disabled={props.loading}>Check Session</button>
-        <button type="button" className="ghost" onClick={props.onLoadSessionHistory} disabled={props.loading}>Session History</button>
-        <button type="button" className="ghost" onClick={props.onCheckToolStatus} disabled={props.loading}>Check Tool Status</button>
-        <button type="button" className="ghost" onClick={props.onPreflight} disabled={props.loading}>Preflight Selected</button>
-        <button type="button" className="ghost" onClick={() => props.onBridgeAlias()} disabled={props.loading}>Bridge CCI Alias</button>
-      </div>
-
       <div className="ops-grid">
         <article className="sub-card" role="status" aria-live="polite">
           <p className="panel-caption">Preflight issues</p>
@@ -290,23 +281,6 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
         </article>
 
         <article className="sub-card">
-          <p className="panel-caption">Operator commands</p>
-          <h3>Manual auth bridge</h3>
-          <p className="muted">
-            Use `Bridge CCI Alias` first. Run these commands only when the automatic bridge path reports a blocking error.
-          </p>
-          <pre className="diagnostic-code-block">{`# 1) Authenticate in sf keychain
-sf org login web --alias ${props.orgAlias} --instance-url https://test.salesforce.com --set-default
-
-# 2) Bridge alias into CCI registry
-# run from the local Orgumented sf project path
-cd "%APPDATA%\\Orgumented\\sf-project"
-cci org import ${props.orgAlias} ${props.orgAlias}
-cci org info ${props.orgAlias}`}</pre>
-          <p><strong>Restore alias:</strong> <span className="path-value">{props.restoreAlias || props.orgSessionHistory?.restoreAlias || 'n/a'}</span></p>
-        </article>
-
-        <article className="sub-card">
           <p className="panel-caption">Recent auth events</p>
           <h3>Session history</h3>
           {props.recentSessionEvents.length > 0 ? (
@@ -329,6 +303,30 @@ cci org info ${props.orgAlias}`}</pre>
           )}
         </article>
       </div>
+
+      <details className="debug-details">
+        <summary>Advanced session tools</summary>
+        <p className="muted">
+          Use `Bridge CCI Alias` first. Expand this section only when you need explicit alias/session probes or the manual bridge fallback.
+        </p>
+        <div className="action-row">
+          <button type="button" className="ghost" onClick={props.onLoadAliases} disabled={props.loading}>Load Aliases</button>
+          <button type="button" className="ghost" onClick={props.onCheckSession} disabled={props.loading}>Check Session</button>
+          <button type="button" className="ghost" onClick={props.onLoadSessionHistory} disabled={props.loading}>Session History</button>
+          <button type="button" className="ghost" onClick={props.onCheckToolStatus} disabled={props.loading}>Check Tool Status</button>
+          <button type="button" className="ghost" onClick={props.onPreflight} disabled={props.loading}>Preflight Selected</button>
+          <button type="button" className="ghost" onClick={() => props.onBridgeAlias()} disabled={props.loading}>Bridge CCI Alias</button>
+        </div>
+        <pre className="diagnostic-code-block">{`# 1) Authenticate in sf keychain
+sf org login web --alias ${props.orgAlias} --instance-url https://test.salesforce.com --set-default
+
+# 2) Bridge alias into CCI registry
+# run from the local Orgumented sf project path
+cd "%APPDATA%\\Orgumented\\sf-project"
+cci org import ${props.orgAlias} ${props.orgAlias}
+cci org info ${props.orgAlias}`}</pre>
+        <p><strong>Restore alias:</strong> <span className="path-value">{props.restoreAlias || props.orgSessionHistory?.restoreAlias || 'n/a'}</span></p>
+      </details>
 
       {props.aliasInventory.length > 0 ? (
         <div className="sub-card">
