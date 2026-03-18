@@ -198,8 +198,6 @@ function run(): void {
     })
   );
 
-  assert.match(markup, /Use the structured triage snapshot or primary controls above for Refresh Status and Open Refresh &amp; Build\./);
-  assert.match(markup, /Use the structured triage snapshot or primary controls above for Load Org Status, Run Preflight, and Open Org Sessions\./);
   assert.match(markup, /Refresh Status/);
   assert.match(markup, /Open Refresh &amp; Build/);
   assert.match(markup, /Ask Trust/);
@@ -219,9 +217,7 @@ function run(): void {
   assert.match(markup, /Refresh Ask Trust/);
   assert.match(markup, /<span class="path-value">llm_fallback<\/span>: 1/);
   assert.match(markup, /<span class="path-value">constraint_risk<\/span>: 2/);
-  assert.match(markup, /Use the triage snapshot or primary controls above to refresh trust or load related telemetry\./);
   assert.match(markup, /42 requests across 3 routes; slowest POST \/refresh at 185\.5 ms\./);
-  assert.match(markup, /Use the triage snapshot or primary controls above to refresh telemetry or runtime status\./);
   assert.match(markup, /<strong>Context path:<\/strong>\s*<span class="path-value">C:\/Users\/sean\/AppData\/Roaming\/Orgumented\/meta\/context-with-a-very-long-path\.json<\/span>/);
   assert.match(markup, /<strong>Audit artifact:<\/strong>\s*<span class="path-value">C:\/Users\/sean\/AppData\/Roaming\/Orgumented\/meta\/audit\/very-long-adapt-audit-artifact\.json<\/span>/);
   assert.match(markup, /Structured change summary/);
@@ -298,6 +294,10 @@ function run(): void {
   assert.match(emptyMarkup, /Load Runtime Telemetry from the primary controls or triage snapshot/);
   assert.doesNotMatch(emptyMarkup, /Operator recovery checklist/);
   assert.doesNotMatch(emptyMarkup, /Session\/toolchain recovery checklist/);
+  assert.doesNotMatch(markup, /Use the structured triage snapshot or primary controls above for Refresh Status and Open Refresh &amp; Build\./);
+  assert.doesNotMatch(markup, /Use the structured triage snapshot or primary controls above for Load Org Status, Run Preflight, and Open Org Sessions\./);
+  assert.doesNotMatch(markup, /Use the triage snapshot or primary controls above to refresh trust or load related telemetry\./);
+  assert.doesNotMatch(markup, /Use the triage snapshot or primary controls above to refresh telemetry or runtime status\./);
 }
 
 run();

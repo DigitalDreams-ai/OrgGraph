@@ -335,6 +335,7 @@ Scope:
 - Meta Context and Meta Adapt cards expose their own local actions so semantic weighting refresh and adapt reruns do not depend on the shared top action row
 - secondary diagnostics detail cards do not repeat their own quick-action rows or checklist prose once the same recovery path already exists in the primary controls and structured triage snapshot
 - Runtime Health and Tooling Status do not expose their own recovery button rows once the same actions already exist in the primary controls and structured triage snapshot
+- Analyze detail cards and loaded diagnostics detail cards do not repeat separate workflow-guidance prose once the structured triage snapshot already owns the recovery path
 
 Exit:
 - core analysis tasks complete through card actions
@@ -342,6 +343,7 @@ Exit:
 - operator can diagnose common permission/automation/map failures without raw JSON as primary UI
 - primary triage state is readable without card overload or repeated action surfaces
 - secondary detail cards no longer duplicate the same recovery actions already provided by the primary controls and structured snapshot
+- secondary detail cards no longer add extra "use the snapshot above" reminder cards or loaded-state reminder prose when the same hierarchy is already visually obvious
 
 ## wave9 - Proofs/History Productization
 
