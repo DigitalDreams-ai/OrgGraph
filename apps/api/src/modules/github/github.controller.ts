@@ -5,6 +5,7 @@ import type {
   GithubCreateRepoResponse,
   GithubPublishReviewPacketCommentRequest,
   GithubPublishReviewPacketCommentResponse,
+  GithubRepoContextResponse,
   GithubRepoListResponse,
   GithubSelectRepoRequest,
   GithubSelectRepoResponse,
@@ -32,6 +33,37 @@ export class GithubController {
       throw new BadRequestException('limit must be an integer between 1 and 100');
     }
     return this.githubService.listRepos(limit);
+  }
+
+  @Get('/github/repo/context')
+  async repoContext(
+    @Query('owner') ownerRaw?: string,
+    @Query('repo') repoRaw?: string,
+    @Query('branchLimit') branchLimitRaw?: string,
+    @Query('pullLimit') pullLimitRaw?: string
+  ): Promise<GithubRepoContextResponse> {
+    const branchLimit = branchLimitRaw === undefined ? undefined : Number(branchLimitRaw);
+    const pullLimit = pullLimitRaw === undefined ? undefined : Number(pullLimitRaw);
+    if (
+      branchLimitRaw !== undefined &&
+      (!Number.isInteger(branchLimit) || (branchLimit as number) < 1 || (branchLimit as number) > 25)
+    ) {
+      throw new BadRequestException('branchLimit must be an integer between 1 and 25');
+    }
+    if (
+      pullLimitRaw !== undefined &&
+      (!Number.isInteger(pullLimit) || (pullLimit as number) < 1 || (pullLimit as number) > 25)
+    ) {
+      throw new BadRequestException('pullLimit must be an integer between 1 and 25');
+    }
+    if (ownerRaw !== undefined && ownerRaw.trim().length === 0) {
+      throw new BadRequestException('owner must be a non-empty string when provided');
+    }
+    if (repoRaw !== undefined && repoRaw.trim().length === 0) {
+      throw new BadRequestException('repo must be a non-empty string when provided');
+    }
+
+    return this.githubService.repoContext(ownerRaw?.trim(), repoRaw?.trim(), branchLimit, pullLimit);
   }
 
   @Post('/github/repos')

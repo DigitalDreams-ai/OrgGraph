@@ -52,6 +52,27 @@ export interface GithubRepoSummary {
   selected?: boolean;
 }
 
+export interface GithubBranchSummary {
+  name: string;
+  protected: boolean;
+  url?: string;
+  lastCommitSha?: string;
+  lastCommitUrl?: string;
+}
+
+export interface GithubPullRequestSummary {
+  number: number;
+  title: string;
+  state: 'open';
+  url?: string;
+  author?: string;
+  draft: boolean;
+  headRef?: string;
+  baseRef?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface GithubSelectedRepoState {
   owner: string;
   repo: string;
@@ -80,6 +101,16 @@ export interface GithubRepoListResponse {
   viewer: GithubViewerSummary;
   selectedRepo?: GithubSelectedRepoState;
   repos: GithubRepoSummary[];
+}
+
+export interface GithubRepoContextResponse {
+  status: 'loaded';
+  hostname: string;
+  viewer: GithubViewerSummary;
+  selectedRepo?: GithubSelectedRepoState;
+  repo: GithubRepoSummary;
+  branches: GithubBranchSummary[];
+  pullRequests: GithubPullRequestSummary[];
 }
 
 export interface GithubCreateRepoRequest {

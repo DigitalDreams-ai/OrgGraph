@@ -44,6 +44,31 @@ export function listGithubRepos(limit = 50): Promise<QueryResponse> {
   });
 }
 
+export function getGithubRepoContext(payload?: {
+  owner?: string;
+  repo?: string;
+  branchLimit?: number;
+  pullLimit?: number;
+}): Promise<QueryResponse> {
+  const params = new URLSearchParams();
+  if (payload?.owner) {
+    params.set('owner', payload.owner);
+  }
+  if (payload?.repo) {
+    params.set('repo', payload.repo);
+  }
+  if (payload?.branchLimit !== undefined) {
+    params.set('branchLimit', String(payload.branchLimit));
+  }
+  if (payload?.pullLimit !== undefined) {
+    params.set('pullLimit', String(payload.pullLimit));
+  }
+  const suffix = params.size > 0 ? `?${params.toString()}` : '';
+  return requestBoundary(resolveDesktopApiUrl(`/github/repo/context${suffix}`), {
+    method: 'GET'
+  });
+}
+
 export function createGithubRepo(payload: {
   owner?: string;
   name: string;

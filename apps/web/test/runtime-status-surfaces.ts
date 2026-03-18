@@ -188,6 +188,26 @@ function run(): void {
           defaultBranch: 'main'
         }
       },
+      githubRepoContext: {
+        repo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime',
+          defaultBranch: 'main'
+        },
+        branches: [
+          {
+            name: 'main',
+            protected: true,
+            lastCommitSha: 'abcdef1',
+            lastCommitUrl: 'https://github.com/sean/orgumented-runtime/commit/abcdef1'
+          }
+        ],
+        pullRequests: []
+      },
       aliasInventory: [],
       githubAccessibleRepos: [],
       githubSelectedRepo: {
@@ -233,6 +253,7 @@ function run(): void {
       onRefreshGithubStatus: () => undefined,
       onAuthorizeGithub: () => undefined,
       onLoadGithubRepos: () => undefined,
+      onLoadGithubRepoContext: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
     } as any)
@@ -243,6 +264,8 @@ function run(): void {
   assert.match(connectMarkup, /Authenticated in sf:<\/strong> yes/);
   assert.match(connectMarkup, /CCI alias available:<\/strong> yes/);
   assert.match(connectMarkup, /Parse path present:<\/strong> yes/);
+  assert.match(connectMarkup, /Selected repo context/);
+  assert.match(connectMarkup, /Branches and open pull requests/);
   assert.match(connectMarkup, /Org ID:<\/strong> <span class="path-value">00Dxx000001kjZRUAY<\/span>/);
   assert.match(connectMarkup, /Instance URL:<\/strong> <span class="path-value">https:\/\/shulman-hill--uat\.sandbox\.my\.salesforce\.com<\/span>/);
   assert.match(connectMarkup, /<pre class="diagnostic-code-block"># 1\) Authenticate in sf keychain/);

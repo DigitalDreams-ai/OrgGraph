@@ -140,7 +140,11 @@ Current state:
   - list accessible repos
   - create a new repo
   - select one explicit repo binding for later repo-backed workflows
-- branch / PR context is still not modeled in the engine yet
+- Connect workspace can now load read-only selected repo context for:
+  - repository metadata
+  - recent branches
+  - open pull requests
+- changed-file scope read is still not modeled in the engine yet
 
 ### Phase 2: Publish Review Output Back To GitHub
 

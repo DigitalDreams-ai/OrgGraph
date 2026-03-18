@@ -13,10 +13,13 @@ import { AskProofStoreService } from '../ask/ask-proof-store.service';
 import type { AskDecisionPacket, AskProofArtifact } from '../ask/ask.types';
 import { GithubToolAdapterService } from './github-tool-adapter.service';
 import type {
+  GithubBranchSummary,
   GithubCreateRepoRequest,
   GithubCreateRepoResponse,
   GithubPublishReviewPacketCommentRequest,
   GithubPublishReviewPacketCommentResponse,
+  GithubPullRequestSummary,
+  GithubRepoContextResponse,
   GithubRepoListResponse,
   GithubRepoSummary,
   GithubReviewPacketPayload,
@@ -46,6 +49,34 @@ interface GithubApiRepo {
   owner?: {
     login?: string;
   };
+}
+
+interface GithubApiBranch {
+  name?: string;
+  protected?: boolean;
+  commit?: {
+    sha?: string;
+    url?: string;
+  };
+}
+
+interface GithubApiPullRequest {
+  number?: number;
+  title?: string;
+  state?: string;
+  html_url?: string;
+  user?: {
+    login?: string;
+  };
+  draft?: boolean;
+  head?: {
+    ref?: string;
+  };
+  base?: {
+    ref?: string;
+  };
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface GithubViewerApiPayload {
@@ -157,6 +188,64 @@ export class GithubService {
       viewer,
       selectedRepo: this.readSelectedRepoState(),
       repos
+    };
+  }
+
+  async repoContext(
+    ownerRaw?: string,
+    repoRaw?: string,
+    branchLimitRaw?: number,
+    pullLimitRaw?: number
+  ): Promise<GithubRepoContextResponse> {
+    const branchLimit = this.normalizeContextLimit(branchLimitRaw);
+    const pullLimit = this.normalizeContextLimit(pullLimitRaw);
+    const auth = await this.resolveGithubAuth();
+    const viewer = await this.loadViewer(auth.token);
+    const targetRepo = this.resolveTargetRepo(ownerRaw, repoRaw);
+    if (!targetRepo) {
+      throw new BadRequestException('owner and repo are required or a selected GitHub repo must be bound first');
+    }
+
+    const [repoResponse, branchesResponse, pullsResponse] = await Promise.all([
+      this.githubRequest(auth.token, `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}`, {
+        method: 'GET'
+      }),
+      this.githubRequest(
+        auth.token,
+        `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}/branches?per_page=${branchLimit}`,
+        {
+          method: 'GET'
+        }
+      ),
+      this.githubRequest(
+        auth.token,
+        `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}/pulls?state=open&per_page=${pullLimit}`,
+        {
+          method: 'GET'
+        }
+      )
+    ]);
+
+    const repo = this.mapRepo((await repoResponse.json()) as GithubApiRepo);
+    if (!repo) {
+      throw new BadGatewayException('GitHub repo context response was missing repository details');
+    }
+
+    const branches = ((await branchesResponse.json()) as GithubApiBranch[])
+      .map((branch) => this.mapBranch(branch))
+      .filter((branch): branch is GithubBranchSummary => branch !== undefined);
+    const pullRequests = ((await pullsResponse.json()) as GithubApiPullRequest[])
+      .map((pullRequest) => this.mapPullRequest(pullRequest))
+      .filter((pullRequest): pullRequest is GithubPullRequestSummary => pullRequest !== undefined);
+
+    return {
+      status: 'loaded',
+      hostname: GithubService.HOSTNAME,
+      viewer,
+      selectedRepo: this.readSelectedRepoState(),
+      repo,
+      branches,
+      pullRequests
     };
   }
 
@@ -305,6 +394,16 @@ export class GithubService {
     return limitRaw;
   }
 
+  private normalizeContextLimit(limitRaw?: number): number {
+    if (limitRaw === undefined) {
+      return 10;
+    }
+    if (!Number.isInteger(limitRaw) || limitRaw < 1 || limitRaw > 25) {
+      throw new BadRequestException('context limits must be integers between 1 and 25');
+    }
+    return limitRaw;
+  }
+
   private async resolveGithubAuth(): Promise<ResolvedGithubAuth> {
     const envToken = this.config.githubToken();
     if (envToken) {
@@ -378,6 +477,45 @@ export class GithubService {
           selectedRepo.owner.toLowerCase() === owner.toLowerCase() &&
           selectedRepo.repo.toLowerCase() === name.toLowerCase()
       )
+    };
+  }
+
+  private mapBranch(branch: GithubApiBranch): GithubBranchSummary | undefined {
+    const name = typeof branch.name === 'string' ? branch.name.trim() : '';
+    if (!name) {
+      return undefined;
+    }
+
+    return {
+      name,
+      protected: Boolean(branch.protected),
+      url: typeof branch.commit?.url === 'string' ? branch.commit.url.trim() || undefined : undefined,
+      lastCommitSha: typeof branch.commit?.sha === 'string' ? branch.commit.sha.trim() || undefined : undefined,
+      lastCommitUrl: typeof branch.commit?.url === 'string' ? branch.commit.url.trim() || undefined : undefined
+    };
+  }
+
+  private mapPullRequest(pullRequest: GithubApiPullRequest): GithubPullRequestSummary | undefined {
+    const number = pullRequest.number;
+    if (typeof number !== 'number' || !Number.isInteger(number) || number < 1) {
+      return undefined;
+    }
+    const title = typeof pullRequest.title === 'string' ? pullRequest.title.trim() : '';
+    if (!title || pullRequest.state !== 'open') {
+      return undefined;
+    }
+
+    return {
+      number,
+      title,
+      state: 'open',
+      url: typeof pullRequest.html_url === 'string' ? pullRequest.html_url.trim() || undefined : undefined,
+      author: typeof pullRequest.user?.login === 'string' ? pullRequest.user.login.trim() || undefined : undefined,
+      draft: Boolean(pullRequest.draft),
+      headRef: typeof pullRequest.head?.ref === 'string' ? pullRequest.head.ref.trim() || undefined : undefined,
+      baseRef: typeof pullRequest.base?.ref === 'string' ? pullRequest.base.ref.trim() || undefined : undefined,
+      createdAt: typeof pullRequest.created_at === 'string' ? pullRequest.created_at.trim() || undefined : undefined,
+      updatedAt: typeof pullRequest.updated_at === 'string' ? pullRequest.updated_at.trim() || undefined : undefined
     };
   }
 
