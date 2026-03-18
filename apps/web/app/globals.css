@@ -431,7 +431,7 @@ button.ghost {
 
 .launch-grid {
   display: grid;
-  grid-template-columns: 1.35fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   gap: 0.8rem;
   margin-bottom: 0.9rem;
 }
@@ -456,6 +456,12 @@ button.ghost {
 
 .launch-copy {
   max-width: 58ch;
+}
+
+.launch-card-actions {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
 }
 
 .launch-stat-grid {

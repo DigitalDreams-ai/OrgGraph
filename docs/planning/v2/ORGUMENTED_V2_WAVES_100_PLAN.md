@@ -383,6 +383,7 @@ Scope:
 - explicit telemetry render guards for Ask trust failure-class labels in Settings & Diagnostics
 - explicit Org Browser render guards for long retrieve parse paths, metadata args, and selected member chips
 - explicit Org Sessions render guards for long alias, username, org ID, and instance URL values
+- Ask launch chrome is reduced so operator readiness and next-step navigation no longer consume separate top-level cards ahead of the primary question and packet flow
 
 Exit:
 - zero known clipping defects in Stage 1 surfaces
