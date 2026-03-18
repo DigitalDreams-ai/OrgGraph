@@ -136,6 +136,9 @@ function run(): void {
   assert.match(markup, /<strong class="packet-action-label">Inspect the longest impacted automation path before approval using the deterministic source trail/);
   assert.match(markup, /<p class="packet-action-rationale">This rationale is long enough to prove the follow-up list stays readable/);
   assert.match(markup, /<h3>Proof and evidence<\/h3>/);
+  assert.match(markup, /<p class="panel-caption">Operator readiness<\/p>/);
+  assert.match(markup, /<p class="panel-caption">Next move<\/p>/);
+  assert.doesNotMatch(markup, /<p class="panel-caption">Quick actions<\/p>/);
   assert.match(markup, /<summary>Proof context<\/summary>/);
   assert.match(markup, /<summary>Citations \(1\)<\/summary>/);
   assert.doesNotMatch(markup, /<p class="panel-caption">Proof context<\/p>/);

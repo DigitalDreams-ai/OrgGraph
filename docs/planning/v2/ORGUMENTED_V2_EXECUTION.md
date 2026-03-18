@@ -231,6 +231,7 @@ Materially true now:
 - wave10 density guardrails now widen card-grid minima and heading wrapping to reduce clipping/overlap in Ask, Analyze, Proofs, and Diagnostics
 - wave10 accessibility baseline now includes explicit focus-visible rings across core interactive controls and standardized checkbox/radio sizing for keyboard clarity
 - wave10 follow-up now wraps long path/identifier values in Connect, Refresh, and System with explicit `path-value`/`diagnostic-code-block` hooks, and the runtime-status regression gate now render-checks those markup guards so long paths/JSON stay bounded
+- wave10 Ask simplification now collapses the launch header from separate status and quick-action cards into one operator-readiness card with inline next-move actions, reducing top-of-workspace dashboard density before the primary question/payload flow
 - wave9 is now closed: history rows, top actions, and exports all resolve from the selected history label by default, while advanced proof/replay tokens stay isolated behind the debug disclosure and never drive the primary workflow
 
 Still unresolved:

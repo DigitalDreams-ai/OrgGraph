@@ -86,7 +86,7 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
 
       <div className="launch-grid">
         <article className="sub-card launch-card launch-card-accent">
-          <p className="panel-caption">Current launch state</p>
+          <p className="panel-caption">Operator readiness</p>
           <h3>Ask-first desktop runtime</h3>
           <p className="launch-copy">The main window opens on Ask, with session health, trust, and recovery actions visible before any deep operator workflow.</p>
           <div className="launch-stat-grid">
@@ -107,16 +107,14 @@ export function AskWorkspace(props: AskWorkspaceProps): JSX.Element {
               <strong>{props.buildVersion}</strong>
             </div>
           </div>
-        </article>
-
-        <article className="sub-card launch-card">
-          <p className="panel-caption">Quick actions</p>
-          <h3>Next operator move</h3>
-          <div className="quick-actions-grid">
-            <button type="button" className="ghost" onClick={props.onOpenConnect}>Connect org</button>
-            <button type="button" className="ghost" onClick={props.onRefreshAliases} disabled={props.loading}>Refresh aliases</button>
-            <button type="button" className="ghost" onClick={props.onOpenBrowser}>Browse metadata</button>
-            <button type="button" className="ghost" onClick={props.onOpenRefresh}>Run refresh</button>
+          <div className="launch-card-actions">
+            <p className="panel-caption">Next move</p>
+            <div className="quick-actions-grid">
+              <button type="button" className="ghost" onClick={props.onOpenConnect}>Connect org</button>
+              <button type="button" className="ghost" onClick={props.onRefreshAliases} disabled={props.loading}>Refresh aliases</button>
+              <button type="button" className="ghost" onClick={props.onOpenBrowser}>Browse metadata</button>
+              <button type="button" className="ghost" onClick={props.onOpenRefresh}>Run refresh</button>
+            </div>
           </div>
         </article>
 
