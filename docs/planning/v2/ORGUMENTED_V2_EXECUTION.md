@@ -233,6 +233,7 @@ Materially true now:
 - wave10 follow-up now wraps long path/identifier values in Connect, Refresh, and System with explicit `path-value`/`diagnostic-code-block` hooks, and the runtime-status regression gate now render-checks those markup guards so long paths/JSON stay bounded
 - wave10 Ask simplification now collapses the launch header from separate status and quick-action cards into one operator-readiness card with inline next-move actions, reducing top-of-workspace dashboard density before the primary question/payload flow
 - wave10 Org Sessions simplification now demotes explicit alias/session probes and manual bridge commands into one advanced disclosure, so connect/switch actions remain primary while fallback tooling stays available without its own full-width card
+- wave10 Refresh simplification now removes the duplicate rebuild-chain recap card, leaving the staged workflow snapshot and concrete run summaries as the primary rebuild-state surfaces
 - wave9 is now closed: history rows, top actions, and exports all resolve from the selected history label by default, while advanced proof/replay tokens stay isolated behind the debug disclosure and never drive the primary workflow
 
 Still unresolved:

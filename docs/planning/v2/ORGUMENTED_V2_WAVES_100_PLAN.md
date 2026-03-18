@@ -385,6 +385,7 @@ Scope:
 - explicit Org Sessions render guards for long alias, username, org ID, and instance URL values
 - Ask launch chrome is reduced so operator readiness and next-step navigation no longer consume separate top-level cards ahead of the primary question and packet flow
 - Org Sessions keeps manual bridge commands and secondary alias/session probes behind a single advanced disclosure, reducing connect-screen card overload without removing explicit fallback tooling
+- Refresh & Build now relies on one staged workflow snapshot plus concrete run summaries instead of repeating the same rebuild chain in a second recap card
 
 Exit:
 - zero known clipping defects in Stage 1 surfaces
