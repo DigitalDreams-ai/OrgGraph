@@ -55,7 +55,7 @@ Remaining work is now primarily around:
 | runtime core | packaged startup deterministic, fail-closed, no ambiguous status | mostly in place | close wave2 runtime/tooling parity gaps and startup drift edge cases |
 | sessions/browser/retrieve | connect/switch/restore deterministic and browser parity delivered | complete | maintain packaged handoff proof and lock end-to-end rebuild workflow parity |
 | ask/planner | grounded metadata asks with replay-safe proof | complete | maintain deterministic evidence-lookup normalization, replay parity, and bounded semantic-frame admissibility |
-| decision packets | approval-grade, trusted by workflow | partial | wave7 acceptance benchmark and packet quality gates |
+| decision packets | approval-grade, trusted by workflow | complete | maintain proxy benchmark verification and proof-bound PR publication |
 | analyze/diagnostics | structured triage without JSON dependency | partial | wave8 card/action depth and synthesis improvements |
 | proofs/history | label-first reopen/replay/export as primary flow | near complete | close remaining universal history-first path gaps |
 | design/layout/a11y | no clipping + keyboard/focus baseline | improved | complete wave10 accessibility, simplification, and final visual consistency pass |
@@ -149,7 +149,7 @@ Mandatory:
 | wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
 | wave5 | retrieve -> refresh handoff | B008 | Complete | Maintain packaged real-org handoff smoke proof |
 | wave6 | ask planner/compiler depth | B003, B009 | Complete | Maintain bounded semantic-frame admissibility and deterministic evidence-lookup coverage |
-| wave7 | decision-packet quality | B010, B017 | In Progress | Packet summaries publish into GitHub PR surfaces with deterministic proof/provenance binding, while canonical proxy benchmark publish/verify stays green |
+| wave7 | decision-packet quality | B010, B017 | Complete | Maintain proxy benchmark verification and proof-bound PR publication |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage and diagnostics cards expose direct operator actions, no core recovery path depends on raw JSON or manual tab hunting, and redundant status/action surfaces are collapsed |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first selection stays independent from advanced token lookup and reopen/replay/export remain history-first |
 | wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline with live-region coverage, calmer workspace hierarchy, and proof-history identifier guardrails |
@@ -163,7 +163,7 @@ Mandatory:
 |---|---|---|
 | Core runtime integrity | wave2, wave3, wave12 | packaged runtime + session/toolchain parity proven |
 | Core workflow completeness | wave3, wave4, wave5, wave8, wave9 | all Stage 1 workflows pass runbook paths |
-| Planner/packet quality | wave6, wave7 | grounded Ask + approval-grade packet benchmark pass |
+| Planner/packet quality | wave6, wave7 | grounded Ask + approval-grade packet benchmark pass + PR publication path |
 | UX/design/layout quality | wave10 | no clipping/overflow, action semantics locked, and dense redundant surfaces simplified |
 | Defect/release discipline | wave11, wave12, wave13 | P0/P1 zero, release evidence complete, stabilization clean |
 
@@ -172,7 +172,7 @@ Mandatory:
 This is a cross-wave support track, not a replacement for the locked numbered wave order.
 
 Overall implementation progress:
-- approximately 15%
+- approximately 25%
 - policy and ownership boundaries are complete
 - product integration slices are still mostly open
 
@@ -180,7 +180,7 @@ Overall implementation progress:
 |---|---|---|---|---|
 | policy and ownership boundary (`sf`, `cci`, GitHub, Orgumented) | foundation | Complete | 100% | hold the tool boundary stable while implementation begins |
 | read-only repo / branch / PR context in the engine | wave7 | Open | 0% | typed GitHub adapter returns repo and PR scope without becoming a runtime dependency |
-| PR publication of decision packets, proof links, and review summaries | wave7 | Open | 0% | idempotent PR comment or check-run publication with deterministic proof references |
+| PR publication of decision packets, proof links, and review summaries | wave7 | Complete | 100% | maintain proof-bound idempotent PR comment publication while check-run publication remains optional future extension |
 | typed local `cci` job registry | wave7, wave11 | Planned | 20% | elevate current alias/info/import support into explicit typed jobs with allowlist, mutability class, timeout, and audit trail |
 | typed GitHub Actions dispatch and status ingest | wave11 | Open | 0% | workflow allowlist plus typed dispatch/status mapping back into Orgumented state |
 | explicit user-bound repo binding for commit-capable metadata workflows | wave11, wave12 | Planned | 10% | fail closed when the only available repo is the Orgumented product repo |
@@ -310,7 +310,7 @@ Exit:
 - packet cites deterministic reads/writes/impact paths with minimal manual interpretation
 - packet hierarchy is clear enough that the primary recommendation, evidence, and next action are visible without scanning redundant cards
 - latest proxy benchmark run passes specificity and friction gates with explicit recommendation/evidence-gap publication, and canonical proxy publish/verify is now green without human stopwatch capture
-- remaining finish work is GitHub PR-surface publication that preserves packet provenance, proof identity, and fail-closed semantics
+- decision packets now publish into GitHub PR comment surfaces with proof-bound idempotent upsert behavior, preserving `proofId`, `replayToken`, snapshot/policy provenance, and fail-closed semantics without exposing raw JSON
 - packet summary is publishable to GitHub PR surfaces without collapsing into raw JSON or losing proof identity
 
 ## wave8 - Explain/Analyze Depth

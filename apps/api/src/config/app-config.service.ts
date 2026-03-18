@@ -63,6 +63,11 @@ export class AppConfigService {
     this.validateOptionalString('SF_RETRY_DELAY_MS');
     this.validateOptionalString('SF_TIMEOUT_SECONDS');
     this.validateOptionalString('SF_AUTO_REFRESH_AFTER_RETRIEVE');
+    this.validateOptionalString('GITHUB_INTEGRATION_ENABLED');
+    this.validateOptionalString('GITHUB_TOKEN');
+    this.validateOptionalString('GITHUB_API_URL');
+    this.validateOptionalString('GITHUB_REPO_OWNER');
+    this.validateOptionalString('GITHUB_REPO_NAME');
     this.validateOptionalString('MIN_CONFIDENCE_DEFAULT');
     this.validateOptionalString('ASK_CONSISTENCY_CHECK_ENABLED');
     this.validateOptionalString('ASK_LLM_MAX_LATENCY_MS');
@@ -269,6 +274,26 @@ export class AppConfigService {
 
   sfAutoRefreshAfterRetrieve(): boolean {
     return (process.env.SF_AUTO_REFRESH_AFTER_RETRIEVE || 'true').trim().toLowerCase() === 'true';
+  }
+
+  githubIntegrationEnabled(): boolean {
+    return (process.env.GITHUB_INTEGRATION_ENABLED || 'false').trim().toLowerCase() === 'true';
+  }
+
+  githubToken(): string | undefined {
+    return process.env.GITHUB_TOKEN?.trim() || undefined;
+  }
+
+  githubApiUrl(): string {
+    return process.env.GITHUB_API_URL?.trim() || 'https://api.github.com';
+  }
+
+  githubRepoOwner(): string | undefined {
+    return process.env.GITHUB_REPO_OWNER?.trim() || undefined;
+  }
+
+  githubRepoName(): string | undefined {
+    return process.env.GITHUB_REPO_NAME?.trim() || undefined;
   }
 
   minConfidenceDefault(): 'low' | 'medium' | 'high' {

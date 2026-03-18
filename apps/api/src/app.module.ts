@@ -3,6 +3,7 @@ import { AskModule } from './modules/ask/ask.module';
 import { ApiErrorFilter } from './common/api-error.filter';
 import { ConfigModule } from './config/config.module';
 import { RuntimeBootstrapService } from './config/runtime-bootstrap.service';
+import { GithubModule } from './modules/github/github.module';
 import { GraphModule } from './modules/graph/graph.module';
 import { HealthModule } from './modules/health/health.module';
 import { IngestionModule } from './modules/ingestion/ingestion.module';
@@ -22,6 +23,7 @@ import { APP_FILTER } from '@nestjs/core';
     QueriesModule,
     AnalysisModule,
     AskModule,
+    GithubModule,
     HealthModule,
     MetricsModule,
     OrgModule
