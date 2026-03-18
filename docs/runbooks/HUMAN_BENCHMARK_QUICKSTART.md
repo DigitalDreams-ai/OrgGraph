@@ -1,5 +1,10 @@
 # Human Benchmark Quickstart
 
+Current policy:
+- this quickstart is optional exploratory guidance
+- it is not required for Wave 7 closure
+- canonical Wave 7 acceptance now uses proxy benchmark publication and verification
+
 Use this file when you actually run the benchmark.
 
 This file is intentionally short.

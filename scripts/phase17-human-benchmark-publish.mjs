@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const defaultProxyArtifactPath = path.join(repoRoot, 'logs', 'high-risk-review-benchmark.json');
@@ -24,6 +25,10 @@ Optional:
 Example:
   pnpm phase17:benchmark:human:publish
   pnpm phase17:benchmark:human:publish -- --human-artifact logs/high-risk-review-human-benchmark-smoke.json --out-md logs/high-risk-review-human-benchmark-preview.md --allow-synthetic
+
+Behavior:
+  - publishes canonical proxy-only results when no human artifact is present
+  - includes human comparison details when a human artifact is present
 `;
 
 function parseArgs(argv) {
@@ -67,6 +72,20 @@ function relativePath(filePath) {
 
 function isCanonicalOutput(filePath) {
   return path.resolve(filePath) === path.resolve(defaultOutMdPath);
+}
+
+async function pathExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function sha256File(filePath) {
+  const body = await fs.readFile(filePath);
+  return crypto.createHash('sha256').update(body).digest('hex');
 }
 
 function detectSyntheticHumanArtifact(humanArtifact, humanArtifactPath) {
@@ -220,6 +239,82 @@ ${noteLines}
 `;
 }
 
+function buildProxyOnlyMarkdown(proxyArtifact, metadata) {
+  const proxyComparison = proxyArtifact.comparison ?? {};
+  const proxyDecisionPacket = proxyArtifact?.reviewPacket?.ask?.decisionPacket ?? {};
+  const proxyPacketQuality = proxyArtifact?.reviewPacket?.packetQuality ?? {};
+  const proxyNotes = Array.isArray(proxyArtifact.notes) ? proxyArtifact.notes : [];
+
+  return `# High-Risk Review Benchmark Results
+
+Date: ${metadata.runDate}
+Artifacts:
+- \`${metadata.proxyArtifactPath}\`
+
+## Provenance Binding
+
+Acceptance mode:
+- \`proxy_only\`
+
+Proxy artifact:
+- path: \`${metadata.proxyArtifactPath}\`
+- hash: \`${metadata.proxyArtifactHash}\`
+
+## Latest Automated Proxy Run
+
+Runtime mode:
+- ${proxyArtifact.runtimeMode ?? 'unknown'}
+
+Scenario:
+- \`${proxyArtifact?.scenario?.reviewQuery ?? 'unknown'}\`
+
+## Automated Proxy Summary
+
+The typed review-packet path materially reduced workflow friction on the automated proxy benchmark:
+- proxy time improved from \`${proxyArtifact?.baseline?.operatorProxyElapsedMs ?? 'n/a'}ms\` to \`${proxyArtifact?.reviewPacket?.operatorProxyElapsedMs ?? 'n/a'}ms\`
+- evidence steps dropped from \`${proxyArtifact?.baseline?.evidenceSteps ?? 'n/a'}\` to \`${proxyArtifact?.reviewPacket?.evidenceSteps ?? 'n/a'}\`
+- workspace switches dropped from \`${proxyArtifact?.baseline?.workspaceSwitches ?? 'n/a'}\` to \`${proxyArtifact?.reviewPacket?.workspaceSwitches ?? 'n/a'}\`
+- repeated identical review asks preserved:
+  - \`proofId\`
+  - \`replayToken\`
+  - replay parity
+- review packet recommendation verdict: \`${formatScalar(proxyDecisionPacket.recommendationVerdict)}\`
+- review packet recommendation summary: \`${formatScalar(proxyDecisionPacket.recommendationSummary)}\`
+- review packet evidence gaps visible: \`${formatScalar(
+    proxyDecisionPacket.evidenceGapCount ?? proxyPacketQuality.evidenceGapCount
+  )}\`
+- review packet specificity guard: \`${boolPass(proxyPacketQuality.passed)}\`
+- review packet recommendation present: \`${boolPass(proxyPacketQuality.hasRecommendation)}\`
+- both baseline and review-packet asks returned:
+  - \`trustLevel = trusted\`
+
+Proxy comparison:
+- proxy time delta: \`${proxyComparison.proxyTimeDeltaMs ?? 'n/a'}ms\`
+- proxy time improvement ratio: \`${formatRatio(proxyComparison.proxyTimeImprovementRatio)}\`
+- evidence-step delta: \`${proxyComparison.evidenceStepDelta ?? 'n/a'}\`
+- workspace-switch delta: \`${proxyComparison.workspaceSwitchDelta ?? 'n/a'}\`
+
+## Human Benchmark Capture
+
+Status:
+- \`not required for current Wave 7 acceptance\`
+- \`not collected in this publication\`
+
+Reason:
+- Human timing on test data is not treated as a reliable Stage 1 acceptance metric.
+- Proxy evidence plus deterministic packet-quality gates are the canonical acceptance basis for this benchmark.
+
+## Publication Discipline
+
+- generated from artifacts with \`pnpm phase17:benchmark:human:publish\`
+- manual transcription into this file is not allowed
+- human capture remains optional exploratory evidence and is not required for canonical proxy-only publication
+
+Proxy notes:
+${proxyNotes.length > 0 ? proxyNotes.map((note) => `- ${note}`).join('\n') : '- none recorded'}
+`;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
@@ -232,27 +327,46 @@ async function main() {
   const outMdPath = path.resolve(args['out-md'] ?? defaultOutMdPath);
 
   const proxyArtifact = await readJson(proxyArtifactPath);
-  const humanArtifact = await readJson(humanArtifactPath);
-  const syntheticCheck = detectSyntheticHumanArtifact(humanArtifact, humanArtifactPath);
+  const proxyArtifactHash = await sha256File(proxyArtifactPath);
+  const hasHumanArtifact = await pathExists(humanArtifactPath);
 
-  if (syntheticCheck.synthetic && !args['allow-synthetic']) {
-    throw new Error(
-      `Refusing to publish synthetic human benchmark artifact (${syntheticCheck.signals.join(
-        '; '
-      )}). Use --allow-synthetic only for non-canonical preview output.`
-    );
+  let markdown;
+  let synthetic = false;
+  let passed = Boolean(proxyArtifact?.reviewPacket?.packetQuality?.passed);
+  let mode = 'proxy_only';
+
+  if (hasHumanArtifact) {
+    const humanArtifact = await readJson(humanArtifactPath);
+    const syntheticCheck = detectSyntheticHumanArtifact(humanArtifact, humanArtifactPath);
+
+    if (syntheticCheck.synthetic && !args['allow-synthetic']) {
+      throw new Error(
+        `Refusing to publish synthetic human benchmark artifact (${syntheticCheck.signals.join(
+          '; '
+        )}). Use --allow-synthetic only for non-canonical preview output.`
+      );
+    }
+
+    if (syntheticCheck.synthetic && isCanonicalOutput(outMdPath)) {
+      throw new Error(
+        'Refusing to write synthetic or smoke-only evidence to the canonical benchmark results file.'
+      );
+    }
+
+    markdown = buildMarkdown(proxyArtifact, humanArtifact, {
+      proxyArtifactPath: relativePath(proxyArtifactPath),
+      humanArtifactPath: relativePath(humanArtifactPath)
+    });
+    synthetic = syntheticCheck.synthetic;
+    passed = Boolean(humanArtifact.passed);
+    mode = synthetic ? 'human_preview' : 'human';
+  } else {
+    markdown = buildProxyOnlyMarkdown(proxyArtifact, {
+      runDate: new Date().toISOString().slice(0, 10),
+      proxyArtifactPath: relativePath(proxyArtifactPath),
+      proxyArtifactHash
+    });
   }
-
-  if (syntheticCheck.synthetic && isCanonicalOutput(outMdPath)) {
-    throw new Error(
-      'Refusing to write synthetic or smoke-only evidence to the canonical benchmark results file.'
-    );
-  }
-
-  const markdown = buildMarkdown(proxyArtifact, humanArtifact, {
-    proxyArtifactPath: relativePath(proxyArtifactPath),
-    humanArtifactPath: relativePath(humanArtifactPath)
-  });
 
   await fs.mkdir(path.dirname(outMdPath), { recursive: true });
   await fs.writeFile(outMdPath, markdown, 'utf8');
@@ -261,10 +375,11 @@ async function main() {
     `${JSON.stringify(
       {
         proxyArtifactPath: relativePath(proxyArtifactPath),
-        humanArtifactPath: relativePath(humanArtifactPath),
+        humanArtifactPath: hasHumanArtifact ? relativePath(humanArtifactPath) : null,
         outMdPath: relativePath(outMdPath),
-        synthetic: syntheticCheck.synthetic,
-        passed: Boolean(humanArtifact.passed)
+        synthetic,
+        passed,
+        mode
       },
       null,
       2

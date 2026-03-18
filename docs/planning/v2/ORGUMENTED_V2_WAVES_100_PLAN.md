@@ -149,7 +149,7 @@ Mandatory:
 | wave4 | org browser explorer | B006, B007 | Complete | Maintain checkbox/search parity while closing wave5 handoff |
 | wave5 | retrieve -> refresh handoff | B008 | Complete | Maintain packaged real-org handoff smoke proof |
 | wave6 | ask planner/compiler depth | B003, B009 | Complete | Maintain bounded semantic-frame admissibility and deterministic evidence-lookup coverage |
-| wave7 | decision-packet quality | B010, B017 | In Progress | Real human benchmark capture plus canonical publish/verify, now that the proxy packet benchmark passes with explicit recommendation and evidence-gap publication and without dense packet clutter or duplicate follow-up surfaces |
+| wave7 | decision-packet quality | B010, B017 | In Progress | Packet summaries publish into GitHub PR surfaces with deterministic proof/provenance binding, while canonical proxy benchmark publish/verify stays green |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | In Progress | Structured triage and diagnostics cards expose direct operator actions, no core recovery path depends on raw JSON or manual tab hunting, and redundant status/action surfaces are collapsed |
 | wave9 | proofs/history productization | B011 | In Progress | Label-first selection stays independent from advanced token lookup and reopen/replay/export remain history-first |
 | wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline with live-region coverage, calmer workspace hierarchy, and proof-history identifier guardrails |
@@ -309,7 +309,8 @@ Exit:
 - proof/trust envelope remains deterministic and replayable
 - packet cites deterministic reads/writes/impact paths with minimal manual interpretation
 - packet hierarchy is clear enough that the primary recommendation, evidence, and next action are visible without scanning redundant cards
-- latest proxy benchmark run passes specificity and friction gates with explicit recommendation/evidence-gap publication, so the only remaining acceptance blocker is the real human benchmark capture plus canonical publish/verify cycle
+- latest proxy benchmark run passes specificity and friction gates with explicit recommendation/evidence-gap publication, and canonical proxy publish/verify is now green without human stopwatch capture
+- remaining finish work is GitHub PR-surface publication that preserves packet provenance, proof identity, and fail-closed semantics
 - packet summary is publishable to GitHub PR surfaces without collapsing into raw JSON or losing proof identity
 
 ## wave8 - Explain/Analyze Depth

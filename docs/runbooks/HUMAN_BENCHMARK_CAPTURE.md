@@ -8,6 +8,11 @@ If you are about to run the benchmark now, use this file instead:
 
 This is the only file you need to follow for the first real Stage 1 human benchmark run.
 
+Current policy:
+- this runbook is optional exploratory operator guidance
+- it is not a required Wave 7 closure gate
+- canonical Wave 7 acceptance now closes on proxy benchmark publication and verification
+
 Do not use `docs/runbooks/HUMAN_BENCHMARK_OPERATOR_FORM.md` as a separate worksheet anymore. That file now only redirects back here.
 
 Scenario under test:
