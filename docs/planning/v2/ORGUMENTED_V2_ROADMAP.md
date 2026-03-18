@@ -98,7 +98,8 @@ Post-Wave E only after:
 As of March 1, 2026:
 - Waves B, C, F, and major parts of G are materially advanced
 - the current architectural pressure point is runtime convergence and planner depth
-- the next product pressure point is turning decision packets into real workflow artifacts
+- decision packets now behave as real workflow artifacts, including proxy-backed benchmark verification and proof-bound GitHub PR comment publication
+- the next product pressure point is structured Analyze/Diagnostics depth plus the remaining calmer proof/history and layout closure work
 
 ## Current Active Priorities
 
@@ -133,9 +134,9 @@ As of March 1, 2026:
 
 Current support-track status:
 - planning and ownership policy are complete
-- implementation is still early, at roughly 15%
+- implementation is still early, at roughly 25%
 - read-only repo and PR context is not built yet
-- PR publication, workflow dispatch/status ingest, and release linkage are not built yet
+- proof-bound PR comment publication is now built, while read-only repo context, workflow dispatch/status ingest, and release linkage are still open
 - current live `cci` support remains the alias bridge / project-support baseline, not the full typed job registry
 
 ### Priority 6: Policy-aware approval support

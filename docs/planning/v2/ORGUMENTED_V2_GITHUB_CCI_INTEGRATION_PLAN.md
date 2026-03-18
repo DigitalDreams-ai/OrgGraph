@@ -1,7 +1,7 @@
 # Orgumented v2 GitHub And CCI Integration Plan
 
 Date: March 16, 2026
-Status: active support-track planning artifact
+Status: active support-track planning artifact, with initial Phase 2 PR comment publication now live
 
 Companion docs:
 - `docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md`
@@ -139,6 +139,11 @@ Add:
 - proof/replay links and decision-packet summaries
 - benchmark publication summaries where relevant
 
+Current state:
+- initial PR comment publication is now live through `/github/pr/comment-review-packet`
+- publication is idempotent per `proofId` and preserves `proofId`, `replayToken`, snapshot/policy provenance, recommendation summary, evidence gaps, and next actions
+- check-run publication is still optional future extension
+
 Use cases:
 - post Orgumented review output directly on the PR
 - keep decision packets in the normal engineering review surface
@@ -216,7 +221,7 @@ This support track is only valid if all of the following stay true:
 ## Immediate Planned Moves
 
 1. Read-only repo and PR context in the engine.
-2. PR-facing decision-packet publication for approval workflows.
+2. Extend PR-facing decision-packet publication from proof-bound comments into broader repo/PR-context-aware workflows.
 3. Typed GitHub Actions dispatch/status ingest for validation and benchmark publication.
 4. Release artifact and evidence linkage in wave12.
 5. Gradual typed CCI expansion locally, with mutating/release flows kept in GitHub Actions until release proof is stronger.

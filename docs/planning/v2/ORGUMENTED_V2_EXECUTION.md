@@ -88,6 +88,7 @@ Materially true now:
 - wave7 proxy benchmark now passes on current main again: `pnpm phase17:benchmark` against a grounded local runtime returns explicit recommendation verdict/summary, explicit evidence-gap visibility, stable proof/replay identifiers, and a passing specificity guard for the approval-review packet
 - wave7 acceptance is now proxy-first: the canonical benchmark can publish and verify from deterministic proxy evidence alone, while optional human capture remains exploratory and non-blocking
 - wave7 proxy-only benchmark publication is now green on current main: `pnpm phase17:benchmark:human:publish`, `pnpm phase17:benchmark:human:verify`, and `pnpm phase17:benchmark:human:status` regenerate and validate the canonical results file against proxy provenance without requiring a human capture artifact
+- wave7 GitHub publication is now live in the engine as a fail-closed, proof-bound PR comment publisher: `/github/pr/comment-review-packet` upserts one review-packet comment per `proofId`, preserving `proofId`, `replayToken`, snapshot/policy provenance, recommendation summary, evidence gaps, and next actions without publishing raw JSON
 - flow read/write asks remain on the legacy planner path in this slice; semantic-frame rollout is still intentionally bounded to impact + field/object automation + graph-global permission asks only
 - wave4 browser parity closeout is complete (`B006/B007`, `D004`, `G005/G006`), with unified checkbox semantics across search and browse plus predictable unseeded discovery behavior
 - browser parity follow-up now also closes `B026`: full live family catalog visibility survives sparse caches, and family/search explorer rows share the same deterministic chevron-and-checkbox interaction model
@@ -230,7 +231,6 @@ Materially true now:
 - wave10 follow-up now wraps long path/identifier values in Connect, Refresh, and System with explicit `path-value`/`diagnostic-code-block` hooks, and the runtime-status regression gate now render-checks those markup guards so long paths/JSON stay bounded
 
 Still unresolved:
-- decision packet quality no longer depends on human stopwatch capture, but GitHub PR publication for packet summaries, proof links, and review-safe provenance is still not implemented
 - explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
 - proofs/history still needs full label-first lifecycle closure beyond current baseline auto-selection
 - layout/accessibility still needs final visual QA lock after latest density guardrail pass
@@ -274,30 +274,25 @@ Rules:
 
 ## Immediate Frontier (Next Slices)
 
-1. Wave7 finish slice:
-- publish decision packets into GitHub PR review surfaces without losing proof provenance, replay identity, or fail-closed semantics
-- keep proxy-only benchmark publication and verification green while the GitHub publication path is added
-- keep the packet calm enough that the same summary can survive PR comment/check presentation without collapsing into raw JSON
-
-2. Wave8 finish slice:
+1. Wave8 finish slice:
 - deepen structured diagnostics/analysis cards for primary operator triage
 - reduce raw JSON dependence in permission/automation/impact/map workflows
 - collapse redundant status/action surfaces so Analyze and Diagnostics present one clear recovery path before secondary telemetry or debug detail
 
-3. Wave9 finish slice:
+2. Wave9 finish slice:
 - complete label-first proof lifecycle (open/replay/export) without token-first dependence in normal workflows
 - keep token fields strictly advanced/debug while preserving replay parity checks and label-first selection semantics
 
-4. Wave10 finish slice:
+3. Wave10 finish slice:
 - close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
 - lock viewport and long-string rendering tests
 - simplify bloated workspace layouts, remove duplicate cards/action rows, and enforce progressive disclosure so the primary workflow is visible without scanning dense dashboards
 
-5. Wave11 finish slice:
+4. Wave11 finish slice:
 - complete P0/P1 burn-down lock and regression gates
 - keep CI strict while preserving minute-efficiency controls
 
-6. Wave12 finish slice:
+5. Wave12 finish slice:
 - complete clean-machine operator proof on the current real-org quickstart
 - execute one rollback validation cycle against the canonical rollback record and keep release evidence machine-checkable
 - keep Actions storage bounded with automated run-retention pruning and short artifact retention defaults
@@ -329,9 +324,9 @@ Orgumented keeps owning:
 
 Current support-track status:
 - planning and ownership policy are complete
-- overall implementation is still early, roughly 15%
+- overall implementation is still early, roughly 25%
 - no read-only repo/PR adapter is in the engine yet
-- no PR publication path is live yet
+- a proof-bound PR comment publication path is now live in the engine
 - no typed GitHub workflow dispatch/status-ingest path is live yet
 - current live `cci` support remains the alias bridge / project-support baseline, not the full typed local job registry
 

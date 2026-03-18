@@ -12,6 +12,7 @@ import { AskService } from './ask.service';
 @Module({
   imports: [PlannerModule, EvidenceModule, QueriesModule, AnalysisModule, LlmModule],
   providers: [AskService, AskProofStoreService, AskMetricsStoreService],
-  controllers: [AskController]
+  controllers: [AskController],
+  exports: [AskProofStoreService]
 })
 export class AskModule {}
