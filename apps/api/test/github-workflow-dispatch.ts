@@ -221,7 +221,15 @@ process.exit(1);
       assert.equal(runsResponse.status, 200);
       const runsJson = (await runsResponse.json()) as {
         workflow: { key: string; name: string };
-        runs: Array<{ runId: number; conclusion?: string; branch?: string; actor?: string }>;
+        runs: Array<{
+          runId: number;
+          runNumber?: number;
+          status: string;
+          conclusion?: string;
+          branch?: string;
+          actor?: string;
+          event?: string;
+        }>;
         totalCount: number;
         truncated: boolean;
       };
