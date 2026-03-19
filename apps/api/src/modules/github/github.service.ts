@@ -18,6 +18,9 @@ import type {
   GithubCreateRepoResponse,
   GithubPublishReviewPacketCommentRequest,
   GithubPublishReviewPacketCommentResponse,
+  GithubPullRequestFileScopeResponse,
+  GithubPullRequestFileSummary,
+  GithubPullRequestScopeSummary,
   GithubPullRequestSummary,
   GithubRepoContextResponse,
   GithubRepoListResponse,
@@ -77,6 +80,19 @@ interface GithubApiPullRequest {
   };
   created_at?: string;
   updated_at?: string;
+  changed_files?: number;
+}
+
+interface GithubApiPullRequestFile {
+  filename?: string;
+  status?: string;
+  additions?: number;
+  deletions?: number;
+  changes?: number;
+  previous_filename?: string;
+  blob_url?: string;
+  raw_url?: string;
+  patch?: string;
 }
 
 interface GithubViewerApiPayload {
@@ -249,6 +265,69 @@ export class GithubService {
     };
   }
 
+  async pullRequestFiles(
+    ownerRaw: string | undefined,
+    repoRaw: string | undefined,
+    pullNumber: number,
+    limitRaw?: number
+  ): Promise<GithubPullRequestFileScopeResponse> {
+    const limit = this.normalizePullRequestFileLimit(limitRaw);
+    const auth = await this.resolveGithubAuth();
+    const viewer = await this.loadViewer(auth.token);
+    const targetRepo = this.resolveTargetRepo(ownerRaw, repoRaw);
+    if (!targetRepo) {
+      throw new BadRequestException('owner and repo are required or a selected GitHub repo must be bound first');
+    }
+
+    const [repoResponse, pullResponse, filesResponse] = await Promise.all([
+      this.githubRequest(auth.token, `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}`, {
+        method: 'GET'
+      }),
+      this.githubRequest(
+        auth.token,
+        `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}/pulls/${pullNumber}`,
+        {
+          method: 'GET'
+        }
+      ),
+      this.githubRequest(
+        auth.token,
+        `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}/pulls/${pullNumber}/files?per_page=${limit}`,
+        {
+          method: 'GET'
+        }
+      )
+    ]);
+
+    const repo = this.mapRepo((await repoResponse.json()) as GithubApiRepo);
+    if (!repo) {
+      throw new BadGatewayException('GitHub pull request file scope response was missing repository details');
+    }
+
+    const pullRequestPayload = (await pullResponse.json()) as GithubApiPullRequest;
+    const pullRequest = this.mapPullRequestScope(pullRequestPayload);
+    if (!pullRequest) {
+      throw new BadGatewayException('GitHub pull request response was missing pull request details');
+    }
+
+    const files = ((await filesResponse.json()) as GithubApiPullRequestFile[])
+      .map((file) => this.mapPullRequestFile(file))
+      .filter((file): file is GithubPullRequestFileSummary => file !== undefined);
+    const totalCount = pullRequest.changedFileCount ?? files.length;
+
+    return {
+      status: 'loaded',
+      hostname: GithubService.HOSTNAME,
+      viewer,
+      selectedRepo: this.readSelectedRepoState(),
+      repo,
+      pullRequest,
+      files,
+      totalCount,
+      truncated: totalCount > files.length
+    };
+  }
+
   async createRepo(request: GithubCreateRepoRequest): Promise<GithubCreateRepoResponse> {
     const name = request.name?.trim();
     if (!name) {
@@ -404,6 +483,16 @@ export class GithubService {
     return limitRaw;
   }
 
+  private normalizePullRequestFileLimit(limitRaw?: number): number {
+    if (limitRaw === undefined) {
+      return 100;
+    }
+    if (!Number.isInteger(limitRaw) || limitRaw < 1 || limitRaw > 300) {
+      throw new BadRequestException('pull request file limit must be an integer between 1 and 300');
+    }
+    return limitRaw;
+  }
+
   private async resolveGithubAuth(): Promise<ResolvedGithubAuth> {
     const envToken = this.config.githubToken();
     if (envToken) {
@@ -516,6 +605,65 @@ export class GithubService {
       baseRef: typeof pullRequest.base?.ref === 'string' ? pullRequest.base.ref.trim() || undefined : undefined,
       createdAt: typeof pullRequest.created_at === 'string' ? pullRequest.created_at.trim() || undefined : undefined,
       updatedAt: typeof pullRequest.updated_at === 'string' ? pullRequest.updated_at.trim() || undefined : undefined
+    };
+  }
+
+  private mapPullRequestScope(pullRequest: GithubApiPullRequest): GithubPullRequestScopeSummary | undefined {
+    const number = pullRequest.number;
+    if (typeof number !== 'number' || !Number.isInteger(number) || number < 1) {
+      return undefined;
+    }
+    const title = typeof pullRequest.title === 'string' ? pullRequest.title.trim() : '';
+    const state = pullRequest.state === 'open' || pullRequest.state === 'closed' ? pullRequest.state : undefined;
+    if (!title || !state) {
+      return undefined;
+    }
+
+    return {
+      number,
+      title,
+      state,
+      url: typeof pullRequest.html_url === 'string' ? pullRequest.html_url.trim() || undefined : undefined,
+      author: typeof pullRequest.user?.login === 'string' ? pullRequest.user.login.trim() || undefined : undefined,
+      draft: Boolean(pullRequest.draft),
+      headRef: typeof pullRequest.head?.ref === 'string' ? pullRequest.head.ref.trim() || undefined : undefined,
+      baseRef: typeof pullRequest.base?.ref === 'string' ? pullRequest.base.ref.trim() || undefined : undefined,
+      createdAt: typeof pullRequest.created_at === 'string' ? pullRequest.created_at.trim() || undefined : undefined,
+      updatedAt: typeof pullRequest.updated_at === 'string' ? pullRequest.updated_at.trim() || undefined : undefined,
+      changedFileCount:
+        typeof pullRequest.changed_files === 'number' && Number.isInteger(pullRequest.changed_files) && pullRequest.changed_files >= 0
+          ? pullRequest.changed_files
+          : undefined
+    };
+  }
+
+  private mapPullRequestFile(file: GithubApiPullRequestFile): GithubPullRequestFileSummary | undefined {
+    const filename = typeof file.filename === 'string' ? file.filename.trim() : '';
+    if (!filename) {
+      return undefined;
+    }
+
+    const status =
+      file.status === 'added' ||
+      file.status === 'modified' ||
+      file.status === 'removed' ||
+      file.status === 'renamed' ||
+      file.status === 'copied' ||
+      file.status === 'changed'
+        ? file.status
+        : 'changed';
+
+    return {
+      filename,
+      status,
+      additions: typeof file.additions === 'number' && file.additions >= 0 ? file.additions : 0,
+      deletions: typeof file.deletions === 'number' && file.deletions >= 0 ? file.deletions : 0,
+      changes: typeof file.changes === 'number' && file.changes >= 0 ? file.changes : 0,
+      previousFilename:
+        typeof file.previous_filename === 'string' ? file.previous_filename.trim() || undefined : undefined,
+      blobUrl: typeof file.blob_url === 'string' ? file.blob_url.trim() || undefined : undefined,
+      rawUrl: typeof file.raw_url === 'string' ? file.raw_url.trim() || undefined : undefined,
+      patchTruncated: typeof file.patch !== 'string'
     };
   }
 

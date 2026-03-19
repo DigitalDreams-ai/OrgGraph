@@ -73,6 +73,32 @@ export interface GithubPullRequestSummary {
   updatedAt?: string;
 }
 
+export interface GithubPullRequestScopeSummary {
+  number: number;
+  title: string;
+  state: 'open' | 'closed';
+  url?: string;
+  author?: string;
+  draft: boolean;
+  headRef?: string;
+  baseRef?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  changedFileCount?: number;
+}
+
+export interface GithubPullRequestFileSummary {
+  filename: string;
+  status: 'added' | 'modified' | 'removed' | 'renamed' | 'copied' | 'changed';
+  additions: number;
+  deletions: number;
+  changes: number;
+  previousFilename?: string;
+  blobUrl?: string;
+  rawUrl?: string;
+  patchTruncated?: boolean;
+}
+
 export interface GithubSelectedRepoState {
   owner: string;
   repo: string;
@@ -111,6 +137,18 @@ export interface GithubRepoContextResponse {
   repo: GithubRepoSummary;
   branches: GithubBranchSummary[];
   pullRequests: GithubPullRequestSummary[];
+}
+
+export interface GithubPullRequestFileScopeResponse {
+  status: 'loaded';
+  hostname: string;
+  viewer: GithubViewerSummary;
+  selectedRepo?: GithubSelectedRepoState;
+  repo: GithubRepoSummary;
+  pullRequest: GithubPullRequestScopeSummary;
+  files: GithubPullRequestFileSummary[];
+  totalCount: number;
+  truncated: boolean;
 }
 
 export interface GithubCreateRepoRequest {

@@ -69,6 +69,28 @@ export function getGithubRepoContext(payload?: {
   });
 }
 
+export function getGithubPullRequestFiles(payload: {
+  pullNumber: number;
+  owner?: string;
+  repo?: string;
+  limit?: number;
+}): Promise<QueryResponse> {
+  const params = new URLSearchParams();
+  params.set('pullNumber', String(payload.pullNumber));
+  if (payload.owner) {
+    params.set('owner', payload.owner);
+  }
+  if (payload.repo) {
+    params.set('repo', payload.repo);
+  }
+  if (payload.limit !== undefined) {
+    params.set('limit', String(payload.limit));
+  }
+  return requestBoundary(resolveDesktopApiUrl(`/github/pr/files?${params.toString()}`), {
+    method: 'GET'
+  });
+}
+
 export function createGithubRepo(payload: {
   owner?: string;
   name: string;

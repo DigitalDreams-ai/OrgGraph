@@ -147,6 +147,8 @@ function run(): void {
       setGithubRepoDescription: () => undefined,
       githubRepoPrivate: true,
       setGithubRepoPrivate: () => undefined,
+      githubPullNumber: '17',
+      setGithubPullNumber: () => undefined,
       activeAlias: 'shulman-uat',
       sessionStatus: 'connected',
       orgStatus: {
@@ -208,6 +210,39 @@ function run(): void {
         ],
         pullRequests: []
       },
+      githubPullRequestFiles: {
+        repo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime',
+          defaultBranch: 'main'
+        },
+        pullRequest: {
+          number: 17,
+          title: 'Add PR file scope read path',
+          state: 'open',
+          author: 'sean',
+          draft: false,
+          headRef: 'feature/github-pr-files',
+          baseRef: 'main',
+          changedFileCount: 2
+        },
+        files: [
+          {
+            filename: 'apps/api/src/modules/github/github.service.ts',
+            status: 'modified',
+            additions: 10,
+            deletions: 2,
+            changes: 12,
+            blobUrl: 'https://github.com/sean/orgumented-runtime/blob/main/apps/api/src/modules/github/github.service.ts'
+          }
+        ],
+        totalCount: 2,
+        truncated: true
+      },
       aliasInventory: [],
       githubAccessibleRepos: [],
       githubSelectedRepo: {
@@ -254,6 +289,7 @@ function run(): void {
       onAuthorizeGithub: () => undefined,
       onLoadGithubRepos: () => undefined,
       onLoadGithubRepoContext: () => undefined,
+      onLoadGithubPullRequestFiles: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
     } as any)
@@ -266,6 +302,8 @@ function run(): void {
   assert.match(connectMarkup, /Parse path present:<\/strong> yes/);
   assert.match(connectMarkup, /Selected repo context/);
   assert.match(connectMarkup, /Branches and open pull requests/);
+  assert.match(connectMarkup, /Pull request file scope/);
+  assert.match(connectMarkup, /Files: 2/);
   assert.match(connectMarkup, /Org ID:<\/strong> <span class="path-value">00Dxx000001kjZRUAY<\/span>/);
   assert.match(connectMarkup, /Instance URL:<\/strong> <span class="path-value">https:\/\/shulman-hill--uat\.sandbox\.my\.salesforce\.com<\/span>/);
   assert.match(connectMarkup, /<pre class="diagnostic-code-block"># 1\) Authenticate in sf keychain/);
@@ -282,6 +320,8 @@ function run(): void {
       setGithubRepoDescription: () => undefined,
       githubRepoPrivate: true,
       setGithubRepoPrivate: () => undefined,
+      githubPullNumber: '',
+      setGithubPullNumber: () => undefined,
       activeAlias: 'shulman-uat',
       sessionStatus: 'connected',
       orgStatus: null,
@@ -290,6 +330,8 @@ function run(): void {
       orgSessionHistory: null,
       orgSession: null,
       githubSession: null,
+      githubRepoContext: null,
+      githubPullRequestFiles: null,
       aliasInventory: [],
       githubAccessibleRepos: [],
       githubSelectedRepo: null,
@@ -321,6 +363,8 @@ function run(): void {
       onRefreshGithubStatus: () => undefined,
       onAuthorizeGithub: () => undefined,
       onLoadGithubRepos: () => undefined,
+      onLoadGithubRepoContext: () => undefined,
+      onLoadGithubPullRequestFiles: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
     } as any)

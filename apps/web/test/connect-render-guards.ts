@@ -24,6 +24,8 @@ function run(): void {
       setGithubRepoDescription: () => undefined,
       githubRepoPrivate: true,
       setGithubRepoPrivate: () => undefined,
+      githubPullNumber: '42',
+      setGithubPullNumber: () => undefined,
       activeAlias: longAlias,
       sessionStatus: 'connected',
       orgStatus: {
@@ -97,6 +99,50 @@ function run(): void {
           }
         ]
       },
+      githubPullRequestFiles: {
+        repo: {
+          owner: 'sean',
+          name: 'Orgumented-runtime-repo-with-a-very-long-selected-binding-name',
+          fullName: longGithubRepo,
+          private: true,
+          visibility: 'private',
+          url: longGithubUrl,
+          defaultBranch: 'main'
+        },
+        pullRequest: {
+          number: 42,
+          title: 'Improve Orgumented review packet wiring for long selected repository bindings',
+          state: 'open',
+          author: 'sean',
+          draft: false,
+          headRef: 'feature/github-context',
+          baseRef: 'main',
+          changedFileCount: 3,
+          updatedAt: '2026-03-18T12:00:00Z'
+        },
+        files: [
+          {
+            filename: 'apps/api/src/modules/github/github.service.ts',
+            status: 'modified',
+            additions: 12,
+            deletions: 3,
+            changes: 15,
+            blobUrl: `${longGithubUrl}/blob/main/apps/api/src/modules/github/github.service.ts`
+          },
+          {
+            filename: 'apps/web/app/workspaces/connect/connect-workspace.tsx',
+            status: 'renamed',
+            additions: 8,
+            deletions: 2,
+            changes: 10,
+            previousFilename: 'apps/web/app/workspaces/connect/legacy-connect-workspace.tsx',
+            blobUrl: `${longGithubUrl}/blob/main/apps/web/app/workspaces/connect/connect-workspace.tsx`,
+            patchTruncated: true
+          }
+        ],
+        totalCount: 3,
+        truncated: true
+      },
       aliasInventory: [
         {
           alias: longAlias,
@@ -163,6 +209,7 @@ function run(): void {
       onAuthorizeGithub: () => undefined,
       onLoadGithubRepos: () => undefined,
       onLoadGithubRepoContext: () => undefined,
+      onLoadGithubPullRequestFiles: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
     } as any)
@@ -182,7 +229,11 @@ function run(): void {
   assert.match(connectMarkup, /<strong>Selected repo:<\/strong> <span class="path-value">sean\/Orgumented-runtime-repo-with-a-very-long-selected-binding-name<\/span>/);
   assert.match(connectMarkup, /<strong>URL:<\/strong> <span class="path-value">https:\/\/github\.com\/sean\/Orgumented-runtime-repo-with-a-very-long-selected-binding-name<\/span>/);
   assert.match(connectMarkup, /Load Repo Context<\/button>/);
+  assert.match(connectMarkup, /Load PR Files<\/button>/);
   assert.match(connectMarkup, /Selected repo context/);
+  assert.match(connectMarkup, /Pull request file scope/);
+  assert.match(connectMarkup, /apps\/api\/src\/modules\/github\/github\.service\.ts/);
+  assert.match(connectMarkup, /Previous path:/);
   assert.match(connectMarkup, /feature\/very-long-branch-name-for-orgumented-review-context-rendering/);
   assert.match(connectMarkup, /Improve Orgumented review packet wiring for long selected repository bindings/);
   assert.match(connectMarkup, /Authorize GitHub<\/button>/);

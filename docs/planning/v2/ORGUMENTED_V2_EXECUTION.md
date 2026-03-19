@@ -330,12 +330,16 @@ Orgumented keeps owning:
 
 Current support-track status:
 - planning and ownership policy are complete
-- overall implementation is still early, roughly 55%
+- overall implementation is still early, roughly 65%
 - local `gh`-backed GitHub auth/session plus typed repo list/create/select is now live in the engine and Connect workspace
 - typed read-only repo context is now live in the engine and Connect workspace for:
   - selected repo metadata
   - recent branches
   - open pull request summaries
+- typed changed-file scope is now live in the engine and Connect workspace for:
+  - explicit pull request selection
+  - selected repo binding or explicit owner/repo
+  - deterministic changed-file metadata without diff interpretation in the UI
 - a proof-bound PR comment publication path is now live in the engine
 - no typed GitHub workflow dispatch/status-ingest path is live yet
 - current live `cci` support remains the alias bridge / project-support baseline, not the full typed local job registry

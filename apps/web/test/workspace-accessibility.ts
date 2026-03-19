@@ -63,6 +63,8 @@ function run(): void {
       setGithubRepoDescription: () => undefined,
       githubRepoPrivate: true,
       setGithubRepoPrivate: () => undefined,
+      githubPullNumber: '17',
+      setGithubPullNumber: () => undefined,
       activeAlias: 'shulman-uat',
       sessionStatus: 'connected',
       orgStatus: {
@@ -111,6 +113,27 @@ function run(): void {
         branches: [],
         pullRequests: []
       },
+      githubPullRequestFiles: {
+        repo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime'
+        },
+        pullRequest: {
+          number: 17,
+          title: 'Add PR file scope read path',
+          state: 'open',
+          draft: false,
+          headRef: 'feature/github-pr-files',
+          baseRef: 'main'
+        },
+        files: [],
+        totalCount: 0,
+        truncated: false
+      },
       aliasInventory: [],
       githubAccessibleRepos: [],
       githubSelectedRepo: {
@@ -150,6 +173,7 @@ function run(): void {
       onAuthorizeGithub: () => undefined,
       onLoadGithubRepos: () => undefined,
       onLoadGithubRepoContext: () => undefined,
+      onLoadGithubPullRequestFiles: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
     })
