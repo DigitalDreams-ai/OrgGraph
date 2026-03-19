@@ -144,7 +144,10 @@ Current state:
   - repository metadata
   - recent branches
   - open pull requests
-- changed-file scope read is still not modeled in the engine yet
+- Connect workspace can now load read-only changed-file scope for an explicit pull request against:
+  - the selected repo binding
+  - or explicit owner/repo when provided
+- diff hunk parsing and higher-order diff interpretation are still intentionally out of scope for this phase
 
 ### Phase 2: Publish Review Output Back To GitHub
 

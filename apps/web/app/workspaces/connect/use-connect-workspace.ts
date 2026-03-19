@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { QueryResponse } from '../../lib/ask-client';
 import {
   createGithubRepo,
+  getGithubPullRequestFiles,
   getGithubRepoContext,
   getGithubSessionStatus,
   listGithubRepos,
@@ -25,6 +26,7 @@ import type {
   GithubRepoListPayload,
   GithubRepoContextPayload,
   GithubRepoSummary,
+  GithubPullRequestFileScopePayload,
   GithubSessionIssue,
   GithubSessionPayload,
   OrgAliasSummary,
@@ -96,6 +98,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   const [githubRepoName, setGithubRepoName] = useState('');
   const [githubRepoDescription, setGithubRepoDescription] = useState('');
   const [githubRepoPrivate, setGithubRepoPrivate] = useState(true);
+  const [githubPullNumber, setGithubPullNumber] = useState('');
   const [orgSession, setOrgSession] = useState<OrgSessionPayload | null>(null);
   const [orgStatus, setOrgStatus] = useState<OrgStatusPayload | null>(null);
   const [orgPreflight, setOrgPreflight] = useState<OrgPreflightPayload | null>(null);
@@ -104,6 +107,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   const [githubSession, setGithubSession] = useState<GithubSessionPayload | null>(null);
   const [githubRepos, setGithubRepos] = useState<GithubRepoListPayload | null>(null);
   const [githubRepoContext, setGithubRepoContext] = useState<GithubRepoContextPayload | null>(null);
+  const [githubPullRequestFiles, setGithubPullRequestFiles] = useState<GithubPullRequestFileScopePayload | null>(null);
   const [runtimeUnavailable, setRuntimeUnavailable] = useState(false);
 
   const aliasInventory = orgAliases?.aliases ?? [];
@@ -336,6 +340,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       setGithubSession(payload);
       if (!payload?.selectedRepo) {
         setGithubRepoContext(null);
+        setGithubPullRequestFiles(null);
       }
       syncGithubOwnerDefaults(payload);
     });
@@ -350,6 +355,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       const reposPayload = readPayload<GithubRepoListPayload>(reposResponse);
       setGithubRepos(reposPayload);
       setGithubRepoContext(null);
+      setGithubPullRequestFiles(null);
     });
   }
 
@@ -383,6 +389,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
         await refreshGithubStatus();
         await loadGithubReposAction();
         await loadGithubRepoContextAction();
+        setGithubPullRequestFiles(null);
         const payload = readPayload<{ selectedRepo?: GithubRepoSummary }>(response);
         if (payload?.selectedRepo?.owner) {
           setGithubRepoOwner(payload.selectedRepo.owner);
@@ -398,6 +405,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       await refreshGithubStatus();
       await loadGithubReposAction();
       await loadGithubRepoContextAction(owner, repo);
+      setGithubPullRequestFiles(null);
       setGithubRepoOwner(owner);
     });
   }
@@ -416,6 +424,29 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     );
   }
 
+  function loadGithubPullRequestFilesAction(pullNumberRaw?: string): Promise<QueryResponse | null> {
+    const candidate = (pullNumberRaw ?? githubPullNumber).trim();
+    const pullNumber = Number(candidate);
+    if (!Number.isInteger(pullNumber) || pullNumber < 1) {
+      const fallback: QueryResponse = { ok: false, error: { message: 'GitHub pull request number must be a positive integer.' } };
+      options.presentResponse(fallback);
+      options.setErrorText('Enter a valid GitHub pull request number before loading changed-file scope.');
+      return Promise.resolve(fallback);
+    }
+
+    return runAction(
+      () =>
+        getGithubPullRequestFiles({
+          pullNumber
+        }),
+      (response) => {
+        const payload = readPayload<GithubPullRequestFileScopePayload>(response);
+        setGithubPullRequestFiles(payload);
+        setGithubPullNumber(String(pullNumber));
+      }
+    );
+  }
+
   return {
     orgAlias,
     setOrgAlias,
@@ -427,6 +458,8 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     setGithubRepoDescription,
     githubRepoPrivate,
     setGithubRepoPrivate,
+    githubPullNumber,
+    setGithubPullNumber,
     orgSession,
     orgStatus,
     orgPreflight,
@@ -435,6 +468,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     githubSession,
     githubRepos,
     githubRepoContext,
+    githubPullRequestFiles,
     activeAlias,
     sessionStatus,
     restoreAlias,
@@ -467,6 +501,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     authorizeGithub,
     loadGithubRepos: loadGithubReposAction,
     loadGithubRepoContext: loadGithubRepoContextAction,
+    loadGithubPullRequestFiles: loadGithubPullRequestFilesAction,
     createGithubRepo: createGithubRepoAction,
     selectGithubRepo: selectGithubRepoAction
   };

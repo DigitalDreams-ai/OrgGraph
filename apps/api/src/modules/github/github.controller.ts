@@ -5,6 +5,7 @@ import type {
   GithubCreateRepoResponse,
   GithubPublishReviewPacketCommentRequest,
   GithubPublishReviewPacketCommentResponse,
+  GithubPullRequestFileScopeResponse,
   GithubRepoContextResponse,
   GithubRepoListResponse,
   GithubSelectRepoRequest,
@@ -64,6 +65,31 @@ export class GithubController {
     }
 
     return this.githubService.repoContext(ownerRaw?.trim(), repoRaw?.trim(), branchLimit, pullLimit);
+  }
+
+  @Get('/github/pr/files')
+  async pullRequestFiles(
+    @Query('pullNumber') pullNumberRaw?: string,
+    @Query('owner') ownerRaw?: string,
+    @Query('repo') repoRaw?: string,
+    @Query('limit') limitRaw?: string
+  ): Promise<GithubPullRequestFileScopeResponse> {
+    const parsedPullNumber = pullNumberRaw === undefined ? undefined : Number(pullNumberRaw);
+    const limit = limitRaw === undefined ? undefined : Number(limitRaw);
+    if (pullNumberRaw === undefined || !Number.isInteger(parsedPullNumber) || (parsedPullNumber as number) < 1) {
+      throw new BadRequestException('pullNumber must be a positive integer');
+    }
+    if (limitRaw !== undefined && (!Number.isInteger(limit) || (limit as number) < 1 || (limit as number) > 300)) {
+      throw new BadRequestException('limit must be an integer between 1 and 300');
+    }
+    if (ownerRaw !== undefined && ownerRaw.trim().length === 0) {
+      throw new BadRequestException('owner must be a non-empty string when provided');
+    }
+    if (repoRaw !== undefined && repoRaw.trim().length === 0) {
+      throw new BadRequestException('repo must be a non-empty string when provided');
+    }
+
+    return this.githubService.pullRequestFiles(ownerRaw?.trim(), repoRaw?.trim(), parsedPullNumber as number, limit);
   }
 
   @Post('/github/repos')

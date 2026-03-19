@@ -9,6 +9,9 @@ import {
 } from '../../shell/org-status-surface';
 import type {
   GithubBranchSummary,
+  GithubPullRequestFileScopePayload,
+  GithubPullRequestFileSummary,
+  GithubPullRequestScopeSummary,
   GithubPullRequestSummary,
   GithubRepoContextPayload,
   GithubRepoSummary,
@@ -35,6 +38,8 @@ interface ConnectWorkspaceProps {
   setGithubRepoDescription: (value: string) => void;
   githubRepoPrivate: boolean;
   setGithubRepoPrivate: (value: boolean) => void;
+  githubPullNumber: string;
+  setGithubPullNumber: (value: string) => void;
   activeAlias: string;
   sessionStatus: string;
   orgStatus: OrgStatusPayload | null;
@@ -44,6 +49,7 @@ interface ConnectWorkspaceProps {
   orgSession: OrgSessionPayload | null;
   githubSession: GithubSessionPayload | null;
   githubRepoContext: GithubRepoContextPayload | null;
+  githubPullRequestFiles: GithubPullRequestFileScopePayload | null;
   aliasInventory: OrgAliasSummary[];
   githubAccessibleRepos: GithubRepoSummary[];
   githubSelectedRepo: GithubRepoSummary | null;
@@ -76,6 +82,7 @@ interface ConnectWorkspaceProps {
   onAuthorizeGithub: () => void;
   onLoadGithubRepos: () => void;
   onLoadGithubRepoContext: () => void;
+  onLoadGithubPullRequestFiles: () => void;
   onCreateGithubRepo: () => void;
   onSelectGithubRepo: (owner: string, repo: string) => void;
 }
@@ -166,6 +173,9 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
   const githubContextRepo = props.githubRepoContext?.repo || githubSelectedRepo;
   const githubContextBranches = (props.githubRepoContext?.branches ?? []) as GithubBranchSummary[];
   const githubContextPullRequests = (props.githubRepoContext?.pullRequests ?? []) as GithubPullRequestSummary[];
+  const githubPullRequestScope = props.githubPullRequestFiles?.pullRequest as GithubPullRequestScopeSummary | undefined;
+  const githubPullRequestFileRepo = props.githubPullRequestFiles?.repo || githubContextRepo;
+  const githubPullRequestFileList = (props.githubPullRequestFiles?.files ?? []) as GithubPullRequestFileSummary[];
   const githubCliLabel = props.githubSession?.cliInstalled ? 'installed' : 'missing';
   const githubAuthSource =
     props.githubSession?.authSource === 'env_token'
@@ -422,6 +432,17 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
               Load Repo Context
             </button>
           </div>
+          <div className="ops-grid compact-grid">
+            <label>
+              Pull request number
+              <input value={props.githubPullNumber} onChange={(e) => props.setGithubPullNumber(e.target.value)} placeholder="296" />
+            </label>
+          </div>
+          <div className="action-row">
+            <button type="button" className="ghost" onClick={props.onLoadGithubPullRequestFiles} disabled={props.loading}>
+              Load PR Files
+            </button>
+          </div>
         </article>
       </div>
 
@@ -582,6 +603,55 @@ cci org info ${props.orgAlias}`}</pre>
             </>
           ) : (
             <p className="muted">No open pull requests are loaded for the selected repo.</p>
+          )}
+        </div>
+      ) : null}
+
+      {githubPullRequestScope && githubPullRequestFileRepo ? (
+        <div className="sub-card" role="status" aria-live="polite">
+          <p className="panel-caption">Pull request file scope</p>
+          <h3>Changed files for review context</h3>
+          <div className="decision-meta">
+            <span className={`decision-badge ${githubPullRequestScope.draft ? 'muted' : 'good'}`}>
+              {githubPullRequestScope.draft ? 'draft' : githubPullRequestScope.state}
+            </span>
+            <span className="decision-badge muted">#{githubPullRequestScope.number}</span>
+            <span className="decision-badge muted">Files: {props.githubPullRequestFiles?.totalCount ?? githubPullRequestFileList.length}</span>
+            {props.githubPullRequestFiles?.truncated ? <span className="decision-badge bad">truncated</span> : null}
+          </div>
+          <p><strong>Repo:</strong> <span className="path-value">{githubPullRequestFileRepo.fullName}</span></p>
+          <p><strong>Title:</strong> <span className="path-value">{githubPullRequestScope.title}</span></p>
+          <p><strong>Head:</strong> <span className="path-value">{githubPullRequestScope.headRef || 'n/a'}</span></p>
+          <p><strong>Base:</strong> <span className="path-value">{githubPullRequestScope.baseRef || 'n/a'}</span></p>
+          <p className="muted">
+            This is file-path scope only. It is intended to ground later repo-backed review flows without pulling GitHub diff interpretation into the UI.
+          </p>
+
+          {githubPullRequestFileList.length > 0 ? (
+            <ul className="issue-list">
+              {githubPullRequestFileList.map((file) => (
+                <li key={`${file.filename}-${file.status}`}>
+                  <div className="decision-meta">
+                    <span
+                      className={`decision-badge ${
+                        file.status === 'removed' ? 'bad' : file.status === 'renamed' ? 'muted' : 'good'
+                      }`}
+                    >
+                      {file.status}
+                    </span>
+                    <span className="decision-badge muted">+{file.additions} / -{file.deletions}</span>
+                    {file.patchTruncated ? <span className="decision-badge muted">metadata only</span> : null}
+                  </div>
+                  <p><strong><span className="path-value">{file.filename}</span></strong></p>
+                  {file.previousFilename ? (
+                    <p><strong>Previous path:</strong> <span className="path-value">{file.previousFilename}</span></p>
+                  ) : null}
+                  <p><strong>Blob URL:</strong> <span className="path-value">{file.blobUrl || file.rawUrl || 'n/a'}</span></p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">No changed files are loaded for the selected pull request.</p>
           )}
         </div>
       ) : null}

@@ -240,6 +240,8 @@ export default function Page(): JSX.Element {
               setGithubRepoDescription={connectWorkspace.setGithubRepoDescription}
               githubRepoPrivate={connectWorkspace.githubRepoPrivate}
               setGithubRepoPrivate={connectWorkspace.setGithubRepoPrivate}
+              githubPullNumber={connectWorkspace.githubPullNumber}
+              setGithubPullNumber={connectWorkspace.setGithubPullNumber}
               activeAlias={connectWorkspace.activeAlias}
               sessionStatus={connectWorkspace.sessionStatus}
               orgStatus={connectWorkspace.orgStatus}
@@ -249,6 +251,7 @@ export default function Page(): JSX.Element {
               orgSession={connectWorkspace.orgSession}
               githubSession={connectWorkspace.githubSession}
               githubRepoContext={connectWorkspace.githubRepoContext}
+              githubPullRequestFiles={connectWorkspace.githubPullRequestFiles}
               aliasInventory={connectWorkspace.aliasInventory}
               githubAccessibleRepos={connectWorkspace.githubAccessibleRepos}
               githubSelectedRepo={connectWorkspace.githubSelectedRepo}
@@ -281,6 +284,7 @@ export default function Page(): JSX.Element {
               onAuthorizeGithub={() => void connectWorkspace.authorizeGithub()}
               onLoadGithubRepos={() => void connectWorkspace.loadGithubRepos()}
               onLoadGithubRepoContext={() => void connectWorkspace.loadGithubRepoContext()}
+              onLoadGithubPullRequestFiles={() => void connectWorkspace.loadGithubPullRequestFiles()}
               onCreateGithubRepo={() => void connectWorkspace.createGithubRepo()}
               onSelectGithubRepo={(owner, repo) => void connectWorkspace.selectGithubRepo(owner, repo)}
             />

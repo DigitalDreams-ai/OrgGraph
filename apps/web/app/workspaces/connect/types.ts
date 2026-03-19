@@ -130,6 +130,32 @@ export type GithubPullRequestSummary = {
   updatedAt?: string;
 };
 
+export type GithubPullRequestScopeSummary = {
+  number: number;
+  title: string;
+  state: 'open' | 'closed';
+  url?: string;
+  author?: string;
+  draft: boolean;
+  headRef?: string;
+  baseRef?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  changedFileCount?: number;
+};
+
+export type GithubPullRequestFileSummary = {
+  filename: string;
+  status: 'added' | 'modified' | 'removed' | 'renamed' | 'copied' | 'changed';
+  additions: number;
+  deletions: number;
+  changes: number;
+  previousFilename?: string;
+  blobUrl?: string;
+  rawUrl?: string;
+  patchTruncated?: boolean;
+};
+
 export type GithubSessionPayload = {
   status?: 'authenticated' | 'unauthenticated';
   hostname?: string;
@@ -156,4 +182,16 @@ export type GithubRepoContextPayload = {
   repo?: GithubRepoSummary;
   branches?: GithubBranchSummary[];
   pullRequests?: GithubPullRequestSummary[];
+};
+
+export type GithubPullRequestFileScopePayload = {
+  status?: 'loaded';
+  hostname?: string;
+  viewer?: GithubViewerSummary;
+  selectedRepo?: GithubSelectedRepo;
+  repo?: GithubRepoSummary;
+  pullRequest?: GithubPullRequestScopeSummary;
+  files?: GithubPullRequestFileSummary[];
+  totalCount?: number;
+  truncated?: boolean;
 };
