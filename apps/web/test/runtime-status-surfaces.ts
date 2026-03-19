@@ -149,6 +149,10 @@ function run(): void {
       setGithubRepoPrivate: () => undefined,
       githubPullNumber: '17',
       setGithubPullNumber: () => undefined,
+      githubWorkflowKey: 'runtime_nightly',
+      setGithubWorkflowKey: () => undefined,
+      githubWorkflowRef: 'main',
+      setGithubWorkflowRef: () => undefined,
       activeAlias: 'shulman-uat',
       sessionStatus: 'connected',
       orgStatus: {
@@ -243,6 +247,58 @@ function run(): void {
         totalCount: 2,
         truncated: true
       },
+      githubWorkflowCatalog: {
+        repo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime',
+          defaultBranch: 'main'
+        },
+        workflows: [
+          {
+            key: 'runtime_nightly',
+            workflowFile: 'runtime-nightly.yml',
+            name: 'Runtime Nightly',
+            description: 'Build and smoke the packaged desktop runtime.',
+            dispatchEnabled: true,
+            inputs: []
+          }
+        ]
+      },
+      githubWorkflowRuns: {
+        repo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime',
+          defaultBranch: 'main'
+        },
+        workflow: {
+          key: 'runtime_nightly',
+          workflowFile: 'runtime-nightly.yml',
+          name: 'Runtime Nightly',
+          description: 'Build and smoke the packaged desktop runtime.',
+          dispatchEnabled: true,
+          inputs: []
+        },
+        runs: [
+          {
+            runId: 4001,
+            status: 'completed',
+            conclusion: 'success',
+            branch: 'main',
+            actor: 'sean',
+            updatedAt: '2026-03-19T10:00:00Z'
+          }
+        ],
+        totalCount: 1,
+        truncated: false
+      },
       aliasInventory: [],
       githubAccessibleRepos: [],
       githubSelectedRepo: {
@@ -290,6 +346,9 @@ function run(): void {
       onLoadGithubRepos: () => undefined,
       onLoadGithubRepoContext: () => undefined,
       onLoadGithubPullRequestFiles: () => undefined,
+      onLoadGithubWorkflowCatalog: () => undefined,
+      onLoadGithubWorkflowRuns: () => undefined,
+      onDispatchGithubWorkflow: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
     } as any)
@@ -303,6 +362,8 @@ function run(): void {
   assert.match(connectMarkup, /Selected repo context/);
   assert.match(connectMarkup, /Branches and open pull requests/);
   assert.match(connectMarkup, /Pull request file scope/);
+  assert.match(connectMarkup, /GitHub Actions/);
+  assert.match(connectMarkup, /Runtime Nightly/);
   assert.match(connectMarkup, /Files: 2/);
   assert.match(connectMarkup, /Org ID:<\/strong> <span class="path-value">00Dxx000001kjZRUAY<\/span>/);
   assert.match(connectMarkup, /Instance URL:<\/strong> <span class="path-value">https:\/\/shulman-hill--uat\.sandbox\.my\.salesforce\.com<\/span>/);
@@ -322,6 +383,10 @@ function run(): void {
       setGithubRepoPrivate: () => undefined,
       githubPullNumber: '',
       setGithubPullNumber: () => undefined,
+      githubWorkflowKey: 'runtime_nightly',
+      setGithubWorkflowKey: () => undefined,
+      githubWorkflowRef: '',
+      setGithubWorkflowRef: () => undefined,
       activeAlias: 'shulman-uat',
       sessionStatus: 'connected',
       orgStatus: null,
@@ -332,6 +397,8 @@ function run(): void {
       githubSession: null,
       githubRepoContext: null,
       githubPullRequestFiles: null,
+      githubWorkflowCatalog: null,
+      githubWorkflowRuns: null,
       aliasInventory: [],
       githubAccessibleRepos: [],
       githubSelectedRepo: null,
@@ -365,6 +432,9 @@ function run(): void {
       onLoadGithubRepos: () => undefined,
       onLoadGithubRepoContext: () => undefined,
       onLoadGithubPullRequestFiles: () => undefined,
+      onLoadGithubWorkflowCatalog: () => undefined,
+      onLoadGithubWorkflowRuns: () => undefined,
+      onDispatchGithubWorkflow: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
     } as any)

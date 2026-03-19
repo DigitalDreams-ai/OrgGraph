@@ -26,6 +26,10 @@ function run(): void {
       setGithubRepoPrivate: () => undefined,
       githubPullNumber: '42',
       setGithubPullNumber: () => undefined,
+      githubWorkflowKey: 'runtime_nightly',
+      setGithubWorkflowKey: () => undefined,
+      githubWorkflowRef: 'main',
+      setGithubWorkflowRef: () => undefined,
       activeAlias: longAlias,
       sessionStatus: 'connected',
       orgStatus: {
@@ -143,6 +147,60 @@ function run(): void {
         totalCount: 3,
         truncated: true
       },
+      githubWorkflowCatalog: {
+        repo: {
+          owner: 'sean',
+          name: 'Orgumented-runtime-repo-with-a-very-long-selected-binding-name',
+          fullName: longGithubRepo,
+          private: true,
+          visibility: 'private',
+          url: longGithubUrl,
+          defaultBranch: 'main'
+        },
+        workflows: [
+          {
+            key: 'runtime_nightly',
+            workflowFile: 'runtime-nightly.yml',
+            name: 'Runtime Nightly',
+            description: 'Build and smoke the packaged desktop runtime.',
+            dispatchEnabled: true,
+            inputs: []
+          }
+        ]
+      },
+      githubWorkflowRuns: {
+        repo: {
+          owner: 'sean',
+          name: 'Orgumented-runtime-repo-with-a-very-long-selected-binding-name',
+          fullName: longGithubRepo,
+          private: true,
+          visibility: 'private',
+          url: longGithubUrl,
+          defaultBranch: 'main'
+        },
+        workflow: {
+          key: 'runtime_nightly',
+          workflowFile: 'runtime-nightly.yml',
+          name: 'Runtime Nightly',
+          description: 'Build and smoke the packaged desktop runtime.',
+          dispatchEnabled: true,
+          inputs: []
+        },
+        runs: [
+          {
+            runId: 4001,
+            runNumber: 18,
+            status: 'completed',
+            conclusion: 'success',
+            branch: 'main',
+            actor: 'sean',
+            url: `${longGithubUrl}/actions/runs/4001`,
+            updatedAt: '2026-03-18T12:30:00Z'
+          }
+        ],
+        totalCount: 1,
+        truncated: false
+      },
       aliasInventory: [
         {
           alias: longAlias,
@@ -210,6 +268,9 @@ function run(): void {
       onLoadGithubRepos: () => undefined,
       onLoadGithubRepoContext: () => undefined,
       onLoadGithubPullRequestFiles: () => undefined,
+      onLoadGithubWorkflowCatalog: () => undefined,
+      onLoadGithubWorkflowRuns: () => undefined,
+      onDispatchGithubWorkflow: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
     } as any)
@@ -230,7 +291,13 @@ function run(): void {
   assert.match(connectMarkup, /<strong>URL:<\/strong> <span class="path-value">https:\/\/github\.com\/sean\/Orgumented-runtime-repo-with-a-very-long-selected-binding-name<\/span>/);
   assert.match(connectMarkup, /Load Repo Context<\/button>/);
   assert.match(connectMarkup, /Load PR Files<\/button>/);
+  assert.match(connectMarkup, /Load Workflows<\/button>/);
+  assert.match(connectMarkup, /Dispatch Workflow<\/button>/);
+  assert.match(connectMarkup, /Load Workflow Runs<\/button>/);
   assert.match(connectMarkup, /Selected repo context/);
+  assert.match(connectMarkup, /GitHub Actions/);
+  assert.match(connectMarkup, /Runtime Nightly/);
+  assert.match(connectMarkup, /runtime-nightly\.yml/);
   assert.match(connectMarkup, /Pull request file scope/);
   assert.match(connectMarkup, /apps\/api\/src\/modules\/github\/github\.service\.ts/);
   assert.match(connectMarkup, /Previous path:/);

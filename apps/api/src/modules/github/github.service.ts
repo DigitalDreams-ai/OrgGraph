@@ -18,6 +18,13 @@ import type {
   GithubCreateRepoResponse,
   GithubPublishReviewPacketCommentRequest,
   GithubPublishReviewPacketCommentResponse,
+  GithubWorkflowCatalogResponse,
+  GithubWorkflowDispatchRequest,
+  GithubWorkflowDispatchResponse,
+  GithubWorkflowInputDefinition,
+  GithubWorkflowRunsResponse,
+  GithubWorkflowRunSummary,
+  GithubWorkflowSummary,
   GithubPullRequestFileScopeResponse,
   GithubPullRequestFileSummary,
   GithubPullRequestScopeSummary,
@@ -95,6 +102,28 @@ interface GithubApiPullRequestFile {
   patch?: string;
 }
 
+interface GithubApiWorkflowRun {
+  id?: number;
+  run_number?: number;
+  status?: string;
+  conclusion?: string | null;
+  event?: string;
+  html_url?: string;
+  head_branch?: string;
+  head_sha?: string;
+  display_title?: string;
+  created_at?: string;
+  updated_at?: string;
+  actor?: {
+    login?: string;
+  };
+}
+
+interface GithubApiWorkflowRunsPayload {
+  total_count?: number;
+  workflow_runs?: GithubApiWorkflowRun[];
+}
+
 interface GithubViewerApiPayload {
   login?: string;
   name?: string | null;
@@ -105,6 +134,24 @@ type ResolvedGithubAuth = {
   token: string;
   authSource: 'env_token' | 'gh_cli';
   cliInstalled: boolean;
+};
+
+type GithubAllowlistedWorkflow = {
+  key: string;
+  workflowFile: string;
+  name: string;
+  description: string;
+  inputs: GithubWorkflowInputDefinition[];
+};
+
+const GITHUB_ACTIONS_WORKFLOW_ALLOWLIST: Record<string, GithubAllowlistedWorkflow> = {
+  runtime_nightly: {
+    key: 'runtime_nightly',
+    workflowFile: 'runtime-nightly.yml',
+    name: 'Runtime Nightly',
+    description: 'Dispatch the packaged desktop build-and-smoke workflow and read back recent workflow_dispatch runs.',
+    inputs: []
+  }
 };
 
 @Injectable()
@@ -328,6 +375,121 @@ export class GithubService {
     };
   }
 
+  async workflowCatalog(ownerRaw?: string, repoRaw?: string): Promise<GithubWorkflowCatalogResponse> {
+    const auth = await this.resolveGithubAuth();
+    const viewer = await this.loadViewer(auth.token);
+    const targetRepo = this.resolveTargetRepo(ownerRaw, repoRaw);
+    if (!targetRepo) {
+      throw new BadRequestException('owner and repo are required or a selected GitHub repo must be bound first');
+    }
+
+    const repoResponse = await this.githubRequest(
+      auth.token,
+      `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}`,
+      { method: 'GET' }
+    );
+    const repo = this.mapRepo((await repoResponse.json()) as GithubApiRepo);
+    if (!repo) {
+      throw new BadGatewayException('GitHub workflow catalog response was missing repository details');
+    }
+
+    return {
+      status: 'loaded',
+      hostname: GithubService.HOSTNAME,
+      viewer,
+      selectedRepo: this.readSelectedRepoState(),
+      repo,
+      workflows: this.listAllowlistedWorkflows()
+    };
+  }
+
+  async workflowRuns(
+    workflowKeyRaw: string,
+    ownerRaw?: string,
+    repoRaw?: string,
+    limitRaw?: number
+  ): Promise<GithubWorkflowRunsResponse> {
+    const workflow = this.resolveAllowlistedWorkflow(workflowKeyRaw);
+    const limit = this.normalizeWorkflowRunsLimit(limitRaw);
+    const auth = await this.resolveGithubAuth();
+    const viewer = await this.loadViewer(auth.token);
+    const targetRepo = this.resolveTargetRepo(ownerRaw, repoRaw);
+    if (!targetRepo) {
+      throw new BadRequestException('owner and repo are required or a selected GitHub repo must be bound first');
+    }
+
+    const [repoResponse, runsResponse] = await Promise.all([
+      this.githubRequest(auth.token, `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}`, {
+        method: 'GET'
+      }),
+      this.githubRequest(
+        auth.token,
+        `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}/actions/workflows/${encodeURIComponent(workflow.workflowFile)}/runs?per_page=${limit}&event=workflow_dispatch`,
+        { method: 'GET' }
+      )
+    ]);
+
+    const repo = this.mapRepo((await repoResponse.json()) as GithubApiRepo);
+    if (!repo) {
+      throw new BadGatewayException('GitHub workflow runs response was missing repository details');
+    }
+
+    const runsPayload = (await runsResponse.json()) as GithubApiWorkflowRunsPayload;
+    const runs = (runsPayload.workflow_runs ?? [])
+      .map((run) => this.mapWorkflowRun(run))
+      .filter((run): run is GithubWorkflowRunSummary => run !== undefined);
+    const totalCount =
+      typeof runsPayload.total_count === 'number' && runsPayload.total_count >= 0 ? runsPayload.total_count : runs.length;
+
+    return {
+      status: 'loaded',
+      hostname: GithubService.HOSTNAME,
+      viewer,
+      selectedRepo: this.readSelectedRepoState(),
+      repo,
+      workflow: this.mapAllowlistedWorkflow(workflow),
+      runs,
+      totalCount,
+      truncated: totalCount > runs.length
+    };
+  }
+
+  async dispatchWorkflow(request: GithubWorkflowDispatchRequest): Promise<GithubWorkflowDispatchResponse> {
+    const workflow = this.resolveAllowlistedWorkflow(request.workflowKey);
+    const ref = request.ref?.trim();
+    if (!ref) {
+      throw new BadRequestException('ref is required');
+    }
+
+    const auth = await this.resolveGithubAuth();
+    const targetRepo = this.resolveTargetRepo(request.owner, request.repo);
+    if (!targetRepo) {
+      throw new BadRequestException('owner and repo are required or a selected GitHub repo must be bound first');
+    }
+
+    const inputs = this.normalizeWorkflowInputs(workflow, request.inputs);
+    await this.githubRequest(
+      auth.token,
+      `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}/actions/workflows/${encodeURIComponent(workflow.workflowFile)}/dispatches`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          ref,
+          ...(Object.keys(inputs).length > 0 ? { inputs } : {})
+        })
+      }
+    );
+
+    return {
+      status: 'dispatched',
+      owner: targetRepo.owner,
+      repo: targetRepo.repo,
+      workflow: this.mapAllowlistedWorkflow(workflow),
+      ref,
+      inputs
+    };
+  }
+
   async createRepo(request: GithubCreateRepoRequest): Promise<GithubCreateRepoResponse> {
     const name = request.name?.trim();
     if (!name) {
@@ -489,6 +651,16 @@ export class GithubService {
     }
     if (!Number.isInteger(limitRaw) || limitRaw < 1 || limitRaw > 300) {
       throw new BadRequestException('pull request file limit must be an integer between 1 and 300');
+    }
+    return limitRaw;
+  }
+
+  private normalizeWorkflowRunsLimit(limitRaw?: number): number {
+    if (limitRaw === undefined) {
+      return 10;
+    }
+    if (!Number.isInteger(limitRaw) || limitRaw < 1 || limitRaw > 25) {
+      throw new BadRequestException('workflow run limit must be an integer between 1 and 25');
     }
     return limitRaw;
   }
@@ -664,6 +836,94 @@ export class GithubService {
       blobUrl: typeof file.blob_url === 'string' ? file.blob_url.trim() || undefined : undefined,
       rawUrl: typeof file.raw_url === 'string' ? file.raw_url.trim() || undefined : undefined,
       patchTruncated: typeof file.patch !== 'string'
+    };
+  }
+
+  private listAllowlistedWorkflows(): GithubWorkflowSummary[] {
+    return Object.values(GITHUB_ACTIONS_WORKFLOW_ALLOWLIST).map((workflow) => this.mapAllowlistedWorkflow(workflow));
+  }
+
+  private resolveAllowlistedWorkflow(workflowKeyRaw: string): GithubAllowlistedWorkflow {
+    const workflowKey = workflowKeyRaw?.trim();
+    if (!workflowKey) {
+      throw new BadRequestException('workflowKey is required');
+    }
+
+    const workflow = GITHUB_ACTIONS_WORKFLOW_ALLOWLIST[workflowKey];
+    if (!workflow) {
+      throw new BadRequestException(`workflowKey is not allowlisted: ${workflowKey}`);
+    }
+
+    return workflow;
+  }
+
+  private mapAllowlistedWorkflow(workflow: GithubAllowlistedWorkflow): GithubWorkflowSummary {
+    return {
+      key: workflow.key,
+      workflowFile: workflow.workflowFile,
+      name: workflow.name,
+      description: workflow.description,
+      dispatchEnabled: true,
+      inputs: workflow.inputs
+    };
+  }
+
+  private normalizeWorkflowInputs(
+    workflow: GithubAllowlistedWorkflow,
+    inputsRaw?: Record<string, string>
+  ): Record<string, string> {
+    const normalizedSource =
+      inputsRaw && typeof inputsRaw === 'object' && !Array.isArray(inputsRaw) ? inputsRaw : {};
+    const normalized: Record<string, string> = {};
+
+    for (const input of workflow.inputs) {
+      const rawValue = normalizedSource[input.key];
+      const candidate = typeof rawValue === 'string' ? rawValue.trim() : '';
+      if (candidate.length > 0) {
+        normalized[input.key] = candidate;
+        continue;
+      }
+      if (input.defaultValue !== undefined) {
+        normalized[input.key] = input.defaultValue;
+        continue;
+      }
+      if (input.required) {
+        throw new BadRequestException(`workflow input is required: ${input.key}`);
+      }
+    }
+
+    const unexpectedKeys = Object.keys(normalizedSource).filter((key) => !workflow.inputs.some((input) => input.key === key));
+    if (unexpectedKeys.length > 0) {
+      throw new BadRequestException(`workflow inputs are not allowlisted: ${unexpectedKeys.join(', ')}`);
+    }
+
+    return normalized;
+  }
+
+  private mapWorkflowRun(run: GithubApiWorkflowRun): GithubWorkflowRunSummary | undefined {
+    const runId = run.id;
+    if (typeof runId !== 'number' || !Number.isInteger(runId) || runId < 1) {
+      return undefined;
+    }
+
+    const status = typeof run.status === 'string' ? run.status.trim() : '';
+    if (!status) {
+      return undefined;
+    }
+
+    return {
+      runId,
+      runNumber: typeof run.run_number === 'number' && Number.isInteger(run.run_number) && run.run_number > 0 ? run.run_number : undefined,
+      status,
+      conclusion: typeof run.conclusion === 'string' ? run.conclusion.trim() || undefined : undefined,
+      event: typeof run.event === 'string' ? run.event.trim() || undefined : undefined,
+      url: typeof run.html_url === 'string' ? run.html_url.trim() || undefined : undefined,
+      branch: typeof run.head_branch === 'string' ? run.head_branch.trim() || undefined : undefined,
+      sha: typeof run.head_sha === 'string' ? run.head_sha.trim() || undefined : undefined,
+      actor: typeof run.actor?.login === 'string' ? run.actor.login.trim() || undefined : undefined,
+      title: typeof run.display_title === 'string' ? run.display_title.trim() || undefined : undefined,
+      createdAt: typeof run.created_at === 'string' ? run.created_at.trim() || undefined : undefined,
+      updatedAt: typeof run.updated_at === 'string' ? run.updated_at.trim() || undefined : undefined
     };
   }
 

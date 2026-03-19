@@ -242,6 +242,10 @@ export default function Page(): JSX.Element {
               setGithubRepoPrivate={connectWorkspace.setGithubRepoPrivate}
               githubPullNumber={connectWorkspace.githubPullNumber}
               setGithubPullNumber={connectWorkspace.setGithubPullNumber}
+              githubWorkflowKey={connectWorkspace.githubWorkflowKey}
+              setGithubWorkflowKey={connectWorkspace.setGithubWorkflowKey}
+              githubWorkflowRef={connectWorkspace.githubWorkflowRef}
+              setGithubWorkflowRef={connectWorkspace.setGithubWorkflowRef}
               activeAlias={connectWorkspace.activeAlias}
               sessionStatus={connectWorkspace.sessionStatus}
               orgStatus={connectWorkspace.orgStatus}
@@ -252,6 +256,8 @@ export default function Page(): JSX.Element {
               githubSession={connectWorkspace.githubSession}
               githubRepoContext={connectWorkspace.githubRepoContext}
               githubPullRequestFiles={connectWorkspace.githubPullRequestFiles}
+              githubWorkflowCatalog={connectWorkspace.githubWorkflowCatalog}
+              githubWorkflowRuns={connectWorkspace.githubWorkflowRuns}
               aliasInventory={connectWorkspace.aliasInventory}
               githubAccessibleRepos={connectWorkspace.githubAccessibleRepos}
               githubSelectedRepo={connectWorkspace.githubSelectedRepo}
@@ -285,6 +291,9 @@ export default function Page(): JSX.Element {
               onLoadGithubRepos={() => void connectWorkspace.loadGithubRepos()}
               onLoadGithubRepoContext={() => void connectWorkspace.loadGithubRepoContext()}
               onLoadGithubPullRequestFiles={() => void connectWorkspace.loadGithubPullRequestFiles()}
+              onLoadGithubWorkflowCatalog={() => void connectWorkspace.loadGithubWorkflowCatalog()}
+              onLoadGithubWorkflowRuns={() => void connectWorkspace.loadGithubWorkflowRuns()}
+              onDispatchGithubWorkflow={() => void connectWorkspace.dispatchGithubWorkflow()}
               onCreateGithubRepo={() => void connectWorkspace.createGithubRepo()}
               onSelectGithubRepo={(owner, repo) => void connectWorkspace.selectGithubRepo(owner, repo)}
             />

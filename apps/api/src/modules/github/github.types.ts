@@ -151,6 +151,76 @@ export interface GithubPullRequestFileScopeResponse {
   truncated: boolean;
 }
 
+export interface GithubWorkflowInputDefinition {
+  key: string;
+  label: string;
+  description: string;
+  required: boolean;
+  defaultValue?: string;
+}
+
+export interface GithubWorkflowSummary {
+  key: string;
+  workflowFile: string;
+  name: string;
+  description: string;
+  dispatchEnabled: boolean;
+  inputs: GithubWorkflowInputDefinition[];
+}
+
+export interface GithubWorkflowRunSummary {
+  runId: number;
+  runNumber?: number;
+  status: string;
+  conclusion?: string;
+  event?: string;
+  url?: string;
+  branch?: string;
+  sha?: string;
+  actor?: string;
+  title?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface GithubWorkflowCatalogResponse {
+  status: 'loaded';
+  hostname: string;
+  viewer: GithubViewerSummary;
+  selectedRepo?: GithubSelectedRepoState;
+  repo: GithubRepoSummary;
+  workflows: GithubWorkflowSummary[];
+}
+
+export interface GithubWorkflowRunsResponse {
+  status: 'loaded';
+  hostname: string;
+  viewer: GithubViewerSummary;
+  selectedRepo?: GithubSelectedRepoState;
+  repo: GithubRepoSummary;
+  workflow: GithubWorkflowSummary;
+  runs: GithubWorkflowRunSummary[];
+  totalCount: number;
+  truncated: boolean;
+}
+
+export interface GithubWorkflowDispatchRequest {
+  workflowKey: string;
+  ref: string;
+  owner?: string;
+  repo?: string;
+  inputs?: Record<string, string>;
+}
+
+export interface GithubWorkflowDispatchResponse {
+  status: 'dispatched';
+  owner: string;
+  repo: string;
+  workflow: GithubWorkflowSummary;
+  ref: string;
+  inputs: Record<string, string>;
+}
+
 export interface GithubCreateRepoRequest {
   owner?: string;
   name: string;

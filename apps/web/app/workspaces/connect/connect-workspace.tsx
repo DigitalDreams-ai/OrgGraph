@@ -9,6 +9,10 @@ import {
 } from '../../shell/org-status-surface';
 import type {
   GithubBranchSummary,
+  GithubWorkflowCatalogPayload,
+  GithubWorkflowRunSummary,
+  GithubWorkflowRunsPayload,
+  GithubWorkflowSummary,
   GithubPullRequestFileScopePayload,
   GithubPullRequestFileSummary,
   GithubPullRequestScopeSummary,
@@ -40,6 +44,10 @@ interface ConnectWorkspaceProps {
   setGithubRepoPrivate: (value: boolean) => void;
   githubPullNumber: string;
   setGithubPullNumber: (value: string) => void;
+  githubWorkflowKey: string;
+  setGithubWorkflowKey: (value: string) => void;
+  githubWorkflowRef: string;
+  setGithubWorkflowRef: (value: string) => void;
   activeAlias: string;
   sessionStatus: string;
   orgStatus: OrgStatusPayload | null;
@@ -50,6 +58,8 @@ interface ConnectWorkspaceProps {
   githubSession: GithubSessionPayload | null;
   githubRepoContext: GithubRepoContextPayload | null;
   githubPullRequestFiles: GithubPullRequestFileScopePayload | null;
+  githubWorkflowCatalog: GithubWorkflowCatalogPayload | null;
+  githubWorkflowRuns: GithubWorkflowRunsPayload | null;
   aliasInventory: OrgAliasSummary[];
   githubAccessibleRepos: GithubRepoSummary[];
   githubSelectedRepo: GithubRepoSummary | null;
@@ -83,6 +93,9 @@ interface ConnectWorkspaceProps {
   onLoadGithubRepos: () => void;
   onLoadGithubRepoContext: () => void;
   onLoadGithubPullRequestFiles: () => void;
+  onLoadGithubWorkflowCatalog: () => void;
+  onLoadGithubWorkflowRuns: () => void;
+  onDispatchGithubWorkflow: () => void;
   onCreateGithubRepo: () => void;
   onSelectGithubRepo: (owner: string, repo: string) => void;
 }
@@ -176,6 +189,10 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
   const githubPullRequestScope = props.githubPullRequestFiles?.pullRequest as GithubPullRequestScopeSummary | undefined;
   const githubPullRequestFileRepo = props.githubPullRequestFiles?.repo || githubContextRepo;
   const githubPullRequestFileList = (props.githubPullRequestFiles?.files ?? []) as GithubPullRequestFileSummary[];
+  const githubWorkflowCatalogRepo = props.githubWorkflowCatalog?.repo || githubContextRepo;
+  const githubWorkflowList = (props.githubWorkflowCatalog?.workflows ?? []) as GithubWorkflowSummary[];
+  const githubWorkflowRuns = (props.githubWorkflowRuns?.runs ?? []) as GithubWorkflowRunSummary[];
+  const githubSelectedWorkflow = props.githubWorkflowRuns?.workflow || githubWorkflowList.find((workflow) => workflow.key === props.githubWorkflowKey);
   const githubCliLabel = props.githubSession?.cliInstalled ? 'installed' : 'missing';
   const githubAuthSource =
     props.githubSession?.authSource === 'env_token'
@@ -431,6 +448,9 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
             <button type="button" className="ghost" onClick={props.onLoadGithubRepoContext} disabled={props.loading}>
               Load Repo Context
             </button>
+            <button type="button" className="ghost" onClick={props.onLoadGithubWorkflowCatalog} disabled={props.loading}>
+              Load Workflows
+            </button>
           </div>
           <div className="ops-grid compact-grid">
             <label>
@@ -603,6 +623,88 @@ cci org info ${props.orgAlias}`}</pre>
             </>
           ) : (
             <p className="muted">No open pull requests are loaded for the selected repo.</p>
+          )}
+        </div>
+      ) : null}
+
+      {githubWorkflowCatalogRepo && githubWorkflowList.length > 0 ? (
+        <div className="sub-card" role="status" aria-live="polite">
+          <p className="panel-caption">GitHub Actions</p>
+          <h3>Allowlisted workflow dispatch</h3>
+          <div className="decision-meta">
+            <span className="decision-badge muted">Repo: {githubWorkflowCatalogRepo.fullName}</span>
+            <span className="decision-badge muted">Allowlisted: {githubWorkflowList.length}</span>
+            {githubSelectedWorkflow ? <span className="decision-badge muted">Selected: {githubSelectedWorkflow.name}</span> : null}
+          </div>
+          <p><strong>Default branch:</strong> <span className="path-value">{githubWorkflowCatalogRepo.defaultBranch || 'n/a'}</span></p>
+          <p className="muted">
+            This support-plane lane is allowlisted and typed. Orgumented can dispatch only the workflows explicitly exposed by the engine and can
+            read back recent workflow-dispatch runs without widening local semantic execution.
+          </p>
+          <div className="ops-grid compact-grid">
+            <label>
+              Workflow
+              <select value={props.githubWorkflowKey} onChange={(e) => props.setGithubWorkflowKey(e.target.value)}>
+                {githubWorkflowList.map((workflow) => (
+                  <option key={workflow.key} value={workflow.key}>
+                    {workflow.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Ref
+              <input
+                value={props.githubWorkflowRef}
+                onChange={(e) => props.setGithubWorkflowRef(e.target.value)}
+                placeholder={githubWorkflowCatalogRepo.defaultBranch || 'main'}
+              />
+            </label>
+          </div>
+          {githubSelectedWorkflow ? (
+            <>
+              <p><strong>Workflow file:</strong> <span className="path-value">{githubSelectedWorkflow.workflowFile}</span></p>
+              <p>{githubSelectedWorkflow.description}</p>
+            </>
+          ) : null}
+          <div className="action-row">
+            <button type="button" onClick={props.onDispatchGithubWorkflow} disabled={props.loading}>
+              Dispatch Workflow
+            </button>
+            <button type="button" className="ghost" onClick={props.onLoadGithubWorkflowRuns} disabled={props.loading}>
+              Load Workflow Runs
+            </button>
+          </div>
+
+          {githubWorkflowRuns.length > 0 ? (
+            <ul className="issue-list">
+              {githubWorkflowRuns.map((run) => (
+                <li key={run.runId}>
+                  <div className="decision-meta">
+                    <span
+                      className={`decision-badge ${
+                        run.conclusion === 'success'
+                          ? 'good'
+                          : run.conclusion === 'failure' || run.conclusion === 'cancelled'
+                            ? 'bad'
+                            : 'muted'
+                      }`}
+                    >
+                      {run.conclusion || run.status}
+                    </span>
+                    {run.runNumber ? <span className="decision-badge muted">run #{run.runNumber}</span> : null}
+                    {run.event ? <span className="decision-badge muted">{run.event}</span> : null}
+                  </div>
+                  <p><strong><span className="path-value">{run.title || run.branch || `Run ${run.runId}`}</span></strong></p>
+                  <p><strong>Branch:</strong> <span className="path-value">{run.branch || 'n/a'}</span></p>
+                  <p><strong>Actor:</strong> <span className="path-value">{run.actor || 'n/a'}</span></p>
+                  <p><strong>Updated:</strong> <span className="path-value">{formatTimestamp(run.updatedAt)}</span></p>
+                  <p><strong>URL:</strong> <span className="path-value">{run.url || 'n/a'}</span></p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="muted">No recent workflow-dispatch runs are loaded for the selected allowlisted workflow.</p>
           )}
         </div>
       ) : null}

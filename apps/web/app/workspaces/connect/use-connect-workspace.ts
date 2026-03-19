@@ -4,9 +4,12 @@ import { useMemo, useState } from 'react';
 import type { QueryResponse } from '../../lib/ask-client';
 import {
   createGithubRepo,
+  dispatchGithubWorkflow,
   getGithubPullRequestFiles,
   getGithubRepoContext,
   getGithubSessionStatus,
+  getGithubWorkflowCatalog,
+  getGithubWorkflowRuns,
   listGithubRepos,
   loginGithubSession,
   selectGithubRepo
@@ -27,6 +30,8 @@ import type {
   GithubRepoContextPayload,
   GithubRepoSummary,
   GithubPullRequestFileScopePayload,
+  GithubWorkflowCatalogPayload,
+  GithubWorkflowRunsPayload,
   GithubSessionIssue,
   GithubSessionPayload,
   OrgAliasSummary,
@@ -99,6 +104,8 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   const [githubRepoDescription, setGithubRepoDescription] = useState('');
   const [githubRepoPrivate, setGithubRepoPrivate] = useState(true);
   const [githubPullNumber, setGithubPullNumber] = useState('');
+  const [githubWorkflowKey, setGithubWorkflowKey] = useState('runtime_nightly');
+  const [githubWorkflowRef, setGithubWorkflowRef] = useState('');
   const [orgSession, setOrgSession] = useState<OrgSessionPayload | null>(null);
   const [orgStatus, setOrgStatus] = useState<OrgStatusPayload | null>(null);
   const [orgPreflight, setOrgPreflight] = useState<OrgPreflightPayload | null>(null);
@@ -108,6 +115,8 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   const [githubRepos, setGithubRepos] = useState<GithubRepoListPayload | null>(null);
   const [githubRepoContext, setGithubRepoContext] = useState<GithubRepoContextPayload | null>(null);
   const [githubPullRequestFiles, setGithubPullRequestFiles] = useState<GithubPullRequestFileScopePayload | null>(null);
+  const [githubWorkflowCatalog, setGithubWorkflowCatalog] = useState<GithubWorkflowCatalogPayload | null>(null);
+  const [githubWorkflowRuns, setGithubWorkflowRuns] = useState<GithubWorkflowRunsPayload | null>(null);
   const [runtimeUnavailable, setRuntimeUnavailable] = useState(false);
 
   const aliasInventory = orgAliases?.aliases ?? [];
@@ -341,6 +350,8 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       if (!payload?.selectedRepo) {
         setGithubRepoContext(null);
         setGithubPullRequestFiles(null);
+        setGithubWorkflowCatalog(null);
+        setGithubWorkflowRuns(null);
       }
       syncGithubOwnerDefaults(payload);
     });
@@ -356,6 +367,8 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       setGithubRepos(reposPayload);
       setGithubRepoContext(null);
       setGithubPullRequestFiles(null);
+      setGithubWorkflowCatalog(null);
+      setGithubWorkflowRuns(null);
     });
   }
 
@@ -389,7 +402,9 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
         await refreshGithubStatus();
         await loadGithubReposAction();
         await loadGithubRepoContextAction();
+        await loadGithubWorkflowCatalogAction();
         setGithubPullRequestFiles(null);
+        setGithubWorkflowRuns(null);
         const payload = readPayload<{ selectedRepo?: GithubRepoSummary }>(response);
         if (payload?.selectedRepo?.owner) {
           setGithubRepoOwner(payload.selectedRepo.owner);
@@ -405,7 +420,9 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       await refreshGithubStatus();
       await loadGithubReposAction();
       await loadGithubRepoContextAction(owner, repo);
+      await loadGithubWorkflowCatalogAction(owner, repo);
       setGithubPullRequestFiles(null);
+      setGithubWorkflowRuns(null);
       setGithubRepoOwner(owner);
     });
   }
@@ -420,6 +437,12 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       (response) => {
         const payload = readPayload<GithubRepoContextPayload>(response);
         setGithubRepoContext(payload);
+        if (!githubWorkflowRef.trim()) {
+          const defaultBranch = payload?.repo?.defaultBranch?.trim();
+          if (defaultBranch) {
+            setGithubWorkflowRef(defaultBranch);
+          }
+        }
       }
     );
   }
@@ -447,6 +470,81 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     );
   }
 
+  function loadGithubWorkflowCatalogAction(owner?: string, repo?: string): Promise<QueryResponse | null> {
+    return runAction(
+      () =>
+        getGithubWorkflowCatalog({
+          owner: owner?.trim() || undefined,
+          repo: repo?.trim() || undefined
+        }),
+      (response) => {
+        const payload = readPayload<GithubWorkflowCatalogPayload>(response);
+        setGithubWorkflowCatalog(payload);
+        const defaultWorkflowKey = payload?.workflows?.[0]?.key;
+        if (defaultWorkflowKey && !payload?.workflows?.some((workflow) => workflow.key === githubWorkflowKey)) {
+          setGithubWorkflowKey(defaultWorkflowKey);
+        }
+        if (!githubWorkflowRef.trim()) {
+          const defaultBranch = payload?.repo?.defaultBranch?.trim();
+          if (defaultBranch) {
+            setGithubWorkflowRef(defaultBranch);
+          }
+        }
+      }
+    );
+  }
+
+  function loadGithubWorkflowRunsAction(workflowKeyRaw?: string): Promise<QueryResponse | null> {
+    const workflowKey = (workflowKeyRaw ?? githubWorkflowKey).trim();
+    if (!workflowKey) {
+      const fallback: QueryResponse = { ok: false, error: { message: 'GitHub workflow selection is required.' } };
+      options.presentResponse(fallback);
+      options.setErrorText('Select an allowlisted GitHub workflow before loading recent runs.');
+      return Promise.resolve(fallback);
+    }
+
+    return runAction(
+      () =>
+        getGithubWorkflowRuns({
+          workflowKey
+        }),
+      (response) => {
+        const payload = readPayload<GithubWorkflowRunsPayload>(response);
+        setGithubWorkflowRuns(payload);
+        setGithubWorkflowKey(workflowKey);
+      }
+    );
+  }
+
+  function dispatchGithubWorkflowAction(): Promise<QueryResponse | null> {
+    const workflowKey = githubWorkflowKey.trim();
+    const ref = githubWorkflowRef.trim() || githubWorkflowCatalog?.repo?.defaultBranch?.trim() || githubRepoContext?.repo?.defaultBranch?.trim() || '';
+    if (!workflowKey) {
+      const fallback: QueryResponse = { ok: false, error: { message: 'GitHub workflow selection is required.' } };
+      options.presentResponse(fallback);
+      options.setErrorText('Select an allowlisted GitHub workflow before dispatching.');
+      return Promise.resolve(fallback);
+    }
+    if (!ref) {
+      const fallback: QueryResponse = { ok: false, error: { message: 'GitHub workflow ref is required.' } };
+      options.presentResponse(fallback);
+      options.setErrorText('Enter a branch or ref before dispatching the workflow.');
+      return Promise.resolve(fallback);
+    }
+
+    return runAction(
+      () =>
+        dispatchGithubWorkflow({
+          workflowKey,
+          ref
+        }),
+      async () => {
+        setGithubWorkflowRef(ref);
+        await loadGithubWorkflowRunsAction(workflowKey);
+      }
+    );
+  }
+
   return {
     orgAlias,
     setOrgAlias,
@@ -460,6 +558,10 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     setGithubRepoPrivate,
     githubPullNumber,
     setGithubPullNumber,
+    githubWorkflowKey,
+    setGithubWorkflowKey,
+    githubWorkflowRef,
+    setGithubWorkflowRef,
     orgSession,
     orgStatus,
     orgPreflight,
@@ -469,6 +571,8 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     githubRepos,
     githubRepoContext,
     githubPullRequestFiles,
+    githubWorkflowCatalog,
+    githubWorkflowRuns,
     activeAlias,
     sessionStatus,
     restoreAlias,
@@ -502,6 +606,9 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     loadGithubRepos: loadGithubReposAction,
     loadGithubRepoContext: loadGithubRepoContextAction,
     loadGithubPullRequestFiles: loadGithubPullRequestFilesAction,
+    loadGithubWorkflowCatalog: loadGithubWorkflowCatalogAction,
+    loadGithubWorkflowRuns: loadGithubWorkflowRunsAction,
+    dispatchGithubWorkflow: dispatchGithubWorkflowAction,
     createGithubRepo: createGithubRepoAction,
     selectGithubRepo: selectGithubRepoAction
   };
