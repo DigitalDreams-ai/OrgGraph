@@ -248,6 +248,13 @@ Still unresolved:
 Operational note:
 - desktop smoke should run after desktop build completes; running both in parallel can produce a false process-exit readiness failure
 
+Wave11 support-track note:
+- Connect now exposes an allowlisted GitHub Actions lane for the selected repo binding:
+  - load allowlisted workflows
+  - dispatch the typed `runtime_nightly` workflow against an explicit ref
+  - read back recent `workflow_dispatch` runs for that same workflow
+- this remains a support-plane surface only; it does not replace local semantic execution or introduce arbitrary workflow/YAML control from the UI
+
 ## Regrouped 100% Completion Focus
 
 This execution plan is now anchored to the regrouped scorecard in:

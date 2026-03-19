@@ -195,3 +195,56 @@ export type GithubPullRequestFileScopePayload = {
   totalCount?: number;
   truncated?: boolean;
 };
+
+export type GithubWorkflowInputDefinition = {
+  key: string;
+  label: string;
+  description: string;
+  required: boolean;
+  defaultValue?: string;
+};
+
+export type GithubWorkflowSummary = {
+  key: string;
+  workflowFile: string;
+  name: string;
+  description: string;
+  dispatchEnabled: boolean;
+  inputs: GithubWorkflowInputDefinition[];
+};
+
+export type GithubWorkflowRunSummary = {
+  runId: number;
+  runNumber?: number;
+  status: string;
+  conclusion?: string;
+  event?: string;
+  url?: string;
+  branch?: string;
+  sha?: string;
+  actor?: string;
+  title?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type GithubWorkflowCatalogPayload = {
+  status?: 'loaded';
+  hostname?: string;
+  viewer?: GithubViewerSummary;
+  selectedRepo?: GithubSelectedRepo;
+  repo?: GithubRepoSummary;
+  workflows?: GithubWorkflowSummary[];
+};
+
+export type GithubWorkflowRunsPayload = {
+  status?: 'loaded';
+  hostname?: string;
+  viewer?: GithubViewerSummary;
+  selectedRepo?: GithubSelectedRepo;
+  repo?: GithubRepoSummary;
+  workflow?: GithubWorkflowSummary;
+  runs?: GithubWorkflowRunSummary[];
+  totalCount?: number;
+  truncated?: boolean;
+};

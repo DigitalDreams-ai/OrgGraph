@@ -91,6 +91,56 @@ export function getGithubPullRequestFiles(payload: {
   });
 }
 
+export function getGithubWorkflowCatalog(payload?: { owner?: string; repo?: string }): Promise<QueryResponse> {
+  const params = new URLSearchParams();
+  if (payload?.owner) {
+    params.set('owner', payload.owner);
+  }
+  if (payload?.repo) {
+    params.set('repo', payload.repo);
+  }
+  const suffix = params.size > 0 ? `?${params.toString()}` : '';
+  return requestBoundary(resolveDesktopApiUrl(`/github/actions/workflows${suffix}`), {
+    method: 'GET'
+  });
+}
+
+export function getGithubWorkflowRuns(payload: {
+  workflowKey: string;
+  owner?: string;
+  repo?: string;
+  limit?: number;
+}): Promise<QueryResponse> {
+  const params = new URLSearchParams();
+  params.set('workflowKey', payload.workflowKey);
+  if (payload.owner) {
+    params.set('owner', payload.owner);
+  }
+  if (payload.repo) {
+    params.set('repo', payload.repo);
+  }
+  if (payload.limit !== undefined) {
+    params.set('limit', String(payload.limit));
+  }
+  return requestBoundary(resolveDesktopApiUrl(`/github/actions/runs?${params.toString()}`), {
+    method: 'GET'
+  });
+}
+
+export function dispatchGithubWorkflow(payload: {
+  workflowKey: string;
+  ref: string;
+  owner?: string;
+  repo?: string;
+  inputs?: Record<string, string>;
+}): Promise<QueryResponse> {
+  return requestBoundary(resolveDesktopApiUrl('/github/actions/dispatch'), {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
+
 export function createGithubRepo(payload: {
   owner?: string;
   name: string;

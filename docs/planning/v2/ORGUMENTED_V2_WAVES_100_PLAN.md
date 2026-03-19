@@ -172,9 +172,9 @@ Mandatory:
 This is a cross-wave support track, not a replacement for the locked numbered wave order.
 
 Overall implementation progress:
-- approximately 65%
+- approximately 75%
 - policy and ownership boundaries are complete
-- local auth/repo-management, repo context, and changed-file scope slices are now live, but workflow dispatch and release linkage remain open
+- local auth/repo-management, repo context, changed-file scope, and the first typed workflow lane are now live, but broader workflow coverage and release linkage remain open
 
 | Support Track Item | Owning Wave(s) | Status | Approx. Complete | Next Gate |
 |---|---|---|---|---|
@@ -183,7 +183,7 @@ Overall implementation progress:
 | read-only repo / branch / PR / changed-file context in the engine | wave7 | Complete | 100% | maintain typed selected-repo and PR file-scope reads while later review flows consume them |
 | PR publication of decision packets, proof links, and review summaries | wave7 | Complete | 100% | maintain proof-bound idempotent PR comment publication while check-run publication remains optional future extension |
 | typed local `cci` job registry | wave7, wave11 | Planned | 20% | elevate current alias/info/import support into explicit typed jobs with allowlist, mutability class, timeout, and audit trail |
-| typed GitHub Actions dispatch and status ingest | wave11 | Open | 0% | workflow allowlist plus typed dispatch/status mapping back into Orgumented state |
+| typed GitHub Actions dispatch and status ingest | wave11 | In Progress | 55% | expand beyond the initial allowlisted `runtime_nightly` lane while keeping workflow dispatch typed, repo-bound, and fail closed |
 | explicit user-bound repo binding for commit-capable metadata workflows | wave11, wave12 | In Progress | 45% | fail closed in future commit-capable metadata flows unless the selected bound repo is present and not the Orgumented product repo |
 | GitHub release / artifact linkage from canonical release evidence | wave12 | Open | 0% | release evidence links cleanly to GitHub artifacts without replacing local proof/replay storage |
 

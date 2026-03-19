@@ -5,6 +5,10 @@ import type {
   GithubCreateRepoResponse,
   GithubPublishReviewPacketCommentRequest,
   GithubPublishReviewPacketCommentResponse,
+  GithubWorkflowCatalogResponse,
+  GithubWorkflowDispatchRequest,
+  GithubWorkflowDispatchResponse,
+  GithubWorkflowRunsResponse,
   GithubPullRequestFileScopeResponse,
   GithubRepoContextResponse,
   GithubRepoListResponse,
@@ -90,6 +94,83 @@ export class GithubController {
     }
 
     return this.githubService.pullRequestFiles(ownerRaw?.trim(), repoRaw?.trim(), parsedPullNumber as number, limit);
+  }
+
+  @Get('/github/actions/workflows')
+  async workflowCatalog(
+    @Query('owner') ownerRaw?: string,
+    @Query('repo') repoRaw?: string
+  ): Promise<GithubWorkflowCatalogResponse> {
+    if (ownerRaw !== undefined && ownerRaw.trim().length === 0) {
+      throw new BadRequestException('owner must be a non-empty string when provided');
+    }
+    if (repoRaw !== undefined && repoRaw.trim().length === 0) {
+      throw new BadRequestException('repo must be a non-empty string when provided');
+    }
+
+    return this.githubService.workflowCatalog(ownerRaw?.trim(), repoRaw?.trim());
+  }
+
+  @Get('/github/actions/runs')
+  async workflowRuns(
+    @Query('workflowKey') workflowKeyRaw?: string,
+    @Query('owner') ownerRaw?: string,
+    @Query('repo') repoRaw?: string,
+    @Query('limit') limitRaw?: string
+  ): Promise<GithubWorkflowRunsResponse> {
+    const limit = limitRaw === undefined ? undefined : Number(limitRaw);
+    if (typeof workflowKeyRaw !== 'string' || workflowKeyRaw.trim().length === 0) {
+      throw new BadRequestException('workflowKey is required');
+    }
+    if (limitRaw !== undefined && (!Number.isInteger(limit) || (limit as number) < 1 || (limit as number) > 25)) {
+      throw new BadRequestException('limit must be an integer between 1 and 25');
+    }
+    if (ownerRaw !== undefined && ownerRaw.trim().length === 0) {
+      throw new BadRequestException('owner must be a non-empty string when provided');
+    }
+    if (repoRaw !== undefined && repoRaw.trim().length === 0) {
+      throw new BadRequestException('repo must be a non-empty string when provided');
+    }
+
+    return this.githubService.workflowRuns(workflowKeyRaw.trim(), ownerRaw?.trim(), repoRaw?.trim(), limit);
+  }
+
+  @Post('/github/actions/dispatch')
+  async dispatchWorkflow(
+    @Body() body: Partial<GithubWorkflowDispatchRequest> = {}
+  ): Promise<GithubWorkflowDispatchResponse> {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw new BadRequestException('body is required');
+    }
+    if (typeof body.workflowKey !== 'string' || body.workflowKey.trim().length === 0) {
+      throw new BadRequestException('workflowKey is required');
+    }
+    if (typeof body.ref !== 'string' || body.ref.trim().length === 0) {
+      throw new BadRequestException('ref is required');
+    }
+    if (body.owner !== undefined && (typeof body.owner !== 'string' || body.owner.trim().length === 0)) {
+      throw new BadRequestException('owner must be a non-empty string when provided');
+    }
+    if (body.repo !== undefined && (typeof body.repo !== 'string' || body.repo.trim().length === 0)) {
+      throw new BadRequestException('repo must be a non-empty string when provided');
+    }
+    if (
+      body.inputs !== undefined &&
+      (!body.inputs ||
+        typeof body.inputs !== 'object' ||
+        Array.isArray(body.inputs) ||
+        Object.values(body.inputs).some((value) => typeof value !== 'string'))
+    ) {
+      throw new BadRequestException('inputs must be an object with string values when provided');
+    }
+
+    return this.githubService.dispatchWorkflow({
+      workflowKey: body.workflowKey.trim(),
+      ref: body.ref.trim(),
+      owner: body.owner?.trim(),
+      repo: body.repo?.trim(),
+      inputs: body.inputs as Record<string, string> | undefined
+    });
   }
 
   @Post('/github/repos')

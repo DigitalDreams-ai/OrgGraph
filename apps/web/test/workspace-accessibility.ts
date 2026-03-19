@@ -65,6 +65,10 @@ function run(): void {
       setGithubRepoPrivate: () => undefined,
       githubPullNumber: '17',
       setGithubPullNumber: () => undefined,
+      githubWorkflowKey: 'runtime_nightly',
+      setGithubWorkflowKey: () => undefined,
+      githubWorkflowRef: 'main',
+      setGithubWorkflowRef: () => undefined,
       activeAlias: 'shulman-uat',
       sessionStatus: 'connected',
       orgStatus: {
@@ -134,6 +138,47 @@ function run(): void {
         totalCount: 0,
         truncated: false
       },
+      githubWorkflowCatalog: {
+        repo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime'
+        },
+        workflows: [
+          {
+            key: 'runtime_nightly',
+            workflowFile: 'runtime-nightly.yml',
+            name: 'Runtime Nightly',
+            description: 'Build and smoke the packaged desktop runtime.',
+            dispatchEnabled: true,
+            inputs: []
+          }
+        ]
+      },
+      githubWorkflowRuns: {
+        repo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime'
+        },
+        workflow: {
+          key: 'runtime_nightly',
+          workflowFile: 'runtime-nightly.yml',
+          name: 'Runtime Nightly',
+          description: 'Build and smoke the packaged desktop runtime.',
+          dispatchEnabled: true,
+          inputs: []
+        },
+        runs: [],
+        totalCount: 0,
+        truncated: false
+      },
       aliasInventory: [],
       githubAccessibleRepos: [],
       githubSelectedRepo: {
@@ -174,6 +219,9 @@ function run(): void {
       onLoadGithubRepos: () => undefined,
       onLoadGithubRepoContext: () => undefined,
       onLoadGithubPullRequestFiles: () => undefined,
+      onLoadGithubWorkflowCatalog: () => undefined,
+      onLoadGithubWorkflowRuns: () => undefined,
+      onDispatchGithubWorkflow: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
     })
