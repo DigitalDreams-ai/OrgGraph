@@ -3,7 +3,7 @@
 ## Start / Stop
 Desktop development runtime:
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 $env:ORGUMENTED_DESKTOP_API_PORT="3200"
 $env:ORGUMENTED_DESKTOP_WEB_PORT="3201"
 node apps/desktop/scripts/dev-runtime.mjs
@@ -17,19 +17,19 @@ $env:ORGUMENTED_DESKTOP_WEB_REBUILD="1"
 
 Standalone desktop shell:
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:dev
 ```
 
 Packaged desktop build:
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:build
 ```
 
 Packaged desktop smoke:
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm desktop:smoke:release
 ```
 
@@ -202,7 +202,7 @@ pnpm phase17:benchmark:human:status
 
 ## Project Memory MCP
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 pnpm --filter @orgumented/project-memory-mcp build
 npm run mcp:project-memory
 ```
@@ -210,14 +210,14 @@ npm run mcp:project-memory
 Optional env:
 ```powershell
 $env:ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl"
-$env:ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$env:USERPROFILE\Projects\GitHub\OrgGraph"
+$env:ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$env:USERPROFILE\Projects\GitHub\Orgumented"
 ```
 
 Cursor project config is committed at `.cursor/mcp.json`.
 
 Codex registration:
 ```powershell
-Set-Location "$env:USERPROFILE\Projects\GitHub\OrgGraph"
+Set-Location "$env:USERPROFILE\Projects\GitHub\Orgumented"
 codex mcp add project-memory --env ORGUMENTED_PROJECT_MEMORY_WORKSPACE_ROOT="$PWD" --env ORGUMENTED_PROJECT_MEMORY_PATH="data/project-memory/events.jsonl" -- node "$PWD\packages\project-memory-mcp\dist\index.js"
 ```
 

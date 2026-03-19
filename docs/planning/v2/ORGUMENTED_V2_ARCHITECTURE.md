@@ -139,7 +139,7 @@ flowchart LR
 Primary rule:
 - Salesforce CLI keychain is the only authentication source of truth
 
-Concrete tool ownership and migration rules:
+Concrete tool ownership and rollout rules:
 - `docs/planning/v2/ORGUMENTED_V2_TOOLCHAIN_IMPLEMENTATION_POLICY.md`
 
 Desktop auth behavior:

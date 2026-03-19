@@ -42,5 +42,3 @@
 - [ ] `/ask` known-positive validation
 
 ## 7) Legacy note
-- [ ] If you still use Docker during migration, treat it as scaffolding only.
-- [ ] Do not use Docker-only auth instructions as the primary operator workflow.

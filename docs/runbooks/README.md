@@ -35,4 +35,3 @@ Use runbooks for operator execution and validation workflows.
 ## Platform / Support
 
 - [Project Memory MCP](./PROJECT_MEMORY_MCP.md)
-- [Postgres Migration](./POSTGRES_MIGRATION.md)

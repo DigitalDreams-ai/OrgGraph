@@ -100,7 +100,7 @@ Purpose:
 17. `docs/planning/v2/ORGUMENTED_V2_GITHUB_CCI_INTEGRATION_PLAN.md`
 - GitHub repo / review / CI / release integration plan
 - replacement matrix for what GitHub should own vs what Orgumented must keep
-- safe migration phases and typed CCI expansion rules
+- safe rollout phases and typed CCI expansion rules
 
 18. `docs/planning/v2/ORGUMENTED_V2_TOOLCHAIN_IMPLEMENTATION_POLICY.md`
 - concrete ownership policy for `sf`, `cci`, GitHub, and Orgumented

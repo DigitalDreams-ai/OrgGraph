@@ -34,7 +34,7 @@ Expected target reality on Windows:
 - Tauri CLI present
 - WebView2 runtime available
 
-## Run Local Dev Runtime Without Docker
+## Run Local Dev Runtime
 
 This starts:
 - NestJS engine on a local port
@@ -202,7 +202,7 @@ Rules:
 
 ## Local Org Auth
 
-Authenticate locally, not in Docker:
+Authenticate locally:
 
 ```powershell
 sf org login web --alias orgumented-sandbox --instance-url https://test.salesforce.com --set-default

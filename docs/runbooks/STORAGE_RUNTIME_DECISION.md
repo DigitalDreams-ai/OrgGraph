@@ -12,7 +12,7 @@
   - deterministic replay (`/ask/replay`)
   - backend parity coverage (sqlite/postgres)
   - policy/drift governance and audit artifacts
-- Specialized runtime introduces operational and migration risk before proven user-value lift.
+- Specialized runtime introduces operational and rollout risk before proven user-value lift.
 
 ## Required Go Thresholds (for future promotion)
 

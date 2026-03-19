@@ -25,8 +25,6 @@ Mapped mainly into:
 - `ORGUMENTED_V2_SEMANTIC_RUNTIME_REFERENCE.md`
 
 ### Architecture and runtime direction
-- `docs/planning/archive/pre-v2-2026-03-01/DESKTOP_ARCHITECTURE.md`
-- `docs/planning/archive/pre-v2-2026-03-01/DESKTOP_TRANSITION_PLAN.md`
 - `docs/planning/archive/pre-v2-2026-03-01/PLAN.md`
 - `docs/planning/archive/pre-v2-2026-03-01/NEXT_BRANCH_PLAN.md`
 - `docs/planning/archive/pre-v2-2026-03-01/REMOVAL_REGISTER.md`
@@ -69,7 +67,6 @@ These informed the thinking but are not the primary v2 control surface:
 - `docs/planning/archive/pre-v2-2026-03-01/Orgumented_Strategic_Roadmap.md`
 - `docs/planning/archive/pre-v2-2026-03-01/inspirations/KANTEXT.md`
 - `docs/planning/archive/pre-v2-2026-03-01/inspirations/THOUGHTS.md`
-- `docs/planning/archive/pre-v2-2026-03-01/WINDOWS_MIGRATION_HANDOFF.md`
 
 ## Execution History Not Rewritten
 

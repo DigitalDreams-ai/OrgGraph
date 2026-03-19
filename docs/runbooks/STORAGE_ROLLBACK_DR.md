@@ -16,7 +16,7 @@ This runbook covers storage/runtime rollback for Orgumented.
 - parity mismatch in CI (`backend-parity` failure)
 - replay mismatch in production checks
 - sustained latency/memory regression after storage change
-- data migration anomalies
+- data-change anomalies
 
 ## Immediate Rollback Steps
 

@@ -6,7 +6,6 @@ Connect Orgumented to a Salesforce org using Salesforce CLI keychain sessions on
 Primary direction:
 - use local CLI state
 - use local alias/session attach flows
-- do not treat Docker as the required runtime for org auth
 
 ## Auth Model
 - Single supported auth model: `sf_cli_keychain`
