@@ -239,7 +239,7 @@ Materially true now:
 - wave10 Org Sessions follow-up now keeps GitHub repo creation, repo context, workflow dispatch, and PR file-scope tools behind explicit secondary disclosures, so the local alias/session workflow remains the primary visible operator path while the support plane stays available on demand
 - wave10 is now closed: the embedded web regression corpus plus production build are green on current main, path-heavy proof/history identifiers stay bounded, and the remaining dense support-plane and proof-history surfaces no longer compete with the primary Stage 1 operator workflow
 - wave9 is now closed: history rows, top actions, and exports all resolve from the selected history label by default, while advanced proof/replay tokens stay isolated behind the debug disclosure and never drive the primary workflow
-- wave11 GitHub support-plane follow-up now exposes explicit metadata-publication binding safety in the engine and Connect workspace: the selected repo is compared against the Orgumented product repo identity, missing or product-repo bindings are marked blocked, and future commit-capable metadata workflows now have a concrete fail-closed eligibility gate instead of a docs-only policy rule
+- wave11 is now closed on current main: critical/high defect count is reconciled to zero, CI trust/cost controls are locked in repo, browser coverage-state regressions are locked, and embedded web regressions run in `validate`
 - wave12 GitHub release-artifact follow-up now exposes typed artifact linkage for allowlisted workflows in the engine and Connect workspace, so canonical release evidence can record workflow/run/download links for packaged validation artifacts without replacing local proof or replay storage
 
 Still unresolved:
@@ -293,16 +293,12 @@ Rules:
 
 ## Immediate Frontier (Next Slices)
 
-1. Wave11 finish slice:
-- complete P0/P1 burn-down lock and regression gates
-- keep CI strict while preserving minute-efficiency controls
-
-2. Wave12 finish slice:
+1. Wave12 finish slice:
 - complete clean-machine operator proof on the current real-org quickstart
 - execute one rollback validation cycle against the canonical rollback record and keep release evidence machine-checkable
 - keep Actions storage bounded with automated run-retention pruning and short artifact retention defaults
 
-3. Wave13 stabilization slice:
+2. Wave13 stabilization slice:
 - hold one clean stabilization window after wave11 and wave12 close
 - allow only regression fixes while P0/P1 remains zero
 

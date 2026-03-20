@@ -57,7 +57,7 @@ Remaining work is now primarily around:
 | analyze/diagnostics | structured triage without JSON dependency | complete | maintain one clear triage path with evidence-first secondary cards |
 | proofs/history | label-first reopen/replay/export as primary flow | complete | maintain history-first selection semantics and keep advanced tokens debug-only |
 | design/layout/a11y | no clipping + keyboard/focus baseline | complete | maintain wave10 render/accessibility guardrails and calmer workspace hierarchy |
-| defects/ci/release | P0/P1 zero, stable CI, release+rollback proven | in progress | wave11 burn-down + wave12 clean-machine/operator proof |
+| defects/ci/release | P0/P1 zero, stable CI, release+rollback proven | in progress | wave12 clean-machine/operator proof + rollback execution |
 
 ## 100% Scorecard Pillars
 
@@ -151,7 +151,7 @@ Mandatory:
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | Complete | Maintain one clear triage path through structured actions while keeping secondary Analyze and Diagnostics cards evidence-first |
 | wave9 | proofs/history productization | B011 | Complete | Maintain label-first selection independence and keep advanced token lookup debug-only |
 | wave10 | design/layout/accessibility | B012, B020, B021 | Complete | Maintain calmer workspace hierarchy, proof-history identifier guardrails, and embedded web regression coverage |
-| wave11 | bug burn-down and CI quality lock | B013, B018, B023 | In Progress | P0/P1 count to zero, stable trust gates, edge metadata-family regressions locked, embedded web regressions enforced in `validate`, and Actions retention policy regression-gated |
+| wave11 | bug burn-down and CI quality lock | B013, B018, B023 | Complete | Maintain zero unresolved critical/high defects, stable trust gates, edge metadata-family regressions, and Actions retention guardrails |
 | wave12 | release readiness and operator proof | B014, B019 | In Progress | Clean-machine runbook pass + rollback proof |
 | wave13 | post-100 stabilization | B024 | Open | No P0/P1 regressions during hold window |
 
