@@ -178,6 +178,9 @@ Current packaged smoke proof:
 - the smoke also forces port `3100` clear before launch, so repeated packaged verification runs do not fail on a stale listener
 - the current packaged benchmark query now returns `askTrustLevel=trusted`
 
+Operator note:
+- if a real-org `Refresh Semantic State` run fails with `Semantic drift budget exceeded`, use the workspace's explicit `Rebaseline Semantic State` recovery action so the current retrieved-org handoff becomes the new semantic baseline instead of falling back to manual API calls
+
 Optional deeper packaged auth proof:
 
 ```powershell

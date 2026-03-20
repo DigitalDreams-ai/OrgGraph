@@ -370,8 +370,10 @@ export default function Page(): JSX.Element {
               lastRefreshRun={refreshWorkspace.lastRefreshRun}
               lastDiffRun={refreshWorkspace.lastDiffRun}
               lastOrgRetrieveRun={refreshWorkspace.lastOrgRetrieveRun}
+              refreshNeedsRebaseline={refreshWorkspace.refreshNeedsRebaseline}
               loading={secondaryQueryRunner.loading}
               onRunRefresh={() => void refreshWorkspace.runRefreshNow()}
+              onRunRefreshWithRebaseline={() => void refreshWorkspace.runRefreshWithRebaseline()}
               onRunDiff={() => void refreshWorkspace.runDiff()}
               onRunOrgRetrieve={() => void refreshWorkspace.runOrgRetrieveNow()}
               onOpenBrowser={() => setUiTab('browser')}

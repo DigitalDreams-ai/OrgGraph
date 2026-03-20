@@ -36,8 +36,10 @@ interface RefreshWorkspaceProps {
   lastRefreshRun: RefreshRunView | null;
   lastDiffRun: RefreshDiffView | null;
   lastOrgRetrieveRun: OrgRetrieveRunView | null;
+  refreshNeedsRebaseline: boolean;
   loading: boolean;
   onRunRefresh: () => void;
+  onRunRefreshWithRebaseline: () => void;
   onRunDiff: () => void;
   onRunOrgRetrieve: () => void;
   onOpenBrowser: () => void;
@@ -281,6 +283,7 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
               <p><strong>Counts:</strong> {props.lastRefreshRun.nodeCount} nodes, {props.lastRefreshRun.edgeCount} edges, {props.lastRefreshRun.evidenceCount} evidence</p>
               <p><strong>Meaning change:</strong> {props.lastRefreshRun.meaningChangeSummary || 'n/a'}</p>
               <p><strong>Drift summary:</strong> {props.lastRefreshRun.driftSummary || 'n/a'}</p>
+              <p><strong>Rebaseline applied:</strong> {String(props.lastRefreshRun.rebaselineApplied)}</p>
               {refreshLineage.state !== 'current' ? (
                 <ul className="issue-list">
                   {refreshLineage.reasons.map((reason) => (
@@ -311,6 +314,16 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
         <button type="button" onClick={props.onRunRefresh} disabled={props.loading || refreshBlocked}>
           Refresh Semantic State
         </button>
+        {props.refreshNeedsRebaseline ? (
+          <button
+            type="button"
+            className="ghost"
+            onClick={props.onRunRefreshWithRebaseline}
+            disabled={props.loading || refreshBlocked}
+          >
+            Rebaseline Semantic State
+          </button>
+        ) : null}
       </div>
       {refreshBlocked ? (
         <ul className="issue-list">
@@ -325,6 +338,14 @@ export function RefreshWorkspace(props: RefreshWorkspaceProps): JSX.Element {
               run `Retrieve Cart`.
             </li>
           ) : null}
+        </ul>
+      ) : null}
+      {props.refreshNeedsRebaseline ? (
+        <ul className="issue-list">
+          <li>
+            <strong>Recovery available.</strong> The current Browser handoff exceeds the existing semantic drift budget.
+            Use <strong>Rebaseline Semantic State</strong> to accept this retrieved-org handoff as the new baseline.
+          </li>
         </ul>
       ) : null}
 

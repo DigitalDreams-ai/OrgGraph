@@ -134,6 +134,12 @@ Expected result:
 - each stage tells you the exact next action when blocked, waiting, or stale
 - Compare Snapshot Drift remains disabled until both snapshot IDs are present and different
 
+If `Refresh Semantic State` fails with `Semantic drift budget exceeded`:
+1. Stay in `Refresh & Build`.
+2. Click `Rebaseline Semantic State`.
+3. Wait for the latest refresh summary to update.
+4. Then continue to `Compare Snapshot Drift`.
+
 ## 5) Ask A Retrieved-Metadata Question
 
 Inside Orgumented `Ask` workspace:

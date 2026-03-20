@@ -32,6 +32,7 @@ function buildRefreshRun(overrides: Partial<RefreshRunView> = {}): RefreshRunVie
   return {
     snapshotId: 'snap_current',
     mode: 'incremental',
+    rebaselineApplied: false,
     skipped: false,
     sourcePath: handoff.parsePath,
     nodeCount: 30,
