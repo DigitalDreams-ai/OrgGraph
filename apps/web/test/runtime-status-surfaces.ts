@@ -194,6 +194,27 @@ function run(): void {
           defaultBranch: 'main'
         }
       },
+      githubRepoBinding: {
+        status: 'ready',
+        selectedRepo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime',
+          defaultBranch: 'main'
+        },
+        productRepo: {
+          owner: 'DigitalDreams-ai',
+          repo: 'OrgGraph',
+          fullName: 'DigitalDreams-ai/OrgGraph',
+          source: 'git_origin',
+          remoteUrl: 'https://github.com/DigitalDreams-ai/OrgGraph.git'
+        },
+        metadataCommitEligible: true,
+        issues: []
+      },
       githubRepoContext: {
         repo: {
           owner: 'sean',
@@ -344,6 +365,7 @@ function run(): void {
       onRefreshGithubStatus: () => undefined,
       onAuthorizeGithub: () => undefined,
       onLoadGithubRepos: () => undefined,
+      onLoadGithubRepoBinding: () => undefined,
       onLoadGithubRepoContext: () => undefined,
       onLoadGithubPullRequestFiles: () => undefined,
       onLoadGithubWorkflowCatalog: () => undefined,
@@ -395,6 +417,18 @@ function run(): void {
       orgSessionHistory: null,
       orgSession: null,
       githubSession: null,
+      githubRepoBinding: {
+        status: 'blocked',
+        metadataCommitEligible: false,
+        issues: [
+          {
+            code: 'GITHUB_SELECTED_REPO_MISSING',
+            severity: 'error',
+            message: 'No explicit GitHub repo binding is selected for commit-capable metadata workflows.',
+            remediation: 'Select a repo first.'
+          }
+        ]
+      },
       githubRepoContext: null,
       githubPullRequestFiles: null,
       githubWorkflowCatalog: null,
@@ -430,6 +464,7 @@ function run(): void {
       onRefreshGithubStatus: () => undefined,
       onAuthorizeGithub: () => undefined,
       onLoadGithubRepos: () => undefined,
+      onLoadGithubRepoBinding: () => undefined,
       onLoadGithubRepoContext: () => undefined,
       onLoadGithubPullRequestFiles: () => undefined,
       onLoadGithubWorkflowCatalog: () => undefined,

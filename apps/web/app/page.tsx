@@ -254,6 +254,7 @@ export default function Page(): JSX.Element {
               orgSessionHistory={connectWorkspace.orgSessionHistory}
               orgSession={connectWorkspace.orgSession}
               githubSession={connectWorkspace.githubSession}
+              githubRepoBinding={connectWorkspace.githubRepoBinding}
               githubRepoContext={connectWorkspace.githubRepoContext}
               githubPullRequestFiles={connectWorkspace.githubPullRequestFiles}
               githubWorkflowCatalog={connectWorkspace.githubWorkflowCatalog}
@@ -289,6 +290,7 @@ export default function Page(): JSX.Element {
               onRefreshGithubStatus={() => void connectWorkspace.refreshGithubStatus()}
               onAuthorizeGithub={() => void connectWorkspace.authorizeGithub()}
               onLoadGithubRepos={() => void connectWorkspace.loadGithubRepos()}
+              onLoadGithubRepoBinding={() => void connectWorkspace.loadGithubRepoBinding()}
               onLoadGithubRepoContext={() => void connectWorkspace.loadGithubRepoContext()}
               onLoadGithubPullRequestFiles={() => void connectWorkspace.loadGithubPullRequestFiles()}
               onLoadGithubWorkflowCatalog={() => void connectWorkspace.loadGithubWorkflowCatalog()}

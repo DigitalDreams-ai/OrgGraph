@@ -10,6 +10,7 @@ import type {
   GithubWorkflowDispatchResponse,
   GithubWorkflowRunsResponse,
   GithubPullRequestFileScopeResponse,
+  GithubRepoBindingStatusResponse,
   GithubRepoContextResponse,
   GithubRepoListResponse,
   GithubSelectRepoRequest,
@@ -38,6 +39,11 @@ export class GithubController {
       throw new BadRequestException('limit must be an integer between 1 and 100');
     }
     return this.githubService.listRepos(limit);
+  }
+
+  @Get('/github/repo/binding')
+  async repoBindingStatus(): Promise<GithubRepoBindingStatusResponse> {
+    return this.githubService.repoBindingStatus();
   }
 
   @Get('/github/repo/context')

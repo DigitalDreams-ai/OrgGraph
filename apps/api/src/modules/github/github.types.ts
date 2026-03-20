@@ -111,6 +111,14 @@ export interface GithubSelectedRepoState {
   selectedAt: string;
 }
 
+export interface GithubProductRepoSummary {
+  owner: string;
+  repo: string;
+  fullName: string;
+  source: 'env_config' | 'git_origin';
+  remoteUrl?: string;
+}
+
 export interface GithubSessionStatusResponse {
   status: 'authenticated' | 'unauthenticated';
   hostname: string;
@@ -127,6 +135,15 @@ export interface GithubRepoListResponse {
   viewer: GithubViewerSummary;
   selectedRepo?: GithubSelectedRepoState;
   repos: GithubRepoSummary[];
+}
+
+export interface GithubRepoBindingStatusResponse {
+  status: 'ready' | 'blocked';
+  hostname: string;
+  selectedRepo?: GithubSelectedRepoState;
+  productRepo?: GithubProductRepoSummary;
+  metadataCommitEligible: boolean;
+  issues: GithubSessionIssue[];
 }
 
 export interface GithubRepoContextResponse {

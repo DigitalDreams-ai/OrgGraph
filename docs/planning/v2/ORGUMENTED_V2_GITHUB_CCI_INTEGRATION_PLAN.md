@@ -191,6 +191,10 @@ Current state:
   - load engine-owned allowlisted workflows
   - dispatch allowlisted workflows through GitHub Actions with an explicit ref
   - read back recent `workflow_dispatch` runs for those workflows
+- explicit repo-binding safety is now live in the engine and Connect workspace for future commit-capable metadata workflows:
+  - selected repo binding is inspected directly from local Orgumented state
+  - product repo identity is resolved from `GITHUB_REPO_OWNER` / `GITHUB_REPO_NAME` or the local `origin` remote
+  - commit-capable metadata binding is blocked when the selected repo is missing or matches the Orgumented product repo
 - the current allowlist is intentionally narrow:
   - `ci_validate`
   - `runtime_nightly`
@@ -254,6 +258,7 @@ This support track is only valid if all of the following stay true:
 
 1. Extend the allowlist only where the workflow is operator-safe and typed beyond the current CI/runtime/lint set.
 2. Extend PR-facing decision-packet publication from proof-bound comments into broader repo/PR-context-aware workflows.
-3. Add benchmark-publication-specific typed workflow lanes where they replace low-value manual CI invocation.
-4. Release artifact and evidence linkage in wave12.
-5. Gradual typed CCI expansion locally, with mutating/release flows kept in GitHub Actions until release proof is stronger.
+3. Wire the binding-safety gate into the first commit-capable metadata export/publication path so policy becomes execution-enforced, not only observable.
+4. Add benchmark-publication-specific typed workflow lanes where they replace low-value manual CI invocation.
+5. Release artifact and evidence linkage in wave12.
+6. Gradual typed CCI expansion locally, with mutating/release flows kept in GitHub Actions until release proof is stronger.

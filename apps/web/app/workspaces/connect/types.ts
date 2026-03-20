@@ -109,6 +109,14 @@ export type GithubSelectedRepo = GithubRepoSummary & {
   selectedAt?: string;
 };
 
+export type GithubProductRepoSummary = {
+  owner: string;
+  repo: string;
+  fullName: string;
+  source: 'env_config' | 'git_origin';
+  remoteUrl?: string;
+};
+
 export type GithubBranchSummary = {
   name: string;
   protected: boolean;
@@ -172,6 +180,15 @@ export type GithubRepoListPayload = {
   viewer?: GithubViewerSummary;
   selectedRepo?: GithubSelectedRepo;
   repos?: GithubRepoSummary[];
+};
+
+export type GithubRepoBindingStatusPayload = {
+  status?: 'ready' | 'blocked';
+  hostname?: string;
+  selectedRepo?: GithubSelectedRepo;
+  productRepo?: GithubProductRepoSummary;
+  metadataCommitEligible?: boolean;
+  issues?: GithubSessionIssue[];
 };
 
 export type GithubRepoContextPayload = {

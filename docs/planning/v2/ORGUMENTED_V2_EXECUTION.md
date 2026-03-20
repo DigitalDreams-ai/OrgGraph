@@ -239,6 +239,7 @@ Materially true now:
 - wave10 Org Sessions follow-up now keeps GitHub repo creation, repo context, workflow dispatch, and PR file-scope tools behind explicit secondary disclosures, so the local alias/session workflow remains the primary visible operator path while the support plane stays available on demand
 - wave10 is now closed: the embedded web regression corpus plus production build are green on current main, path-heavy proof/history identifiers stay bounded, and the remaining dense support-plane and proof-history surfaces no longer compete with the primary Stage 1 operator workflow
 - wave9 is now closed: history rows, top actions, and exports all resolve from the selected history label by default, while advanced proof/replay tokens stay isolated behind the debug disclosure and never drive the primary workflow
+- wave11 GitHub support-plane follow-up now exposes explicit metadata-publication binding safety in the engine and Connect workspace: the selected repo is compared against the Orgumented product repo identity, missing or product-repo bindings are marked blocked, and future commit-capable metadata workflows now have a concrete fail-closed eligibility gate instead of a docs-only policy rule
 
 Still unresolved:
 - clean-machine pass for the new real-org quickstart runbook is still pending
@@ -342,14 +343,19 @@ Current support-track status:
   - selected repo binding or explicit owner/repo
   - deterministic changed-file metadata without diff interpretation in the UI
 - a proof-bound PR comment publication path is now live in the engine
-- no typed GitHub workflow dispatch/status-ingest path is live yet
+- typed GitHub workflow dispatch/status ingest is now live for the engine-owned allowlist
+- typed repo-binding safety is now live for future commit-capable metadata workflows:
+  - selected repo present
+  - product repo identity resolved from config or local origin remote
+  - selected repo must not equal the product repo
 - current live `cci` support remains the alias bridge / project-support baseline, not the full typed local job registry
 
 Safe move order:
 1. read-only repo / PR context in the engine
 2. decision-packet publication back to PRs as comments or checks
 3. typed GitHub Actions dispatch and status ingest
-4. release evidence and artifact linkage
+4. explicit user-bound repo binding enforced in the first commit-capable metadata export/publish lane
+5. release evidence and artifact linkage
 
 CCI direction:
 - yes, `cci` should be used inside Orgumented for more than GitHub Actions
