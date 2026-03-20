@@ -579,6 +579,7 @@ function run(): void {
       setOrgAutoRefresh: () => undefined,
       lastRefreshRun: {
         snapshotId: 'snap_1234567890abcdef',
+        rebaselineApplied: false,
         sourcePath: 'C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\sf-project\\force-app\\main\\default',
         nodeCount: 10,
         edgeCount: 20,
@@ -598,8 +599,10 @@ function run(): void {
         metadataArgs: ['CustomField:Opportunity.StageName'],
         stepSummary: []
       },
+      refreshNeedsRebaseline: true,
       loading: false,
       onRunRefresh: () => undefined,
+      onRunRefreshWithRebaseline: () => undefined,
       onRunDiff: () => undefined,
       onRunOrgRetrieve: () => undefined,
       onOpenBrowser: () => undefined
@@ -608,6 +611,8 @@ function run(): void {
   assert.match(refreshMarkup, /Parse path:<\/strong> <span class="path-value">C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\sf-project\\force-app\\main\\default<\/span>/);
   assert.match(refreshMarkup, /Metadata args:<\/strong> <span class="path-value">Flow:Civil_Rights_Intake_Questionnaire<\/span>/);
   assert.match(refreshMarkup, /Project path:<\/strong> <span class="path-value">C:\\Users\\sean\\AppData\\Roaming\\Orgumented\\sf-project<\/span>/);
+  assert.match(refreshMarkup, /Rebaseline Semantic State/);
+  assert.match(refreshMarkup, /The current Browser handoff exceeds the existing semantic drift budget/);
   assert.match(refreshMarkup, /<p class="panel-caption">Staged workflow<\/p>/);
   assert.doesNotMatch(refreshMarkup, /<p class="panel-caption">Workflow state<\/p>/);
 

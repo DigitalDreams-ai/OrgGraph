@@ -371,8 +371,10 @@ function run(): void {
       lastRefreshRun: null,
       lastDiffRun: null,
       lastOrgRetrieveRun: null,
+      refreshNeedsRebaseline: false,
       loading: false,
       onRunRefresh: () => undefined,
+      onRunRefreshWithRebaseline: () => undefined,
       onRunDiff: () => undefined,
       onRunOrgRetrieve: () => undefined,
       onOpenBrowser: () => undefined

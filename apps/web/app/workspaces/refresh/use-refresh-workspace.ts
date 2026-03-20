@@ -53,6 +53,7 @@ function parseRefreshRun(response: QueryResponse): RefreshRunView | null {
   return {
     snapshotId: String(payload.snapshotId ?? ''),
     mode: String(payload.mode ?? ''),
+    rebaselineApplied: payload.rebaselineApplied === true,
     skipped: payload.skipped === true,
     sourcePath: String(payload.sourcePath ?? ''),
     nodeCount: Number(payload.nodeCount ?? 0),
@@ -186,6 +187,7 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
   const [lastRefreshRun, setLastRefreshRun] = useState<RefreshRunView | null>(null);
   const [lastDiffRun, setLastDiffRun] = useState<RefreshDiffView | null>(null);
   const [lastOrgRetrieveRun, setLastOrgRetrieveRun] = useState<OrgRetrieveRunView | null>(null);
+  const [refreshNeedsRebaseline, setRefreshNeedsRebaseline] = useState(false);
 
   useEffect(() => {
     try {
@@ -267,6 +269,14 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
   }
 
   async function runRefreshNow(): Promise<void> {
+    await executeRefresh(false);
+  }
+
+  async function runRefreshWithRebaseline(): Promise<void> {
+    await executeRefresh(true);
+  }
+
+  async function executeRefresh(rebaseline: boolean): Promise<void> {
     options.setLoading(true);
     options.setCopied(false);
     options.setErrorText('');
@@ -284,6 +294,7 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
       options.presentResponse(response);
       options.setErrorText(message);
       setLastRefreshRun(null);
+      setRefreshNeedsRebaseline(false);
       options.setLoading(false);
       return;
     }
@@ -301,16 +312,23 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
       options.presentResponse(response);
       options.setErrorText(message);
       setLastRefreshRun(null);
+      setRefreshNeedsRebaseline(false);
       options.setLoading(false);
       return;
     }
 
     try {
-      const result = await runRefresh({ mode: refreshMode });
+      const result = await runRefresh({
+        mode: refreshMode,
+        fixturesPath: options.retrieveHandoff?.parsePath,
+        rebaseline
+      });
       options.presentResponse(result);
       if (result.ok === false) {
-        options.setErrorText(options.resolveErrorMessage(result));
+        const message = options.resolveErrorMessage(result);
+        options.setErrorText(message);
         setLastRefreshRun(null);
+        setRefreshNeedsRebaseline(/semantic drift budget exceeded/i.test(message));
       } else {
         const parsedRun = parseRefreshRun(result);
         setLastRefreshRun(
@@ -326,6 +344,7 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
               }
             : null
         );
+        setRefreshNeedsRebaseline(false);
         if (parsedRun?.snapshotId) {
           rememberRefreshSnapshot(parsedRun.snapshotId);
         }
@@ -336,6 +355,7 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
       options.presentResponse(fallback);
       options.setErrorText('Refresh request failed. Check API readiness and local runtime health.');
       setLastRefreshRun(null);
+      setRefreshNeedsRebaseline(false);
     } finally {
       options.setLoading(false);
     }
@@ -536,7 +556,9 @@ export function useRefreshWorkspace(options: UseRefreshWorkspaceOptions) {
     lastRefreshRun,
     lastDiffRun,
     lastOrgRetrieveRun,
+    refreshNeedsRebaseline,
     runRefreshNow,
+    runRefreshWithRebaseline,
     runDiff,
     runOrgRetrieveNow
   };

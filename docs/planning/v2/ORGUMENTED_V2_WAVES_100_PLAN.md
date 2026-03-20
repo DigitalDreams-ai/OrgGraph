@@ -385,6 +385,7 @@ Scope:
 - Ask launch chrome is reduced so operator readiness and next-step navigation no longer consume separate top-level cards ahead of the primary question and packet flow
 - Org Sessions keeps manual bridge commands and secondary alias/session probes behind a single advanced disclosure, reducing connect-screen card overload without removing explicit fallback tooling
 - Refresh & Build now relies on one staged workflow snapshot plus concrete run summaries instead of repeating the same rebuild chain in a second recap card
+- Refresh & Build now uses the staged Browser handoff parse path for rebuild runs and exposes an explicit `Rebaseline Semantic State` recovery action when a real-org handoff exceeds the prior drift baseline
 
 Exit:
 - zero known clipping defects in Stage 1 surfaces

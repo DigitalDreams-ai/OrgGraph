@@ -3,6 +3,8 @@ import { resolveDesktopApiUrl } from './runtime-mode';
 
 interface RefreshPayload {
   mode?: 'full' | 'incremental';
+  fixturesPath?: string;
+  rebaseline?: boolean;
 }
 
 async function parseBoundaryResponse(res: Response): Promise<QueryResponse> {

@@ -118,6 +118,7 @@ Materially true now:
 - refresh diff now also fails closed when the latest Refresh no longer belongs to the current Browser handoff lineage, preventing stale snapshot comparisons after alias, selection, or retrieve-cycle changes
 - org-retrieve summaries now distinguish handoff-backed pipeline runs from auth-only runs, so the staged workflow cannot silently treat a non-retrieve pipeline step as current rebuild evidence
 - `Refresh & Build` now presents a numbered four-stage operator sequence (`Retrieve Cart`, `Refresh Semantic State`, `Compare Snapshot Drift`, `Run Org Pipeline`) with deterministic state badges and one explicit next action
+- `Refresh & Build` now routes refresh runs through the current Browser handoff parse path and exposes an explicit `Rebaseline Semantic State` recovery action when a real-org handoff legitimately exceeds the prior semantic drift budget
 - refresh workspace labels and runbook steps now use the same operator language, reducing the last retrieve -> refresh handoff ambiguity between Browser, Refresh, and the real-org quickstart
 - wave5 retrieve -> refresh -> diff handoff closure is now materially complete (`B008`, `D005`, `G007`, `G008`), with the primary operator path visible and executable without raw JSON
 - packaged desktop smoke now also verifies metadata search plus selective metadata retrieve handoff artifacts whenever a connected org session is available, while remaining explicit-skip in disconnected CI environments so wave5 proof coverage does not create false negatives

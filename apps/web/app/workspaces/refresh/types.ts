@@ -16,6 +16,7 @@ export interface WorkflowLineage {
 export interface RefreshRunView {
   snapshotId: string;
   mode: string;
+  rebaselineApplied: boolean;
   skipped: boolean;
   sourcePath: string;
   nodeCount: number;
