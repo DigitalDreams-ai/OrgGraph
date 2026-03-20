@@ -250,8 +250,13 @@ Operational note:
 Wave11 support-track note:
 - Connect now exposes an allowlisted GitHub Actions lane for the selected repo binding:
   - load allowlisted workflows
-  - dispatch the typed `runtime_nightly` workflow against an explicit ref
-  - read back recent `workflow_dispatch` runs for that same workflow
+  - dispatch typed validation/support workflows against an explicit ref
+  - read back recent `workflow_dispatch` runs for those same workflows
+- the allowlist now covers:
+  - `ci_validate`
+  - `runtime_nightly`
+  - `scripts_lint`
+  - `workflow_lint`
 - this remains a support-plane surface only; it does not replace local semantic execution or introduce arbitrary workflow/YAML control from the UI
 
 ## Regrouped 100% Completion Focus

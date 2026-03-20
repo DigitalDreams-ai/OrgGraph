@@ -108,6 +108,47 @@ process.exit(1);
 
       if (
         req.method === 'GET' &&
+        url.pathname === '/repos/acme/repo-one/actions/workflows/ci.yml/runs'
+      ) {
+        assert.equal(url.searchParams.get('per_page'), '10');
+        assert.equal(url.searchParams.get('event'), 'workflow_dispatch');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(
+          JSON.stringify({
+            total_count: 1,
+            workflow_runs: [
+              {
+                id: 5001,
+                run_number: 27,
+                status: 'completed',
+                conclusion: 'success',
+                event: 'workflow_dispatch',
+                html_url: 'https://github.com/acme/repo-one/actions/runs/5001',
+                head_branch: 'main',
+                head_sha: 'fedcba0987654321',
+                display_title: 'CI Validate',
+                created_at: '2026-03-19T10:00:00Z',
+                updated_at: '2026-03-19T10:12:00Z',
+                actor: { login: 'octocat' }
+              }
+            ]
+          })
+        );
+        return;
+      }
+
+      if (
+        req.method === 'POST' &&
+        url.pathname === '/repos/acme/repo-one/actions/workflows/ci.yml/dispatches'
+      ) {
+        dispatchBody = body ?? null;
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
+      if (
+        req.method === 'GET' &&
         url.pathname === '/repos/acme/repo-one/actions/workflows/runtime-nightly.yml/runs'
       ) {
         assert.equal(url.searchParams.get('per_page'), '10');
@@ -206,17 +247,41 @@ process.exit(1);
       assert.equal(workflowCatalogJson.repo.fullName, 'acme/repo-one');
       assert.deepEqual(workflowCatalogJson.workflows, [
         {
+          key: 'ci_validate',
+          name: 'CI Validate',
+          workflowFile: 'ci.yml',
+          description: 'Dispatch the repo CI validation workflow and read back recent workflow_dispatch runs.',
+          dispatchEnabled: true,
+          inputs: []
+        },
+        {
           key: 'runtime_nightly',
           name: 'Runtime Nightly',
           workflowFile: 'runtime-nightly.yml',
           description: 'Dispatch the packaged desktop build-and-smoke workflow and read back recent workflow_dispatch runs.',
           dispatchEnabled: true,
           inputs: []
+        },
+        {
+          key: 'scripts_lint',
+          name: 'Scripts Lint',
+          workflowFile: 'scripts-lint.yml',
+          description: 'Dispatch the repo-local scripts lint workflow and read back recent workflow_dispatch runs.',
+          dispatchEnabled: true,
+          inputs: []
+        },
+        {
+          key: 'workflow_lint',
+          name: 'Workflow Lint',
+          workflowFile: 'workflow-lint.yml',
+          description: 'Dispatch the GitHub workflow lint checks and read back recent workflow_dispatch runs.',
+          dispatchEnabled: true,
+          inputs: []
         }
       ]);
 
       const runsResponse = await fetch(
-        `http://127.0.0.1:${apiAddress.port}/github/actions/runs?workflowKey=runtime_nightly`
+        `http://127.0.0.1:${apiAddress.port}/github/actions/runs?workflowKey=ci_validate`
       );
       assert.equal(runsResponse.status, 200);
       const runsJson = (await runsResponse.json()) as {
@@ -233,9 +298,9 @@ process.exit(1);
         totalCount: number;
         truncated: boolean;
       };
-      assert.equal(runsJson.workflow.key, 'runtime_nightly');
-      assert.equal(runsJson.workflow.name, 'Runtime Nightly');
-      assert.equal(runsJson.totalCount, 2);
+      assert.equal(runsJson.workflow.key, 'ci_validate');
+      assert.equal(runsJson.workflow.name, 'CI Validate');
+      assert.equal(runsJson.totalCount, 1);
       assert.equal(runsJson.truncated, false);
       assert.deepEqual(
         runsJson.runs.map((run) => ({
@@ -249,21 +314,12 @@ process.exit(1);
         })),
         [
           {
-            runId: 4001,
-            runNumber: 18,
+            runId: 5001,
+            runNumber: 27,
             status: 'completed',
             conclusion: 'success',
             branch: 'main',
             actor: 'octocat',
-            event: 'workflow_dispatch'
-          },
-          {
-            runId: 4002,
-            runNumber: 19,
-            status: 'in_progress',
-            conclusion: undefined,
-            branch: 'release/proof',
-            actor: 'sean',
             event: 'workflow_dispatch'
           }
         ]
@@ -273,7 +329,7 @@ process.exit(1);
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          workflowKey: 'runtime_nightly',
+          workflowKey: 'ci_validate',
           ref: 'main'
         })
       });
@@ -287,8 +343,8 @@ process.exit(1);
       };
       assert.equal(dispatchJson.owner, 'acme');
       assert.equal(dispatchJson.repo, 'repo-one');
-      assert.equal(dispatchJson.workflow.key, 'runtime_nightly');
-      assert.equal(dispatchJson.workflow.workflowFile, 'runtime-nightly.yml');
+      assert.equal(dispatchJson.workflow.key, 'ci_validate');
+      assert.equal(dispatchJson.workflow.workflowFile, 'ci.yml');
       assert.equal(dispatchJson.ref, 'main');
       assert.deepEqual(dispatchJson.inputs, {});
       assert.deepEqual(dispatchBody, { ref: 'main' });

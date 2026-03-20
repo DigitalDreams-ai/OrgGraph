@@ -187,12 +187,16 @@ Safety:
 - no hidden fallback to local unconstrained execution if dispatch fails
 
 Current state:
-- the first typed workflow lane is now live for the selected repo binding:
+- typed workflow lanes are now live for the selected repo binding:
   - load engine-owned allowlisted workflows
-  - dispatch `runtime_nightly` through GitHub Actions with an explicit ref
-  - read back recent `workflow_dispatch` runs for that workflow
-- the current lane is intentionally narrow:
-  - no arbitrary workflow selection
+  - dispatch allowlisted workflows through GitHub Actions with an explicit ref
+  - read back recent `workflow_dispatch` runs for those workflows
+- the current allowlist is intentionally narrow:
+  - `ci_validate`
+  - `runtime_nightly`
+  - `scripts_lint`
+  - `workflow_lint`
+  - no arbitrary workflow selection outside that typed set
   - no YAML mutation
   - no hidden fallback to local shell execution
 - broader allowlisted workflows, benchmark publication dispatch, and check-run publication are still future slices
@@ -248,8 +252,8 @@ This support track is only valid if all of the following stay true:
 
 ## Immediate Planned Moves
 
-1. Extend the workflow allowlist beyond `runtime_nightly` only where the workflow is operator-safe and typed.
+1. Extend the allowlist only where the workflow is operator-safe and typed beyond the current CI/runtime/lint set.
 2. Extend PR-facing decision-packet publication from proof-bound comments into broader repo/PR-context-aware workflows.
-3. Add benchmark-publication or validation-specific typed workflow lanes where they replace low-value manual CI invocation.
+3. Add benchmark-publication-specific typed workflow lanes where they replace low-value manual CI invocation.
 4. Release artifact and evidence linkage in wave12.
 5. Gradual typed CCI expansion locally, with mutating/release flows kept in GitHub Actions until release proof is stronger.
