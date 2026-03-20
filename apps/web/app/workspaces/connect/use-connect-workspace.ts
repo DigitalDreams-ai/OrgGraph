@@ -6,6 +6,7 @@ import {
   createGithubRepo,
   dispatchGithubWorkflow,
   getGithubPullRequestFiles,
+  getGithubRepoBindingStatus,
   getGithubRepoContext,
   getGithubSessionStatus,
   getGithubWorkflowCatalog,
@@ -26,6 +27,7 @@ import {
   switchOrgSession
 } from '../../lib/org-client';
 import type {
+  GithubRepoBindingStatusPayload,
   GithubRepoListPayload,
   GithubRepoContextPayload,
   GithubRepoSummary,
@@ -113,6 +115,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   const [orgSessionHistory, setOrgSessionHistory] = useState<OrgSessionHistoryPayload | null>(null);
   const [githubSession, setGithubSession] = useState<GithubSessionPayload | null>(null);
   const [githubRepos, setGithubRepos] = useState<GithubRepoListPayload | null>(null);
+  const [githubRepoBinding, setGithubRepoBinding] = useState<GithubRepoBindingStatusPayload | null>(null);
   const [githubRepoContext, setGithubRepoContext] = useState<GithubRepoContextPayload | null>(null);
   const [githubPullRequestFiles, setGithubPullRequestFiles] = useState<GithubPullRequestFileScopePayload | null>(null);
   const [githubWorkflowCatalog, setGithubWorkflowCatalog] = useState<GithubWorkflowCatalogPayload | null>(null);
@@ -343,10 +346,17 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     }
   }
 
+  async function syncGithubRepoBinding(): Promise<void> {
+    const response = await getGithubRepoBindingStatus();
+    const payload = readPayload<GithubRepoBindingStatusPayload>(response);
+    setGithubRepoBinding(payload);
+  }
+
   function refreshGithubStatus(): Promise<QueryResponse | null> {
     return runAction(() => getGithubSessionStatus(), (response) => {
       const payload = readPayload<GithubSessionPayload>(response);
       setGithubSession(payload);
+      void syncGithubRepoBinding();
       if (!payload?.selectedRepo) {
         setGithubRepoContext(null);
         setGithubPullRequestFiles(null);
@@ -362,6 +372,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       const payload = readPayload<GithubSessionPayload>(response);
       setGithubSession(payload);
       syncGithubOwnerDefaults(payload, false);
+      await syncGithubRepoBinding();
       const reposResponse = await listGithubRepos();
       const reposPayload = readPayload<GithubRepoListPayload>(reposResponse);
       setGithubRepos(reposPayload);
@@ -377,6 +388,13 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       const payload = readPayload<GithubRepoListPayload>(response);
       setGithubRepos(payload);
       syncGithubOwnerDefaults(payload);
+    });
+  }
+
+  function loadGithubRepoBindingAction(): Promise<QueryResponse | null> {
+    return runAction(() => getGithubRepoBindingStatus(), (response) => {
+      const payload = readPayload<GithubRepoBindingStatusPayload>(response);
+      setGithubRepoBinding(payload);
     });
   }
 
@@ -400,6 +418,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
         }),
       async (response) => {
         await refreshGithubStatus();
+        await syncGithubRepoBinding();
         await loadGithubReposAction();
         await loadGithubRepoContextAction();
         await loadGithubWorkflowCatalogAction();
@@ -418,6 +437,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   function selectGithubRepoAction(owner: string, repo: string): Promise<QueryResponse | null> {
     return runAction(() => selectGithubRepo({ owner, repo }), async () => {
       await refreshGithubStatus();
+      await syncGithubRepoBinding();
       await loadGithubReposAction();
       await loadGithubRepoContextAction(owner, repo);
       await loadGithubWorkflowCatalogAction(owner, repo);
@@ -569,6 +589,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     orgSessionHistory,
     githubSession,
     githubRepos,
+    githubRepoBinding,
     githubRepoContext,
     githubPullRequestFiles,
     githubWorkflowCatalog,
@@ -604,6 +625,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     refreshGithubStatus,
     authorizeGithub,
     loadGithubRepos: loadGithubReposAction,
+    loadGithubRepoBinding: loadGithubRepoBindingAction,
     loadGithubRepoContext: loadGithubRepoContextAction,
     loadGithubPullRequestFiles: loadGithubPullRequestFilesAction,
     loadGithubWorkflowCatalog: loadGithubWorkflowCatalogAction,

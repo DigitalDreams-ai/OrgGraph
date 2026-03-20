@@ -22,9 +22,11 @@ import type {
   GithubWorkflowDispatchRequest,
   GithubWorkflowDispatchResponse,
   GithubWorkflowInputDefinition,
+  GithubProductRepoSummary,
   GithubWorkflowRunsResponse,
   GithubWorkflowRunSummary,
   GithubWorkflowSummary,
+  GithubRepoBindingStatusResponse,
   GithubPullRequestFileScopeResponse,
   GithubPullRequestFileSummary,
   GithubPullRequestScopeSummary,
@@ -272,6 +274,46 @@ export class GithubService {
       viewer,
       selectedRepo: this.readSelectedRepoState(),
       repos
+    };
+  }
+
+  async repoBindingStatus(): Promise<GithubRepoBindingStatusResponse> {
+    const selectedRepo = this.readSelectedRepoState();
+    const productRepo = await this.resolveProductRepoIdentity();
+    const issues: GithubSessionIssue[] = [];
+
+    if (!selectedRepo) {
+      issues.push({
+        code: 'GITHUB_SELECTED_REPO_MISSING',
+        severity: 'error',
+        message: 'No explicit GitHub repo binding is selected for commit-capable metadata workflows.',
+        remediation: 'Select or create a non-product GitHub repository in Connect before enabling metadata publication flows.'
+      });
+    }
+
+    if (!productRepo) {
+      issues.push({
+        code: 'PRODUCT_REPO_IDENTITY_UNAVAILABLE',
+        severity: 'error',
+        message: 'Orgumented could not determine the product repository identity for fail-closed metadata publication.',
+        remediation: 'Set GITHUB_REPO_OWNER and GITHUB_REPO_NAME or ensure the local origin remote points at the product repository.'
+      });
+    } else if (selectedRepo && this.repoMatches(selectedRepo, productRepo)) {
+      issues.push({
+        code: 'PRODUCT_REPO_SELECTED',
+        severity: 'error',
+        message: 'The selected GitHub repo is the Orgumented product repository, which is blocked for user metadata publication.',
+        remediation: 'Bind a dedicated user-owned repository before enabling commit-capable metadata workflows.'
+      });
+    }
+
+    return {
+      status: issues.length === 0 ? 'ready' : 'blocked',
+      hostname: GithubService.HOSTNAME,
+      selectedRepo,
+      productRepo,
+      metadataCommitEligible: issues.length === 0,
+      issues
     };
   }
 
@@ -976,6 +1018,73 @@ export class GithubService {
     }
 
     return undefined;
+  }
+
+  private async resolveProductRepoIdentity(): Promise<GithubProductRepoSummary | undefined> {
+    const configuredOwner = this.config.githubRepoOwner();
+    const configuredRepo = this.config.githubRepoName();
+    if (configuredOwner && configuredRepo) {
+      return {
+        owner: configuredOwner,
+        repo: configuredRepo,
+        fullName: `${configuredOwner}/${configuredRepo}`,
+        source: 'env_config'
+      };
+    }
+
+    const cwd = this.runtimePaths.workspaceRoot();
+    const remoteResult = await this.githubToolAdapter.gitRemoteGetUrl(cwd, 'origin');
+    if (remoteResult.exitCode !== 0) {
+      return undefined;
+    }
+
+    return this.parseGithubRemoteUrl(remoteResult.stdout.trim());
+  }
+
+  private parseGithubRemoteUrl(remoteUrlRaw: string): GithubProductRepoSummary | undefined {
+    const remoteUrl = remoteUrlRaw.trim();
+    if (!remoteUrl) {
+      return undefined;
+    }
+
+    const httpsMatch = remoteUrl.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?$/i);
+    if (httpsMatch) {
+      const owner = httpsMatch[1].trim();
+      const repo = httpsMatch[2].trim();
+      if (owner && repo) {
+        return {
+          owner,
+          repo,
+          fullName: `${owner}/${repo}`,
+          source: 'git_origin',
+          remoteUrl
+        };
+      }
+    }
+
+    const sshMatch = remoteUrl.match(/^git@github\.com:([^/]+)\/([^/]+?)(?:\.git)?$/i);
+    if (sshMatch) {
+      const owner = sshMatch[1].trim();
+      const repo = sshMatch[2].trim();
+      if (owner && repo) {
+        return {
+          owner,
+          repo,
+          fullName: `${owner}/${repo}`,
+          source: 'git_origin',
+          remoteUrl
+        };
+      }
+    }
+
+    return undefined;
+  }
+
+  private repoMatches(
+    left: { owner: string; repo: string },
+    right: { owner: string; repo: string }
+  ): boolean {
+    return left.owner.toLowerCase() === right.owner.toLowerCase() && left.repo.toLowerCase() === right.repo.toLowerCase();
   }
 
   private persistSelectedRepo(repo: GithubRepoSummary): GithubSelectedRepoState {

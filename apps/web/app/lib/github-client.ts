@@ -44,6 +44,12 @@ export function listGithubRepos(limit = 50): Promise<QueryResponse> {
   });
 }
 
+export function getGithubRepoBindingStatus(): Promise<QueryResponse> {
+  return requestBoundary(resolveDesktopApiUrl('/github/repo/binding'), {
+    method: 'GET'
+  });
+}
+
 export function getGithubRepoContext(payload?: {
   owner?: string;
   repo?: string;

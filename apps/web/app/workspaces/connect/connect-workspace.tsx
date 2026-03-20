@@ -9,6 +9,7 @@ import {
 } from '../../shell/org-status-surface';
 import type {
   GithubBranchSummary,
+  GithubRepoBindingStatusPayload,
   GithubWorkflowCatalogPayload,
   GithubWorkflowRunSummary,
   GithubWorkflowRunsPayload,
@@ -56,6 +57,7 @@ interface ConnectWorkspaceProps {
   orgSessionHistory: OrgSessionHistoryPayload | null;
   orgSession: OrgSessionPayload | null;
   githubSession: GithubSessionPayload | null;
+  githubRepoBinding: GithubRepoBindingStatusPayload | null;
   githubRepoContext: GithubRepoContextPayload | null;
   githubPullRequestFiles: GithubPullRequestFileScopePayload | null;
   githubWorkflowCatalog: GithubWorkflowCatalogPayload | null;
@@ -91,6 +93,7 @@ interface ConnectWorkspaceProps {
   onRefreshGithubStatus: () => void;
   onAuthorizeGithub: () => void;
   onLoadGithubRepos: () => void;
+  onLoadGithubRepoBinding: () => void;
   onLoadGithubRepoContext: () => void;
   onLoadGithubPullRequestFiles: () => void;
   onLoadGithubWorkflowCatalog: () => void;
@@ -183,6 +186,11 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
   const githubStatus = props.githubSession?.status || 'unauthenticated';
   const githubViewer = props.githubSession?.viewer;
   const githubSelectedRepo = props.githubSelectedRepo;
+  const githubRepoBinding = props.githubRepoBinding;
+  const githubBindingStatus = githubRepoBinding?.status || 'blocked';
+  const githubProductRepo = githubRepoBinding?.productRepo;
+  const githubBindingEligible = Boolean(githubRepoBinding?.metadataCommitEligible);
+  const githubBindingIssues = githubRepoBinding?.issues ?? [];
   const githubContextRepo = props.githubRepoContext?.repo || githubSelectedRepo;
   const githubContextBranches = (props.githubRepoContext?.branches ?? []) as GithubBranchSummary[];
   const githubContextPullRequests = (props.githubRepoContext?.pullRequests ?? []) as GithubPullRequestSummary[];
@@ -318,13 +326,18 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
               gh: {githubCliLabel}
             </span>
             <span className="decision-badge muted">Source: {githubAuthSource}</span>
+            <span className={`decision-badge ${githubBindingEligible ? 'good' : 'bad'}`}>
+              Metadata binding: {githubBindingStatus}
+            </span>
           </div>
           <p><strong>Viewer:</strong> <span className="path-value">{githubViewer?.login || 'n/a'}</span></p>
           <p><strong>Name:</strong> <span className="path-value">{githubViewer?.name || 'n/a'}</span></p>
           <p><strong>Selected repo:</strong> <span className="path-value">{githubSelectedRepo?.fullName || 'n/a'}</span></p>
+          <p><strong>Product repo:</strong> <span className="path-value">{githubProductRepo?.fullName || 'unresolved'}</span></p>
           <p><strong>Visibility:</strong> {githubSelectedRepo?.visibility || 'n/a'}</p>
           <p><strong>Default branch:</strong> <span className="path-value">{githubSelectedRepo?.defaultBranch || 'n/a'}</span></p>
           <p><strong>Issues:</strong> {props.githubIssues.length}</p>
+          <p><strong>Commit-capable metadata eligible:</strong> {githubBindingEligible ? 'yes' : 'no'}</p>
           <p className="muted">
             Orgumented uses local <code>gh</code> for GitHub sign-in and keeps one explicit selected repo binding for future repo-backed workflows.
           </p>
@@ -332,6 +345,7 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
             <button type="button" onClick={props.onRefreshGithubStatus} disabled={props.loading}>Refresh GitHub</button>
             <button type="button" onClick={props.onAuthorizeGithub} disabled={props.loading}>Authorize GitHub</button>
             <button type="button" className="ghost" onClick={props.onLoadGithubRepos} disabled={props.loading}>Load Repos</button>
+            <button type="button" className="ghost" onClick={props.onLoadGithubRepoBinding} disabled={props.loading}>Check Binding</button>
           </div>
         </article>
       </div>
@@ -417,6 +431,37 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           ) : (
             <p className="muted">No current GitHub auth issues are recorded.</p>
           )}
+
+          <div className="sub-section">
+            <p><strong>Metadata publication binding</strong></p>
+            <div className="decision-meta">
+              <span className={`decision-badge ${githubBindingEligible ? 'good' : 'bad'}`}>
+                {githubBindingEligible ? 'ready' : 'blocked'}
+              </span>
+              {githubProductRepo ? <span className="decision-badge muted">product repo: {githubProductRepo.fullName}</span> : null}
+              {githubProductRepo?.source ? <span className="decision-badge muted">source: {githubProductRepo.source}</span> : null}
+            </div>
+            <p><strong>Selected binding:</strong> <span className="path-value">{githubSelectedRepo?.fullName || 'n/a'}</span></p>
+            <p><strong>Product repo URL:</strong> <span className="path-value">{githubProductRepo?.remoteUrl || 'n/a'}</span></p>
+            {githubBindingIssues.length > 0 ? (
+              <ul className="issue-list">
+                {githubBindingIssues.map((issue) => (
+                  <li key={`${issue.code || 'binding'}-${issue.message || 'message'}`}>
+                    <div className="decision-meta">
+                      <span className={`decision-badge ${issue.severity === 'error' ? 'bad' : 'muted'}`}>
+                        {issue.severity || 'warning'}
+                      </span>
+                      <span className="decision-badge muted">{issue.code || 'binding'}</span>
+                    </div>
+                    <p><strong>{issue.message || 'Unknown repo binding issue'}</strong></p>
+                    <p>{issue.remediation || 'No remediation provided.'}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">The current selected repo is eligible for future commit-capable metadata workflows.</p>
+            )}
+          </div>
 
           <details className="debug-details">
             <summary>GitHub repo tools</summary>

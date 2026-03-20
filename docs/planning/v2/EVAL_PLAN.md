@@ -6,18 +6,16 @@ Scoring authority used: `docs/planning/v2/ORGUMENTED_V2_DECISION_MATRIX.md`
 ## Initiative
 
 Assumed initiative under evaluation:
-- extend bounded GitHub support with typed workflow dispatch and status ingest in the local desktop runtime
+- extend bounded GitHub support with explicit repo-binding safety for future commit-capable metadata workflows
 
 Working description:
 - keep local `gh` CLI as the GitHub auth and authorization plane
 - reuse the selected repo binding already present in the engine
-- extend the typed allowlisted workflow lane set for:
-  - selected repo binding or explicit owner/repo
-  - explicit workflow selection from an engine-owned allowlist
-  - explicit ref plus typed optional inputs
-  - recent-run status ingest scoped to the same workflow
-- surface dispatch and status in Connect without turning GitHub into a runtime dependency
-- avoid generic workflow mutation, arbitrary YAML execution, or hidden local fallback in this slice
+- expose a typed repo-binding safety read path in the engine and Connect workspace
+- resolve the Orgumented product repo identity from config or local `origin`
+- mark the binding blocked when the selected repo is missing or points at the product repo
+- keep this as a support-plane safety surface without turning GitHub into a runtime dependency
+- avoid adding actual commit/push metadata publication in this slice
 
 ## Intended Stage Alignment
 
@@ -38,7 +36,7 @@ Secondary support:
 
 Not in scope for this slice:
 - GitHub release/artifact linkage
-- arbitrary workflow dispatch outside the engine allowlist
+- first commit-capable metadata export/publication implementation
 - diff hunk parsing or patch analysis
 - custom OAuth, GitHub App install flow, or hosted callback infrastructure
 
@@ -48,18 +46,18 @@ Chosen path:
 - Module rebuild / bounded extension
 
 Why:
-- existing GitHub support already exists for auth, repo binding, repo context, changed-file scope, and proof-bound PR publication
-- the missing capability is broader bounded workflow execution visibility, not a subsystem replacement
-- local `gh` reuse plus direct GitHub API reads/writes is the smallest viable path that satisfies the operator need without violating desktop-local runtime rules
+- existing GitHub support already exists for auth, repo binding, repo context, changed-file scope, workflow lanes, and proof-bound PR publication
+- the missing capability is execution-visible repo-binding safety, not a subsystem replacement
+- local repo-binding inspection plus product-repo identity resolution is the smallest viable path that turns the current docs-only policy into an engine-enforced gate
 
 ## Acceptance Gates
 
-1. Engine exposes a typed GitHub workflow-dispatch endpoint for an explicit allowlisted workflow set.
-2. Dispatch resolves owner/repo explicitly or from the selected GitHub repo binding.
-3. Dispatch requires an explicit workflow key and ref, and fails closed when either is missing or invalid.
-4. Engine exposes a typed recent-run status endpoint for the same allowlisted workflows.
-5. Connect workspace exposes workflow dispatch and recent-run status as a secondary support-plane surface without embedding GitHub policy logic in the UI.
-6. Existing auth, repo-management, repo-context, changed-file scope, and proof-bound PR publication paths continue to work.
+1. Engine exposes a typed repo-binding status endpoint for the selected repo.
+2. Product repo identity resolves from explicit config or the local `origin` remote.
+3. The binding is blocked when no selected repo exists.
+4. The binding is blocked when the selected repo equals the Orgumented product repo.
+5. Connect workspace exposes binding readiness as a calm secondary support-plane surface without adding new primary workflow chrome.
+6. Existing auth, repo-management, repo-context, changed-file scope, workflow dispatch, and proof-bound PR publication paths continue to work.
 7. Focused API and web regression coverage passes.
 
 ## Risks To Control
@@ -68,12 +66,12 @@ Why:
 - must fail closed if neither env token nor authenticated `gh` session is available
 
 2. Scope creep
-- this slice must stay inside an explicit workflow allowlist
-- no arbitrary workflow mutation, YAML editing, or patch analysis should leak in under the Actions heading
+- this slice must stay on repo-binding safety only
+- no commit/push metadata publication should leak in before the first real commit-capable flow is deliberately chosen
 
 3. Product repo contamination
 - selected repo binding must remain explicit and local
-- this slice must not silently target the Orgumented product repo for future commit-capable flows
+- this slice must mark the Orgumented product repo as blocked for future commit-capable flows
 
 4. UI bloat
-- workflow dispatch and recent-run status must sit inside the existing Connect workflow with a calm secondary support-plane surface
+- repo-binding safety must sit inside the existing Connect workflow with a calm secondary support-plane surface

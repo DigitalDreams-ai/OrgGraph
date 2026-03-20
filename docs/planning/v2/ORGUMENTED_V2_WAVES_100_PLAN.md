@@ -172,7 +172,7 @@ This is a cross-wave support track, not a replacement for the locked numbered wa
 Overall implementation progress:
 - approximately 75%
 - policy and ownership boundaries are complete
-- local auth/repo-management, repo context, changed-file scope, and the typed validation/runtime workflow lanes are now live, but broader benchmark/release linkage remains open
+- local auth/repo-management, repo context, changed-file scope, typed validation/runtime workflow lanes, and explicit repo-binding safety are now live, but broader benchmark/release linkage remains open
 
 | Support Track Item | Owning Wave(s) | Status | Approx. Complete | Next Gate |
 |---|---|---|---|---|
@@ -182,7 +182,7 @@ Overall implementation progress:
 | PR publication of decision packets, proof links, and review summaries | wave7 | Complete | 100% | maintain proof-bound idempotent PR comment publication while check-run publication remains optional future extension |
 | typed local `cci` job registry | wave7, wave11 | Planned | 20% | elevate current alias/info/import support into explicit typed jobs with allowlist, mutability class, timeout, and audit trail |
 | typed GitHub Actions dispatch and status ingest | wave11 | In Progress | 70% | keep the allowlist typed and repo-bound while adding repo-safe validation lanes before broader benchmark/release flows |
-| explicit user-bound repo binding for commit-capable metadata workflows | wave11, wave12 | In Progress | 45% | fail closed in future commit-capable metadata flows unless the selected bound repo is present and not the Orgumented product repo |
+| explicit user-bound repo binding for commit-capable metadata workflows | wave11, wave12 | In Progress | 75% | wire the now-live binding safety gate into the first commit-capable metadata export/publication path so it cannot proceed when the selected repo is missing or matches the product repo |
 | GitHub release / artifact linkage from canonical release evidence | wave12 | Open | 0% | release evidence links cleanly to GitHub artifacts without replacing local proof/replay storage |
 
 ## wave1 - Baseline Lock And Triage

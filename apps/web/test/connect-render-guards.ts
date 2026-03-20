@@ -72,6 +72,28 @@ function run(): void {
           selectedAt: '2026-03-17T12:00:00Z'
         }
       },
+      githubRepoBinding: {
+        status: 'ready',
+        selectedRepo: {
+          owner: 'sean',
+          name: 'Orgumented-runtime-repo-with-a-very-long-selected-binding-name',
+          fullName: longGithubRepo,
+          private: true,
+          visibility: 'private',
+          url: longGithubUrl,
+          defaultBranch: 'main',
+          selectedAt: '2026-03-17T12:00:00Z'
+        },
+        productRepo: {
+          owner: 'DigitalDreams-ai',
+          repo: 'OrgGraph',
+          fullName: 'DigitalDreams-ai/OrgGraph',
+          source: 'git_origin',
+          remoteUrl: 'https://github.com/DigitalDreams-ai/OrgGraph.git'
+        },
+        metadataCommitEligible: true,
+        issues: []
+      },
       githubRepoContext: {
         repo: {
           owner: 'sean',
@@ -266,6 +288,7 @@ function run(): void {
       onRefreshGithubStatus: () => undefined,
       onAuthorizeGithub: () => undefined,
       onLoadGithubRepos: () => undefined,
+      onLoadGithubRepoBinding: () => undefined,
       onLoadGithubRepoContext: () => undefined,
       onLoadGithubPullRequestFiles: () => undefined,
       onLoadGithubWorkflowCatalog: () => undefined,
@@ -288,6 +311,9 @@ function run(): void {
   assert.match(connectMarkup, /<strong>Active alias:<\/strong> <span class="path-value">shulman-uat-with-a-very-long-alias-name-that-must-wrap-cleanly<\/span>/);
   assert.match(connectMarkup, /<strong><span class="path-value">shulman-uat-with-a-very-long-alias-name-that-must-wrap-cleanly<\/span><\/strong>/);
   assert.match(connectMarkup, /<strong>Selected repo:<\/strong> <span class="path-value">sean\/Orgumented-runtime-repo-with-a-very-long-selected-binding-name<\/span>/);
+  assert.match(connectMarkup, /Metadata binding: ready/);
+  assert.match(connectMarkup, /DigitalDreams-ai\/OrgGraph/);
+  assert.match(connectMarkup, /Check Binding<\/button>/);
   assert.match(connectMarkup, /<strong>URL:<\/strong> <span class="path-value">https:\/\/github\.com\/sean\/Orgumented-runtime-repo-with-a-very-long-selected-binding-name<\/span>/);
   assert.match(connectMarkup, /Load Repo Context<\/button>/);
   assert.match(connectMarkup, /Load PR Files<\/button>/);

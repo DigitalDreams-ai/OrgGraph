@@ -25,6 +25,23 @@ export class GithubToolAdapterService {
     );
   }
 
+  async gitRemoteGetUrl(cwd: string, remote = 'origin'): Promise<CommandResult> {
+    try {
+      return await this.commandRunner.run('git', ['remote', 'get-url', remote], {
+        cwd,
+        timeoutMs: 30_000
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        exitCode: 1,
+        stdout: '',
+        stderr: message,
+        elapsedMs: 0
+      };
+    }
+  }
+
   private async runGh(args: string[], cwd: string, timeoutMs: number): Promise<CommandResult> {
     try {
       return await this.commandRunner.run('gh', args, {
