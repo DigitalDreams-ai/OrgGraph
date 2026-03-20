@@ -6,16 +6,15 @@ Scoring authority used: `docs/planning/v2/ORGUMENTED_V2_DECISION_MATRIX.md`
 ## Initiative
 
 Assumed initiative under evaluation:
-- extend bounded GitHub support with explicit repo-binding safety for future commit-capable metadata workflows
+- extend bounded GitHub support with typed release-artifact linkage for Wave 12 evidence
 
 Working description:
 - keep local `gh` CLI as the GitHub auth and authorization plane
 - reuse the selected repo binding already present in the engine
-- expose a typed repo-binding safety read path in the engine and Connect workspace
-- resolve the Orgumented product repo identity from config or local `origin`
-- mark the binding blocked when the selected repo is missing or points at the product repo
-- keep this as a support-plane safety surface without turning GitHub into a runtime dependency
-- avoid adding actual commit/push metadata publication in this slice
+- expose a typed workflow-artifact read path in the engine for allowlisted workflows
+- surface recent artifact links in Connect without widening local semantic execution
+- wire canonical release evidence to record GitHub artifact workflow/run/download links
+- keep this as release-evidence linkage, not GitHub Releases publishing or release creation
 
 ## Intended Stage Alignment
 
@@ -29,13 +28,13 @@ Why:
 ## Wave Mapping
 
 Primary wave alignment:
-- Wave 11: bug burn-down and CI / support-plane quality lock
+- Wave 12: release readiness and operator proof
 
 Secondary support:
-- Wave 12: explicit user-bound repo binding for release and commit-capable workflows
+- Wave 11: keep the allowlisted support plane typed and bounded
 
 Not in scope for this slice:
-- GitHub release/artifact linkage
+- GitHub release creation or tag publication
 - first commit-capable metadata export/publication implementation
 - diff hunk parsing or patch analysis
 - custom OAuth, GitHub App install flow, or hosted callback infrastructure
@@ -47,18 +46,18 @@ Chosen path:
 
 Why:
 - existing GitHub support already exists for auth, repo binding, repo context, changed-file scope, workflow lanes, and proof-bound PR publication
-- the missing capability is execution-visible repo-binding safety, not a subsystem replacement
-- local repo-binding inspection plus product-repo identity resolution is the smallest viable path that turns the current docs-only policy into an engine-enforced gate
+- the missing capability is release-facing artifact linkage from the canonical evidence record, not broader GitHub platform expansion
+- typed workflow artifact reads plus release-evidence fields close a real Wave 12 gate without pretending GitHub replaces local proof identity
 
 ## Acceptance Gates
 
-1. Engine exposes a typed repo-binding status endpoint for the selected repo.
-2. Product repo identity resolves from explicit config or the local `origin` remote.
-3. The binding is blocked when no selected repo exists.
-4. The binding is blocked when the selected repo equals the Orgumented product repo.
-5. Connect workspace exposes binding readiness as a calm secondary support-plane surface without adding new primary workflow chrome.
+1. Engine exposes a typed workflow-artifact read endpoint for allowlisted workflows.
+2. Artifact reads remain repo-bound and workflow-allowlisted.
+3. Connect workspace exposes recent artifacts as a calm secondary support-plane surface.
+4. Canonical release evidence records GitHub artifact workflow/run/download linkage explicitly.
+5. Release evidence checker understands the new GitHub artifact fields.
 6. Existing auth, repo-management, repo-context, changed-file scope, workflow dispatch, and proof-bound PR publication paths continue to work.
-7. Focused API and web regression coverage passes.
+7. Focused API, web, and release-evidence regression coverage passes.
 
 ## Risks To Control
 
@@ -66,12 +65,12 @@ Why:
 - must fail closed if neither env token nor authenticated `gh` session is available
 
 2. Scope creep
-- this slice must stay on repo-binding safety only
-- no commit/push metadata publication should leak in before the first real commit-capable flow is deliberately chosen
+- this slice must stay on release-artifact linkage only
+- no GitHub Release publishing or broad workflow browsing should leak in here
 
-3. Product repo contamination
-- selected repo binding must remain explicit and local
-- this slice must mark the Orgumented product repo as blocked for future commit-capable flows
+3. Artifact ambiguity
+- release docs must record which workflow/run/artifact backed the candidate
+- the slice must not imply GitHub artifacts replace local proof or replay storage
 
 4. UI bloat
-- repo-binding safety must sit inside the existing Connect workflow with a calm secondary support-plane surface
+- release-artifact linkage must sit inside the existing GitHub Actions surface with a calm secondary support-plane presentation

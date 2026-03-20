@@ -259,6 +259,7 @@ export default function Page(): JSX.Element {
               githubPullRequestFiles={connectWorkspace.githubPullRequestFiles}
               githubWorkflowCatalog={connectWorkspace.githubWorkflowCatalog}
               githubWorkflowRuns={connectWorkspace.githubWorkflowRuns}
+              githubWorkflowArtifacts={connectWorkspace.githubWorkflowArtifacts}
               aliasInventory={connectWorkspace.aliasInventory}
               githubAccessibleRepos={connectWorkspace.githubAccessibleRepos}
               githubSelectedRepo={connectWorkspace.githubSelectedRepo}
@@ -295,6 +296,7 @@ export default function Page(): JSX.Element {
               onLoadGithubPullRequestFiles={() => void connectWorkspace.loadGithubPullRequestFiles()}
               onLoadGithubWorkflowCatalog={() => void connectWorkspace.loadGithubWorkflowCatalog()}
               onLoadGithubWorkflowRuns={() => void connectWorkspace.loadGithubWorkflowRuns()}
+              onLoadGithubWorkflowArtifacts={() => void connectWorkspace.loadGithubWorkflowArtifacts()}
               onDispatchGithubWorkflow={() => void connectWorkspace.dispatchGithubWorkflow()}
               onCreateGithubRepo={() => void connectWorkspace.createGithubRepo()}
               onSelectGithubRepo={(owner, repo) => void connectWorkspace.selectGithubRepo(owner, repo)}

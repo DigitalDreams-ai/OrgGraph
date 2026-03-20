@@ -42,6 +42,21 @@ Common examples:
 - `logs/desktop-release-smoke-refresh-diff.json`
 - `logs/desktop-release-smoke-org-pipeline.json`
 
+## GitHub Actions Artifact Links
+
+Use Connect -> GitHub Actions -> `Load Artifacts` to capture repo-native workflow artifact links for the selected repo binding.
+
+Recommended release-evidence linkage:
+
+- workflow key that produced the artifact (`ci_validate` or `runtime_nightly`)
+- GitHub Actions run URL
+- artifact name
+- artifact download URL
+
+Recommended rollback-target linkage:
+
+- last known-good GitHub artifact URL for the installer/smoke evidence bundle used as the rollback reference
+
 ## Real-Org Operator Proof Artifacts
 
 Canonical proof results log:
@@ -67,6 +82,10 @@ Every release candidate should record:
 5. real-org operator proof result location
 6. rollback target installer path
 7. rollback target smoke artifact path
+8. GitHub artifact workflow key
+9. GitHub artifact run URL
+10. GitHub artifact download URL
+11. rollback target GitHub artifact URL
 
 If any of these paths are unknown, the release evidence is incomplete.
 

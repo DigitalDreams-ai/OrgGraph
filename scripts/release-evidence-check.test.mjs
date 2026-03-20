@@ -27,6 +27,10 @@ const passingDocument = `
 
 - Smoke artifact JSON: logs/desktop-release-smoke-20260312.json
 - Smoke artifact log: logs/desktop-release-smoke.20260312.log
+- GitHub artifact workflow key: runtime_nightly
+- GitHub artifact run URL: https://github.com/DigitalDreams-ai/OrgGraph/actions/runs/4001
+- GitHub artifact name: runtime-nightly-artifacts
+- GitHub artifact download URL: https://api.github.com/repos/DigitalDreams-ai/OrgGraph/actions/artifacts/9101/zip
 - Desktop executable path: apps/desktop/src-tauri/target/release/orgumented-desktop.exe
 - Installer path used for validation: apps/desktop/src-tauri/target/release/bundle/nsis/Orgumented_0.1.0_x64-setup.exe
 - \`readyStatus\`: verified
@@ -82,6 +86,7 @@ const passingDocument = `
 - Last known-good commit SHA: def5678
 - Last known-good installer/binary path: installers/v0.0.9/Orgumented_0.0.9_x64-setup.exe
 - Last known-good smoke artifact: logs/v0.0.9/desktop-release-smoke.json
+- Last known-good GitHub artifact URL: https://api.github.com/repos/DigitalDreams-ai/OrgGraph/actions/artifacts/9001/zip
 - Rollback target recorded by: release-engineer
 
 ## Rollback Validation

@@ -170,9 +170,9 @@ Mandatory:
 This is a cross-wave support track, not a replacement for the locked numbered wave order.
 
 Overall implementation progress:
-- approximately 75%
+- approximately 85%
 - policy and ownership boundaries are complete
-- local auth/repo-management, repo context, changed-file scope, typed validation/runtime workflow lanes, and explicit repo-binding safety are now live, but broader benchmark/release linkage remains open
+- local auth/repo-management, repo context, changed-file scope, typed validation/runtime workflow lanes, explicit repo-binding safety, and typed release-artifact linkage are now live, but commit-capable metadata publication and GitHub release publication remain open
 
 | Support Track Item | Owning Wave(s) | Status | Approx. Complete | Next Gate |
 |---|---|---|---|---|
@@ -183,7 +183,7 @@ Overall implementation progress:
 | typed local `cci` job registry | wave7, wave11 | Planned | 20% | elevate current alias/info/import support into explicit typed jobs with allowlist, mutability class, timeout, and audit trail |
 | typed GitHub Actions dispatch and status ingest | wave11 | In Progress | 70% | keep the allowlist typed and repo-bound while adding repo-safe validation lanes before broader benchmark/release flows |
 | explicit user-bound repo binding for commit-capable metadata workflows | wave11, wave12 | In Progress | 75% | wire the now-live binding safety gate into the first commit-capable metadata export/publication path so it cannot proceed when the selected repo is missing or matches the product repo |
-| GitHub release / artifact linkage from canonical release evidence | wave12 | Open | 0% | release evidence links cleanly to GitHub artifacts without replacing local proof/replay storage |
+| GitHub release / artifact linkage from canonical release evidence | wave12 | In Progress | 70% | use the typed artifact linkage lane in a real candidate and rollback record without weakening local proof/replay ownership |
 
 ## wave1 - Baseline Lock And Triage
 
@@ -439,6 +439,7 @@ Scope:
 - deterministic `pnpm release:evidence:check` gate that fails when the canonical release record still contains blank or placeholder fields
 - release evidence lint now also verifies that proof-results references in `RELEASE.md` point at real headings in `docs/planning/v2/REAL_ORG_OPERATOR_PROOF_RESULTS.md`
 - release evidence lint now also verifies that referenced proof-results sections contain filled summary fields (`Operator`, `Result`, `Proof ID`, `Replay Token`), and the canonical proof-results file now uses numbered anchorable entries (`Candidate 001`, `Clean Machine 001`)
+- typed GitHub artifact linkage for allowlisted workflows, surfaced in Connect and recorded in canonical release evidence fields (`workflow key`, `run URL`, `artifact name`, `artifact download URL`, rollback-target GitHub artifact URL)
 - proofs/history label-first workflow now keeps manual token entry isolated from selected history labels, reducing remaining token-driven ambiguity in the normal audit path
 - proofs/history advanced token path now has an explicit clear/exit action that removes typed debug tokens and token-only loaded state, making it easier to return to the normal history-first workflow after parity/debug inspection
 - proofs/history export filenames now prefer the selected history label so saved proof and replay JSON artifacts stay aligned to the primary history-first audit flow

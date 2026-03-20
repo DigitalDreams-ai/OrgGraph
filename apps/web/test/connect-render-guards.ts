@@ -223,6 +223,51 @@ function run(): void {
         totalCount: 1,
         truncated: false
       },
+      githubWorkflowArtifacts: {
+        repo: {
+          owner: 'sean',
+          name: 'Orgumented-runtime-repo-with-a-very-long-selected-binding-name',
+          fullName: longGithubRepo,
+          private: true,
+          visibility: 'private',
+          url: longGithubUrl,
+          defaultBranch: 'main'
+        },
+        workflow: {
+          key: 'runtime_nightly',
+          workflowFile: 'runtime-nightly.yml',
+          name: 'Runtime Nightly',
+          description: 'Build and smoke the packaged desktop runtime.',
+          dispatchEnabled: true,
+          inputs: []
+        },
+        runs: [
+          {
+            runId: 4001,
+            runNumber: 18,
+            status: 'completed',
+            conclusion: 'success',
+            branch: 'main',
+            actor: 'sean',
+            url: `${longGithubUrl}/actions/runs/4001`,
+            updatedAt: '2026-03-18T12:30:00Z',
+            artifactCount: 1,
+            artifactsTruncated: false,
+            artifacts: [
+              {
+                artifactId: 9101,
+                name: 'runtime-nightly-artifacts',
+                sizeInBytes: 24576,
+                downloadUrl: `${longGithubUrl}/actions/artifacts/9101`,
+                expiresAt: '2026-03-20T12:30:00Z',
+                expired: false
+              }
+            ]
+          }
+        ],
+        totalCount: 1,
+        truncated: false
+      },
       aliasInventory: [
         {
           alias: longAlias,
@@ -293,6 +338,7 @@ function run(): void {
       onLoadGithubPullRequestFiles: () => undefined,
       onLoadGithubWorkflowCatalog: () => undefined,
       onLoadGithubWorkflowRuns: () => undefined,
+      onLoadGithubWorkflowArtifacts: () => undefined,
       onDispatchGithubWorkflow: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
@@ -320,10 +366,13 @@ function run(): void {
   assert.match(connectMarkup, /Load Workflows<\/button>/);
   assert.match(connectMarkup, /Dispatch Workflow<\/button>/);
   assert.match(connectMarkup, /Load Workflow Runs<\/button>/);
+  assert.match(connectMarkup, /Load Artifacts<\/button>/);
   assert.match(connectMarkup, /Selected repo context/);
   assert.match(connectMarkup, /GitHub Actions/);
   assert.match(connectMarkup, /Runtime Nightly/);
   assert.match(connectMarkup, /runtime-nightly\.yml/);
+  assert.match(connectMarkup, /Recent artifacts for release evidence/);
+  assert.match(connectMarkup, /runtime-nightly-artifacts/);
   assert.match(connectMarkup, /Pull request file scope/);
   assert.match(connectMarkup, /apps\/api\/src\/modules\/github\/github\.service\.ts/);
   assert.match(connectMarkup, /Previous path:/);

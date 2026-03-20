@@ -13,6 +13,7 @@ import { AskProofStoreService } from '../ask/ask-proof-store.service';
 import type { AskDecisionPacket, AskProofArtifact } from '../ask/ask.types';
 import { GithubToolAdapterService } from './github-tool-adapter.service';
 import type {
+  GithubArtifactSummary,
   GithubBranchSummary,
   GithubCreateRepoRequest,
   GithubCreateRepoResponse,
@@ -21,6 +22,8 @@ import type {
   GithubWorkflowCatalogResponse,
   GithubWorkflowDispatchRequest,
   GithubWorkflowDispatchResponse,
+  GithubWorkflowArtifactsResponse,
+  GithubWorkflowArtifactRunSummary,
   GithubWorkflowInputDefinition,
   GithubProductRepoSummary,
   GithubWorkflowRunsResponse,
@@ -124,6 +127,23 @@ interface GithubApiWorkflowRun {
 interface GithubApiWorkflowRunsPayload {
   total_count?: number;
   workflow_runs?: GithubApiWorkflowRun[];
+}
+
+interface GithubApiArtifact {
+  id?: number;
+  name?: string;
+  size_in_bytes?: number;
+  archive_download_url?: string;
+  url?: string;
+  created_at?: string;
+  updated_at?: string;
+  expires_at?: string;
+  expired?: boolean;
+}
+
+interface GithubApiArtifactsPayload {
+  total_count?: number;
+  artifacts?: GithubApiArtifact[];
 }
 
 interface GithubViewerApiPayload {
@@ -517,6 +537,84 @@ export class GithubService {
     };
   }
 
+  async workflowArtifacts(
+    workflowKeyRaw: string,
+    ownerRaw?: string,
+    repoRaw?: string,
+    limitRaw?: number,
+    artifactLimitRaw?: number
+  ): Promise<GithubWorkflowArtifactsResponse> {
+    const workflow = this.resolveAllowlistedWorkflow(workflowKeyRaw);
+    const limit = this.normalizeWorkflowRunsLimit(limitRaw);
+    const artifactLimit = this.normalizeWorkflowArtifactLimit(artifactLimitRaw);
+    const auth = await this.resolveGithubAuth();
+    const viewer = await this.loadViewer(auth.token);
+    const targetRepo = this.resolveTargetRepo(ownerRaw, repoRaw);
+    if (!targetRepo) {
+      throw new BadRequestException('owner and repo are required or a selected GitHub repo must be bound first');
+    }
+
+    const [repoResponse, runsResponse] = await Promise.all([
+      this.githubRequest(auth.token, `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}`, {
+        method: 'GET'
+      }),
+      this.githubRequest(
+        auth.token,
+        `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}/actions/workflows/${encodeURIComponent(workflow.workflowFile)}/runs?per_page=${limit}&event=workflow_dispatch`,
+        { method: 'GET' }
+      )
+    ]);
+
+    const repo = this.mapRepo((await repoResponse.json()) as GithubApiRepo);
+    if (!repo) {
+      throw new BadGatewayException('GitHub workflow artifacts response was missing repository details');
+    }
+
+    const runsPayload = (await runsResponse.json()) as GithubApiWorkflowRunsPayload;
+    const runs = (runsPayload.workflow_runs ?? [])
+      .map((run) => this.mapWorkflowRun(run))
+      .filter((run): run is GithubWorkflowRunSummary => run !== undefined);
+    const totalCount =
+      typeof runsPayload.total_count === 'number' && runsPayload.total_count >= 0 ? runsPayload.total_count : runs.length;
+
+    const artifactRuns = await Promise.all(
+      runs.map(async (run): Promise<GithubWorkflowArtifactRunSummary> => {
+        const artifactsResponse = await this.githubRequest(
+          auth.token,
+          `/repos/${encodeURIComponent(targetRepo.owner)}/${encodeURIComponent(targetRepo.repo)}/actions/runs/${run.runId}/artifacts?per_page=${artifactLimit}`,
+          { method: 'GET' }
+        );
+        const artifactsPayload = (await artifactsResponse.json()) as GithubApiArtifactsPayload;
+        const artifacts = (artifactsPayload.artifacts ?? [])
+          .map((artifact) => this.mapArtifact(artifact))
+          .filter((artifact): artifact is GithubArtifactSummary => artifact !== undefined);
+        const artifactCount =
+          typeof artifactsPayload.total_count === 'number' && artifactsPayload.total_count >= 0
+            ? artifactsPayload.total_count
+            : artifacts.length;
+
+        return {
+          ...run,
+          artifactCount,
+          artifacts,
+          artifactsTruncated: artifactCount > artifacts.length
+        };
+      })
+    );
+
+    return {
+      status: 'loaded',
+      hostname: GithubService.HOSTNAME,
+      viewer,
+      selectedRepo: this.readSelectedRepoState(),
+      repo,
+      workflow: this.mapAllowlistedWorkflow(workflow),
+      runs: artifactRuns,
+      totalCount,
+      truncated: totalCount > artifactRuns.length
+    };
+  }
+
   async dispatchWorkflow(request: GithubWorkflowDispatchRequest): Promise<GithubWorkflowDispatchResponse> {
     const workflow = this.resolveAllowlistedWorkflow(request.workflowKey);
     const ref = request.ref?.trim();
@@ -724,6 +822,16 @@ export class GithubService {
     }
     if (!Number.isInteger(limitRaw) || limitRaw < 1 || limitRaw > 25) {
       throw new BadRequestException('workflow run limit must be an integer between 1 and 25');
+    }
+    return limitRaw;
+  }
+
+  private normalizeWorkflowArtifactLimit(limitRaw?: number): number {
+    if (limitRaw === undefined) {
+      return 10;
+    }
+    if (!Number.isInteger(limitRaw) || limitRaw < 1 || limitRaw > 25) {
+      throw new BadRequestException('workflow artifact limit must be an integer between 1 and 25');
     }
     return limitRaw;
   }
@@ -987,6 +1095,34 @@ export class GithubService {
       title: typeof run.display_title === 'string' ? run.display_title.trim() || undefined : undefined,
       createdAt: typeof run.created_at === 'string' ? run.created_at.trim() || undefined : undefined,
       updatedAt: typeof run.updated_at === 'string' ? run.updated_at.trim() || undefined : undefined
+    };
+  }
+
+  private mapArtifact(artifact: GithubApiArtifact): GithubArtifactSummary | undefined {
+    const artifactId = artifact.id;
+    if (typeof artifactId !== 'number' || !Number.isInteger(artifactId) || artifactId < 1) {
+      return undefined;
+    }
+
+    const name = typeof artifact.name === 'string' ? artifact.name.trim() : '';
+    if (!name) {
+      return undefined;
+    }
+
+    return {
+      artifactId,
+      name,
+      sizeInBytes:
+        typeof artifact.size_in_bytes === 'number' && Number.isFinite(artifact.size_in_bytes) && artifact.size_in_bytes >= 0
+          ? artifact.size_in_bytes
+          : 0,
+      downloadUrl:
+        typeof artifact.archive_download_url === 'string' ? artifact.archive_download_url.trim() || undefined : undefined,
+      url: typeof artifact.url === 'string' ? artifact.url.trim() || undefined : undefined,
+      createdAt: typeof artifact.created_at === 'string' ? artifact.created_at.trim() || undefined : undefined,
+      updatedAt: typeof artifact.updated_at === 'string' ? artifact.updated_at.trim() || undefined : undefined,
+      expiresAt: typeof artifact.expires_at === 'string' ? artifact.expires_at.trim() || undefined : undefined,
+      expired: artifact.expired === true
     };
   }
 

@@ -136,6 +136,7 @@ Record:
 - date/time
 - operator
 - smoke artifact paths
+- GitHub artifact workflow key, run URL, and download URL
 - quickstart evidence location
 - installer path used for operator proof
 - clean-machine proof results location
@@ -156,6 +157,7 @@ pnpm release:evidence:check
 - [ ] Confirm previous smoke artifact exists
 - [ ] Record rollback target in release notes
 - [ ] Record rollback installer path and smoke artifact path using [Release Artifact Paths](./ARTIFACT_PATHS.md) as the format guide
+- [ ] Record the last known-good GitHub artifact URL for the rollback target
 - [ ] Record rollback target summary in [Release Notes](./RELEASE.md)
 
 Do not release if rollback target is missing.

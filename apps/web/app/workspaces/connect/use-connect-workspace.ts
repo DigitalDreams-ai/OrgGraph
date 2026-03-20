@@ -9,6 +9,7 @@ import {
   getGithubRepoBindingStatus,
   getGithubRepoContext,
   getGithubSessionStatus,
+  getGithubWorkflowArtifacts,
   getGithubWorkflowCatalog,
   getGithubWorkflowRuns,
   listGithubRepos,
@@ -32,6 +33,7 @@ import type {
   GithubRepoContextPayload,
   GithubRepoSummary,
   GithubPullRequestFileScopePayload,
+  GithubWorkflowArtifactsPayload,
   GithubWorkflowCatalogPayload,
   GithubWorkflowRunsPayload,
   GithubSessionIssue,
@@ -120,6 +122,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
   const [githubPullRequestFiles, setGithubPullRequestFiles] = useState<GithubPullRequestFileScopePayload | null>(null);
   const [githubWorkflowCatalog, setGithubWorkflowCatalog] = useState<GithubWorkflowCatalogPayload | null>(null);
   const [githubWorkflowRuns, setGithubWorkflowRuns] = useState<GithubWorkflowRunsPayload | null>(null);
+  const [githubWorkflowArtifacts, setGithubWorkflowArtifacts] = useState<GithubWorkflowArtifactsPayload | null>(null);
   const [runtimeUnavailable, setRuntimeUnavailable] = useState(false);
 
   const aliasInventory = orgAliases?.aliases ?? [];
@@ -362,6 +365,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
         setGithubPullRequestFiles(null);
         setGithubWorkflowCatalog(null);
         setGithubWorkflowRuns(null);
+        setGithubWorkflowArtifacts(null);
       }
       syncGithubOwnerDefaults(payload);
     });
@@ -380,6 +384,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       setGithubPullRequestFiles(null);
       setGithubWorkflowCatalog(null);
       setGithubWorkflowRuns(null);
+      setGithubWorkflowArtifacts(null);
     });
   }
 
@@ -424,6 +429,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
         await loadGithubWorkflowCatalogAction();
         setGithubPullRequestFiles(null);
         setGithubWorkflowRuns(null);
+        setGithubWorkflowArtifacts(null);
         const payload = readPayload<{ selectedRepo?: GithubRepoSummary }>(response);
         if (payload?.selectedRepo?.owner) {
           setGithubRepoOwner(payload.selectedRepo.owner);
@@ -443,6 +449,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       await loadGithubWorkflowCatalogAction(owner, repo);
       setGithubPullRequestFiles(null);
       setGithubWorkflowRuns(null);
+      setGithubWorkflowArtifacts(null);
       setGithubRepoOwner(owner);
     });
   }
@@ -531,6 +538,29 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       (response) => {
         const payload = readPayload<GithubWorkflowRunsPayload>(response);
         setGithubWorkflowRuns(payload);
+        setGithubWorkflowArtifacts(null);
+        setGithubWorkflowKey(workflowKey);
+      }
+    );
+  }
+
+  function loadGithubWorkflowArtifactsAction(workflowKeyRaw?: string): Promise<QueryResponse | null> {
+    const workflowKey = (workflowKeyRaw ?? githubWorkflowKey).trim();
+    if (!workflowKey) {
+      const fallback: QueryResponse = { ok: false, error: { message: 'GitHub workflow selection is required.' } };
+      options.presentResponse(fallback);
+      options.setErrorText('Select an allowlisted GitHub workflow before loading recent artifacts.');
+      return Promise.resolve(fallback);
+    }
+
+    return runAction(
+      () =>
+        getGithubWorkflowArtifacts({
+          workflowKey
+        }),
+      (response) => {
+        const payload = readPayload<GithubWorkflowArtifactsPayload>(response);
+        setGithubWorkflowArtifacts(payload);
         setGithubWorkflowKey(workflowKey);
       }
     );
@@ -561,6 +591,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
       async () => {
         setGithubWorkflowRef(ref);
         await loadGithubWorkflowRunsAction(workflowKey);
+        await loadGithubWorkflowArtifactsAction(workflowKey);
       }
     );
   }
@@ -594,6 +625,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     githubPullRequestFiles,
     githubWorkflowCatalog,
     githubWorkflowRuns,
+    githubWorkflowArtifacts,
     activeAlias,
     sessionStatus,
     restoreAlias,
@@ -630,6 +662,7 @@ export function useConnectWorkspace(options: UseConnectWorkspaceOptions) {
     loadGithubPullRequestFiles: loadGithubPullRequestFilesAction,
     loadGithubWorkflowCatalog: loadGithubWorkflowCatalogAction,
     loadGithubWorkflowRuns: loadGithubWorkflowRunsAction,
+    loadGithubWorkflowArtifacts: loadGithubWorkflowArtifactsAction,
     dispatchGithubWorkflow: dispatchGithubWorkflowAction,
     createGithubRepo: createGithubRepoAction,
     selectGithubRepo: selectGithubRepoAction

@@ -133,6 +133,32 @@ export function getGithubWorkflowRuns(payload: {
   });
 }
 
+export function getGithubWorkflowArtifacts(payload: {
+  workflowKey: string;
+  owner?: string;
+  repo?: string;
+  limit?: number;
+  artifactLimit?: number;
+}): Promise<QueryResponse> {
+  const params = new URLSearchParams();
+  params.set('workflowKey', payload.workflowKey);
+  if (payload.owner) {
+    params.set('owner', payload.owner);
+  }
+  if (payload.repo) {
+    params.set('repo', payload.repo);
+  }
+  if (payload.limit !== undefined) {
+    params.set('limit', String(payload.limit));
+  }
+  if (payload.artifactLimit !== undefined) {
+    params.set('artifactLimit', String(payload.artifactLimit));
+  }
+  return requestBoundary(resolveDesktopApiUrl(`/github/actions/artifacts?${params.toString()}`), {
+    method: 'GET'
+  });
+}
+
 export function dispatchGithubWorkflow(payload: {
   workflowKey: string;
   ref: string;
