@@ -42,11 +42,9 @@ The following are now true in main and should not be re-planned as open:
 - packaged desktop smoke against alias `shulman-uat` now records `retrieveHandoffProof.status=verified` for `CustomObject Opportunity` in `logs/desktop-release-smoke-result.json`, so Wave5 packaged real-org handoff proof is no longer pending on ad hoc manual reconstruction
 
 Remaining work is now primarily around:
-- wave7 packet quality acceptance
-- wave8 diagnostics/analyze depth
-- wave9 proof/history lifecycle closure
-- wave10 final visual and accessibility closure
-- wave11/12 defect + release discipline
+- wave11 defect + CI discipline
+- wave12 release evidence and operator proof
+- wave13 stabilization hold
 
 ## 100% Domain Matrix
 
@@ -58,7 +56,7 @@ Remaining work is now primarily around:
 | decision packets | approval-grade, trusted by workflow | complete | maintain proxy benchmark verification and proof-bound PR publication |
 | analyze/diagnostics | structured triage without JSON dependency | complete | maintain one clear triage path with evidence-first secondary cards |
 | proofs/history | label-first reopen/replay/export as primary flow | complete | maintain history-first selection semantics and keep advanced tokens debug-only |
-| design/layout/a11y | no clipping + keyboard/focus baseline | improved | complete wave10 accessibility, simplification, and final visual consistency pass |
+| design/layout/a11y | no clipping + keyboard/focus baseline | complete | maintain wave10 render/accessibility guardrails and calmer workspace hierarchy |
 | defects/ci/release | P0/P1 zero, stable CI, release+rollback proven | in progress | wave11 burn-down + wave12 clean-machine/operator proof |
 
 ## 100% Scorecard Pillars
@@ -152,7 +150,7 @@ Mandatory:
 | wave7 | decision-packet quality | B010, B017 | Complete | Maintain proxy benchmark verification and proof-bound PR publication |
 | wave8 | analyze and diagnostics depth | B015, B016, B022 | Complete | Maintain one clear triage path through structured actions while keeping secondary Analyze and Diagnostics cards evidence-first |
 | wave9 | proofs/history productization | B011 | Complete | Maintain label-first selection independence and keep advanced token lookup debug-only |
-| wave10 | design/layout/accessibility | B012, B020, B021 | In Progress | Zero clipping plus keyboard/focus baseline with live-region coverage, calmer workspace hierarchy, and proof-history identifier guardrails |
+| wave10 | design/layout/accessibility | B012, B020, B021 | Complete | Maintain calmer workspace hierarchy, proof-history identifier guardrails, and embedded web regression coverage |
 | wave11 | bug burn-down and CI quality lock | B013, B018, B023 | In Progress | P0/P1 count to zero, stable trust gates, edge metadata-family regressions locked, embedded web regressions enforced in `validate`, and Actions retention policy regression-gated |
 | wave12 | release readiness and operator proof | B014, B019 | In Progress | Clean-machine runbook pass + rollback proof |
 | wave13 | post-100 stabilization | B024 | Open | No P0/P1 regressions during hold window |

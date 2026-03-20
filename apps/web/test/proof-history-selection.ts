@@ -215,20 +215,18 @@ function run(): void {
   );
   assert.match(noSelectionMarkup, /Open Selected History<\/button>/);
   assert.match(noSelectionMarkup, /Replay Selected History<\/button>/);
-  assert.match(noSelectionMarkup, /Export Selected History Proof<\/button>/);
-  assert.match(noSelectionMarkup, /Export Selected History Replay<\/button>/);
   assert.match(noSelectionMarkup, /Open by Token<\/button>/);
   assert.match(noSelectionMarkup, /Replay by Token<\/button>/);
   assert.match(noSelectionMarkup, /disabled="">Open Selected History/);
   assert.match(noSelectionMarkup, /disabled="">Replay Selected History/);
-  assert.match(noSelectionMarkup, /disabled="">Export Selected History Proof/);
-  assert.match(noSelectionMarkup, /disabled="">Export Selected History Replay/);
   assert.match(noSelectionMarkup, /disabled="">Open by Token/);
   assert.match(noSelectionMarkup, /disabled="">Replay by Token/);
   assert.match(noSelectionMarkup, /disabled="">Clear Advanced Tokens/);
   assert.match(noSelectionMarkup, /History label: none/);
   assert.match(noSelectionMarkup, /Loaded proof: not opened/);
   assert.doesNotMatch(noSelectionMarkup, /Advanced debug active/);
+  assert.match(noSelectionMarkup, /Selected artifact details/);
+  assert.match(noSelectionMarkup, /<summary>Trust history export<\/summary>/);
   assert.match(noSelectionMarkup, /Advanced debug tools/);
   assert.doesNotMatch(noSelectionMarkup, /Advanced proof ID:/);
 
@@ -297,13 +295,13 @@ function run(): void {
   );
   assert.doesNotMatch(selectedMarkup, /disabled="">Open Selected History/);
   assert.doesNotMatch(selectedMarkup, /disabled="">Replay Selected History/);
-  assert.doesNotMatch(selectedMarkup, /disabled="">Export Selected History Proof/);
-  assert.doesNotMatch(selectedMarkup, /disabled="">Export Selected History Replay/);
   assert.match(selectedMarkup, /History label: selected/);
   assert.match(selectedMarkup, /Loaded proof: not opened/);
   assert.doesNotMatch(selectedMarkup, /Advanced debug active/);
   assert.match(selectedMarkup, /Export Label Proof<\/button>/);
   assert.match(selectedMarkup, /Export Label Replay<\/button>/);
+  assert.match(selectedMarkup, /Export Selected History Proof<\/button>/);
+  assert.match(selectedMarkup, /Export Selected History Replay<\/button>/);
 
   const advancedLoadedMarkup = renderToStaticMarkup(
     React.createElement(ProofsWorkspace, {

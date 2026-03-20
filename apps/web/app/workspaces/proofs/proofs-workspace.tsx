@@ -79,23 +79,6 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
         >
           Replay Selected History
         </button>
-        <button
-          type="button"
-          className="ghost"
-          onClick={() => void props.onExportProofArtifact()}
-          disabled={props.loading || !props.selectedRecentProof?.proofId}
-        >
-          Export Selected History Proof
-        </button>
-        <button
-          type="button"
-          className="ghost"
-          onClick={() => void props.onExportReplayArtifact()}
-          disabled={props.loading || !props.selectedRecentProof?.replayToken}
-        >
-          Export Selected History Replay
-        </button>
-        <button type="button" onClick={props.onExportMetrics} disabled={props.loading}>Export Trust History</button>
       </div>
 
       <article className="sub-card" role="status" aria-live="polite">
@@ -191,86 +174,112 @@ export function ProofsWorkspace(props: ProofsWorkspaceProps): JSX.Element {
         </article>
 
         <article className="sub-card">
-          <p className="panel-caption">Proof artifact</p>
-          <h3>Selected proof</h3>
-          {props.selectedProof ? (
-            <>
-              <p><strong>Query:</strong> {props.selectedProof.query || 'n/a'}</p>
-              <div className="decision-meta">
-                <span className="decision-badge muted">Trust: {props.selectedProof.trustLevel}</span>
-                <span className="decision-badge muted">Policy: {props.selectedProof.policyId}</span>
-                <span className="decision-badge muted">Trace: {props.selectedProof.traceLevel}</span>
-              </div>
-              <p><strong>Snapshot:</strong> <span className="path-value">{props.selectedProof.snapshotId}</span></p>
-              <p><strong>Generated:</strong> <span className="path-value">{props.selectedProof.generatedAt || 'n/a'}</span></p>
-              <p><strong>Deterministic answer:</strong> {props.selectedProof.deterministicAnswer || 'n/a'}</p>
-              <p><strong>Confidence:</strong> {typeof props.selectedProof.confidence === 'number' ? props.selectedProof.confidence : 'n/a'}</p>
-              <p><strong>Operators:</strong> {props.selectedProof.operatorsExecuted.join(', ') || 'n/a'}</p>
-              <p><strong>Rejected branches:</strong> {props.selectedProof.rejectedBranches.join(', ') || 'none'}</p>
-              <p><strong>Citations:</strong> {props.selectedProof.citationCount}</p>
-              <p><strong>Derivation edges:</strong> {props.selectedProof.derivationEdgeCount}</p>
-            </>
-          ) : (
-            <p className="muted">Select a history label, then run “Open Selected History” to load a structured proof view.</p>
-          )}
-        </article>
-
-        <article className="sub-card">
-          <p className="panel-caption">Replay parity</p>
-          <h3>Latest replay result</h3>
-          {props.replayResult ? (
-            <>
-              <div className="decision-meta">
-                <span className={`decision-badge ${props.replayResult.matched ? 'good' : 'bad'}`}>Matched: {String(props.replayResult.matched)}</span>
-                <span className={`decision-badge ${props.replayResult.corePayloadMatched ? 'good' : 'bad'}`}>Core payload: {String(props.replayResult.corePayloadMatched)}</span>
-                <span className={`decision-badge ${props.replayResult.metricsMatched ? 'good' : 'bad'}`}>Metrics: {String(props.replayResult.metricsMatched)}</span>
-              </div>
-              <p><strong>Policy:</strong> <span className="path-value">{props.replayResult.policyId}</span></p>
-              <p><strong>Snapshot:</strong> <span className="path-value">{props.replayResult.snapshotId}</span></p>
-              <p><strong>Original trust:</strong> {props.replayResult.original.trustLevel}</p>
-              <p><strong>Replayed trust:</strong> {props.replayResult.replayed.trustLevel}</p>
-              <p><strong>Original answer:</strong> {props.replayResult.original.deterministicAnswer || 'n/a'}</p>
-              <p><strong>Replayed answer:</strong> {props.replayResult.replayed.deterministicAnswer || 'n/a'}</p>
-            </>
-          ) : (
-            <p className="muted">Select a history label, then run “Replay Selected History” to compare deterministic replay parity.</p>
-          )}
-        </article>
-
-        <article className="sub-card">
-          <p className="panel-caption">Metrics export</p>
-          <h3>Trust history summary</h3>
-          {props.metricsExport ? (
-            <>
-              <p><strong>Total records:</strong> {props.metricsExport.totalRecords}</p>
-              <div className="proof-metric-grid">
-                <div>
-                  <strong>By snapshot</strong>
-                  <ul className="proof-inline-list">
-                    {props.metricsExport.bySnapshot.slice(0, 3).map((snapshot) => (
-                      <li key={snapshot.snapshotId}>
-                        <span className="path-value">{snapshot.snapshotId}</span>: {snapshot.count} asks, {snapshot.trusted} trusted, {snapshot.refused} refused
-                      </li>
-                    ))}
-                  </ul>
+          <p className="panel-caption">Selected artifact details</p>
+          <h3>Proof and replay state</h3>
+          {props.selectedRecentProof ? (
+            <div className="action-row">
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => void props.onExportProofArtifact()}
+                disabled={props.loading || !props.selectedRecentProof.proofId}
+              >
+                Export Selected History Proof
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => void props.onExportReplayArtifact()}
+                disabled={props.loading || !props.selectedRecentProof.replayToken}
+              >
+                Export Selected History Replay
+              </button>
+            </div>
+          ) : null}
+          <section>
+            <p className="panel-caption">Proof artifact</p>
+            <h4>Selected proof</h4>
+            {props.selectedProof ? (
+              <>
+                <p><strong>Query:</strong> {props.selectedProof.query || 'n/a'}</p>
+                <div className="decision-meta">
+                  <span className="decision-badge muted">Trust: {props.selectedProof.trustLevel}</span>
+                  <span className="decision-badge muted">Policy: {props.selectedProof.policyId}</span>
+                  <span className="decision-badge muted">Trace: {props.selectedProof.traceLevel}</span>
                 </div>
-                <div>
-                  <strong>By provider</strong>
-                  <ul className="proof-inline-list">
-                    {props.metricsExport.byProvider.slice(0, 3).map((provider) => (
-                      <li key={`${provider.provider}-${provider.model || 'default'}`}>
-                        {provider.provider}{provider.model ? `/${provider.model}` : ''}: {provider.count} calls, error rate {provider.errorRate}
-                      </li>
-                    ))}
-                  </ul>
+                <p><strong>Snapshot:</strong> <span className="path-value">{props.selectedProof.snapshotId}</span></p>
+                <p><strong>Generated:</strong> <span className="path-value">{props.selectedProof.generatedAt || 'n/a'}</span></p>
+                <p><strong>Deterministic answer:</strong> {props.selectedProof.deterministicAnswer || 'n/a'}</p>
+                <p><strong>Confidence:</strong> {typeof props.selectedProof.confidence === 'number' ? props.selectedProof.confidence : 'n/a'}</p>
+                <p><strong>Operators:</strong> {props.selectedProof.operatorsExecuted.join(', ') || 'n/a'}</p>
+                <p><strong>Rejected branches:</strong> {props.selectedProof.rejectedBranches.join(', ') || 'none'}</p>
+                <p><strong>Citations:</strong> {props.selectedProof.citationCount}</p>
+                <p><strong>Derivation edges:</strong> {props.selectedProof.derivationEdgeCount}</p>
+              </>
+            ) : (
+              <p className="muted">Select a history label, then run “Open Selected History” to load a structured proof view.</p>
+            )}
+          </section>
+          <section>
+            <p className="panel-caption">Replay parity</p>
+            <h4>Latest replay result</h4>
+            {props.replayResult ? (
+              <>
+                <div className="decision-meta">
+                  <span className={`decision-badge ${props.replayResult.matched ? 'good' : 'bad'}`}>Matched: {String(props.replayResult.matched)}</span>
+                  <span className={`decision-badge ${props.replayResult.corePayloadMatched ? 'good' : 'bad'}`}>Core payload: {String(props.replayResult.corePayloadMatched)}</span>
+                  <span className={`decision-badge ${props.replayResult.metricsMatched ? 'good' : 'bad'}`}>Metrics: {String(props.replayResult.metricsMatched)}</span>
                 </div>
-              </div>
-            </>
-          ) : (
-            <p className="muted">Run “Export Trust History” to inspect trust history by snapshot and provider.</p>
-          )}
+                <p><strong>Policy:</strong> <span className="path-value">{props.replayResult.policyId}</span></p>
+                <p><strong>Snapshot:</strong> <span className="path-value">{props.replayResult.snapshotId}</span></p>
+                <p><strong>Original trust:</strong> {props.replayResult.original.trustLevel}</p>
+                <p><strong>Replayed trust:</strong> {props.replayResult.replayed.trustLevel}</p>
+                <p><strong>Original answer:</strong> {props.replayResult.original.deterministicAnswer || 'n/a'}</p>
+                <p><strong>Replayed answer:</strong> {props.replayResult.replayed.deterministicAnswer || 'n/a'}</p>
+              </>
+            ) : (
+              <p className="muted">Select a history label, then run “Replay Selected History” to compare deterministic replay parity.</p>
+            )}
+          </section>
         </article>
       </div>
+
+      <details className="debug-details">
+        <summary>Trust history export</summary>
+        <p className="muted">Exported trust history is secondary evidence. Use it when you need snapshot/provider rollups, not for the default history-first proof workflow.</p>
+        <div className="action-row">
+          <button type="button" className="ghost" onClick={props.onExportMetrics} disabled={props.loading}>Export Trust History</button>
+        </div>
+        {props.metricsExport ? (
+          <>
+            <p><strong>Total records:</strong> {props.metricsExport.totalRecords}</p>
+            <div className="proof-metric-grid">
+              <div>
+                <strong>By snapshot</strong>
+                <ul className="proof-inline-list">
+                  {props.metricsExport.bySnapshot.slice(0, 3).map((snapshot) => (
+                    <li key={snapshot.snapshotId}>
+                      <span className="path-value">{snapshot.snapshotId}</span>: {snapshot.count} asks, {snapshot.trusted} trusted, {snapshot.refused} refused
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <strong>By provider</strong>
+                <ul className="proof-inline-list">
+                  {props.metricsExport.byProvider.slice(0, 3).map((provider) => (
+                    <li key={`${provider.provider}-${provider.model || 'default'}`}>
+                      {provider.provider}{provider.model ? `/${provider.model}` : ''}: {provider.count} calls, error rate {provider.errorRate}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className="muted">Run “Export Trust History” to inspect trust history by snapshot and provider.</p>
+        )}
+      </details>
 
       <details>
         <summary>Advanced debug tools</summary>
