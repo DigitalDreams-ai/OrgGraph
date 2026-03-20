@@ -20,33 +20,33 @@ Purpose:
 
 | ID | Priority | Area | Backlog Item | Target Wave | Acceptance Gate | Status |
 |---|---|---|---|---|---|---|
-| B001 | P0 | Runtime | Eliminate packaged bootstrap drift-budget startup failures for standard operator startup | Wave2 | Packaged app starts cleanly with deterministic bootstrap in smoke and repeated packaged launch proof | In Progress |
-| B025 | P0 | Governance | Lock stabilization-first execution order and prevent architecture churn/restart drift | Wave11 | v2 planning set enforces no-restart policy, ordered wave sequence, and objective rebuild triggers | In Progress |
+| B001 | P0 | Runtime | Eliminate packaged bootstrap drift-budget startup failures for standard operator startup | Wave2 | Packaged app starts cleanly with deterministic bootstrap in smoke and repeated packaged launch proof | Complete |
+| B025 | P0 | Governance | Lock stabilization-first execution order and prevent architecture churn/restart drift | Wave11 | v2 planning set enforces no-restart policy, ordered wave sequence, and objective rebuild triggers | Complete |
 | B002 | P0 | Runtime | Ensure runtime unavailability never masquerades as missing `sf`/`cci` tools | Wave2 | Tool status and runtime status are always disambiguated in desktop UI | Complete |
 | B003 | P0 | Determinism | Lock replay parity for high-risk query family after planner hardening | Wave6 | Replay parity assertions pass for repeated benchmark asks | Complete |
 | B004 | P1 | Sessions | Make connect/switch/restore flows deterministic across restart cycles | Wave3 | Session history and restore behave identically after app relaunch | Complete |
 | B005 | P1 | Sessions | Resolve CCI alias registry mismatch workflow (`alias not found`) with actionable next steps | Wave3 | Operator gets exact remediation path; no ambiguous warning-only dead end | Complete |
 | B006 | P1 | Browser | Complete explorer-style metadata browsing with tree parity to expected org-browser mental model | Wave4 | Operator can browse families and members without type-first workflow | Complete |
 | B007 | P1 | Browser | Ensure search-by-name returns predictable results when catalog is unseeded | Wave4 | Name search works with live metadata discovery and clear empty-state behavior | Complete |
-| B026 | P1 | Browser | Remove fixed family ceiling and make family row expansion explicit/reliable in Org Browser | Wave11 | Browser lists full live metadata family catalog and every family row exposes unmistakable coverage state plus deterministic expand/load of nested items | In Progress |
+| B026 | P1 | Browser | Remove fixed family ceiling and make family row expansion explicit/reliable in Org Browser | Wave11 | Browser lists full live metadata family catalog and every family row exposes unmistakable coverage state plus deterministic expand/load of nested items | Complete |
 | B008 | P1 | Refresh/Build | Make retrieve -> refresh -> diff -> org-retrieve handoff product-grade | Wave5 | End-to-end handoff works without raw JSON reliance | Complete |
-| B009 | P1 | Ask | Improve flow/object/field grounding quality for real metadata questions | Wave6 | No low-value generic fallback for grounded metadata asks | In Progress |
-| B010 | P1 | Decision Packets | Raise packet usefulness for approval decisions (risk drivers, reads/writes, next actions) | Wave7 | Benchmark packet accepted as primary review artifact in runbook scenario | In Progress |
-| B011 | P1 | Proofs/History | Complete label-first proof access; remove token-bookkeeping dependency from primary path | Wave9 | Operator can reopen and replay by label/history alone | In Progress |
-| B012 | P1 | UX/Layout | Remove clipping/overflow/truncation defects across cards/rails/workspaces | Wave10 | No known clipping defects at supported desktop viewport targets | In Progress |
-| B013 | P1 | Quality | Burn down all critical/high Stage 1 defects to zero | Wave11 | P0/P1 defect matrix count reaches zero and stays stable for one cycle | Open |
+| B009 | P1 | Ask | Improve flow/object/field grounding quality for real metadata questions | Wave6 | No low-value generic fallback for grounded metadata asks | Complete |
+| B010 | P1 | Decision Packets | Raise packet usefulness for approval decisions (risk drivers, reads/writes, next actions) | Wave7 | Benchmark packet accepted as primary review artifact in runbook scenario | Complete |
+| B011 | P1 | Proofs/History | Complete label-first proof access; remove token-bookkeeping dependency from primary path | Wave9 | Operator can reopen and replay by label/history alone | Complete |
+| B012 | P1 | UX/Layout | Remove clipping/overflow/truncation defects across cards/rails/workspaces | Wave10 | No known clipping defects at supported desktop viewport targets | Complete |
+| B013 | P1 | Quality | Burn down all critical/high Stage 1 defects to zero | Wave11 | P0/P1 defect matrix count reaches zero and stays stable for one cycle | Complete |
 | B014 | P1 | Release | Finalize release checklist, rollback path, and operator machine validation | Wave12 | Release candidate checklist fully green with evidence artifacts | In Progress |
-| B015 | P2 | Analyze | Deepen explain/analyze workflows to reduce raw JSON dependency | Wave8 | Core analyze tasks complete using structured cards/actions | In Progress |
-| B016 | P2 | Diagnostics | Improve diagnostics readability and operator actionability under failure | Wave8 | Runtime/tool/semantic failure states map to direct operator actions | In Progress |
-| B017 | P2 | Benchmark | Replace fixture-only benchmark narrative with stronger real-org scenario evidence | Wave7 | Real-org benchmark artifact set published and reproducible | In Progress |
-| B018 | P2 | CI Cost | Continue reducing GitHub Actions minute burn without losing required trust gates | Wave11 | CI runtime reduced while validate + desktop smoke integrity remains intact; Actions storage bounded by retention automation | In Progress |
+| B015 | P2 | Analyze | Deepen explain/analyze workflows to reduce raw JSON dependency | Wave8 | Core analyze tasks complete using structured cards/actions | Complete |
+| B016 | P2 | Diagnostics | Improve diagnostics readability and operator actionability under failure | Wave8 | Runtime/tool/semantic failure states map to direct operator actions | Complete |
+| B017 | P2 | Benchmark | Replace fixture-only benchmark narrative with stronger real-org scenario evidence | Wave7 | Real-org benchmark artifact set published and reproducible | Complete |
+| B018 | P2 | CI Cost | Continue reducing GitHub Actions minute burn without losing required trust gates | Wave11 | CI runtime reduced while validate + desktop smoke integrity remains intact; Actions storage bounded by retention automation | Complete |
 | B019 | P2 | Docs | Consolidate runbooks to explicit, assumption-free operator steps | Wave12 | New operator runbooks pass first-run validation by non-author operator | In Progress |
-| B020 | P2 | Accessibility | Keyboard/focus/accessibility baseline for high-value workflows | Wave10 | Accessibility checks pass for Ask, Sessions, Browser, Refresh | In Progress |
-| B021 | P3 | Design System | Harmonize spacing, typography hierarchy, and density rhythm across workspaces | Wave10 | Visual consistency checklist passes for all Stage 1 workspaces | Open |
-| B022 | P3 | Telemetry | Add structured non-sensitive runtime telemetry for diagnostics correlation | Wave8 | Failure signatures and timings are traceable without exposing secrets | In Progress |
-| B023 | P3 | Automation | Expand deterministic test corpus for edge metadata families | Wave11 | Regression corpus includes expanded metadata family scenarios | In Progress |
+| B020 | P2 | Accessibility | Keyboard/focus/accessibility baseline for high-value workflows | Wave10 | Accessibility checks pass for Ask, Sessions, Browser, Refresh | Complete |
+| B021 | P3 | Design System | Harmonize spacing, typography hierarchy, and density rhythm across workspaces | Wave10 | Visual consistency checklist passes for all Stage 1 workspaces | Complete |
+| B022 | P3 | Telemetry | Add structured non-sensitive runtime telemetry for diagnostics correlation | Wave8 | Failure signatures and timings are traceable without exposing secrets | Complete |
+| B023 | P3 | Automation | Expand deterministic test corpus for edge metadata families | Wave11 | Regression corpus includes expanded metadata family scenarios | Complete |
 | B024 | P3 | Stabilization | Post-release hotfix/stabilization window before Stage 2 expansion | Wave13 | No unresolved P0/P1 within stabilization window | Open |
-| B027 | P2 | Ask | Add deterministic metadata-component usage lookup by metadata name/fullName (not Salesforce record Id) | Wave6 | Operator can ask where a retrieved component such as an Email Template, Flow, Layout, or Apex class is referenced using grounded metadata names; Salesforce record-Id usage asks fail closed with explicit unsupported guidance | In Progress |
+| B027 | P2 | Ask | Add deterministic metadata-component usage lookup by metadata name/fullName (not Salesforce record Id) | Wave6 | Operator can ask where a retrieved component such as an Email Template, Flow, Layout, or Apex class is referenced using grounded metadata names; Salesforce record-Id usage asks fail closed with explicit unsupported guidance | Complete |
 
 ## Wave1 Completion Criteria
 
