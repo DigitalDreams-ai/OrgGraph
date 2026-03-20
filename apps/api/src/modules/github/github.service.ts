@@ -145,11 +145,32 @@ type GithubAllowlistedWorkflow = {
 };
 
 const GITHUB_ACTIONS_WORKFLOW_ALLOWLIST: Record<string, GithubAllowlistedWorkflow> = {
+  ci_validate: {
+    key: 'ci_validate',
+    workflowFile: 'ci.yml',
+    name: 'CI Validate',
+    description: 'Dispatch the repo CI validation workflow and read back recent workflow_dispatch runs.',
+    inputs: []
+  },
   runtime_nightly: {
     key: 'runtime_nightly',
     workflowFile: 'runtime-nightly.yml',
     name: 'Runtime Nightly',
     description: 'Dispatch the packaged desktop build-and-smoke workflow and read back recent workflow_dispatch runs.',
+    inputs: []
+  },
+  scripts_lint: {
+    key: 'scripts_lint',
+    workflowFile: 'scripts-lint.yml',
+    name: 'Scripts Lint',
+    description: 'Dispatch the repo-local scripts lint workflow and read back recent workflow_dispatch runs.',
+    inputs: []
+  },
+  workflow_lint: {
+    key: 'workflow_lint',
+    workflowFile: 'workflow-lint.yml',
+    name: 'Workflow Lint',
+    description: 'Dispatch the GitHub workflow lint checks and read back recent workflow_dispatch runs.',
     inputs: []
   }
 };

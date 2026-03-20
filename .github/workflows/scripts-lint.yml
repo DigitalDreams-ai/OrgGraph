@@ -1,6 +1,7 @@
 name: Scripts Lint
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - 'scripts/**'

@@ -11,7 +11,7 @@ Assumed initiative under evaluation:
 Working description:
 - keep local `gh` CLI as the GitHub auth and authorization plane
 - reuse the selected repo binding already present in the engine
-- add one typed allowlisted workflow lane for:
+- extend the typed allowlisted workflow lane set for:
   - selected repo binding or explicit owner/repo
   - explicit workflow selection from an engine-owned allowlist
   - explicit ref plus typed optional inputs
@@ -49,7 +49,7 @@ Chosen path:
 
 Why:
 - existing GitHub support already exists for auth, repo binding, repo context, changed-file scope, and proof-bound PR publication
-- the missing capability is bounded workflow execution visibility, not a subsystem replacement
+- the missing capability is broader bounded workflow execution visibility, not a subsystem replacement
 - local `gh` reuse plus direct GitHub API reads/writes is the smallest viable path that satisfies the operator need without violating desktop-local runtime rules
 
 ## Acceptance Gates
