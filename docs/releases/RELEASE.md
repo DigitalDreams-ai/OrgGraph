@@ -36,6 +36,10 @@ Canonical path reference:
 
 - Smoke artifact JSON:
 - Smoke artifact log:
+- GitHub artifact workflow key:
+- GitHub artifact run URL:
+- GitHub artifact name:
+- GitHub artifact download URL:
 - Desktop executable path:
 - Installer path used for validation:
 - `readyStatus`:
@@ -99,6 +103,7 @@ Canonical path reference:
 - Last known-good commit SHA:
 - Last known-good installer/binary path:
 - Last known-good smoke artifact:
+- Last known-good GitHub artifact URL:
 - Rollback target recorded by:
 
 ## Rollback Validation

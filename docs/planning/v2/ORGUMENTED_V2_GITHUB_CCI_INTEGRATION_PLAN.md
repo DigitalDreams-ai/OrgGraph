@@ -261,4 +261,8 @@ This support track is only valid if all of the following stay true:
 3. Wire the binding-safety gate into the first commit-capable metadata export/publication path so policy becomes execution-enforced, not only observable.
 4. Add benchmark-publication-specific typed workflow lanes where they replace low-value manual CI invocation.
 5. Release artifact and evidence linkage in wave12.
+Current state:
+- typed artifact linkage is now live for allowlisted workflows through the engine and Connect workspace
+- canonical release evidence now records GitHub artifact workflow/run/download fields explicitly
+- GitHub Release publication itself remains optional future work; this slice is evidence linkage only
 6. Gradual typed CCI expansion locally, with mutating/release flows kept in GitHub Actions until release proof is stronger.

@@ -11,6 +11,8 @@ import type {
   GithubBranchSummary,
   GithubRepoBindingStatusPayload,
   GithubWorkflowCatalogPayload,
+  GithubWorkflowArtifactsPayload,
+  GithubWorkflowArtifactRunSummary,
   GithubWorkflowRunSummary,
   GithubWorkflowRunsPayload,
   GithubWorkflowSummary,
@@ -62,6 +64,7 @@ interface ConnectWorkspaceProps {
   githubPullRequestFiles: GithubPullRequestFileScopePayload | null;
   githubWorkflowCatalog: GithubWorkflowCatalogPayload | null;
   githubWorkflowRuns: GithubWorkflowRunsPayload | null;
+  githubWorkflowArtifacts: GithubWorkflowArtifactsPayload | null;
   aliasInventory: OrgAliasSummary[];
   githubAccessibleRepos: GithubRepoSummary[];
   githubSelectedRepo: GithubRepoSummary | null;
@@ -98,6 +101,7 @@ interface ConnectWorkspaceProps {
   onLoadGithubPullRequestFiles: () => void;
   onLoadGithubWorkflowCatalog: () => void;
   onLoadGithubWorkflowRuns: () => void;
+  onLoadGithubWorkflowArtifacts: () => void;
   onDispatchGithubWorkflow: () => void;
   onCreateGithubRepo: () => void;
   onSelectGithubRepo: (owner: string, repo: string) => void;
@@ -114,6 +118,19 @@ function formatTimestamp(value?: string): string {
   }
 
   return new Date(parsed).toLocaleString();
+}
+
+function formatBytes(value?: number): string {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    return 'n/a';
+  }
+  if (value < 1024) {
+    return `${value} B`;
+  }
+  if (value < 1024 * 1024) {
+    return `${(value / 1024).toFixed(1)} KB`;
+  }
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
@@ -200,6 +217,7 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
   const githubWorkflowCatalogRepo = props.githubWorkflowCatalog?.repo || githubContextRepo;
   const githubWorkflowList = (props.githubWorkflowCatalog?.workflows ?? []) as GithubWorkflowSummary[];
   const githubWorkflowRuns = (props.githubWorkflowRuns?.runs ?? []) as GithubWorkflowRunSummary[];
+  const githubWorkflowArtifactRuns = (props.githubWorkflowArtifacts?.runs ?? []) as GithubWorkflowArtifactRunSummary[];
   const githubSelectedWorkflow = props.githubWorkflowRuns?.workflow || githubWorkflowList.find((workflow) => workflow.key === props.githubWorkflowKey);
   const githubCliLabel = props.githubSession?.cliInstalled ? 'installed' : 'missing';
   const githubAuthSource =
@@ -731,6 +749,9 @@ cci org info ${props.orgAlias}`}</pre>
             <button type="button" className="ghost" onClick={props.onLoadGithubWorkflowRuns} disabled={props.loading}>
               Load Workflow Runs
             </button>
+            <button type="button" className="ghost" onClick={props.onLoadGithubWorkflowArtifacts} disabled={props.loading}>
+              Load Artifacts
+            </button>
           </div>
 
           {githubWorkflowRuns.length > 0 ? (
@@ -763,6 +784,63 @@ cci org info ${props.orgAlias}`}</pre>
           ) : (
             <p className="muted">No recent workflow-dispatch runs are loaded for the selected allowlisted workflow.</p>
           )}
+
+          <div className="sub-section">
+            <p><strong>Recent artifacts for release evidence</strong></p>
+            <p className="muted">
+              This lane exposes recent GitHub Actions artifacts for the selected allowlisted workflow so Wave 12 release evidence can
+              reference repo-native validation artifacts without replacing local proof or replay storage.
+            </p>
+            {githubWorkflowArtifactRuns.length > 0 ? (
+              <ul className="issue-list">
+                {githubWorkflowArtifactRuns.map((run) => (
+                  <li key={`artifact-run-${run.runId}`}>
+                    <div className="decision-meta">
+                      <span
+                        className={`decision-badge ${
+                          run.conclusion === 'success'
+                            ? 'good'
+                            : run.conclusion === 'failure' || run.conclusion === 'cancelled'
+                              ? 'bad'
+                              : 'muted'
+                        }`}
+                      >
+                        {run.conclusion || run.status}
+                      </span>
+                      {run.runNumber ? <span className="decision-badge muted">run #{run.runNumber}</span> : null}
+                      <span className="decision-badge muted">artifacts: {run.artifactCount}</span>
+                      {run.artifactsTruncated ? <span className="decision-badge bad">truncated</span> : null}
+                    </div>
+                    <p><strong><span className="path-value">{run.title || run.branch || `Run ${run.runId}`}</span></strong></p>
+                    <p><strong>Run URL:</strong> <span className="path-value">{run.url || 'n/a'}</span></p>
+                    <p><strong>Branch:</strong> <span className="path-value">{run.branch || 'n/a'}</span></p>
+                    <p><strong>Updated:</strong> <span className="path-value">{formatTimestamp(run.updatedAt)}</span></p>
+                    {run.artifacts.length > 0 ? (
+                      <ul className="issue-list">
+                        {run.artifacts.map((artifact) => (
+                          <li key={`artifact-${run.runId}-${artifact.artifactId}`}>
+                            <div className="decision-meta">
+                              <span className={`decision-badge ${artifact.expired ? 'bad' : 'good'}`}>
+                                {artifact.expired ? 'expired' : 'available'}
+                              </span>
+                              <span className="decision-badge muted">{formatBytes(artifact.sizeInBytes)}</span>
+                            </div>
+                            <p><strong><span className="path-value">{artifact.name}</span></strong></p>
+                            <p><strong>Download URL:</strong> <span className="path-value">{artifact.downloadUrl || artifact.url || 'n/a'}</span></p>
+                            <p><strong>Expires:</strong> <span className="path-value">{formatTimestamp(artifact.expiresAt)}</span></p>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="muted">No artifacts are available for this workflow run.</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">No recent artifact linkage is loaded for the selected allowlisted workflow.</p>
+            )}
+          </div>
           </div>
         </details>
       ) : null}

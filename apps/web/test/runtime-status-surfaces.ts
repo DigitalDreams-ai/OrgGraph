@@ -320,6 +320,49 @@ function run(): void {
         totalCount: 1,
         truncated: false
       },
+      githubWorkflowArtifacts: {
+        repo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime',
+          defaultBranch: 'main'
+        },
+        workflow: {
+          key: 'runtime_nightly',
+          workflowFile: 'runtime-nightly.yml',
+          name: 'Runtime Nightly',
+          description: 'Build and smoke the packaged desktop runtime.',
+          dispatchEnabled: true,
+          inputs: []
+        },
+        runs: [
+          {
+            runId: 4001,
+            status: 'completed',
+            conclusion: 'success',
+            branch: 'main',
+            actor: 'sean',
+            updatedAt: '2026-03-19T10:00:00Z',
+            artifactCount: 1,
+            artifactsTruncated: false,
+            artifacts: [
+              {
+                artifactId: 9101,
+                name: 'runtime-nightly-artifacts',
+                sizeInBytes: 24576,
+                downloadUrl: 'https://github.com/sean/orgumented-runtime/actions/artifacts/9101',
+                expiresAt: '2026-03-20T10:00:00Z',
+                expired: false
+              }
+            ]
+          }
+        ],
+        totalCount: 1,
+        truncated: false
+      },
       aliasInventory: [],
       githubAccessibleRepos: [],
       githubSelectedRepo: {
@@ -370,6 +413,7 @@ function run(): void {
       onLoadGithubPullRequestFiles: () => undefined,
       onLoadGithubWorkflowCatalog: () => undefined,
       onLoadGithubWorkflowRuns: () => undefined,
+      onLoadGithubWorkflowArtifacts: () => undefined,
       onDispatchGithubWorkflow: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
@@ -386,6 +430,7 @@ function run(): void {
   assert.match(connectMarkup, /Pull request file scope/);
   assert.match(connectMarkup, /GitHub Actions/);
   assert.match(connectMarkup, /Runtime Nightly/);
+  assert.match(connectMarkup, /Recent artifacts for release evidence/);
   assert.match(connectMarkup, /Files: 2/);
   assert.match(connectMarkup, /Org ID:<\/strong> <span class="path-value">00Dxx000001kjZRUAY<\/span>/);
   assert.match(connectMarkup, /Instance URL:<\/strong> <span class="path-value">https:\/\/shulman-hill--uat\.sandbox\.my\.salesforce\.com<\/span>/);
@@ -433,6 +478,7 @@ function run(): void {
       githubPullRequestFiles: null,
       githubWorkflowCatalog: null,
       githubWorkflowRuns: null,
+      githubWorkflowArtifacts: null,
       aliasInventory: [],
       githubAccessibleRepos: [],
       githubSelectedRepo: null,
@@ -469,6 +515,7 @@ function run(): void {
       onLoadGithubPullRequestFiles: () => undefined,
       onLoadGithubWorkflowCatalog: () => undefined,
       onLoadGithubWorkflowRuns: () => undefined,
+      onLoadGithubWorkflowArtifacts: () => undefined,
       onDispatchGithubWorkflow: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined

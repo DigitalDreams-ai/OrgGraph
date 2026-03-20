@@ -245,6 +245,24 @@ export type GithubWorkflowRunSummary = {
   updatedAt?: string;
 };
 
+export type GithubArtifactSummary = {
+  artifactId: number;
+  name: string;
+  sizeInBytes: number;
+  downloadUrl?: string;
+  url?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  expiresAt?: string;
+  expired: boolean;
+};
+
+export type GithubWorkflowArtifactRunSummary = GithubWorkflowRunSummary & {
+  artifactCount: number;
+  artifacts: GithubArtifactSummary[];
+  artifactsTruncated: boolean;
+};
+
 export type GithubWorkflowCatalogPayload = {
   status?: 'loaded';
   hostname?: string;
@@ -262,6 +280,18 @@ export type GithubWorkflowRunsPayload = {
   repo?: GithubRepoSummary;
   workflow?: GithubWorkflowSummary;
   runs?: GithubWorkflowRunSummary[];
+  totalCount?: number;
+  truncated?: boolean;
+};
+
+export type GithubWorkflowArtifactsPayload = {
+  status?: 'loaded';
+  hostname?: string;
+  viewer?: GithubViewerSummary;
+  selectedRepo?: GithubSelectedRepo;
+  repo?: GithubRepoSummary;
+  workflow?: GithubWorkflowSummary;
+  runs?: GithubWorkflowArtifactRunSummary[];
   totalCount?: number;
   truncated?: boolean;
 };

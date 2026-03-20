@@ -5,6 +5,7 @@ import type {
   GithubCreateRepoResponse,
   GithubPublishReviewPacketCommentRequest,
   GithubPublishReviewPacketCommentResponse,
+  GithubWorkflowArtifactsResponse,
   GithubWorkflowCatalogResponse,
   GithubWorkflowDispatchRequest,
   GithubWorkflowDispatchResponse,
@@ -139,6 +140,44 @@ export class GithubController {
     }
 
     return this.githubService.workflowRuns(workflowKeyRaw.trim(), ownerRaw?.trim(), repoRaw?.trim(), limit);
+  }
+
+  @Get('/github/actions/artifacts')
+  async workflowArtifacts(
+    @Query('workflowKey') workflowKeyRaw?: string,
+    @Query('owner') ownerRaw?: string,
+    @Query('repo') repoRaw?: string,
+    @Query('limit') limitRaw?: string,
+    @Query('artifactLimit') artifactLimitRaw?: string
+  ): Promise<GithubWorkflowArtifactsResponse> {
+    const limit = limitRaw === undefined ? undefined : Number(limitRaw);
+    const artifactLimit = artifactLimitRaw === undefined ? undefined : Number(artifactLimitRaw);
+    if (typeof workflowKeyRaw !== 'string' || workflowKeyRaw.trim().length === 0) {
+      throw new BadRequestException('workflowKey is required');
+    }
+    if (limitRaw !== undefined && (!Number.isInteger(limit) || (limit as number) < 1 || (limit as number) > 25)) {
+      throw new BadRequestException('limit must be an integer between 1 and 25');
+    }
+    if (
+      artifactLimitRaw !== undefined &&
+      (!Number.isInteger(artifactLimit) || (artifactLimit as number) < 1 || (artifactLimit as number) > 25)
+    ) {
+      throw new BadRequestException('artifactLimit must be an integer between 1 and 25');
+    }
+    if (ownerRaw !== undefined && ownerRaw.trim().length === 0) {
+      throw new BadRequestException('owner must be a non-empty string when provided');
+    }
+    if (repoRaw !== undefined && repoRaw.trim().length === 0) {
+      throw new BadRequestException('repo must be a non-empty string when provided');
+    }
+
+    return this.githubService.workflowArtifacts(
+      workflowKeyRaw.trim(),
+      ownerRaw?.trim(),
+      repoRaw?.trim(),
+      limit,
+      artifactLimit
+    );
   }
 
   @Post('/github/actions/dispatch')

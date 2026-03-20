@@ -240,6 +240,7 @@ Materially true now:
 - wave10 is now closed: the embedded web regression corpus plus production build are green on current main, path-heavy proof/history identifiers stay bounded, and the remaining dense support-plane and proof-history surfaces no longer compete with the primary Stage 1 operator workflow
 - wave9 is now closed: history rows, top actions, and exports all resolve from the selected history label by default, while advanced proof/replay tokens stay isolated behind the debug disclosure and never drive the primary workflow
 - wave11 GitHub support-plane follow-up now exposes explicit metadata-publication binding safety in the engine and Connect workspace: the selected repo is compared against the Orgumented product repo identity, missing or product-repo bindings are marked blocked, and future commit-capable metadata workflows now have a concrete fail-closed eligibility gate instead of a docs-only policy rule
+- wave12 GitHub release-artifact follow-up now exposes typed artifact linkage for allowlisted workflows in the engine and Connect workspace, so canonical release evidence can record workflow/run/download links for packaged validation artifacts without replacing local proof or replay storage
 
 Still unresolved:
 - clean-machine pass for the new real-org quickstart runbook is still pending
@@ -348,6 +349,10 @@ Current support-track status:
   - selected repo present
   - product repo identity resolved from config or local origin remote
   - selected repo must not equal the product repo
+- typed workflow artifact linkage is now live for allowlisted workflows:
+  - recent `workflow_dispatch` runs can load their GitHub artifact bundles
+  - Connect exposes those artifacts as a secondary release-evidence surface
+  - canonical release evidence now records workflow/run/download linkage explicitly
 - current live `cci` support remains the alias bridge / project-support baseline, not the full typed local job registry
 
 Safe move order:
@@ -356,6 +361,7 @@ Safe move order:
 3. typed GitHub Actions dispatch and status ingest
 4. explicit user-bound repo binding enforced in the first commit-capable metadata export/publish lane
 5. release evidence and artifact linkage
+6. GitHub release publication only if it still complements the local proof/replay contract
 
 CCI direction:
 - yes, `cci` should be used inside Orgumented for more than GitHub Actions

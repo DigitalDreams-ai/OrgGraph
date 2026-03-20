@@ -200,6 +200,24 @@ export interface GithubWorkflowRunSummary {
   updatedAt?: string;
 }
 
+export interface GithubArtifactSummary {
+  artifactId: number;
+  name: string;
+  sizeInBytes: number;
+  downloadUrl?: string;
+  url?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  expiresAt?: string;
+  expired: boolean;
+}
+
+export interface GithubWorkflowArtifactRunSummary extends GithubWorkflowRunSummary {
+  artifactCount: number;
+  artifacts: GithubArtifactSummary[];
+  artifactsTruncated: boolean;
+}
+
 export interface GithubWorkflowCatalogResponse {
   status: 'loaded';
   hostname: string;
@@ -217,6 +235,18 @@ export interface GithubWorkflowRunsResponse {
   repo: GithubRepoSummary;
   workflow: GithubWorkflowSummary;
   runs: GithubWorkflowRunSummary[];
+  totalCount: number;
+  truncated: boolean;
+}
+
+export interface GithubWorkflowArtifactsResponse {
+  status: 'loaded';
+  hostname: string;
+  viewer: GithubViewerSummary;
+  selectedRepo?: GithubSelectedRepoState;
+  repo: GithubRepoSummary;
+  workflow: GithubWorkflowSummary;
+  runs: GithubWorkflowArtifactRunSummary[];
   totalCount: number;
   truncated: boolean;
 }

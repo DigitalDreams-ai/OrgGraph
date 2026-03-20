@@ -199,6 +199,27 @@ function run(): void {
         totalCount: 0,
         truncated: false
       },
+      githubWorkflowArtifacts: {
+        repo: {
+          owner: 'sean',
+          name: 'orgumented-runtime',
+          fullName: 'sean/orgumented-runtime',
+          private: true,
+          visibility: 'private',
+          url: 'https://github.com/sean/orgumented-runtime'
+        },
+        workflow: {
+          key: 'runtime_nightly',
+          workflowFile: 'runtime-nightly.yml',
+          name: 'Runtime Nightly',
+          description: 'Build and smoke the packaged desktop runtime.',
+          dispatchEnabled: true,
+          inputs: []
+        },
+        runs: [],
+        totalCount: 0,
+        truncated: false
+      },
       aliasInventory: [],
       githubAccessibleRepos: [],
       githubSelectedRepo: {
@@ -242,6 +263,7 @@ function run(): void {
       onLoadGithubPullRequestFiles: () => undefined,
       onLoadGithubWorkflowCatalog: () => undefined,
       onLoadGithubWorkflowRuns: () => undefined,
+      onLoadGithubWorkflowArtifacts: () => undefined,
       onDispatchGithubWorkflow: () => undefined,
       onCreateGithubRepo: () => undefined,
       onSelectGithubRepo: () => undefined
