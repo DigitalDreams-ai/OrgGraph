@@ -44,7 +44,7 @@ const ORGUMENTED_SEED_DEFINITIONS: RepoSeedDefinition[] = [
       'npm exec --yes pnpm@9.12.3 -- --filter api test',
       'npm exec --yes pnpm@9.12.3 -- --filter api build'
     ],
-    docRefs: ['docs/USAGE_GUIDE.md', 'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md']
+    docRefs: ['docs/getting-started/USAGE_GUIDE.md', 'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md']
   },
   {
     title: 'Operator surfaces',
@@ -57,10 +57,10 @@ const ORGUMENTED_SEED_DEFINITIONS: RepoSeedDefinition[] = [
       { kind: 'doc', ref: 'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md' }
     ],
     entryPoints: ['apps/web/app/page.tsx', 'apps/web/app/layout.tsx'],
-    keyPaths: ['apps/web/app', 'apps/web/test', 'docs/ORGUMENTED_LIFECYCLE.md'],
+    keyPaths: ['apps/web/app', 'apps/web/test', 'docs/architecture/ORGUMENTED_LIFECYCLE.md'],
     dependencies: ['apps/api', 'apps/desktop', 'docs/planning/v2/ORGUMENTED_V2_WAVES_100_PLAN.md'],
     verificationCommands: ['npm exec --yes pnpm@9.12.3 -- desktop:smoke:release'],
-    docRefs: ['docs/ORGUMENTED_LIFECYCLE.md', 'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md']
+    docRefs: ['docs/architecture/ORGUMENTED_LIFECYCLE.md', 'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md']
   },
   {
     title: 'Desktop runtime architecture',
@@ -70,7 +70,7 @@ const ORGUMENTED_SEED_DEFINITIONS: RepoSeedDefinition[] = [
     tags: ['desktop', 'tauri', 'runtime', 'windows'],
     sourceRefs: [
       { kind: 'doc', ref: 'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md' },
-      { kind: 'doc', ref: 'docs/ORGUMENTED_LIFECYCLE.md' }
+      { kind: 'doc', ref: 'docs/architecture/ORGUMENTED_LIFECYCLE.md' }
     ],
     entryPoints: ['apps/desktop/src-tauri/src/main.rs', 'apps/desktop/scripts/dev-runtime.mjs'],
     keyPaths: [
@@ -82,7 +82,7 @@ const ORGUMENTED_SEED_DEFINITIONS: RepoSeedDefinition[] = [
     verificationCommands: ['pnpm desktop:build', 'pnpm desktop:smoke:release'],
     docRefs: [
       'docs/planning/v2/ORGUMENTED_V2_ARCHITECTURE.md',
-      'docs/ORGUMENTED_LIFECYCLE.md',
+      'docs/architecture/ORGUMENTED_LIFECYCLE.md',
       'docs/runbooks/DESKTOP_DEV_RUNTIME.md'
     ]
   },
