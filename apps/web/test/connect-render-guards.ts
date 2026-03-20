@@ -307,6 +307,11 @@ function run(): void {
   assert.match(connectMarkup, /Create Repo<\/button>/);
   assert.match(connectMarkup, /Use Repo<\/button>/);
   assert.match(connectMarkup, /<summary>Advanced session tools<\/summary>/);
+  assert.match(connectMarkup, /<summary>GitHub repo tools<\/summary>/);
+  assert.match(connectMarkup, /<summary>Accessible repos<\/summary>/);
+  assert.match(connectMarkup, /<summary>Repo context<\/summary>/);
+  assert.match(connectMarkup, /<summary>GitHub Actions<\/summary>/);
+  assert.match(connectMarkup, /<summary>Pull request file scope<\/summary>/);
   assert.match(connectMarkup, /Bridge CCI Alias<\/button>/);
   assert.doesNotMatch(connectMarkup, /<p class="panel-caption">Operator commands<\/p>/);
 }

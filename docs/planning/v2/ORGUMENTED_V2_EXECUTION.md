@@ -235,13 +235,12 @@ Materially true now:
 - wave10 Ask simplification now collapses the launch header from separate status and quick-action cards into one operator-readiness card with inline next-move actions, reducing top-of-workspace dashboard density before the primary question/payload flow
 - wave10 Org Sessions simplification now demotes explicit alias/session probes and manual bridge commands into one advanced disclosure, so connect/switch actions remain primary while fallback tooling stays available without its own full-width card
 - wave10 Refresh simplification now removes the duplicate rebuild-chain recap card, leaving the staged workflow snapshot and concrete run summaries as the primary rebuild-state surfaces
+- wave10 Proofs & History simplification now keeps the history-first action row focused on refresh/open/replay, combines proof and replay detail into one artifact-details card, and demotes trust-history export behind a secondary disclosure so label-first review remains the visible primary workflow
+- wave10 Org Sessions follow-up now keeps GitHub repo creation, repo context, workflow dispatch, and PR file-scope tools behind explicit secondary disclosures, so the local alias/session workflow remains the primary visible operator path while the support plane stays available on demand
+- wave10 is now closed: the embedded web regression corpus plus production build are green on current main, path-heavy proof/history identifiers stay bounded, and the remaining dense support-plane and proof-history surfaces no longer compete with the primary Stage 1 operator workflow
 - wave9 is now closed: history rows, top actions, and exports all resolve from the selected history label by default, while advanced proof/replay tokens stay isolated behind the debug disclosure and never drive the primary workflow
 
 Still unresolved:
-- explain/analyze workflows still need deeper typed cards for remaining edge-state diagnostics
-- layout/accessibility still needs final visual QA lock after latest density guardrail pass
-- UI still carries too much density, redundancy, and competing status/action surfaces across multiple workspaces
-- several Stage 1 screens still do too much at once instead of presenting one clear primary artifact and one clear next action
 - clean-machine pass for the new real-org quickstart runbook is still pending
 - rollback proof still needs one executed candidate/known-good validation cycle, even though the canonical playbook now exists
 
@@ -287,28 +286,18 @@ Rules:
 
 ## Immediate Frontier (Next Slices)
 
-1. Wave8 finish slice:
-- deepen structured diagnostics/analysis cards for primary operator triage
-- reduce raw JSON dependence in permission/automation/impact/map workflows
-- collapse redundant status/action surfaces so Analyze and Diagnostics present one clear recovery path before secondary telemetry or debug detail
-
-2. Wave9 finish slice:
-- complete label-first proof lifecycle (open/replay/export) without token-first dependence in normal workflows
-- keep token fields strictly advanced/debug while preserving replay parity checks and label-first selection semantics
-
-3. Wave10 finish slice:
-- close remaining clipping/overflow issues on Ask/Analyze/Diagnostics cards
-- lock viewport and long-string rendering tests
-- simplify bloated workspace layouts, remove duplicate cards/action rows, and enforce progressive disclosure so the primary workflow is visible without scanning dense dashboards
-
-4. Wave11 finish slice:
+1. Wave11 finish slice:
 - complete P0/P1 burn-down lock and regression gates
 - keep CI strict while preserving minute-efficiency controls
 
-5. Wave12 finish slice:
+2. Wave12 finish slice:
 - complete clean-machine operator proof on the current real-org quickstart
 - execute one rollback validation cycle against the canonical rollback record and keep release evidence machine-checkable
 - keep Actions storage bounded with automated run-retention pruning and short artifact retention defaults
+
+3. Wave13 stabilization slice:
+- hold one clean stabilization window after wave11 and wave12 close
+- allow only regression fixes while P0/P1 remains zero
 
 Wave6 maintenance rule after closeout:
 - preserve bounded semantic-frame admissibility, deterministic evidence-lookup normalization, and replay parity while Wave7+ work proceeds

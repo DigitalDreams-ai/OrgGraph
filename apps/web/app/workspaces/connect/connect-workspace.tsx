@@ -324,6 +324,7 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
           <p><strong>Selected repo:</strong> <span className="path-value">{githubSelectedRepo?.fullName || 'n/a'}</span></p>
           <p><strong>Visibility:</strong> {githubSelectedRepo?.visibility || 'n/a'}</p>
           <p><strong>Default branch:</strong> <span className="path-value">{githubSelectedRepo?.defaultBranch || 'n/a'}</span></p>
+          <p><strong>Issues:</strong> {props.githubIssues.length}</p>
           <p className="muted">
             Orgumented uses local <code>gh</code> for GitHub sign-in and keeps one explicit selected repo binding for future repo-backed workflows.
           </p>
@@ -417,52 +418,55 @@ export function ConnectWorkspace(props: ConnectWorkspaceProps): JSX.Element {
             <p className="muted">No current GitHub auth issues are recorded.</p>
           )}
 
-          <div className="ops-grid compact-grid">
+          <details className="debug-details">
+            <summary>GitHub repo tools</summary>
+            <div className="ops-grid compact-grid">
+              <label>
+                GitHub repo owner
+                <input value={props.githubRepoOwner} onChange={(e) => props.setGithubRepoOwner(e.target.value)} placeholder="owner or org" />
+              </label>
+              <label>
+                GitHub repo name
+                <input value={props.githubRepoName} onChange={(e) => props.setGithubRepoName(e.target.value)} placeholder="orgumented-runtime" />
+              </label>
+            </div>
             <label>
-              GitHub repo owner
-              <input value={props.githubRepoOwner} onChange={(e) => props.setGithubRepoOwner(e.target.value)} placeholder="owner or org" />
+              Description
+              <input
+                value={props.githubRepoDescription}
+                onChange={(e) => props.setGithubRepoDescription(e.target.value)}
+                placeholder="Optional repo description"
+              />
             </label>
-            <label>
-              GitHub repo name
-              <input value={props.githubRepoName} onChange={(e) => props.setGithubRepoName(e.target.value)} placeholder="orgumented-runtime" />
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={props.githubRepoPrivate}
+                onChange={(e) => props.setGithubRepoPrivate(e.target.checked)}
+              />
+              Create as private repo
             </label>
-          </div>
-          <label>
-            Description
-            <input
-              value={props.githubRepoDescription}
-              onChange={(e) => props.setGithubRepoDescription(e.target.value)}
-              placeholder="Optional repo description"
-            />
-          </label>
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={props.githubRepoPrivate}
-              onChange={(e) => props.setGithubRepoPrivate(e.target.checked)}
-            />
-            Create as private repo
-          </label>
-          <div className="action-row">
-            <button type="button" onClick={props.onCreateGithubRepo} disabled={props.loading}>Create Repo</button>
-            <button type="button" className="ghost" onClick={props.onLoadGithubRepoContext} disabled={props.loading}>
-              Load Repo Context
-            </button>
-            <button type="button" className="ghost" onClick={props.onLoadGithubWorkflowCatalog} disabled={props.loading}>
-              Load Workflows
-            </button>
-          </div>
-          <div className="ops-grid compact-grid">
-            <label>
-              Pull request number
-              <input value={props.githubPullNumber} onChange={(e) => props.setGithubPullNumber(e.target.value)} placeholder="296" />
-            </label>
-          </div>
-          <div className="action-row">
-            <button type="button" className="ghost" onClick={props.onLoadGithubPullRequestFiles} disabled={props.loading}>
-              Load PR Files
-            </button>
-          </div>
+            <div className="action-row">
+              <button type="button" onClick={props.onCreateGithubRepo} disabled={props.loading}>Create Repo</button>
+              <button type="button" className="ghost" onClick={props.onLoadGithubRepoContext} disabled={props.loading}>
+                Load Repo Context
+              </button>
+              <button type="button" className="ghost" onClick={props.onLoadGithubWorkflowCatalog} disabled={props.loading}>
+                Load Workflows
+              </button>
+            </div>
+            <div className="ops-grid compact-grid">
+              <label>
+                Pull request number
+                <input value={props.githubPullNumber} onChange={(e) => props.setGithubPullNumber(e.target.value)} placeholder="296" />
+              </label>
+            </div>
+            <div className="action-row">
+              <button type="button" className="ghost" onClick={props.onLoadGithubPullRequestFiles} disabled={props.loading}>
+                Load PR Files
+              </button>
+            </div>
+          </details>
         </article>
       </div>
 
@@ -535,48 +539,53 @@ cci org info ${props.orgAlias}`}</pre>
       ) : null}
 
       {props.githubAccessibleRepos.length > 0 ? (
-        <div className="sub-card">
-          <p className="panel-caption">Accessible repos</p>
-          <h3>Available GitHub bindings</h3>
-          <ul className="ops-list">
-            {props.githubAccessibleRepos.map((repo) => (
-              <li key={repo.fullName} className="ops-list-item">
-                <div>
-                  <div className="decision-meta">
-                    <span className={`decision-badge ${repo.selected ? 'good' : 'muted'}`}>
-                      {repo.selected ? 'selected' : repo.visibility}
-                    </span>
-                    <span className="decision-badge muted">{repo.defaultBranch || 'no default branch'}</span>
+        <details className="debug-details">
+          <summary>Accessible repos</summary>
+          <div className="sub-card">
+            <p className="panel-caption">Accessible repos</p>
+            <h3>Available GitHub bindings</h3>
+            <ul className="ops-list">
+              {props.githubAccessibleRepos.map((repo) => (
+                <li key={repo.fullName} className="ops-list-item">
+                  <div>
+                    <div className="decision-meta">
+                      <span className={`decision-badge ${repo.selected ? 'good' : 'muted'}`}>
+                        {repo.selected ? 'selected' : repo.visibility}
+                      </span>
+                      <span className="decision-badge muted">{repo.defaultBranch || 'no default branch'}</span>
+                    </div>
+                    <p><strong><span className="path-value">{repo.fullName}</span></strong></p>
+                    <p>{repo.description || 'No description provided.'}</p>
+                    <p><strong>URL:</strong> <span className="path-value">{repo.url || 'n/a'}</span></p>
                   </div>
-                  <p><strong><span className="path-value">{repo.fullName}</span></strong></p>
-                  <p>{repo.description || 'No description provided.'}</p>
-                  <p><strong>URL:</strong> <span className="path-value">{repo.url || 'n/a'}</span></p>
-                </div>
-                <div className="ops-list-actions">
-                  <button type="button" onClick={() => props.onSelectGithubRepo(repo.owner, repo.name)}>
-                    Use Repo
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+                  <div className="ops-list-actions">
+                    <button type="button" onClick={() => props.onSelectGithubRepo(repo.owner, repo.name)}>
+                      Use Repo
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </details>
       ) : null}
 
       {githubContextRepo ? (
-        <div className="sub-card" role="status" aria-live="polite">
-          <p className="panel-caption">Selected repo context</p>
-          <h3>Branches and open pull requests</h3>
-          <div className="decision-meta">
-            <span className="decision-badge muted">Repo: {githubContextRepo.fullName}</span>
-            <span className="decision-badge muted">Branches: {githubContextBranches.length}</span>
-            <span className="decision-badge muted">Open PRs: {githubContextPullRequests.length}</span>
-          </div>
-          <p><strong>Default branch:</strong> <span className="path-value">{githubContextRepo.defaultBranch || 'n/a'}</span></p>
-          <p><strong>URL:</strong> <span className="path-value">{githubContextRepo.url || 'n/a'}</span></p>
-          <p className="muted">
-            This remains a read-only support-plane view. It is intended to scope future repo-backed workflows without changing local decision determinism.
-          </p>
+        <details className="debug-details">
+          <summary>Repo context</summary>
+          <div className="sub-card" role="status" aria-live="polite">
+            <p className="panel-caption">Selected repo context</p>
+            <h3>Branches and open pull requests</h3>
+            <div className="decision-meta">
+              <span className="decision-badge muted">Repo: {githubContextRepo.fullName}</span>
+              <span className="decision-badge muted">Branches: {githubContextBranches.length}</span>
+              <span className="decision-badge muted">Open PRs: {githubContextPullRequests.length}</span>
+            </div>
+            <p><strong>Default branch:</strong> <span className="path-value">{githubContextRepo.defaultBranch || 'n/a'}</span></p>
+            <p><strong>URL:</strong> <span className="path-value">{githubContextRepo.url || 'n/a'}</span></p>
+            <p className="muted">
+              This remains a read-only support-plane view. It is intended to scope future repo-backed workflows without changing local decision determinism.
+            </p>
 
           {githubContextBranches.length > 0 ? (
             <>
@@ -624,23 +633,26 @@ cci org info ${props.orgAlias}`}</pre>
           ) : (
             <p className="muted">No open pull requests are loaded for the selected repo.</p>
           )}
-        </div>
+          </div>
+        </details>
       ) : null}
 
       {githubWorkflowCatalogRepo && githubWorkflowList.length > 0 ? (
-        <div className="sub-card" role="status" aria-live="polite">
-          <p className="panel-caption">GitHub Actions</p>
-          <h3>Allowlisted workflow dispatch</h3>
-          <div className="decision-meta">
-            <span className="decision-badge muted">Repo: {githubWorkflowCatalogRepo.fullName}</span>
-            <span className="decision-badge muted">Allowlisted: {githubWorkflowList.length}</span>
-            {githubSelectedWorkflow ? <span className="decision-badge muted">Selected: {githubSelectedWorkflow.name}</span> : null}
-          </div>
-          <p><strong>Default branch:</strong> <span className="path-value">{githubWorkflowCatalogRepo.defaultBranch || 'n/a'}</span></p>
-          <p className="muted">
-            This support-plane lane is allowlisted and typed. Orgumented can dispatch only the workflows explicitly exposed by the engine and can
-            read back recent workflow-dispatch runs without widening local semantic execution.
-          </p>
+        <details className="debug-details">
+          <summary>GitHub Actions</summary>
+          <div className="sub-card" role="status" aria-live="polite">
+            <p className="panel-caption">GitHub Actions</p>
+            <h3>Allowlisted workflow dispatch</h3>
+            <div className="decision-meta">
+              <span className="decision-badge muted">Repo: {githubWorkflowCatalogRepo.fullName}</span>
+              <span className="decision-badge muted">Allowlisted: {githubWorkflowList.length}</span>
+              {githubSelectedWorkflow ? <span className="decision-badge muted">Selected: {githubSelectedWorkflow.name}</span> : null}
+            </div>
+            <p><strong>Default branch:</strong> <span className="path-value">{githubWorkflowCatalogRepo.defaultBranch || 'n/a'}</span></p>
+            <p className="muted">
+              This support-plane lane is allowlisted and typed. Orgumented can dispatch only the workflows explicitly exposed by the engine and can
+              read back recent workflow-dispatch runs without widening local semantic execution.
+            </p>
           <div className="ops-grid compact-grid">
             <label>
               Workflow
@@ -706,28 +718,31 @@ cci org info ${props.orgAlias}`}</pre>
           ) : (
             <p className="muted">No recent workflow-dispatch runs are loaded for the selected allowlisted workflow.</p>
           )}
-        </div>
+          </div>
+        </details>
       ) : null}
 
       {githubPullRequestScope && githubPullRequestFileRepo ? (
-        <div className="sub-card" role="status" aria-live="polite">
-          <p className="panel-caption">Pull request file scope</p>
-          <h3>Changed files for review context</h3>
-          <div className="decision-meta">
-            <span className={`decision-badge ${githubPullRequestScope.draft ? 'muted' : 'good'}`}>
-              {githubPullRequestScope.draft ? 'draft' : githubPullRequestScope.state}
-            </span>
-            <span className="decision-badge muted">#{githubPullRequestScope.number}</span>
-            <span className="decision-badge muted">Files: {props.githubPullRequestFiles?.totalCount ?? githubPullRequestFileList.length}</span>
-            {props.githubPullRequestFiles?.truncated ? <span className="decision-badge bad">truncated</span> : null}
-          </div>
-          <p><strong>Repo:</strong> <span className="path-value">{githubPullRequestFileRepo.fullName}</span></p>
-          <p><strong>Title:</strong> <span className="path-value">{githubPullRequestScope.title}</span></p>
-          <p><strong>Head:</strong> <span className="path-value">{githubPullRequestScope.headRef || 'n/a'}</span></p>
-          <p><strong>Base:</strong> <span className="path-value">{githubPullRequestScope.baseRef || 'n/a'}</span></p>
-          <p className="muted">
-            This is file-path scope only. It is intended to ground later repo-backed review flows without pulling GitHub diff interpretation into the UI.
-          </p>
+        <details className="debug-details">
+          <summary>Pull request file scope</summary>
+          <div className="sub-card" role="status" aria-live="polite">
+            <p className="panel-caption">Pull request file scope</p>
+            <h3>Changed files for review context</h3>
+            <div className="decision-meta">
+              <span className={`decision-badge ${githubPullRequestScope.draft ? 'muted' : 'good'}`}>
+                {githubPullRequestScope.draft ? 'draft' : githubPullRequestScope.state}
+              </span>
+              <span className="decision-badge muted">#{githubPullRequestScope.number}</span>
+              <span className="decision-badge muted">Files: {props.githubPullRequestFiles?.totalCount ?? githubPullRequestFileList.length}</span>
+              {props.githubPullRequestFiles?.truncated ? <span className="decision-badge bad">truncated</span> : null}
+            </div>
+            <p><strong>Repo:</strong> <span className="path-value">{githubPullRequestFileRepo.fullName}</span></p>
+            <p><strong>Title:</strong> <span className="path-value">{githubPullRequestScope.title}</span></p>
+            <p><strong>Head:</strong> <span className="path-value">{githubPullRequestScope.headRef || 'n/a'}</span></p>
+            <p><strong>Base:</strong> <span className="path-value">{githubPullRequestScope.baseRef || 'n/a'}</span></p>
+            <p className="muted">
+              This is file-path scope only. It is intended to ground later repo-backed review flows without pulling GitHub diff interpretation into the UI.
+            </p>
 
           {githubPullRequestFileList.length > 0 ? (
             <ul className="issue-list">
@@ -755,7 +770,8 @@ cci org info ${props.orgAlias}`}</pre>
           ) : (
             <p className="muted">No changed files are loaded for the selected pull request.</p>
           )}
-        </div>
+          </div>
+        </details>
       ) : null}
     </>
   );
