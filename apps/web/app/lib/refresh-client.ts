@@ -15,7 +15,7 @@ async function parseBoundaryResponse(res: Response): Promise<QueryResponse> {
     return {
       ok: typeof parsed.ok === 'boolean' ? parsed.ok : res.ok,
       statusCode: typeof parsed.statusCode === 'number' ? parsed.statusCode : res.status,
-      payload: parsed.payload,
+      payload: parsed.payload ?? (parsed as Record<string, unknown>),
       error: parsed.error
     };
   } catch {
