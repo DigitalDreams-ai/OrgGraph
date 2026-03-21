@@ -50,6 +50,7 @@ type DiscoveryMetadataIndex = {
   refreshedAt: string;
   typeMembers: Map<string, string[]>;
   typeCatalog: Map<string, MetadataTypeCatalogEntry>;
+  typeOrigins: Map<string, 'live' | 'mixed' | 'local_fallback'>;
   warnings: string[];
 };
 
@@ -882,7 +883,7 @@ export class OrgService {
       .map((type) => ({
         type,
         memberCount: (index.typeMembers.get(type) ?? []).length,
-        ...this.toMetadataCatalogSummary(type, index.typeCatalog.get(type))
+        ...this.toMetadataCatalogSummary(type, index.typeCatalog.get(type), index.typeOrigins.get(type) ?? 'live')
       }))
       .sort((a, b) => a.type.localeCompare(b.type));
 
@@ -1061,6 +1062,11 @@ export class OrgService {
 
     await this.orgToolAdapter.ensureSfInstalled(projectPath);
     this.ensureParsePathWithinProject(projectPath, parsePath);
+    const discoveryIndex = await this.loadDiscoveryMetadataIndex({
+      refresh: false,
+      includeSearchOnlyTypes: false
+    });
+    this.validateMetadataSelections(input.selections, discoveryIndex.typeOrigins);
 
     const metadataArgs = this.buildMetadataArgs(input.selections);
     if (metadataArgs.length === 0) {
@@ -1144,6 +1150,7 @@ export class OrgService {
           refreshedAt: new Date().toISOString(),
           typeMembers: new Map<string, string[]>(),
           typeCatalog: new Map<string, MetadataTypeCatalogEntry>(),
+          typeOrigins: new Map<string, 'live' | 'mixed' | 'local_fallback'>(),
           warnings: []
         };
     const localIndex = this.loadMetadataIndex(parsePath, input.refresh);
@@ -1155,6 +1162,7 @@ export class OrgService {
         refreshedAt: liveIndex.refreshedAt,
         typeMembers: this.mergeTypeMembers(liveIndex.typeMembers, localIndex.typeMembers),
         typeCatalog: this.mergeTypeCatalog(liveIndex.typeCatalog, localIndex.typeCatalog),
+        typeOrigins: this.mergeTypeOrigins(liveIndex, localIndex),
         warnings: [...liveIndex.warnings, ...localIndex.warnings]
       };
     }
@@ -1165,6 +1173,7 @@ export class OrgService {
         refreshedAt: liveIndex.refreshedAt,
         typeMembers: liveIndex.typeMembers,
         typeCatalog: liveIndex.typeCatalog,
+        typeOrigins: this.buildTypeOrigins(liveIndex, 'live'),
         warnings: [...liveIndex.warnings, ...localIndex.warnings]
       };
     }
@@ -1175,6 +1184,7 @@ export class OrgService {
         refreshedAt: localIndex.refreshedAt,
         typeMembers: localIndex.typeMembers,
         typeCatalog: localIndex.typeCatalog,
+        typeOrigins: this.buildTypeOrigins(localIndex, 'local_fallback'),
         warnings: [...liveIndex.warnings, ...localIndex.warnings]
       };
     }
@@ -1184,6 +1194,7 @@ export class OrgService {
       refreshedAt: liveIndex.refreshedAt,
       typeMembers: liveIndex.typeMembers,
       typeCatalog: liveIndex.typeCatalog,
+      typeOrigins: this.buildTypeOrigins(liveIndex, 'live'),
       warnings: [...liveIndex.warnings, ...localIndex.warnings]
     };
   }
@@ -1240,6 +1251,38 @@ export class OrgService {
     return merged;
   }
 
+  private listIndexTypes(index: Pick<DiscoveryMetadataIndex, 'typeCatalog' | 'typeMembers'>): string[] {
+    return Array.from(new Set([...index.typeCatalog.keys(), ...index.typeMembers.keys()]));
+  }
+
+  private buildTypeOrigins(
+    index: Pick<DiscoveryMetadataIndex, 'typeCatalog' | 'typeMembers'>,
+    origin: 'live' | 'local_fallback'
+  ): Map<string, 'live' | 'mixed' | 'local_fallback'> {
+    return new Map(this.listIndexTypes(index).map((type) => [type, origin] as const));
+  }
+
+  private mergeTypeOrigins(
+    liveIndex: Pick<DiscoveryMetadataIndex, 'typeCatalog' | 'typeMembers'>,
+    localIndex: Pick<DiscoveryMetadataIndex, 'typeCatalog' | 'typeMembers'>
+  ): Map<string, 'live' | 'mixed' | 'local_fallback'> {
+    const merged = new Map<string, 'live' | 'mixed' | 'local_fallback'>();
+    const liveTypes = new Set(this.listIndexTypes(liveIndex));
+    const localTypes = new Set(this.listIndexTypes(localIndex));
+
+    for (const type of new Set([...liveTypes, ...localTypes])) {
+      if (liveTypes.has(type) && localTypes.has(type)) {
+        merged.set(type, 'mixed');
+      } else if (liveTypes.has(type)) {
+        merged.set(type, 'live');
+      } else {
+        merged.set(type, 'local_fallback');
+      }
+    }
+
+    return merged;
+  }
+
   private listMetadataCatalogTypes(index: DiscoveryMetadataIndex): string[] {
     return Array.from(new Set([...index.typeCatalog.keys(), ...index.typeMembers.keys()])).sort((left, right) =>
       left.localeCompare(right)
@@ -1248,13 +1291,24 @@ export class OrgService {
 
   private toMetadataCatalogSummary(
     type: string,
-    entry?: MetadataTypeCatalogEntry
+    entry?: MetadataTypeCatalogEntry,
+    origin: 'live' | 'mixed' | 'local_fallback' = 'live'
   ): OrgMetadataFamilyDescriptor {
+    const retrievable = origin !== 'local_fallback';
+    const summary: OrgMetadataFamilyDescriptor = {
+      catalogOrigin: origin,
+      retrievable
+    };
+    if (!retrievable) {
+      summary.retrievableReason =
+        'Fallback-only family: inferred from local/cache metadata, not verified as a live retrievable metadata type.';
+    }
     if (!entry) {
-      return {};
+      return summary;
     }
 
     return {
+      ...summary,
       directoryName: entry.directoryName,
       inFolder: entry.inFolder,
       metaFile: entry.metaFile,
@@ -1366,6 +1420,7 @@ export class OrgService {
                 refreshedAt: cacheIndex.refreshedAt,
                 typeMembers: cacheIndex.typeMembers,
                 typeCatalog: cacheIndex.typeCatalog,
+                typeOrigins: this.buildTypeOrigins(cacheIndex, 'live'),
                 warnings
               };
             }
@@ -1390,6 +1445,7 @@ export class OrgService {
           refreshedAt: staleCacheFallback.refreshedAt,
           typeMembers: staleCacheFallback.typeMembers,
           typeCatalog: staleCacheFallback.typeCatalog,
+          typeOrigins: this.buildTypeOrigins(staleCacheFallback, 'live'),
           warnings
         };
       }
@@ -1398,6 +1454,7 @@ export class OrgService {
         refreshedAt,
         typeMembers: new Map(),
         typeCatalog: new Map<string, MetadataTypeCatalogEntry>(),
+        typeOrigins: new Map<string, 'live' | 'mixed' | 'local_fallback'>(),
         warnings
       };
     }
@@ -1415,6 +1472,7 @@ export class OrgService {
         refreshedAt: staleCacheFallback.refreshedAt,
         typeMembers: staleCacheFallback.typeMembers,
         typeCatalog: staleCacheFallback.typeCatalog,
+        typeOrigins: this.buildTypeOrigins(staleCacheFallback, 'live'),
         warnings
       };
     }
@@ -1474,6 +1532,7 @@ export class OrgService {
           refreshedAt: staleCacheFallback.refreshedAt,
           typeMembers: staleCacheFallback.typeMembers,
           typeCatalog: staleCacheFallback.typeCatalog,
+          typeOrigins: this.buildTypeOrigins(staleCacheFallback, 'live'),
           warnings
         };
       }
@@ -1517,6 +1576,7 @@ export class OrgService {
       refreshedAt,
       typeMembers,
       typeCatalog,
+      typeOrigins: this.buildTypeOrigins({ typeMembers, typeCatalog }, 'live'),
       warnings
     };
   }
@@ -1595,6 +1655,7 @@ export class OrgService {
     refreshedAt: string;
     typeMembers: Map<string, string[]>;
     typeCatalog: Map<string, MetadataTypeCatalogEntry>;
+    typeOrigins: Map<string, 'live' | 'mixed' | 'local_fallback'>;
     warnings: string[];
   } {
     const warnings: string[] = [];
@@ -1625,6 +1686,7 @@ export class OrgService {
             refreshedAt: parsed.refreshedAt ?? new Date().toISOString(),
             typeMembers,
             typeCatalog: new Map<string, MetadataTypeCatalogEntry>(),
+            typeOrigins: new Map(Array.from(typeMembers.keys()).map((type) => [type, 'local_fallback'] as const)),
             warnings
           };
         }
@@ -1640,6 +1702,7 @@ export class OrgService {
         refreshedAt: new Date().toISOString(),
         typeMembers: new Map(),
         typeCatalog: new Map<string, MetadataTypeCatalogEntry>(),
+        typeOrigins: new Map<string, 'live' | 'mixed' | 'local_fallback'>(),
         warnings
       };
     }
@@ -1706,6 +1769,7 @@ export class OrgService {
       refreshedAt: new Date().toISOString(),
       typeMembers: normalizedMap,
       typeCatalog: new Map<string, MetadataTypeCatalogEntry>(),
+      typeOrigins: new Map(Array.from(normalizedMap.keys()).map((type) => [type, 'local_fallback'] as const)),
       warnings
     };
   }
@@ -1941,6 +2005,32 @@ export class OrgService {
       }
     }
     return metadataArgs;
+  }
+
+  private validateMetadataSelections(
+    selections: Array<{ type: string; members?: string[] }>,
+    typeOrigins: Map<string, 'live' | 'mixed' | 'local_fallback'>
+  ): void {
+    const blockedTypes = Array.from(
+      new Set(
+        selections
+          .map((selection) => selection.type.trim())
+          .filter((type) => typeOrigins.get(type) === 'local_fallback')
+      )
+    ).sort((left, right) => left.localeCompare(right));
+
+    if (blockedTypes.length === 0) {
+      return;
+    }
+
+    throw new BadRequestException({
+      message: 'metadata retrieve blocked for fallback-only families',
+      details: {
+        code: 'SF_METADATA_FALLBACK_ONLY',
+        hint: 'Use live or mixed catalog rows only. Fallback-only families are visible for context but cannot drive retrieve.',
+        blockedTypes
+      }
+    });
   }
 
   private async runRetrieve(alias: string, projectPath: string, metadataArgs: string[]): Promise<void> {

@@ -208,6 +208,10 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
       filterMetadataCatalogTypes(metadataCatalog?.types ?? [], metadataFamilySearch).map((entry) => entry.type),
     [metadataCatalog, metadataFamilySearch]
   );
+  const catalogTypeLookup = useMemo(
+    () => new Map((metadataCatalog?.types ?? []).map((entry) => [entry.type, entry])),
+    [metadataCatalog]
+  );
 
   useEffect(() => {
     try {
@@ -260,6 +264,17 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     setMetadataMemberSearch('');
     setMetadataForceRefresh(false);
     setMetadataSearchResults([]);
+  }
+
+  function isCatalogTypeRetrievable(type: string): boolean {
+    return catalogTypeLookup.get(type)?.retrievable !== false;
+  }
+
+  function getCatalogTypeBlockReason(type: string): string {
+    return (
+      catalogTypeLookup.get(type)?.retrievableReason ??
+      'This family is fallback-only and cannot drive retrieve until live metadata discovery confirms it.'
+    );
   }
 
   function toggleTypeSelection(type: string): void {
@@ -340,6 +355,10 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   }
 
   function setTypeSelected(type: string, selected: boolean): void {
+    if (selected && !isCatalogTypeRetrievable(type)) {
+      options.setErrorText(getCatalogTypeBlockReason(type));
+      return;
+    }
     if (selected) {
       setMetadataSelected((current) => {
         const withoutType = current.filter((entry) => entry.type !== type);
@@ -351,6 +370,10 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   }
 
   function setMemberSelected(type: string, member: string, selected: boolean): void {
+    if (selected && !isCatalogTypeRetrievable(type)) {
+      options.setErrorText(getCatalogTypeBlockReason(type));
+      return;
+    }
     const selectionState = getTypeSelectionState(type);
     if (selectionState === 'all') {
       return;
@@ -388,6 +411,10 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
   }
 
   function setMembersSelected(type: string, members: string[], selected: boolean): void {
+    if (selected && !isCatalogTypeRetrievable(type)) {
+      options.setErrorText(getCatalogTypeBlockReason(type));
+      return;
+    }
     const uniqueMembers = Array.from(
       new Set(
         members
@@ -621,6 +648,25 @@ export function useBrowserWorkspace(options: UseBrowserWorkspaceOptions) {
     options.setCopied(false);
     options.setErrorText('');
     const selectionSnapshot = cloneSelections(metadataSelected);
+    const blockedSelections = selectionSnapshot
+      .map((selection) => selection.type)
+      .filter((type) => !isCatalogTypeRetrievable(type));
+
+    if (blockedSelections.length > 0) {
+      options.presentResponse({
+        ok: false,
+        error: {
+          message: `Retrieve blocked for fallback-only families: ${blockedSelections.join(', ')}`
+        }
+      });
+      options.setErrorText(
+        'Retrieve blocked because the cart still includes fallback-only families. Remove those rows or refresh the live family catalog.'
+      );
+      setLastMetadataRetrieve(null);
+      setLastRetrievedSelections([]);
+      options.setLoading(false);
+      return;
+    }
 
     try {
       const result = await retrieveOrgMetadata({

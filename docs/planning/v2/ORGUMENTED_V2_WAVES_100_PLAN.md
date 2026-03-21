@@ -386,6 +386,7 @@ Scope:
 - Org Sessions keeps manual bridge commands and secondary alias/session probes behind a single advanced disclosure, reducing connect-screen card overload without removing explicit fallback tooling
 - Refresh & Build now relies on one staged workflow snapshot plus concrete run summaries instead of repeating the same rebuild chain in a second recap card
 - Refresh & Build now uses the staged Browser handoff parse path for rebuild runs and exposes an explicit `Rebaseline Semantic State` recovery action when a real-org handoff exceeds the prior drift baseline
+- Org Browser now marks fallback-only family rows explicitly and prevents those rows from driving retrieve, so `Coverage limited` sessions fail closed on unverified family selectors instead of relying on operator inference
 
 Exit:
 - zero known clipping defects in Stage 1 surfaces

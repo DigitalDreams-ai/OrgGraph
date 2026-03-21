@@ -99,7 +99,8 @@ Inside Orgumented:
 7. Wait for matching family rows to appear.
 8. Click `Load & Expand` on the family row you want. The triangle does the same thing if you prefer the tree control.
 9. Use checkboxes next to the family, folder, or item(s) you want.
-10. Click `Retrieve Cart`.
+10. If a row is tagged `fallback only`, do not use it for retrieve. Those rows are visible for context, but they are not live-verified metadata families.
+11. Click `Retrieve Cart`.
 
 Expected result:
 - retrieve succeeds
@@ -111,8 +112,9 @@ If you get no results:
 2. Click `Load Visible Children`.
 3. Click `Expand Visible Families` if you want every currently visible family row opened in one pass.
 4. Click `Load & Expand` on a family row, or use the triangle, to open nested members. Then select via checkbox.
-5. If `Catalog coverage` still shows `limited`, review the discovery warnings before treating the visible list as complete org inventory.
-6. Click `Retrieve Cart` again.
+5. If `Catalog coverage` still shows `limited`, only rows tagged `live catalog` or `live + local` are valid retrieve targets.
+6. Review the discovery warnings before treating the visible list as complete org inventory.
+7. Click `Retrieve Cart` again.
 
 ## 4) Verify Handoff In Refresh & Build
 
