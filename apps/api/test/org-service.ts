@@ -424,10 +424,45 @@ async function run(): Promise<void> {
     const liveLayout = liveCatalog.types.find((item) => item.type === 'Layout');
     assert.equal(liveLayout?.directoryName, 'layouts');
     assert.equal(liveLayout?.suffix, 'layout');
+    assert.equal(liveLayout?.catalogOrigin, 'live');
+    assert.equal(liveLayout?.retrievable, true);
     assert.ok(
       liveCatalog.types.some((item) => item.type === 'Flow' && item.memberCount === 0),
       'expected zero-member metadata families to remain visible in catalog'
     );
+
+    fs.mkdirSync(path.join(parsePath, 'layouts'), { recursive: true });
+    fs.writeFileSync(
+      path.join(parsePath, 'layouts', 'Opportunity-Opportunity Layout.layout-meta.xml'),
+      '<Layout><fullName>Opportunity-Opportunity Layout</fullName></Layout>',
+      'utf8'
+    );
+    const mixedCatalog = await service.metadataCatalog({ refresh: true, limit: 50 });
+    const fallbackLayoutFamily = mixedCatalog.types.find((item) => item.type === 'layouts');
+    assert.equal(mixedCatalog.source, 'mixed');
+    assert.equal(fallbackLayoutFamily?.catalogOrigin, 'local_fallback');
+    assert.equal(fallbackLayoutFamily?.retrievable, false);
+    assert.match(String(fallbackLayoutFamily?.retrievableReason ?? ''), /fallback-only family/i);
+
+    await assert.rejects(
+      () =>
+        service.retrieveSelectedMetadata({
+          selections: [{ type: 'layouts' }],
+          autoRefresh: false
+        }),
+      (error: unknown) => {
+        assert.equal((error as { getStatus?: () => number }).getStatus?.(), 400);
+        const response = (error as { getResponse?: () => unknown }).getResponse?.() as {
+          message?: string;
+          details?: { code?: string; blockedTypes?: string[] };
+        };
+        assert.equal(response?.message, 'metadata retrieve blocked for fallback-only families');
+        assert.equal(response?.details?.code, 'SF_METADATA_FALLBACK_ONLY');
+        assert.deepEqual(response?.details?.blockedTypes, ['layouts']);
+        return true;
+      }
+    );
+    fs.rmSync(path.join(parsePath, 'layouts'), { recursive: true, force: true });
 
     const liveCatalogCachePath = path.join(path.dirname(parsePath), 'metadata-live-catalog-cache.json');
     fs.writeFileSync(
@@ -491,7 +526,10 @@ async function run(): Promise<void> {
     toolAdapter.metadataTypesShouldFail = true;
     const staleFallbackCatalog = await service.metadataCatalog({ refresh: false, limit: 50 });
     toolAdapter.metadataTypesShouldFail = false;
-    assert.equal(staleFallbackCatalog.source, 'cache');
+    assert.ok(
+      staleFallbackCatalog.source === 'cache' || staleFallbackCatalog.source === 'mixed',
+      'stale live cache fallback may still merge with local parse/cache catalog data'
+    );
     assert.ok(
       staleFallbackCatalog.types.some((item) => item.type === 'AnimationRule'),
       'stale cache fallback should preserve richer cached metadata families'

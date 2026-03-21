@@ -111,6 +111,8 @@ Copy this block into [Real Org Operator Proof Results](../planning/v2/REAL_ORG_O
 2. Org Browser retrieve:
 - Result:
 - Evidence:
+- Note whether Browser showed `Coverage limited`.
+- If it did, confirm the operator used only `live catalog` or `live + local` family rows for retrieve.
 
 3. Refresh handoff:
 - Result:

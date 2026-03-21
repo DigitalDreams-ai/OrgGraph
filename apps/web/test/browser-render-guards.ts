@@ -24,7 +24,9 @@ function buildCatalog(
         inFolder: false,
         metaFile: true,
         suffix: 'field-meta.xml',
-        childFamilyCount: 0
+        childFamilyCount: 0,
+        catalogOrigin: 'live',
+        retrievable: true
       }
     ],
     ...overrides
@@ -161,7 +163,22 @@ function run(): void {
             inFolder: false,
             metaFile: true,
             suffix: 'field-meta.xml',
-            childFamilyCount: 0
+            childFamilyCount: 0,
+            catalogOrigin: 'live',
+            retrievable: true
+          },
+          {
+            type: 'layouts',
+            memberCount: 2,
+            directoryName: 'layouts',
+            inFolder: false,
+            metaFile: false,
+            suffix: 'layout-meta.xml',
+            childFamilyCount: 0,
+            catalogOrigin: 'local_fallback',
+            retrievable: false,
+            retrievableReason:
+              'Fallback-only family: inferred from local/cache metadata, not verified as a live retrievable metadata type.'
           }
         ]
       }),
@@ -204,6 +221,10 @@ function run(): void {
   assert.match(limitedMarkup, /Coverage limited/);
   assert.match(limitedMarkup, /Do not treat this as full org inventory yet/);
   assert.match(limitedMarkup, /Load Full Family Catalog/);
+  assert.match(limitedMarkup, /Fallback-only rows stay visible for context but cannot drive retrieve/);
+  assert.match(limitedMarkup, /fallback only/);
+  assert.match(limitedMarkup, /Fallback-only family: inferred from local\/cache metadata, not verified as a live retrievable metadata type\./);
+  assert.match(limitedMarkup, /disabled=""[^>]*>\s*<span class="selection-toggle-copy"><strong>layouts<\/strong>/);
   assert.match(limitedMarkup, /result truncated to limit=25/);
   assert.match(
     limitedMarkup,

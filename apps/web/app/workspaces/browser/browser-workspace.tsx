@@ -133,6 +133,13 @@ function groupSearchResults(results: MetadataSearchResult[]): Array<{
 
 function formatFamilyDescriptor(typeRow: MetadataCatalogPayload['types'][number]): string[] {
   const descriptors: string[] = [];
+  if (typeRow.catalogOrigin === 'live') {
+    descriptors.push('live catalog');
+  } else if (typeRow.catalogOrigin === 'mixed') {
+    descriptors.push('live + local');
+  } else if (typeRow.catalogOrigin === 'local_fallback') {
+    descriptors.push('fallback only');
+  }
   if (typeRow.directoryName) {
     descriptors.push(`folder ${typeRow.directoryName}`);
   }
@@ -168,6 +175,10 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
       new Map(
         (props.metadataCatalog?.types ?? []).map((typeRow) => [typeRow.type, formatFamilyDescriptor(typeRow)])
       ),
+    [props.metadataCatalog]
+  );
+  const familyRows = useMemo(
+    () => new Map((props.metadataCatalog?.types ?? []).map((typeRow) => [typeRow.type, typeRow])),
     [props.metadataCatalog]
   );
   const [expandedBrowseFamilies, setExpandedBrowseFamilies] = useState<Record<string, boolean>>({});
@@ -473,7 +484,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
           <ol className="workflow-step-list">
             <li>Click <strong>Load Full Family Catalog</strong>.</li>
             <li>If coverage still says limited, turn on <strong>Force Refresh</strong> and run <strong>Load Full Family Catalog</strong> again.</li>
-            <li>Use the triangle on a family row to open children. Use the checkbox on that row to add the whole family to the retrieve cart.</li>
+            <li>Use the triangle on a family row to open children. Only rows tagged <strong>live catalog</strong> or <strong>live + local</strong> are retrievable.</li>
             <li>Only treat the family browser as full inventory when the badge above says <strong>Live coverage</strong>.</li>
           </ol>
         </article>
@@ -558,6 +569,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                 const membersLoaded = Boolean(membersPayload);
                 const shouldAutoLoadMembers =
                   !membersLoaded && props.metadataLoadingType !== group.type && !props.loading;
+                const familyRow = familyRows.get(group.type);
                 const matchedMemberNames = new Set(
                   group.results
                     .filter((result) => result.kind === 'member')
@@ -579,8 +591,13 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                         <SelectionCheckbox
                           checked={props.getTypeSelectionState(group.type) === 'all'}
                           indeterminate={props.getTypeSelectionState(group.type) === 'partial'}
+                          disabled={familyRow?.retrievable === false}
                           label={group.type}
-                          hint={`${group.results.length} match${group.results.length === 1 ? '' : 'es'} • check to include this family`}
+                          hint={
+                            familyRow?.retrievable === false
+                              ? familyRow.retrievableReason ?? 'Fallback-only family'
+                              : `${group.results.length} match${group.results.length === 1 ? '' : 'es'} • check to include this family`
+                          }
                           onChange={(checked) => props.onSetTypeSelected(group.type, checked)}
                         />
                         {descriptors.length > 0 ? (
@@ -593,6 +610,9 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                           </div>
                         ) : null}
                       </div>
+                      {familyRow?.retrievable === false ? (
+                        <p className="muted">Search matched a fallback-only family. Inspect it if needed, but do not add it to the retrieve cart.</p>
+                      ) : null}
                       <div className="metadata-family-actions">
                         <button
                           type="button"
@@ -662,7 +682,7 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
         </div>
       </div>
       {catalogCoverage.state !== 'full' ? (
-        <p className="muted">Catalog coverage is limited. Review the coverage warning and discovery notes above before treating this as full org inventory.</p>
+        <p className="muted">Catalog coverage is limited. Fallback-only rows stay visible for context but cannot drive retrieve until live family discovery confirms them.</p>
       ) : null}
       <div className="org-browser-frame">
         {filteredCatalogTypes.map((typeRow) => {
@@ -689,8 +709,13 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                   <SelectionCheckbox
                     checked={typeSelectionState === 'all'}
                     indeterminate={typeSelectionState === 'partial'}
+                    disabled={typeRow.retrievable === false}
                     label={typeRow.type}
-                    hint={`${typeRow.memberCount} discoverable item${typeRow.memberCount === 1 ? '' : 's'} • check to include this family`}
+                    hint={
+                      typeRow.retrievable === false
+                        ? typeRow.retrievableReason ?? 'Fallback-only family'
+                        : `${typeRow.memberCount} discoverable item${typeRow.memberCount === 1 ? '' : 's'} • check to include this family`
+                    }
                     onChange={(checked) => props.onSetTypeSelected(typeRow.type, checked)}
                   />
                   <div className="metadata-family-descriptor-list">
@@ -714,6 +739,9 @@ export function BrowserWorkspace(props: BrowserWorkspaceProps): JSX.Element {
                   {membersLoaded ? 'loaded' : 'not loaded'} • {typeRow.memberCount}
                 </span>
               </div>
+              {typeRow.retrievable === false ? (
+                <p className="muted">Fallback-only family. Browse it if needed, but do not use it to build the retrieve cart until live family discovery confirms it.</p>
+              ) : null}
               {isExpanded ? (
                 <>
                   {props.metadataLoadingType === typeRow.type ? <p className="muted">Loading family items...</p> : null}

@@ -251,7 +251,7 @@ export function describeMetadataCatalogCoverage(
     ? 'Increase Search/Member Limit, then run Load Full Family Catalog again.'
     : coverage.reasons.some((reason) => /failed/i.test(reason) || /sf CLI is unavailable/i.test(reason))
       ? 'Run Force Refresh, then verify sf CLI metadata-type discovery for the active alias.'
-      : 'Run Load Full Family Catalog with Force Refresh enabled before treating this as full org inventory.';
+      : 'Run Load Full Family Catalog with Force Refresh enabled before treating this as full org inventory. Fallback-only rows stay visible for context but are not retrievable.';
 
   return {
     ...coverage,

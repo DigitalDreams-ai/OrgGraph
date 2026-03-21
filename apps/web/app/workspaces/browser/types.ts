@@ -9,6 +9,9 @@ export type MetadataCatalogType = {
   suffix?: string;
   childXmlNames?: string[];
   childFamilyCount?: number;
+  catalogOrigin?: 'live' | 'mixed' | 'local_fallback';
+  retrievable?: boolean;
+  retrievableReason?: string;
 };
 export type MetadataMember = { name: string };
 
